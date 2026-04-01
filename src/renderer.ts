@@ -40,7 +40,10 @@ export interface RenderConfig {
   dragHoverFillColor: string;
   dragHoverStrokeColor: string;
   terrainFillColor: string;
-  terrainStrokeColor: string;
+  /** PNG for placed terrain hexon; clipped to outer contour, no per-cell borders. */
+  terrainImageSrc: string | null;
+  /** Clockwise rotation (°) of the terrain bitmap only; scale stays the same as unrotated cover. */
+  terrainTextureRotationDeg: number;
   terrainPreviewValidColor: string;
   terrainPreviewInvalidColor: string;
   bigMiniFillColor: string;
@@ -77,7 +80,8 @@ export const defaultRenderConfig: RenderConfig = {
   dragHoverFillColor: 'rgba(33, 150, 243, 0.35)',
   dragHoverStrokeColor: '#2196f3',
   terrainFillColor: 'rgba(121, 85, 72, 0.35)',
-  terrainStrokeColor: '#5d4037',
+  terrainImageSrc: '/terrain2.png',
+  terrainTextureRotationDeg: 30,
   terrainPreviewValidColor: 'rgba(76, 175, 80, 0.35)',
   terrainPreviewInvalidColor: 'rgba(244, 67, 54, 0.35)',
   bigMiniFillColor: 'rgba(63, 81, 181, 0.40)',
@@ -126,8 +130,8 @@ export class Renderer {
   private walkReachableHexKeys = new Set<string>();
   private runReachableHexKeys = new Set<string>();
   private terrainCenterHex: Hex | null = null;
-  private terrainPreviewCenterHex: Hex | null = null;
-  private isTerrainPreviewValid = true;
+  private terrainPreviewWorld: Point | null = null;
+  private terrainDragging = false;
   private bigMiniCenters: Hex[] = [];
   private bigMiniPreviewPosition: Point | null = null;
   private draggingBigMiniIndex: number | null = null;
@@ -205,12 +209,12 @@ export class Renderer {
 
   setTerrain(
     terrainCenterHex: Hex | null,
-    terrainPreviewCenterHex: Hex | null,
-    isTerrainPreviewValid: boolean,
+    terrainPreviewWorld: Point | null,
+    isTerrainDragging: boolean,
   ): void {
     this.terrainCenterHex = terrainCenterHex;
-    this.terrainPreviewCenterHex = terrainPreviewCenterHex;
-    this.isTerrainPreviewValid = isTerrainPreviewValid;
+    this.terrainPreviewWorld = terrainPreviewWorld;
+    this.terrainDragging = isTerrainDragging;
   }
 
   setBigMiniatures(
@@ -983,58 +987,67 @@ export class Renderer {
   }
 
   private drawTerrain(): void {
-    const { ctx, layout, config } = this;
+    const { layout } = this;
     const rotRad = (this.terrainRotationDeg * Math.PI) / 180;
+    const drag = this.terrainDragging;
+    // Like big mini: while dragging, hide the placed piece and draw the full terrain at the cursor.
+    if (this.terrainCenterHex && !drag) {
+      this.drawTerrainHexonAtWorldPivot(layout.hexToPixel(this.terrainCenterHex), rotRad);
+    }
+    if (drag && this.terrainPreviewWorld) {
+      this.drawTerrainHexonAtWorldPivot(this.terrainPreviewWorld, rotRad);
+    }
+  }
 
-    if (this.terrainCenterHex) {
-      const pivot = layout.hexToPixel(this.terrainCenterHex);
-      const terrainCells = [this.terrainCenterHex, ...Hex.directions.map((direction) => this.terrainCenterHex!.add(direction))];
+  /**
+   * Terrain = one hexon like big mini: image object-fit cover in outer rounded silhouette,
+   * outer stroke only (no inner hex seams). `worldPivot` is board pixel position (same as big-mini drag preview).
+   */
+  private drawTerrainHexonAtWorldPivot(worldPivot: Point, rotRad: number): void {
+    const { ctx, layout, config } = this;
+    const p = worldPivot;
+    const bounds = this.bigMiniHexonBoundsLocal(layout);
+    const boxW = bounds.maxX - bounds.minX;
+    const boxH = bounds.maxY - bounds.minY;
+    const lwOuter = 2 / this.camera.zoom;
+
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(rotRad);
+
+    const sprite = this.getSpriteImage(config.terrainImageSrc);
+    if (sprite && sprite.naturalWidth > 0 && sprite.naturalHeight > 0) {
+      const iw = sprite.naturalWidth;
+      const ih = sprite.naturalHeight;
+      const cover = Math.max(boxW / iw, boxH / ih);
+      const dw = iw * cover;
+      const dh = ih * cover;
+      const texRotRad = (config.terrainTextureRotationDeg * Math.PI) / 180;
       ctx.save();
-      ctx.translate(pivot.x, pivot.y);
-      ctx.rotate(rotRad);
-      ctx.translate(-pivot.x, -pivot.y);
-      for (const hex of terrainCells) {
-        const corners = layout.hexCorners(hex);
-        ctx.beginPath();
-        ctx.moveTo(corners[0].x, corners[0].y);
-        for (let i = 1; i < 6; i++) {
-          ctx.lineTo(corners[i].x, corners[i].y);
-        }
-        ctx.closePath();
-        ctx.fillStyle = config.terrainFillColor;
-        ctx.fill();
-        ctx.strokeStyle = config.terrainStrokeColor;
-        ctx.lineWidth = 2 / this.camera.zoom;
-        ctx.stroke();
-      }
+      ctx.beginPath();
+      this.addBigMiniHexonOuterPath(ctx, layout, 1);
+      ctx.clip();
+      ctx.rotate(texRotRad);
+      ctx.drawImage(sprite, -dw / 2, -dh / 2, dw, dh);
       ctx.restore();
+      ctx.beginPath();
+      this.addBigMiniHexonOuterPath(ctx, layout, 1);
+      ctx.strokeStyle = config.unitStrokeColor;
+      ctx.lineWidth = lwOuter;
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      this.addBigMiniHexonOuterPath(ctx, layout, 1);
+      ctx.fillStyle = config.terrainFillColor;
+      ctx.fill();
+      ctx.beginPath();
+      this.addBigMiniHexonOuterPath(ctx, layout, 1);
+      ctx.strokeStyle = config.unitStrokeColor;
+      ctx.lineWidth = lwOuter;
+      ctx.stroke();
     }
 
-    if (this.terrainPreviewCenterHex) {
-      const previewPivot = layout.hexToPixel(this.terrainPreviewCenterHex);
-      const previewCells = [
-        this.terrainPreviewCenterHex,
-        ...Hex.directions.map((direction) => this.terrainPreviewCenterHex!.add(direction)),
-      ];
-      ctx.save();
-      ctx.translate(previewPivot.x, previewPivot.y);
-      ctx.rotate(rotRad);
-      ctx.translate(-previewPivot.x, -previewPivot.y);
-      for (const hex of previewCells) {
-        const corners = layout.hexCorners(hex);
-        ctx.beginPath();
-        ctx.moveTo(corners[0].x, corners[0].y);
-        for (let i = 1; i < 6; i++) {
-          ctx.lineTo(corners[i].x, corners[i].y);
-        }
-        ctx.closePath();
-        ctx.fillStyle = this.isTerrainPreviewValid
-          ? config.terrainPreviewValidColor
-          : config.terrainPreviewInvalidColor;
-        ctx.fill();
-      }
-      ctx.restore();
-    }
+    ctx.restore();
   }
 
   // ── Big mini movement range ──

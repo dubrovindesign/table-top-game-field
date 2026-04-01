@@ -2,10 +2,11 @@
  * Entry point — wires everything together.
  */
 
-import { Hex, Layout } from './hex';
+import { Hex, Layout, type Point } from './hex';
 import { HexGrid } from './grid';
 import { Camera, Renderer, defaultRenderConfig } from './renderer';
 import { DiceRoller } from './dice';
+import { UnitCard, type UnitCardData } from './unitCard';
 import {
   BIG_UNIT_HEALTH_UI_SCALE,
   SMALL_UNIT_HEALTH_BADGE_OFFSET_Y_FRAC,
@@ -31,7 +32,7 @@ const ELEMENT_ROT_STEP_FAST = 15;
 const UNIT_DRAG_THRESHOLD_PX = 5;
 const UNIT_HEALTH_MIN = 0;
 
-/** Saved calibration for `public/field1.jpg` — align art with hex grid */
+/** Saved calibration for field background art — align with hex grid (adjust via bg hotkeys) */
 const FIELD_BG_PRESET = {
   backgroundImageOffsetX: 0,
   backgroundImageOffsetY: 48,
@@ -154,7 +155,7 @@ const renderConfig = {
   showCoordinates: false,
   showGrid: false,
   defaultHexFillColor: 'rgba(0, 0, 0, 0)',
-  backgroundImageSrc: '/field1.jpg',
+  backgroundImageSrc: '/fieldwithtrees.png',
   backgroundImageOpacity: 1,
   backgroundImageFit: 'cover' as const,
   backgroundImageOffsetX: FIELD_BG_PRESET.backgroundImageOffsetX,
@@ -225,6 +226,122 @@ const bigMiniatures: {
 let selectedBigMiniIndex: number | null = null;
 let openHealthControlsBigMiniIndex: number | null = null;
 
+/** Alt + hover: same card & range as click-select, but card follows cursor. */
+let altKeyHeld = false;
+type AltHoverTarget = { kind: 'small'; index: number } | { kind: 'big'; index: number };
+let altHoverTarget: AltHoverTarget | null = null;
+let pointerScreenX = 0;
+let pointerScreenY = 0;
+let lastAltCardSig: string | null = null;
+
+// ── Unit card data ─────────────────────────────────────────────
+
+const unitCardData: UnitCardData[] = [
+  {
+    name: 'Tern Vanguard',
+    size: 'small',
+    health: 10, maxHealth: 10,
+    walk: UNIT_WALK_RANGE, run: UNIT_RUN_RANGE,
+    sprite: SMALL_UNIT_SPRITES[0],
+    stats: { attack: 4, defense: 3, initiative: 5 },
+    abilities: [
+      { name: 'Shield Wall', description: '+2 Defense when adjacent to an ally.', cost: 'Passive' },
+      { name: 'Charge', description: 'Move up to run range and attack with +1 Attack.', cost: '1 AP' },
+    ],
+    keywords: ['Human', 'Melee'],
+  },
+  {
+    name: 'Tern Ranger',
+    size: 'small',
+    health: 10, maxHealth: 10,
+    walk: UNIT_WALK_RANGE, run: UNIT_RUN_RANGE,
+    sprite: SMALL_UNIT_SPRITES[1],
+    stats: { attack: 3, defense: 2, initiative: 7 },
+    abilities: [
+      { name: 'Aimed Shot', description: 'Ranged attack within 6 hexes. +1 Attack if stationary.', cost: '1 AP' },
+      { name: 'Evasion', description: 'After being attacked, may move 1 hex.', cost: 'Reaction' },
+    ],
+    keywords: ['Human', 'Ranged'],
+  },
+];
+
+const bigMiniCardData: UnitCardData[] = [
+  {
+    name: 'Iron Golem',
+    size: 'big',
+    health: 20, maxHealth: 20,
+    walk: BIG_MINI_WALK_RANGE, run: BIG_MINI_RUN_RANGE,
+    sprite: BIG_UNIT_SPRITE,
+    stats: { attack: 6, defense: 8, initiative: 2 },
+    abilities: [
+      { name: 'Stomp', description: 'All enemies in the occupied hexon take 3 damage.', cost: '2 AP' },
+      { name: 'Fortify', description: 'Cannot move this turn. +4 Defense until next activation.', cost: '1 AP' },
+      { name: 'Regenerate', description: 'Heal 2 HP at the start of each turn.', cost: 'Passive' },
+    ],
+    keywords: ['Construct', 'Heavy'],
+  },
+];
+
+const unitCard = new UnitCard(document.body);
+
+function updateUnitCard(): void {
+  if (!altKeyHeld) {
+    lastAltCardSig = null;
+  }
+
+  if (altKeyHeld && altHoverTarget !== null) {
+    const sig = `${altHoverTarget.kind}-${altHoverTarget.index}`;
+    if (altHoverTarget.kind === 'small') {
+      const u = units[altHoverTarget.index];
+      const data = unitCardData[altHoverTarget.index];
+      if (data) {
+        data.health = u.health;
+        if (lastAltCardSig === sig) {
+          unitCard.repositionFloating(pointerScreenX, pointerScreenY);
+          return;
+        }
+        lastAltCardSig = sig;
+        unitCard.show(data, { x: pointerScreenX, y: pointerScreenY });
+        return;
+      }
+    } else {
+      const m = bigMiniatures[altHoverTarget.index];
+      const data = bigMiniCardData[altHoverTarget.index];
+      if (data) {
+        data.health = m.health;
+        if (lastAltCardSig === sig) {
+          unitCard.repositionFloating(pointerScreenX, pointerScreenY);
+          return;
+        }
+        lastAltCardSig = sig;
+        unitCard.show(data, { x: pointerScreenX, y: pointerScreenY });
+        return;
+      }
+    }
+  }
+
+  if (selectedUnitIndex !== null) {
+    const u = units[selectedUnitIndex];
+    const data = unitCardData[selectedUnitIndex];
+    if (data) {
+      // Sync live stats
+      data.health = u.health;
+      unitCard.show(data);
+      return;
+    }
+  }
+  if (selectedBigMiniIndex !== null) {
+    const m = bigMiniatures[selectedBigMiniIndex];
+    const data = bigMiniCardData[selectedBigMiniIndex];
+    if (data) {
+      data.health = m.health;
+      unitCard.show(data);
+      return;
+    }
+  }
+  unitCard.hide();
+}
+
 function rebuildHexons(): void {
   renderer.setHighlightedHexonCenter(new Hex(2, 0));
 }
@@ -233,7 +350,7 @@ renderer.setUnits(
   units.map((unit) => unit.position),
   selectedUnitIndex,
 );
-renderer.setTerrain(terrainCenter, null, true);
+renderer.setTerrain(terrainCenter, null, false);
 renderer.setBigMiniatures(
   bigMiniatures.map((m) => m.center),
   null,
@@ -242,10 +359,34 @@ renderer.setBigMiniatures(
 renderer.setBigMiniMovement(null, [], []);
 
 function updateMovementHighlights(): void {
+  // Must keep indices aligned with `units[]` (sprites, drag, selection) — do not filter.
   renderer.setUnits(
-    units.filter((unit) => grid.has(unit.position)).map((unit) => unit.position),
+    units.map((unit) => unit.position),
     selectedUnitIndex,
   );
+
+  if (altKeyHeld && altHoverTarget?.kind === 'small') {
+    const u = units[altHoverTarget.index];
+    if (!grid.has(u.position)) {
+      renderer.setMovementHighlights(null, [], []);
+      return;
+    }
+    const walkReachable: Hex[] = [];
+    const runReachable: Hex[] = [];
+    for (const hex of grid.allHexes()) {
+      const distance = u.position.distanceTo(hex);
+      if (distance === 0) continue;
+      if (distance <= u.walk) walkReachable.push(hex);
+      if (distance <= u.run) runReachable.push(hex);
+    }
+    renderer.setMovementHighlights(u.position, walkReachable, runReachable);
+    return;
+  }
+
+  if (altKeyHeld && altHoverTarget?.kind === 'big') {
+    renderer.setMovementHighlights(null, [], []);
+    return;
+  }
 
   if (selectedUnitIndex === null) {
     renderer.setMovementHighlights(null, [], []);
@@ -311,49 +452,25 @@ function rotateElementUnderHex(hex: Hex | null, deltaDeg: number): boolean {
 }
 
 function updateBigMiniMovementHighlights(): void {
+  /** Green ring index stays `selectedBigMiniIndex`; walk/run can preview another big mini (Alt-hover). */
+  const ringIndex = selectedBigMiniIndex;
+
+  if (altKeyHeld && altHoverTarget?.kind === 'big') {
+    const { walk, run } = computeBigMiniWalkRunCenters(altHoverTarget.index);
+    renderer.setBigMiniMovement(ringIndex, walk, run);
+    return;
+  }
+  if (altKeyHeld && altHoverTarget?.kind === 'small') {
+    renderer.setBigMiniMovement(ringIndex, [], []);
+    return;
+  }
+
   if (selectedBigMiniIndex === null) {
     renderer.setBigMiniMovement(null, [], []);
     return;
   }
-  const selected = bigMiniatures[selectedBigMiniIndex];
-  const maxRange = selected.run;
-  const startKey = selected.center.key;
-  const visited = new Map<string, number>([[startKey, 0]]);
-  const queue: Hex[] = [selected.center];
-  const BIG_HEX_DIRECTIONS = [
-    new Hex(3, -1),
-    new Hex(1, 2),
-    new Hex(-2, 3),
-    new Hex(-3, 1),
-    new Hex(-1, -2),
-    new Hex(2, -3),
-  ];
-  const hexonCenterKeys = new Set(allHexonCenters.map((center) => center.key));
-
-  while (queue.length > 0) {
-    const current = queue.shift()!;
-    const currentDistance = visited.get(current.key) ?? 0;
-    if (currentDistance >= maxRange) continue;
-
-    for (const direction of BIG_HEX_DIRECTIONS) {
-      const next = current.add(direction);
-      if (!hexonCenterKeys.has(next.key)) continue;
-      if (visited.has(next.key)) continue;
-      visited.set(next.key, currentDistance + 1);
-      queue.push(next);
-    }
-  }
-
-  const walkCenters: Hex[] = [];
-  const runCenters: Hex[] = [];
-  for (const center of allHexonCenters) {
-    const distance = visited.get(center.key);
-    if (!distance || distance <= 0) continue;
-    if (distance <= selected.walk) walkCenters.push(center);
-    if (distance <= selected.run) runCenters.push(center);
-  }
-
-  renderer.setBigMiniMovement(selectedBigMiniIndex, walkCenters, runCenters);
+  const { walk, run } = computeBigMiniWalkRunCenters(selectedBigMiniIndex);
+  renderer.setBigMiniMovement(selectedBigMiniIndex, walk, run);
 }
 
 // ── Dice roller UI ─────────────────────────────────────────────
@@ -371,6 +488,17 @@ function scheduleRender(): void {
 function loop(): void {
   if (needsRender) {
     pushPieceRotationsToRenderer();
+    // Re-apply drag / preview every frame so renderer state cannot desync from main.ts.
+    renderer.setDragState(draggingUnitIndex, dragOverHex, dragPreviewPosition);
+    renderer.setBigMiniatures(
+      bigMiniatures.map((m) => m.center),
+      bigMiniPreviewPosition,
+      draggingBigMiniIndex,
+    );
+    renderer.setTerrain(terrainCenter, terrainPreviewWorld, isDraggingTerrain);
+    updateMovementHighlights();
+    updateBigMiniMovementHighlights();
+    updateUnitCard();
     renderer.render();
     needsRender = false;
   }
@@ -387,15 +515,20 @@ let draggingUnitIndex: number | null = null;
 let dragOverHex: Hex | null = null;
 let dragPreviewPosition: { x: number; y: number } | null = null;
 let isDraggingTerrain = false;
-let terrainPreviewCenter: Hex | null = null;
+let terrainDragPending = false;
+let terrainDragPendingStartX = 0;
+let terrainDragPendingStartY = 0;
+let terrainPreviewWorld: Point | null = null;
 let draggingBigMiniIndex: number | null = null;
 let bigMiniPreviewPosition: { x: number; y: number } | null = null;
 /** Hex under mouse for Q/E rotation (null off-board or off-canvas). */
 let hoveredHexUnderPointer: Hex | null = null;
-/** Mousedown on already-selected unit: wait for move (drag) or mouseup (deselect). */
+/** Mousedown on unit: wait for move (drag) or mouseup (deselect if already selected). */
 let unitDragPendingIndex: number | null = null;
 let unitDragPendingStartX = 0;
 let unitDragPendingStartY = 0;
+/** True when the pending click also freshly selected the unit (don't deselect on mouseup). */
+let unitDragPendingIsNewSelection = false;
 /** Same pending-click behavior for selected big miniature. */
 let bigMiniDragPendingIndex: number | null = null;
 let bigMiniDragPendingStartX = 0;
@@ -422,6 +555,20 @@ function hexAtScreen(sx: number, sy: number): Hex | null {
   return grid.has(hex) ? hex : null;
 }
 
+/** Hex under the last known pointer position if it lies over the canvas (for Alt without relying on canvas-only hover). */
+function hexUnderGlobalPointer(): Hex | null {
+  const r = canvas.getBoundingClientRect();
+  if (
+    pointerScreenX < r.left ||
+    pointerScreenX >= r.right ||
+    pointerScreenY < r.top ||
+    pointerScreenY >= r.bottom
+  ) {
+    return null;
+  }
+  return hexAtScreen(pointerScreenX, pointerScreenY);
+}
+
 function isHexOccupiedByOtherUnit(target: Hex, movingUnitIndex: number): boolean {
   return units.some((unit, index) => index !== movingUnitIndex && unit.position.key === target.key);
 }
@@ -438,6 +585,67 @@ function findBigMiniAtHex(hex: Hex): number {
   return bigMiniatures.findIndex((m) =>
     hexonCells(m.center).some((cell) => cell.key === hex.key),
   );
+}
+
+function refreshAltHoverTarget(hex: Hex | null): void {
+  if (!altKeyHeld || !hex) {
+    altHoverTarget = null;
+    return;
+  }
+  const unitIdx = units.findIndex(
+    (unit) => unit.position.key === hex.key && grid.has(unit.position),
+  );
+  if (unitIdx !== -1) {
+    altHoverTarget = { kind: 'small', index: unitIdx };
+    return;
+  }
+  const bigIdx = findBigMiniAtHex(hex);
+  if (bigIdx !== -1) {
+    altHoverTarget = { kind: 'big', index: bigIdx };
+    return;
+  }
+  altHoverTarget = null;
+}
+
+/** BFS in hexon-center space (same as selected big-mini range). */
+function computeBigMiniWalkRunCenters(bigIndex: number): { walk: Hex[]; run: Hex[] } {
+  const BIG_HEX_DIRECTIONS = [
+    new Hex(3, -1),
+    new Hex(1, 2),
+    new Hex(-2, 3),
+    new Hex(-3, 1),
+    new Hex(-1, -2),
+    new Hex(2, -3),
+  ];
+  const selected = bigMiniatures[bigIndex];
+  const maxRange = selected.run;
+  const visited = new Map<string, number>([[selected.center.key, 0]]);
+  const queue: Hex[] = [selected.center];
+  const hexonCenterKeys = new Set(allHexonCenters.map((center) => center.key));
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    const currentDistance = visited.get(current.key) ?? 0;
+    if (currentDistance >= maxRange) continue;
+
+    for (const direction of BIG_HEX_DIRECTIONS) {
+      const next = current.add(direction);
+      if (!hexonCenterKeys.has(next.key)) continue;
+      if (visited.has(next.key)) continue;
+      visited.set(next.key, currentDistance + 1);
+      queue.push(next);
+    }
+  }
+
+  const walkCenters: Hex[] = [];
+  const runCenters: Hex[] = [];
+  for (const center of allHexonCenters) {
+    const distance = visited.get(center.key);
+    if (!distance || distance <= 0) continue;
+    if (distance <= selected.walk) walkCenters.push(center);
+    if (distance <= selected.run) runCenters.push(center);
+  }
+  return { walk: walkCenters, run: runCenters };
 }
 
 function tryPromoteUnitDragFromPending(e: MouseEvent): void {
@@ -472,6 +680,18 @@ function tryPromoteBigMiniDragFromPending(e: MouseEvent): void {
   scheduleRender();
 }
 
+function tryPromoteTerrainDragFromPending(e: MouseEvent): void {
+  if (!terrainDragPending || isDraggingTerrain) return;
+  const dx = e.clientX - terrainDragPendingStartX;
+  const dy = e.clientY - terrainDragPendingStartY;
+  if (dx * dx + dy * dy <= UNIT_DRAG_THRESHOLD_PX * UNIT_DRAG_THRESHOLD_PX) return;
+  terrainDragPending = false;
+  isDraggingTerrain = true;
+  terrainPreviewWorld = screenToBoardWorld(e.clientX, e.clientY);
+  renderer.setTerrain(terrainCenter, terrainPreviewWorld, true);
+  scheduleRender();
+}
+
 // ── Collect all hexon centers from the grid build ──────────────
 
 const allHexonCenters: Hex[] = [];
@@ -495,20 +715,6 @@ function collectHexonCenters(): void {
 }
 collectHexonCenters();
 updateBigMiniMovementHighlights();
-
-/** Find the nearest hexon center to a given hex */
-function nearestHexonCenter(hex: Hex): Hex {
-  let best = allHexonCenters[0];
-  let bestDist = hex.distanceTo(best);
-  for (let i = 1; i < allHexonCenters.length; i++) {
-    const d = hex.distanceTo(allHexonCenters[i]);
-    if (d < bestDist) {
-      bestDist = d;
-      best = allHexonCenters[i];
-    }
-  }
-  return best;
-}
 
 function nearestHexonCenterFromWorld(world: { x: number; y: number }): Hex {
   let best = allHexonCenters[0];
@@ -705,22 +911,31 @@ function handleMiniatureHealthClick(screenX: number, screenY: number): boolean {
 
 // ── Input: mouse hover + eraser drag ───────────────────────────
 
+window.addEventListener('pointermove', (e) => {
+  pointerScreenX = e.clientX;
+  pointerScreenY = e.clientY;
+});
+
 canvas.addEventListener('mousemove', (e) => {
+  pointerScreenX = e.clientX;
+  pointerScreenY = e.clientY;
   tryPromoteUnitDragFromPending(e);
   tryPromoteBigMiniDragFromPending(e);
+  tryPromoteTerrainDragFromPending(e);
 
   const hex = hexAtScreen(e.clientX, e.clientY);
   if (!hex) {
     hoveredHexUnderPointer = null;
     renderer.setHoveredHex(null);
+    refreshAltHoverTarget(null);
     if (draggingUnitIndex !== null) {
       dragOverHex = null;
       dragPreviewPosition = screenToBoardWorld(e.clientX, e.clientY);
       renderer.setDragState(draggingUnitIndex, null, dragPreviewPosition);
     }
     if (isDraggingTerrain) {
-      terrainPreviewCenter = null;
-      renderer.setTerrain(terrainCenter, null, false);
+      terrainPreviewWorld = null;
+      renderer.setTerrain(terrainCenter, null, true);
     }
     if (draggingBigMiniIndex !== null) {
       bigMiniPreviewPosition = null;
@@ -732,6 +947,7 @@ canvas.addEventListener('mousemove', (e) => {
 
   hoveredHexUnderPointer = hex;
   renderer.setHoveredHex(hex);
+  refreshAltHoverTarget(hex);
 
   if (draggingUnitIndex !== null) {
     dragOverHex = isHexOccupiedByOtherUnit(hex, draggingUnitIndex) ? null : hex;
@@ -739,8 +955,8 @@ canvas.addEventListener('mousemove', (e) => {
     renderer.setDragState(draggingUnitIndex, dragOverHex, dragPreviewPosition);
   }
   if (isDraggingTerrain) {
-    terrainPreviewCenter = nearestHexonCenter(hex);
-    renderer.setTerrain(terrainCenter, terrainPreviewCenter, true);
+    terrainPreviewWorld = screenToBoardWorld(e.clientX, e.clientY);
+    renderer.setTerrain(terrainCenter, terrainPreviewWorld, true);
   }
   if (draggingBigMiniIndex !== null) {
     bigMiniPreviewPosition = screenToBoardWorld(e.clientX, e.clientY);
@@ -759,6 +975,7 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('mouseleave', () => {
   hoveredHexUnderPointer = null;
   renderer.setHoveredHex(null);
+  refreshAltHoverTarget(null);
   scheduleRender();
 });
 
@@ -782,28 +999,38 @@ canvas.addEventListener('mousedown', (e) => {
     }
 
     const hex = hexAtScreen(e.clientX, e.clientY);
-    if (!hex) return;
+    if (!hex) {
+      if (selectedUnitIndex !== null || selectedBigMiniIndex !== null) {
+        unitDragPendingIndex = null;
+        bigMiniDragPendingIndex = null;
+        selectedUnitIndex = null;
+        selectedBigMiniIndex = null;
+        updateMovementHighlights();
+        updateBigMiniMovementHighlights();
+      }
+      openHealthControlsUnitIndex = null;
+      openHealthControlsBigMiniIndex = null;
+      scheduleRender();
+      return;
+    }
 
     const clickedUnitIndex = units.findIndex((unit) => unit.position.key === hex.key);
     if (clickedUnitIndex !== -1) {
       bigMiniDragPendingIndex = null;
       openHealthControlsUnitIndex = null;
       openHealthControlsBigMiniIndex = null;
-      if (selectedUnitIndex === clickedUnitIndex) {
-        unitDragPendingIndex = clickedUnitIndex;
-        unitDragPendingStartX = e.clientX;
-        unitDragPendingStartY = e.clientY;
-        scheduleRender();
-        return;
+      // Always use pending — drag starts only after threshold
+      unitDragPendingIndex = clickedUnitIndex;
+      unitDragPendingStartX = e.clientX;
+      unitDragPendingStartY = e.clientY;
+      unitDragPendingIsNewSelection = selectedUnitIndex !== clickedUnitIndex;
+      // Select immediately (visual feedback), but don't drag yet
+      if (unitDragPendingIsNewSelection) {
+        selectedUnitIndex = clickedUnitIndex;
+        selectedBigMiniIndex = null;
+        updateBigMiniMovementHighlights();
+        updateMovementHighlights();
       }
-      selectedUnitIndex = clickedUnitIndex;
-      selectedBigMiniIndex = null;
-      updateBigMiniMovementHighlights();
-      draggingUnitIndex = clickedUnitIndex;
-      dragOverHex = units[clickedUnitIndex].position;
-      dragPreviewPosition = screenToBoardWorld(e.clientX, e.clientY);
-      renderer.setDragState(draggingUnitIndex, dragOverHex, dragPreviewPosition);
-      updateMovementHighlights();
       scheduleRender();
       return;
     }
@@ -813,20 +1040,17 @@ canvas.addEventListener('mousedown', (e) => {
       unitDragPendingIndex = null;
       openHealthControlsUnitIndex = null;
       openHealthControlsBigMiniIndex = null;
-      selectedUnitIndex = null;
-      updateMovementHighlights();
-      if (selectedBigMiniIndex === bigMiniIdx) {
-        bigMiniDragPendingIndex = bigMiniIdx;
-        bigMiniDragPendingStartX = e.clientX;
-        bigMiniDragPendingStartY = e.clientY;
-        scheduleRender();
-        return;
+      // Always use pending — drag starts only after threshold
+      bigMiniDragPendingIndex = bigMiniIdx;
+      bigMiniDragPendingStartX = e.clientX;
+      bigMiniDragPendingStartY = e.clientY;
+      // Select immediately, but don't drag yet
+      if (selectedBigMiniIndex !== bigMiniIdx) {
+        selectedUnitIndex = null;
+        updateMovementHighlights();
+        selectedBigMiniIndex = bigMiniIdx;
+        updateBigMiniMovementHighlights();
       }
-      selectedBigMiniIndex = bigMiniIdx;
-      updateBigMiniMovementHighlights();
-      draggingBigMiniIndex = bigMiniIdx;
-      bigMiniPreviewPosition = screenToBoardWorld(e.clientX, e.clientY);
-      renderer.setBigMiniatures(bigMiniatures.map((m) => m.center), bigMiniPreviewPosition, draggingBigMiniIndex);
       scheduleRender();
       return;
     }
@@ -840,9 +1064,9 @@ canvas.addEventListener('mousedown', (e) => {
       selectedBigMiniIndex = null;
       updateMovementHighlights();
       updateBigMiniMovementHighlights();
-      isDraggingTerrain = true;
-      terrainPreviewCenter = nearestHexonCenter(hex);
-      renderer.setTerrain(terrainCenter, terrainPreviewCenter, true);
+      terrainDragPending = true;
+      terrainDragPendingStartX = e.clientX;
+      terrainDragPendingStartY = e.clientY;
       scheduleRender();
       return;
     }
@@ -866,16 +1090,19 @@ canvas.addEventListener('mousedown', (e) => {
 
 window.addEventListener('mouseup', (e) => {
   if (e.button === 0 && unitDragPendingIndex !== null) {
-    selectedUnitIndex = null;
     unitDragPendingIndex = null;
-    updateMovementHighlights();
-    renderer.setDragState(null, null, null);
-    scheduleRender();
+    if (draggingUnitIndex === null) {
+      renderer.setDragState(null, null, null);
+      scheduleRender();
+    }
   } else if (e.button === 0 && bigMiniDragPendingIndex !== null) {
-    selectedBigMiniIndex = null;
     bigMiniDragPendingIndex = null;
-    updateBigMiniMovementHighlights();
-    renderer.setBigMiniatures(bigMiniatures.map((m) => m.center), null, null);
+    if (draggingBigMiniIndex === null) {
+      renderer.setBigMiniatures(bigMiniatures.map((m) => m.center), null, null);
+      scheduleRender();
+    }
+  } else if (e.button === 0 && terrainDragPending && !isDraggingTerrain) {
+    terrainDragPending = false;
     scheduleRender();
   } else if (e.button === 0 && draggingUnitIndex !== null) {
     if (dragOverHex && !isHexOccupiedByOtherUnit(dragOverHex, draggingUnitIndex)) {
@@ -898,15 +1125,38 @@ window.addEventListener('mouseup', (e) => {
     scheduleRender();
   }
   if (e.button === 0 && isDraggingTerrain) {
-    if (terrainPreviewCenter) {
-      terrainCenter = terrainPreviewCenter;
-    }
+    const dropWorld = screenToBoardWorld(e.clientX, e.clientY);
+    terrainCenter = nearestHexonCenterFromWorld(dropWorld);
     isDraggingTerrain = false;
-    terrainPreviewCenter = null;
-    renderer.setTerrain(terrainCenter, null, true);
+    terrainPreviewWorld = null;
+    renderer.setTerrain(terrainCenter, null, false);
     scheduleRender();
   }
   isPanning = false;
+});
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Alt' || e.code === 'AltLeft' || e.code === 'AltRight') {
+    altKeyHeld = true;
+    refreshAltHoverTarget(hexUnderGlobalPointer() ?? hoveredHexUnderPointer);
+    e.preventDefault();
+    scheduleRender();
+  }
+});
+
+window.addEventListener('keyup', (e) => {
+  if (e.key === 'Alt' || e.code === 'AltLeft' || e.code === 'AltRight') {
+    altKeyHeld = false;
+    altHoverTarget = null;
+    scheduleRender();
+  }
+});
+
+window.addEventListener('blur', () => {
+  if (!altKeyHeld) return;
+  altKeyHeld = false;
+  altHoverTarget = null;
+  scheduleRender();
 });
 
 // ── Input: zoom (scroll wheel) ────────────────────────────────

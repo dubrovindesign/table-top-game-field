@@ -236,3 +236,261 @@ html, body {
 .dice-face-final {
   box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.1);
 }
+
+/* ── Unit Card (right side, above dice) ──────────────────────── */
+
+.unit-card {
+  position: fixed;
+  right: 20px;
+  bottom: 240px;
+  width: 260px;
+  background: rgba(22, 22, 26, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 14px;
+  padding: 0;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  z-index: 100;
+  overflow: hidden;
+
+  /* Hidden by default */
+  opacity: 0;
+  transform: translateX(30px);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.unit-card-visible {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+/* Alt-hover: same card, fixed near cursor (no slide-in from the right) */
+.unit-card.unit-card-floating {
+  right: auto;
+  bottom: auto;
+  transform: none;
+  pointer-events: none;
+  transition: none;
+}
+
+.unit-card-visible.unit-card-floating {
+  transform: none;
+  pointer-events: none;
+}
+
+/* ── Header ── */
+
+.uc-header {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px 8px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.uc-portrait {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.uc-portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.uc-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.uc-name {
+  color: #f0f0f0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.uc-badges {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.uc-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.uc-badge-small {
+  background: rgba(76, 175, 80, 0.25);
+  color: #81c784;
+}
+
+.uc-badge-big {
+  background: rgba(63, 81, 181, 0.25);
+  color: #9fa8da;
+}
+
+.uc-badge-keyword {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ── Health bar ── */
+
+.uc-health-section {
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.uc-health-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.uc-heart {
+  color: #ef5350;
+  font-size: 11px;
+}
+
+.uc-health-bar-outer {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.uc-health-bar-inner {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.uc-health-high { background: #4caf50; }
+.uc-health-mid  { background: #ff9800; }
+.uc-health-low  { background: #f44336; }
+
+/* ── Stats grid ── */
+
+.uc-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.uc-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.uc-stat:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.uc-stat-icon {
+  font-size: 14px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.uc-stat-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.uc-stat-label {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.uc-stat-value {
+  font-size: 13px;
+  color: #e0e0e0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Abilities ── */
+
+.uc-abilities {
+  padding: 8px 14px 12px;
+}
+
+.uc-section-title {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 6px;
+}
+
+.uc-ability {
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  margin-bottom: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.uc-ability:last-child {
+  margin-bottom: 0;
+}
+
+.uc-ability-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.uc-ability-name {
+  color: #e0e0e0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.uc-ability-cost {
+  font-size: 10px;
+  font-weight: 600;
+  color: #ffb74d;
+  background: rgba(255, 183, 77, 0.12);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.uc-ability-desc {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  line-height: 1.4;
+}
