@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.redblobgames.com)",
+      "Bash(npm create:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(cp -f hex-board-game/package.json .)",
+      "Bash(cp -f hex-board-game/tsconfig.json .)",
+      "Bash(cp -rn hex-board-game/node_modules .)",
+      "Bash(rm -rf hex-board-game)"
+    ]
+  }
+}

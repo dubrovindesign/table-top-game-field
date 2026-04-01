@@ -1,0 +1,238 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #1a1a1a;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+#game-canvas {
+  display: block;
+  cursor: crosshair;
+}
+
+/* ── Dice Container (bottom-right) ───────────────────────────── */
+
+.dice-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.dice-container > * {
+  pointer-events: auto;
+}
+
+/* ── Selector Panel ──────────────────────────────────────────── */
+
+.dice-panel {
+  background: rgba(30, 30, 30, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 14px 16px;
+  backdrop-filter: blur(12px);
+  min-width: 220px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.dice-title {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.dice-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.dice-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Mini die icon in the selector */
+.dice-preview {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dice-preview-pip {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.dice-label {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  font-weight: 500;
+  width: 48px;
+  flex-shrink: 0;
+}
+
+.dice-count {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  width: 24px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.dice-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.1s;
+  line-height: 1;
+  padding: 0;
+}
+
+.dice-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.dice-btn:active {
+  transform: scale(0.9);
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.dice-btn-plus {
+  margin-left: auto;
+}
+
+/* Roll button */
+.dice-roll-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #4a90d9, #357abd);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s, opacity 0.2s;
+  letter-spacing: 0.3px;
+}
+
+.dice-roll-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5a9fe8, #4a90d9);
+  transform: translateY(-1px);
+}
+
+.dice-roll-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.dice-roll-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Results Panel (slides up) ───────────────────────────────── */
+
+.dice-results {
+  background: rgba(30, 30, 30, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 12px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  max-width: 400px;
+
+  /* Hidden by default */
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.dice-results-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* ── Slot Machine ────────────────────────────────────────────── */
+
+.dice-slots {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.dice-slot-column {
+  width: 52px;
+  height: 52px;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.dice-slot-strip {
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
+}
+
+/* Individual die face in the slot */
+.dice-face {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  position: relative;
+}
+
+.dice-pip {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Glow effect on final face */
+.dice-face-final {
+  box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.1);
+}
