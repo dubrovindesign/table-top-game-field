@@ -41,99 +41,84 @@ html, body {
   background: rgba(30, 30, 30, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
-  padding: 14px 16px;
+  padding: 12px 14px;
   backdrop-filter: blur(12px);
-  min-width: 220px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  transition: box-shadow 0.3s ease;
 }
 
-.dice-title {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  margin-bottom: 10px;
-  text-align: center;
+.dice-panel,
+.dice-results {
+  width: min(360px, calc(100vw - 40px));
+  max-width: 360px;
 }
 
-.dice-grid {
+.dice-panel-pulse {
+  box-shadow: 0 0 20px rgba(74, 144, 217, 0.5), 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* Row of colored dice cubes */
+.dice-selector-row {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-
-.dice-row {
-  display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 10px;
 }
 
-/* Mini die icon in the selector */
-.dice-preview {
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
+.dice-source-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0;
+  overflow: hidden;
+  cursor: default;
+  flex-shrink: 0;
+}
+
+.dice-source-avatar-hidden {
+  visibility: hidden;
+}
+
+.dice-source-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Individual die cube button */
+.dice-cube {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
   border: 2px solid;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-}
-
-.dice-preview-pip {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-}
-
-.dice-label {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 13px;
-  font-weight: 500;
-  width: 48px;
-  flex-shrink: 0;
-}
-
-.dice-count {
-  color: #ffffff;
-  font-size: 16px;
-  font-weight: 700;
-  width: 24px;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-
-.dice-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-  font-size: 16px;
-  font-weight: 600;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s, transform 0.1s;
-  line-height: 1;
-  padding: 0;
+  user-select: none;
+  transition: transform 0.1s, box-shadow 0.15s;
+  position: relative;
 }
 
-.dice-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
+.dice-cube:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
-.dice-btn:active {
-  transform: scale(0.9);
-  background: rgba(255, 255, 255, 0.25);
+.dice-cube:active {
+  transform: scale(0.94);
 }
 
-.dice-btn-plus {
-  margin-left: auto;
+.dice-cube-count {
+  font-size: 20px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 /* Roll button */
@@ -149,6 +134,28 @@ html, body {
   cursor: pointer;
   transition: background 0.2s, transform 0.1s, opacity 0.2s;
   letter-spacing: 0.3px;
+}
+
+.dice-reset-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.dice-reset-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.dice-reset-btn:active {
+  transform: scale(0.98);
 }
 
 .dice-roll-btn:hover:not(:disabled) {
@@ -174,8 +181,6 @@ html, body {
   padding: 12px;
   backdrop-filter: blur(12px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  max-width: 400px;
-
   /* Hidden by default */
   opacity: 0;
   transform: translateY(20px);
@@ -223,6 +228,15 @@ html, body {
   position: relative;
 }
 
+.dice-face-icon {
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
+  display: block;
+  object-fit: cover;
+  border-radius: 6px;
+  margin: 4px;
+}
+
 .dice-pip {
   position: absolute;
   width: 9px;
@@ -237,13 +251,213 @@ html, body {
   box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.1);
 }
 
+/* ── Rerollable dice ────────────────────────────────────────── */
+
+.dice-slot-rerollable {
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.dice-slot-rerollable:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+  z-index: 2;
+}
+
+.dice-slot-rerolling {
+  box-shadow: 0 0 16px rgba(255, 200, 0, 0.5);
+}
+
+.dice-slot-was-rerolled {
+  position: relative;
+}
+
+.dice-reroll-marker {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255, 180, 0, 0.9);
+  color: #000;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+/* ── Roll label ─────────────────────────────────────────────── */
+
+.dice-roll-label {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+/* ── Result buttons (New Roll / Clear) ──────────────────────── */
+
+.dice-result-buttons {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.dice-clear-btn {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.dice-clear-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.dice-clear-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dice-clear-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+/* ── Dice log (compact previous rolls) ──────────────────────── */
+
+.dice-log {
+  max-height: 120px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dice-log:empty {
+  display: none;
+}
+
+.dice-log::-webkit-scrollbar {
+  width: 3px;
+}
+.dice-log::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+.dice-log-entry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.dice-log-source-avatar,
+.dice-active-source-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 0;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.dice-log-source-avatar-img,
+.dice-active-source-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.dice-active-source {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.dice-active-source-name {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.72);
+  font-weight: 600;
+}
+
+.dice-log-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.35);
+  flex-shrink: 0;
+  min-width: 20px;
+}
+
+.dice-log-dice {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.dice-log-die {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 3px;
+  border: 1px solid;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.dice-log-die-icon {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: 2px;
+  margin: 0;
+}
+
+.dice-log-die-rerolled {
+  box-shadow: 0 0 0 1.5px rgba(255, 180, 0, 0.7);
+}
+
+/* Separator between log and active result */
+.dice-log + .dice-active-result:not(:empty) {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
 /* ── Unit Card (right side, above dice) ──────────────────────── */
 
 .unit-card {
   position: fixed;
   right: 20px;
   bottom: 240px;
-  width: 260px;
+  width: 300px;
+  max-height: calc(100vh - 260px);
+  overflow-y: auto;
   background: rgba(22, 22, 26, 0.96);
   border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: 14px;
@@ -251,7 +465,6 @@ html, body {
   backdrop-filter: blur(14px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
   z-index: 100;
-  overflow: hidden;
 
   /* Hidden by default */
   opacity: 0;
@@ -260,13 +473,26 @@ html, body {
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
+.unit-card::-webkit-scrollbar {
+  width: 4px;
+}
+.unit-card::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
 .unit-card-visible {
   opacity: 1;
   transform: translateX(0);
   pointer-events: auto;
 }
 
-/* Alt-hover: same card, fixed near cursor (no slide-in from the right) */
+.unit-card-passthrough {
+  opacity: 0.12 !important;
+  pointer-events: none !important;
+  transition: opacity 0.2s ease !important;
+}
+
 .unit-card.unit-card-floating {
   right: auto;
   bottom: auto;
@@ -348,9 +574,24 @@ html, body {
   color: #9fa8da;
 }
 
-.uc-badge-keyword {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.5);
+/* ── Domains ── */
+
+.uc-domain-row {
+  display: flex;
+  gap: 4px;
+  padding: 6px 14px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.uc-domain-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* ── Health bar ── */
@@ -412,6 +653,21 @@ html, body {
   background: rgba(255, 255, 255, 0.04);
 }
 
+.uc-stat-clickable {
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.uc-stat-clickable:hover {
+  background: rgba(74, 144, 217, 0.15) !important;
+  transform: scale(1.03);
+}
+
+.uc-stat-clickable:active {
+  transform: scale(0.97);
+  background: rgba(74, 144, 217, 0.25) !important;
+}
+
 .uc-stat-icon {
   font-size: 14px;
   width: 20px;
@@ -440,10 +696,35 @@ html, body {
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Abilities ── */
+/* ── Dice (inline) ── */
 
-.uc-abilities {
-  padding: 8px 14px 12px;
+.uc-dice-inline {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.uc-dice-group {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  margin-right: 3px;
+}
+
+.uc-die {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ── Attacks ── */
+
+.uc-attacks {
+  padding: 8px 14px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .uc-section-title {
@@ -455,42 +736,167 @@ html, body {
   margin-bottom: 6px;
 }
 
-.uc-ability {
+.uc-attack {
   padding: 6px 8px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.03);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-.uc-ability:last-child {
-  margin-bottom: 0;
+.uc-attack:last-child {
+  margin-bottom: 4px;
 }
 
-.uc-ability-header {
+.uc-attack-clickable {
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s, border-color 0.15s;
+}
+
+.uc-attack-clickable:hover {
+  background: rgba(74, 144, 217, 0.12);
+  border-color: rgba(74, 144, 217, 0.3);
+  transform: scale(1.02);
+}
+
+.uc-attack-clickable:active {
+  transform: scale(0.98);
+  background: rgba(74, 144, 217, 0.2);
+}
+
+.uc-attack-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
-.uc-ability-name {
+.uc-attack-name {
   color: #e0e0e0;
   font-size: 12px;
   font-weight: 600;
 }
 
-.uc-ability-cost {
-  font-size: 10px;
+.uc-attack-type {
+  font-size: 9px;
   font-weight: 600;
-  color: #ffb74d;
-  background: rgba(255, 183, 77, 0.12);
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
-.uc-ability-desc {
-  color: rgba(255, 255, 255, 0.5);
+.uc-attack-type-melee {
+  background: rgba(255, 152, 0, 0.18);
+  color: #ffb74d;
+}
+
+.uc-attack-type-ranged {
+  background: rgba(33, 150, 243, 0.18);
+  color: #64b5f6;
+}
+
+.uc-attack-stats {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.uc-attack-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #ccc;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.uc-attack-stat-icon {
+  font-size: 12px;
+}
+
+.uc-attack-stat-sublabel {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-left: 1px;
+}
+
+.uc-attack-mods {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.uc-attack-mod {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  cursor: default;
+}
+
+.uc-attack-mod-icon {
+  background: rgba(255, 215, 0, 0.15);
+  color: #ffd54f;
+  border: 1px solid rgba(255, 215, 0, 0.25);
+}
+
+.uc-attack-mod-text {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ── Traits ── */
+
+.uc-traits {
+  padding: 8px 14px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.uc-trait {
+  padding: 4px 8px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.03);
+  margin-bottom: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.uc-trait:last-child {
+  margin-bottom: 4px;
+}
+
+.uc-trait-name {
+  color: #e0e0e0;
   font-size: 11px;
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+.uc-trait-desc {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 10px;
   line-height: 1.4;
+}
+
+/* ── Keywords ── */
+
+.uc-keywords {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 8px 14px 10px;
+}
+
+.uc-keyword {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }

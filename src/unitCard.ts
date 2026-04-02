@@ -8,32 +8,71 @@
 
 export type UnitSize = 'small' | 'big';
 
+export type DamageType = 'physical' | 'fire' | 'mental' | 'poison';
+export type AttackRange = 'melee' | 'ranged';
+export type Domain = 'order' | 'chaos' | 'nature' | 'shadow';
+
+/** Dice pool: counts of each colour */
+export interface DicePool {
+  red?: number;
+  green?: number;
+  black?: number;
+  white?: number;
+}
+
+export interface AttackModifier {
+  /** 'icon' = triggers on crit, 'text' = always applies if damage lands */
+  kind: 'icon' | 'text';
+  label: string;
+  description?: string;
+}
+
+export interface AttackAbility {
+  name: string;
+  range: number;
+  attackRange: AttackRange;
+  damageType: DamageType;
+  damage: number;
+  dice: DicePool;
+  modifiers?: AttackModifier[];
+}
+
+export interface UnitTrait {
+  name: string;
+  description: string;
+}
+
 export interface UnitCardData {
   name: string;
   size: UnitSize;
   health: number;
   maxHealth: number;
+  /** Defense dice */
+  defense: { white?: number; green?: number };
   walk: number;
   run: number;
   /** Sprite/image URL (optional) */
   sprite?: string;
-  /** Stat block */
-  stats: {
-    attack: number;
-    defense: number;
-    initiative: number;
-  };
-  /** Abilities list */
-  abilities: {
-    name: string;
-    description: string;
-    cost?: string; // e.g. "2 AP" or "Once per turn"
-  }[];
-  /** Optional keywords/tags */
+  /** Domain affinities (1..4) */
+  domains: Domain[];
+  /** Concentration: extra dice added when concentrating */
+  concentration: DicePool;
+  /** Defense reaction: extra dice added on reaction */
+  defenseReaction: { white?: number; green?: number };
+  /** Attack abilities */
+  attacks: AttackAbility[];
+  /** Passive/special traits */
+  traits?: UnitTrait[];
+  /** Keywords/tags */
   keywords?: string[];
 }
 
-// ── DOM helper ─────────────────────────────────────────────────
+export interface DiceRequest {
+  pool: DicePool;
+  source: UnitCardData;
+}
+
+// ── Helpers ────────────────────────────────────────────────────
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -46,20 +85,78 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return e;
 }
 
+const DOMAIN_COLORS: Record<Domain, string> = {
+  order: '#4a90d9',
+  chaos: '#d94a4a',
+  nature: '#4caf50',
+  shadow: '#9c27b0',
+};
+
+const DOMAIN_LABELS: Record<Domain, string> = {
+  order: 'Order',
+  chaos: 'Chaos',
+  nature: 'Nature',
+  shadow: 'Shadow',
+};
+
+const DAMAGE_TYPE_ICONS: Record<DamageType, string> = {
+  physical: '\u2694',
+  fire: '\uD83D\uDD25',
+  mental: '\uD83E\uDDE0',
+  poison: '\u2620',
+};
+
+const DAMAGE_TYPE_LABELS: Record<DamageType, string> = {
+  physical: 'Physical',
+  fire: 'Fire',
+  mental: 'Mental',
+  poison: 'Poison',
+};
+
+const DICE_COLORS: Record<string, string> = {
+  red: '#e53935',
+  green: '#43a047',
+  black: '#424242',
+  white: '#e0e0e0',
+};
+
+function renderDicePool(pool: DicePool, container: HTMLElement): void {
+  const entries = Object.entries(pool).filter(([, v]) => v && v > 0) as [string, number][];
+  for (const [color, count] of entries) {
+    const group = el('span', 'uc-dice-group');
+    for (let i = 0; i < count; i++) {
+      const die = el('span', 'uc-die');
+      die.style.background = DICE_COLORS[color] ?? '#666';
+      if (color === 'white') die.style.border = '1px solid rgba(255,255,255,0.3)';
+      group.appendChild(die);
+    }
+    container.appendChild(group);
+  }
+}
+
+function renderDefenseDice(def: { white?: number; green?: number }, container: HTMLElement): void {
+  renderDicePool({ white: def.white, green: def.green }, container);
+}
+
 // ── UnitCard class ─────────────────────────────────────────────
 
 export class UnitCard {
   private container: HTMLElement;
   private visible = false;
+  /** Called when a dice-bearing element is clicked on the card. */
+  onDiceRequest: ((req: DiceRequest) => void) | null = null;
+  /** Called when pointer enters/leaves an attack row (for board range preview). */
+  onAttackHover: ((attack: AttackAbility | null) => void) | null = null;
 
   constructor(parent: HTMLElement) {
     this.container = el('div', 'unit-card');
     parent.appendChild(this.container);
   }
 
-  /**
-   * @param anchorScreen — if set, card follows cursor (Alt-hover); otherwise docked panel (selection).
-   */
+  private emitDice(pool: DicePool, source: UnitCardData): void {
+    if (this.onDiceRequest) this.onDiceRequest({ pool, source });
+  }
+
   show(data: UnitCardData, anchorScreen?: { x: number; y: number }): void {
     this.visible = true;
     this.container.innerHTML = '';
@@ -72,6 +169,8 @@ export class UnitCard {
       this.container.classList.remove('unit-card-floating');
       this.clearFloatingPosition();
     }
+
+    const source = data;
 
     // ── Header (sprite + name + size badge) ──
     const header = el('div', 'uc-header');
@@ -93,14 +192,22 @@ export class UnitCard {
     const sizeBadge = el('span', `uc-badge uc-badge-${data.size}`,
       data.size === 'big' ? 'Large' : 'Infantry');
     badges.appendChild(sizeBadge);
-    if (data.keywords) {
-      for (const kw of data.keywords) {
-        badges.appendChild(el('span', 'uc-badge uc-badge-keyword', kw));
-      }
-    }
     headerInfo.appendChild(badges);
     header.appendChild(headerInfo);
     this.container.appendChild(header);
+
+    // ── Domains ──
+    if (data.domains.length > 0) {
+      const domainRow = el('div', 'uc-domain-row');
+      for (const d of data.domains) {
+        const badge = el('span', 'uc-domain-badge', DOMAIN_LABELS[d]);
+        badge.style.background = DOMAIN_COLORS[d] + '30';
+        badge.style.color = DOMAIN_COLORS[d];
+        badge.style.borderColor = DOMAIN_COLORS[d] + '50';
+        domainRow.appendChild(badge);
+      }
+      this.container.appendChild(domainRow);
+    }
 
     // ── Health bar ──
     const healthSection = el('div', 'uc-health-section');
@@ -122,51 +229,158 @@ export class UnitCard {
     this.container.appendChild(healthSection);
 
     // ── Core stats grid ──
-    const statsGrid = el('div', 'uc-stats-grid');
     const movementLabel = data.size === 'big' ? 'hexons' : 'hexes';
-    const statItems: { icon: string; label: string; value: string }[] = [
-      { icon: '\u2694', label: 'Attack', value: String(data.stats.attack) },
-      { icon: '\u{1F6E1}', label: 'Defense', value: String(data.stats.defense) },
-      { icon: '\u26A1', label: 'Initiative', value: String(data.stats.initiative) },
-      { icon: '\u{1F6B6}', label: 'Walk', value: `${data.walk} ${movementLabel}` },
-      { icon: '\u{1F3C3}', label: 'Run', value: `${data.run} ${movementLabel}` },
-    ];
+    const statsGrid = el('div', 'uc-stats-grid');
 
-    for (const item of statItems) {
-      const statEl = el('div', 'uc-stat');
-      const iconEl = el('span', 'uc-stat-icon', item.icon);
-      const infoEl = el('div', 'uc-stat-info');
-      const labelEl = el('span', 'uc-stat-label', item.label);
-      const valueEl = el('span', 'uc-stat-value', item.value);
-      infoEl.appendChild(labelEl);
-      infoEl.appendChild(valueEl);
-      statEl.appendChild(iconEl);
-      statEl.appendChild(infoEl);
-      statsGrid.appendChild(statEl);
-    }
+    // Defense (clickable)
+    const defStat = el('div', 'uc-stat uc-stat-clickable');
+    defStat.title = 'Click to add defense dice';
+    defStat.addEventListener('click', () => this.emitDice({ white: data.defense.white, green: data.defense.green }, source));
+    defStat.appendChild(el('span', 'uc-stat-icon', '\uD83D\uDEE1'));
+    const defInfo = el('div', 'uc-stat-info');
+    defInfo.appendChild(el('span', 'uc-stat-label', 'Defense'));
+    const defValue = el('span', 'uc-stat-value uc-dice-inline');
+    renderDefenseDice(data.defense, defValue);
+    defInfo.appendChild(defValue);
+    defStat.appendChild(defInfo);
+    statsGrid.appendChild(defStat);
+
+    // Walk
+    const walkStat = el('div', 'uc-stat');
+    walkStat.appendChild(el('span', 'uc-stat-icon', '\uD83D\uDEB6'));
+    const walkInfo = el('div', 'uc-stat-info');
+    walkInfo.appendChild(el('span', 'uc-stat-label', 'Walk'));
+    walkInfo.appendChild(el('span', 'uc-stat-value', `${data.walk} ${movementLabel}`));
+    walkStat.appendChild(walkInfo);
+    statsGrid.appendChild(walkStat);
+
+    // Run
+    const runStat = el('div', 'uc-stat');
+    runStat.appendChild(el('span', 'uc-stat-icon', '\uD83C\uDFC3'));
+    const runInfo = el('div', 'uc-stat-info');
+    runInfo.appendChild(el('span', 'uc-stat-label', 'Run'));
+    runInfo.appendChild(el('span', 'uc-stat-value', `${data.run} ${movementLabel}`));
+    runStat.appendChild(runInfo);
+    statsGrid.appendChild(runStat);
+
+    // Concentration (clickable)
+    const concStat = el('div', 'uc-stat uc-stat-clickable');
+    concStat.title = 'Click to add concentration dice';
+    concStat.addEventListener('click', () => this.emitDice(data.concentration, source));
+    concStat.appendChild(el('span', 'uc-stat-icon', '\uD83C\uDFAF'));
+    const concInfo = el('div', 'uc-stat-info');
+    concInfo.appendChild(el('span', 'uc-stat-label', 'Concentration'));
+    const concValue = el('span', 'uc-stat-value uc-dice-inline');
+    renderDicePool(data.concentration, concValue);
+    concInfo.appendChild(concValue);
+    concStat.appendChild(concInfo);
+    statsGrid.appendChild(concStat);
+
+    // Defense Reaction (clickable)
+    const reactStat = el('div', 'uc-stat uc-stat-clickable');
+    reactStat.title = 'Click to add defense reaction dice';
+    reactStat.addEventListener('click', () => this.emitDice({ white: data.defenseReaction.white, green: data.defenseReaction.green }, source));
+    reactStat.appendChild(el('span', 'uc-stat-icon', '\u21BA'));
+    const reactInfo = el('div', 'uc-stat-info');
+    reactInfo.appendChild(el('span', 'uc-stat-label', 'Def. Reaction'));
+    const reactValue = el('span', 'uc-stat-value uc-dice-inline');
+    renderDefenseDice(data.defenseReaction, reactValue);
+    reactInfo.appendChild(reactValue);
+    reactStat.appendChild(reactInfo);
+    statsGrid.appendChild(reactStat);
+
     this.container.appendChild(statsGrid);
 
-    // ── Abilities ──
-    if (data.abilities.length > 0) {
-      const abilitiesSection = el('div', 'uc-abilities');
-      const abilitiesTitle = el('div', 'uc-section-title', 'Abilities');
-      abilitiesSection.appendChild(abilitiesTitle);
+    // ── Attacks ──
+    if (data.attacks.length > 0) {
+      const attacksSection = el('div', 'uc-attacks');
+      attacksSection.appendChild(el('div', 'uc-section-title', 'Attacks'));
 
-      for (const ability of data.abilities) {
-        const abilityEl = el('div', 'uc-ability');
-        const abilityHeader = el('div', 'uc-ability-header');
-        const abilityName = el('span', 'uc-ability-name', ability.name);
-        abilityHeader.appendChild(abilityName);
-        if (ability.cost) {
-          const costEl = el('span', 'uc-ability-cost', ability.cost);
-          abilityHeader.appendChild(costEl);
+      for (const atk of data.attacks) {
+        const atkEl = el('div', 'uc-attack uc-attack-clickable');
+        atkEl.title = `Click to add ${atk.name} dice`;
+        atkEl.addEventListener('click', () => this.emitDice(atk.dice, source));
+        atkEl.addEventListener('pointerenter', () => {
+          if (this.onAttackHover) this.onAttackHover(atk);
+        });
+        atkEl.addEventListener('pointerleave', () => {
+          if (this.onAttackHover) this.onAttackHover(null);
+        });
+
+        // Attack header row: name + type badge
+        const atkHeader = el('div', 'uc-attack-header');
+        atkHeader.appendChild(el('span', 'uc-attack-name', atk.name));
+        const typeBadge = el('span',
+          `uc-attack-type uc-attack-type-${atk.attackRange}`,
+          atk.attackRange === 'melee' ? 'Melee' : 'Ranged');
+        atkHeader.appendChild(typeBadge);
+        atkEl.appendChild(atkHeader);
+
+        // Attack stats row
+        const atkStats = el('div', 'uc-attack-stats');
+
+        // Damage
+        const dmgEl = el('span', 'uc-attack-stat');
+        const dmgIcon = DAMAGE_TYPE_ICONS[atk.damageType];
+        dmgEl.appendChild(el('span', 'uc-attack-stat-icon', dmgIcon));
+        dmgEl.appendChild(document.createTextNode(`${atk.damage}`));
+        const dmgLabel = el('span', 'uc-attack-stat-sublabel',
+          DAMAGE_TYPE_LABELS[atk.damageType]);
+        dmgEl.appendChild(dmgLabel);
+        atkStats.appendChild(dmgEl);
+
+        // Range
+        const rangeEl = el('span', 'uc-attack-stat');
+        rangeEl.appendChild(el('span', 'uc-attack-stat-icon', '\uD83C\uDFAF'));
+        rangeEl.appendChild(document.createTextNode(`${atk.range}`));
+        atkStats.appendChild(rangeEl);
+
+        // Dice
+        const diceEl = el('span', 'uc-attack-stat uc-dice-inline');
+        renderDicePool(atk.dice, diceEl);
+        atkStats.appendChild(diceEl);
+
+        atkEl.appendChild(atkStats);
+
+        // Modifiers
+        if (atk.modifiers && atk.modifiers.length > 0) {
+          const modsEl = el('div', 'uc-attack-mods');
+          for (const mod of atk.modifiers) {
+            const modEl = el('span',
+              `uc-attack-mod uc-attack-mod-${mod.kind}`,
+              mod.kind === 'icon' ? `\u2733 ${mod.label}` : mod.label);
+            if (mod.description) modEl.title = mod.description;
+            modsEl.appendChild(modEl);
+          }
+          atkEl.appendChild(modsEl);
         }
-        abilityEl.appendChild(abilityHeader);
-        const desc = el('div', 'uc-ability-desc', ability.description);
-        abilityEl.appendChild(desc);
-        abilitiesSection.appendChild(abilityEl);
+
+        attacksSection.appendChild(atkEl);
       }
-      this.container.appendChild(abilitiesSection);
+      this.container.appendChild(attacksSection);
+    }
+
+    // ── Traits ──
+    if (data.traits && data.traits.length > 0) {
+      const traitsSection = el('div', 'uc-traits');
+      traitsSection.appendChild(el('div', 'uc-section-title', 'Traits'));
+
+      for (const trait of data.traits) {
+        const traitEl = el('div', 'uc-trait');
+        traitEl.appendChild(el('span', 'uc-trait-name', trait.name));
+        traitEl.appendChild(el('span', 'uc-trait-desc', trait.description));
+        traitsSection.appendChild(traitEl);
+      }
+      this.container.appendChild(traitsSection);
+    }
+
+    // ── Keywords ──
+    if (data.keywords && data.keywords.length > 0) {
+      const kwSection = el('div', 'uc-keywords');
+      for (const kw of data.keywords) {
+        kwSection.appendChild(el('span', 'uc-keyword', kw));
+      }
+      this.container.appendChild(kwSection);
     }
   }
 
@@ -176,11 +390,10 @@ export class UnitCard {
     this.container.style.transform = '';
   }
 
-  /** Keep card on-screen; offset from cursor (matches .unit-card width in CSS). */
   private positionNearCursor(screenX: number, screenY: number): void {
     const offset = 16;
-    const cardW = 260;
-    const estH = 420;
+    const cardW = 300;
+    const estH = 520;
     const margin = 8;
     let left = screenX + offset;
     let top = screenY + offset;
@@ -191,7 +404,11 @@ export class UnitCard {
     this.container.style.transform = 'none';
   }
 
-  /** Update cursor offset without rebuilding DOM (Alt-hover while moving mouse). */
+  /** Make the card transparent & click-through (during unit drag). */
+  setPassthrough(on: boolean): void {
+    this.container.classList.toggle('unit-card-passthrough', on);
+  }
+
   repositionFloating(screenX: number, screenY: number): void {
     if (!this.visible || !this.container.classList.contains('unit-card-floating')) return;
     this.positionNearCursor(screenX, screenY);
@@ -199,9 +416,9 @@ export class UnitCard {
 
   hide(): void {
     if (!this.visible) return;
+    if (this.onAttackHover) this.onAttackHover(null);
     this.visible = false;
     const wasFloating = this.container.classList.contains('unit-card-floating');
-    // Avoid docked-layout + opacity transition when closing the cursor-following card.
     if (wasFloating) {
       this.container.style.transition = 'none';
     }

@@ -35,6 +35,8 @@ export interface RenderConfig {
   defaultHexFillColor: string;
   walkRangeFillColor: string;
   runRangeFillColor: string;
+  /** Attack range overlay (drawn on top of walk/run for selected unit). */
+  attackRangeFillColor: string;
   unitFillColor: string;
   unitStrokeColor: string;
   dragHoverFillColor: string;
@@ -66,19 +68,20 @@ export const defaultRenderConfig: RenderConfig = {
   backgroundImageOffsetY: 0,
   backgroundImageScale: 1,
   backgroundImageRotationDeg: 0,
-  hoverFillColor: '#88bbff',
-  hoverStrokeColor: '#3366aa',
+  hoverFillColor: 'rgba(33, 150, 243, 0.5)',
+  hoverStrokeColor: 'rgba(33, 150, 243, 0.5)',
   backgroundColor: '#1a1a1a',
   showCoordinates: false,
   coordinateColor: '#555555',
   coordinateFont: '10px monospace',
   defaultHexFillColor: '#d4d4d4',
-  walkRangeFillColor: 'rgba(76, 175, 80, 0.45)',
-  runRangeFillColor: 'rgba(255, 193, 7, 0.35)',
+  walkRangeFillColor: 'rgba(76, 175, 80, 0.3)',
+  runRangeFillColor: 'rgba(255, 193, 7, 0.25)',
+  attackRangeFillColor: 'rgba(233, 30, 99, 0.35)',
   unitFillColor: '#2b2b2b',
   unitStrokeColor: '#fafafa',
-  dragHoverFillColor: 'rgba(33, 150, 243, 0.35)',
-  dragHoverStrokeColor: '#2196f3',
+  dragHoverFillColor: 'rgba(33, 150, 243, 0.5)',
+  dragHoverStrokeColor: 'rgba(33, 150, 243, 0.5)',
   terrainFillColor: 'rgba(121, 85, 72, 0.35)',
   terrainImageSrc: '/terrain2.png',
   terrainTextureRotationDeg: 30,
@@ -127,14 +130,20 @@ export class Renderer {
   private dragOverHex: Hex | null = null;
   private dragPreviewPosition: Point | null = null;
   private selectedUnitHex: Hex | null = null;
-  private walkReachableHexKeys = new Set<string>();
-  private runReachableHexKeys = new Set<string>();
-  private terrainCenterHex: Hex | null = null;
+  private walkReachableHexes: Hex[] = [];
+  private runReachableHexes: Hex[] = [];
+  private attackRangeHexes: Hex[] = [];
+  private attackRangeBigHexonCenters: Hex[] = [];
+  private terrainCenterHexes: Hex[] = [];
   private terrainPreviewWorld: Point | null = null;
   private terrainDragging = false;
+  private draggingTerrainIndex: number | null = null;
+  private terrainDragOverCenter: Hex | null = null;
+  private selectedTerrainIndex: number | null = null;
   private bigMiniCenters: Hex[] = [];
   private bigMiniPreviewPosition: Point | null = null;
   private draggingBigMiniIndex: number | null = null;
+  private bigMiniDragOverCenter: Hex | null = null;
   private bigMiniWalkHexonCenters: Hex[] = [];
   private bigMiniRunHexonCenters: Hex[] = [];
   private selectedBigMiniIndex: number | null = null;
@@ -188,8 +197,14 @@ export class Renderer {
     runReachableHexes: Hex[],
   ): void {
     this.selectedUnitHex = selectedUnitHex;
-    this.walkReachableHexKeys = new Set(walkReachableHexes.map((hex) => hex.key));
-    this.runReachableHexKeys = new Set(runReachableHexes.map((hex) => hex.key));
+    this.walkReachableHexes = [...walkReachableHexes];
+    this.runReachableHexes = [...runReachableHexes];
+  }
+
+  /** Small-unit hex cells + big-mini hexon footprints for attack range preview (on top of movement). */
+  setAttackRangeOverlay(smallHexes: Hex[], bigHexonCenters: Hex[]): void {
+    this.attackRangeHexes = [...smallHexes];
+    this.attackRangeBigHexonCenters = [...bigHexonCenters];
   }
 
   setUnits(unitHexes: Hex[], selectedUnitIndex: number | null): void {
@@ -208,23 +223,31 @@ export class Renderer {
   }
 
   setTerrain(
-    terrainCenterHex: Hex | null,
+    terrainCenterHexes: Hex[],
     terrainPreviewWorld: Point | null,
     isTerrainDragging: boolean,
+    draggingTerrainIndex: number | null,
+    dragOverCenter: Hex | null,
+    selectedTerrainIndex: number | null,
   ): void {
-    this.terrainCenterHex = terrainCenterHex;
+    this.terrainCenterHexes = [...terrainCenterHexes];
     this.terrainPreviewWorld = terrainPreviewWorld;
     this.terrainDragging = isTerrainDragging;
+    this.draggingTerrainIndex = draggingTerrainIndex;
+    this.terrainDragOverCenter = dragOverCenter;
+    this.selectedTerrainIndex = selectedTerrainIndex;
   }
 
   setBigMiniatures(
     centers: Hex[],
     previewPosition: Point | null,
     draggingIndex: number | null,
+    dragOverCenter: Hex | null,
   ): void {
     this.bigMiniCenters = [...centers];
     this.bigMiniPreviewPosition = previewPosition;
     this.draggingBigMiniIndex = draggingIndex;
+    this.bigMiniDragOverCenter = dragOverCenter;
   }
 
   setBigMiniMovement(
@@ -311,6 +334,9 @@ export class Renderer {
     // Pass 3: movement range overlay for selected unit
     this.drawMovementHighlights();
 
+    // Pass 3b: attack range for small units (on top of walk/run)
+    this.drawAttackRangeSmallHighlights();
+
     // Pass 4: terrain feature (one big hexon)
     this.drawTerrain();
 
@@ -325,8 +351,14 @@ export class Renderer {
     // Pass 7: big mini movement range (hexon-level)
     this.drawBigMiniMovement();
 
+    // Pass 7b: attack range for big miniatures (on top of walk/run rings)
+    this.drawAttackRangeBigHighlights();
+
     // Pass 8: big miniatures (hexon-sized)
     this.drawBigMiniatures();
+
+    // Pass 8b: terrain selection (on top of big minis that share hexes with terrain)
+    this.drawTerrainSelectionRing();
 
     // Pass 9: unit miniature (small)
     this.drawUnits();
@@ -425,7 +457,11 @@ export class Renderer {
   private drawHexFill(hex: Hex): void {
     const { ctx, config, layout } = this;
     const corners = layout.hexCorners(hex);
-    const isHovered = this.hoveredHex !== null && hex.key === this.hoveredHex.key;
+    const showBaseHover =
+      this.draggingUnitIndex === null &&
+      this.draggingBigMiniIndex === null &&
+      !this.terrainDragging;
+    const isHovered = showBaseHover && this.hoveredHex !== null && hex.key === this.hoveredHex.key;
 
     ctx.beginPath();
     ctx.moveTo(corners[0].x, corners[0].y);
@@ -502,13 +538,8 @@ export class Renderer {
   private drawMovementHighlights(): void {
     if (!this.selectedUnitHex) return;
 
-    const { ctx, config, layout, grid } = this;
-
-    for (const hex of grid.allHexes()) {
-      const isWalk = this.walkReachableHexKeys.has(hex.key);
-      const isRunOnly = this.runReachableHexKeys.has(hex.key) && !isWalk;
-      if (!isWalk && !isRunOnly) continue;
-
+    const { ctx, config, layout } = this;
+    const drawHexOverlay = (hex: Hex, fillStyle: string): void => {
       const corners = layout.hexCorners(hex);
       ctx.beginPath();
       ctx.moveTo(corners[0].x, corners[0].y);
@@ -516,8 +547,47 @@ export class Renderer {
         ctx.lineTo(corners[i].x, corners[i].y);
       }
       ctx.closePath();
-      ctx.fillStyle = isWalk ? config.walkRangeFillColor : config.runRangeFillColor;
+      ctx.fillStyle = fillStyle;
       ctx.fill();
+    };
+
+    // Draw each source range layer as-is so overlapping ranges become visually denser.
+    for (const hex of this.runReachableHexes) {
+      drawHexOverlay(hex, config.runRangeFillColor);
+    }
+    for (const hex of this.walkReachableHexes) {
+      drawHexOverlay(hex, config.walkRangeFillColor);
+    }
+  }
+
+  private drawAttackRangeSmallHighlights(): void {
+    const { ctx, layout, config } = this;
+    for (const hex of this.attackRangeHexes) {
+      const corners = layout.hexCorners(hex);
+      ctx.beginPath();
+      ctx.moveTo(corners[0].x, corners[0].y);
+      for (let i = 1; i < 6; i++) {
+        ctx.lineTo(corners[i].x, corners[i].y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = config.attackRangeFillColor;
+      ctx.fill();
+    }
+  }
+
+  private drawAttackRangeBigHighlights(): void {
+    const { ctx, layout, config } = this;
+    for (const center of this.attackRangeBigHexonCenters) {
+      const cells = [center, ...Hex.directions.map((d) => center.add(d))];
+      for (const hex of cells) {
+        const corners = layout.hexCorners(hex);
+        ctx.beginPath();
+        ctx.moveTo(corners[0].x, corners[0].y);
+        for (let i = 1; i < 6; i++) ctx.lineTo(corners[i].x, corners[i].y);
+        ctx.closePath();
+        ctx.fillStyle = config.attackRangeFillColor;
+        ctx.fill();
+      }
     }
   }
 
@@ -969,31 +1039,60 @@ export class Renderer {
   }
 
   private drawDragHoverHex(): void {
-    if (!this.dragOverHex) return;
-
     const { ctx, layout, config } = this;
-    const corners = layout.hexCorners(this.dragOverHex);
-    ctx.beginPath();
-    ctx.moveTo(corners[0].x, corners[0].y);
-    for (let i = 1; i < 6; i++) {
-      ctx.lineTo(corners[i].x, corners[i].y);
+    if (this.dragOverHex) {
+      const corners = layout.hexCorners(this.dragOverHex);
+      ctx.beginPath();
+      ctx.moveTo(corners[0].x, corners[0].y);
+      for (let i = 1; i < 6; i++) {
+        ctx.lineTo(corners[i].x, corners[i].y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = config.dragHoverFillColor;
+      ctx.fill();
+      ctx.strokeStyle = config.dragHoverStrokeColor;
+      ctx.lineWidth = 2 / this.camera.zoom;
+      ctx.stroke();
     }
-    ctx.closePath();
-    ctx.fillStyle = config.dragHoverFillColor;
-    ctx.fill();
-    ctx.strokeStyle = config.dragHoverStrokeColor;
-    ctx.lineWidth = 2 / this.camera.zoom;
-    ctx.stroke();
+
+    if (this.bigMiniDragOverCenter) {
+      const p = layout.hexToPixel(this.bigMiniDragOverCenter);
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.beginPath();
+      this.addBigMiniHexonOuterPath(ctx, layout, 1);
+      ctx.fillStyle = config.dragHoverFillColor;
+      ctx.fill();
+      ctx.strokeStyle = config.dragHoverStrokeColor;
+      ctx.lineWidth = 2 / this.camera.zoom;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    if (this.terrainDragging && this.terrainDragOverCenter) {
+      const p = layout.hexToPixel(this.terrainDragOverCenter);
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.beginPath();
+      this.addBigMiniHexonOuterPath(ctx, layout, 1);
+      ctx.fillStyle = config.dragHoverFillColor;
+      ctx.fill();
+      ctx.strokeStyle = config.dragHoverStrokeColor;
+      ctx.lineWidth = 2 / this.camera.zoom;
+      ctx.stroke();
+      ctx.restore();
+    }
   }
 
   private drawTerrain(): void {
     const { layout } = this;
     const rotRad = (this.terrainRotationDeg * Math.PI) / 180;
     const drag = this.terrainDragging;
-    // Like big mini: while dragging, hide the placed piece and draw the full terrain at the cursor.
-    if (this.terrainCenterHex && !drag) {
-      this.drawTerrainHexonAtWorldPivot(layout.hexToPixel(this.terrainCenterHex), rotRad);
-    }
+    // Like big mini: while dragging, hide dragged piece and draw full terrain at cursor.
+    this.terrainCenterHexes.forEach((center, index) => {
+      if (drag && this.draggingTerrainIndex === index) return;
+      this.drawTerrainHexonAtWorldPivot(layout.hexToPixel(center), rotRad);
+    });
     if (drag && this.terrainPreviewWorld) {
       this.drawTerrainHexonAtWorldPivot(this.terrainPreviewWorld, rotRad);
     }
@@ -1048,6 +1147,24 @@ export class Renderer {
     }
 
     ctx.restore();
+  }
+
+  /** Green hexon ring for selected terrain; drawn after big minis so overlap stays visible. */
+  private drawTerrainSelectionRing(): void {
+    if (this.selectedTerrainIndex === null) return;
+    const index = this.selectedTerrainIndex;
+    const rotDeg = this.terrainRotationDeg;
+    if (
+      this.terrainDragging &&
+      this.draggingTerrainIndex === index &&
+      this.terrainPreviewWorld
+    ) {
+      this.drawBigMiniRingAtPoint(this.terrainPreviewWorld, 1.08, '#4caf50', 3, rotDeg);
+      return;
+    }
+    const center = this.terrainCenterHexes[index];
+    if (!center) return;
+    this.drawBigMiniRing(center, 1.08, '#4caf50', 3, rotDeg);
   }
 
   // ── Big mini movement range ──
