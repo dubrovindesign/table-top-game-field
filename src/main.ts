@@ -12,6 +12,7 @@ import {
   SMALL_UNIT_HEALTH_BADGE_OFFSET_Y_FRAC,
   SMALL_UNIT_HEALTH_BADGE_SCALE,
 } from './healthUi';
+import { CrystalWallet } from './crystalWallet';
 import './style.css';
 
 // ── Config ─────────────────────────────────────────────────────
@@ -702,6 +703,10 @@ const diceRoller = new DiceRoller(document.body);
 unitCard.onDiceRequest = (req: DiceRequest) => {
   diceRoller.addDice(req.pool, req.source);
 };
+
+// ── Crystal wallet UI ──────────────────────────────────────────
+
+new CrystalWallet(document.body);
 
 // ── Render loop ────────────────────────────────────────────────
 

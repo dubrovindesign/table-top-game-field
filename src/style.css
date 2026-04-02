@@ -17,6 +17,192 @@ html, body {
   cursor: crosshair;
 }
 
+/* ── Crystal Wallet (bottom-right, above dice) ─────────────── */
+
+.crystal-wallet {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 100;
+}
+
+.cw-crystals-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  background: rgba(30, 30, 30, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 8px 10px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  min-height: 48px;
+}
+
+/* ── Crystal chip ── */
+
+.cw-chip {
+  width: 40px;
+  height: 40px;
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.12s, box-shadow 0.15s, opacity 0.25s;
+  position: relative;
+}
+
+.cw-chip.cw-shape-diamond {
+  border-radius: 4px;
+  transform: rotate(45deg);
+}
+
+.cw-chip.cw-shape-diamond .cw-chip-count {
+  transform: rotate(-45deg);
+}
+
+.cw-chip.cw-shape-circle {
+  border-radius: 50%;
+}
+
+.cw-chip:hover {
+  transform: scale(1.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.cw-chip.cw-shape-diamond:hover {
+  transform: rotate(45deg) scale(1.12);
+}
+
+.cw-chip:active {
+  transform: scale(0.92);
+}
+
+.cw-chip.cw-shape-diamond:active {
+  transform: rotate(45deg) scale(0.92);
+}
+
+.cw-chip-count {
+  font-size: 16px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Entrance */
+.cw-chip-entering {
+  opacity: 0;
+  transform: scale(0.5);
+}
+
+.cw-chip-entering.cw-shape-diamond {
+  transform: rotate(45deg) scale(0.5);
+}
+
+/* Removal */
+.cw-chip-removing {
+  opacity: 0;
+  transform: scale(0.3);
+  transition: opacity 0.25s, transform 0.25s !important;
+}
+
+.cw-chip-removing.cw-shape-diamond {
+  transform: rotate(45deg) scale(0.3);
+}
+
+/* Pulse on change */
+@keyframes cw-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(255, 255, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+
+.cw-chip-pulse {
+  animation: cw-pulse 0.35s ease-out;
+}
+
+/* ── Add button ── */
+
+.cw-add-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 18px;
+  font-weight: 600;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  user-select: none;
+}
+
+.cw-add-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.cw-add-btn:active {
+  transform: scale(0.9);
+}
+
+/* ── Picker dropdown ── */
+
+.cw-picker {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  display: flex;
+  gap: 6px;
+  padding: 8px 10px;
+  background: rgba(30, 30, 30, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  z-index: 110;
+  flex-wrap: wrap;
+}
+
+.cw-picker-item {
+  padding: 6px 12px;
+  border: 2px solid;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.15s;
+  user-select: none;
+}
+
+.cw-picker-item.cw-shape-diamond {
+  border-radius: 4px;
+}
+
+.cw-picker-item.cw-shape-circle {
+  border-radius: 20px;
+}
+
+.cw-picker-item:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.cw-picker-item:active {
+  transform: scale(0.94);
+}
+
+.cw-picker-empty {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 11px;
+  padding: 4px 8px;
+}
+
 /* ── Dice Container (bottom-right) ───────────────────────────── */
 
 .dice-container {
