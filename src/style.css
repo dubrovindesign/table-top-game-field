@@ -1102,16 +1102,26 @@ html, body {
   left: 12px;
   pointer-events: auto;
   z-index: 190;
+  transition: opacity 0.18s ease, visibility 0.18s ease;
+}
+
+.army-builder-root:has(.army-panel.army-panel-open) .army-menu-wrap {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .army-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 42px;
   height: 42px;
+  padding: 0;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(22, 22, 26, 0.92);
   color: #e8e8e8;
-  font-size: 20px;
   cursor: pointer;
   backdrop-filter: blur(10px);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
@@ -1121,39 +1131,10 @@ html, body {
   background: rgba(36, 36, 42, 0.96);
 }
 
-.army-menu-popover {
-  display: none;
-  position: absolute;
-  top: 48px;
-  left: 0;
-  min-width: 200px;
-  padding: 6px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(22, 22, 26, 0.98);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(12px);
-}
-
-.army-menu-popover-visible {
+.army-open-panel-icon {
+  width: 22px;
+  height: 22px;
   display: block;
-}
-
-.army-menu-item {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: 10px 12px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: #eee;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.army-menu-item:hover {
-  background: rgba(255, 255, 255, 0.08);
 }
 
 .army-panel-overlay {
@@ -1195,16 +1176,31 @@ html, body {
 
 .army-panel-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 12px;
   padding: 14px 16px 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.army-panel-header-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .army-panel-title {
   font-size: 17px;
   font-weight: 700;
   color: #f2f2f2;
+}
+
+.army-panel-subtitle {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.38);
+  line-height: 1.35;
 }
 
 .army-panel-close {
@@ -1223,48 +1219,155 @@ html, body {
   background: rgba(255, 255, 255, 0.12);
 }
 
-.army-points-bar {
-  margin: 10px 16px 8px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: rgba(76, 175, 80, 0.12);
-  border: 1px solid rgba(76, 175, 80, 0.35);
-  color: #a5d6a7;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  font-size: 14px;
+.army-points-block {
+  position: relative;
+  margin: 8px 16px 10px;
+  z-index: 2;
 }
 
-.army-points-bar.army-points-over {
-  background: rgba(211, 47, 47, 0.15);
-  border-color: rgba(239, 83, 80, 0.45);
-  color: #ef9a9a;
+.army-points-inner {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.32);
+}
+
+.army-points-block.army-points-block-over .army-points-inner {
+  background: rgba(211, 47, 47, 0.12);
+  border-color: rgba(239, 83, 80, 0.4);
+}
+
+.army-points-cap-btn {
+  display: block;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 4px 2px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #c8e6c9;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.army-points-cap-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8f5e9;
+}
+
+.army-points-cap-btn.army-points-cap-btn-over {
+  color: #ffcdd2;
+}
+
+.army-points-block.army-points-block-over .army-points-cap-btn.army-points-cap-btn-over {
+  color: #ffcdd2;
+}
+
+.army-points-track {
+  height: 7px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.army-points-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #66bb6a, #81c784);
+  transition: width 0.22s ease;
+}
+
+.army-points-block.army-points-block-over .army-points-fill {
+  background: linear-gradient(90deg, #e57373, #ef5350);
+}
+
+.army-points-cap-menu {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: calc(100% - 4px);
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(26, 28, 34, 0.98);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.army-points-cap-menu[hidden] {
+  display: none !important;
+}
+
+.army-points-cap-option {
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #e0e0e0;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.army-points-cap-option:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.army-points-cap-option-active {
+  background: rgba(74, 144, 217, 0.22);
+  color: #fff;
+}
+
+.army-search-row {
+  padding: 0 16px 10px;
+  flex-shrink: 0;
 }
 
 .army-faction-tabs {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  flex-wrap: nowrap;
+  gap: 5px;
   padding: 0 16px 10px;
-  max-height: 72px;
-  overflow-y: auto;
+  align-items: stretch;
 }
 
 .army-faction-tab {
-  padding: 6px 8px;
-  font-size: 11px;
-  font-weight: 700;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 48px;
+  padding: 3px;
+  box-sizing: border-box;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.75);
+  border: none;
+  background: transparent;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.army-faction-tab-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+  border-radius: 4px;
 }
 
 .army-faction-tab-active {
-  background: rgba(74, 144, 217, 0.25);
-  border-color: rgba(74, 144, 217, 0.5);
-  color: #fff;
+  border: 1px solid rgba(74, 144, 217, 0.55);
+  background: rgba(74, 144, 217, 0.22);
+  box-shadow: 0 0 0 1px rgba(74, 144, 217, 0.35);
 }
 
 .army-leaders-section {

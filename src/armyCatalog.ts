@@ -4,12 +4,15 @@
 
 import type { Domain, UnitCardData } from './unitCard';
 
+/** Default army points limit (panel lets user pick 200 / 300 / 400). */
 export const ARMY_POINTS_CAP = 300;
 
 export type FactionDef = {
   id: string;
   name: string;
   domain: Domain;
+  /** Faction emblem in the army panel filter row (`public/` path). */
+  panelIconSrc: string;
 };
 
 export type RosterSlotDef = {
@@ -310,14 +313,14 @@ export const CATALOG_UNITS: Record<string, CatalogUnitDef> = {
 };
 
 export const FACTIONS: FactionDef[] = [
-  { id: 'tern_concord', name: 'Tern Concord', domain: 'order' },
-  { id: 'ash_legion', name: 'Ash Legion', domain: 'chaos' },
-  { id: 'sylvan_enclave', name: 'Sylvan Enclave', domain: 'nature' },
-  { id: 'umbral_court', name: 'Umbral Court', domain: 'shadow' },
-  { id: 'iron_covenant', name: 'Iron Covenant', domain: 'order' },
-  { id: 'blood_pact', name: 'Blood Pact', domain: 'chaos' },
-  { id: 'wild_horde', name: 'Wild Horde', domain: 'nature' },
-  { id: 'broken_veil', name: 'Broken Veil', domain: 'shadow' },
+  { id: 'tern_concord', name: 'Tern Concord', domain: 'order', panelIconSrc: '/castilla.webp' },
+  { id: 'ash_legion', name: 'Ash Legion', domain: 'chaos', panelIconSrc: '/priory_of_hope.webp' },
+  { id: 'sylvan_enclave', name: 'Sylvan Enclave', domain: 'nature', panelIconSrc: '/engeln.webp' },
+  { id: 'umbral_court', name: 'Umbral Court', domain: 'shadow', panelIconSrc: '/keld.webp' },
+  { id: 'iron_covenant', name: 'Iron Covenant', domain: 'order', panelIconSrc: '/blackthorn.webp' },
+  { id: 'blood_pact', name: 'Blood Pact', domain: 'chaos', panelIconSrc: '/krigmark.webp' },
+  { id: 'wild_horde', name: 'Wild Horde', domain: 'nature', panelIconSrc: '/broomgar_horde.webp' },
+  { id: 'broken_veil', name: 'Broken Veil', domain: 'shadow', panelIconSrc: '/chasm.webp' },
 ];
 
 export const LEADERS: LeaderDef[] = [

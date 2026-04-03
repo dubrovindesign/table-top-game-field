@@ -1,5 +1,5 @@
 /**
- * Ephirium vortex — fixed button (top-right) draws from a 16-card deck without replacement;
+ * Ephirium vortex — fixed button (top-right): each draw picks a random card (uniform among 16);
  * up to two cards visible next to the button; each closable with ×.
  */
 
@@ -22,27 +22,14 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return e;
 }
 
-function shuffleIndices(n: number): number[] {
-  const a = Array.from({ length: n }, (_, i) => i);
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 export class EphiriumVortexUi {
   private root: HTMLElement;
   private cardsRow: HTMLElement;
   private drawBtn: HTMLButtonElement;
-  private deckOrder: number[];
-  private deckPtr = 0;
   /** Open card roots in DOM order: first drawn = index 0 (visually nearest button in row-reverse). */
   private openRoots: HTMLElement[] = [];
 
   constructor(parent: HTMLElement) {
-    this.deckOrder = shuffleIndices(EPHIRIUM_VORTEX_CARDS.length);
-
     this.root = el('div', 'ev-root');
     parent.appendChild(this.root);
 
@@ -77,17 +64,9 @@ export class EphiriumVortexUi {
       : 'Вытянуть карту вихря';
   }
 
-  private ensureDeck(): void {
-    if (this.deckPtr >= this.deckOrder.length) {
-      this.deckOrder = shuffleIndices(EPHIRIUM_VORTEX_CARDS.length);
-      this.deckPtr = 0;
-    }
-  }
-
   private drawNextCard(): { def: EphiriumVortexCardDef; spriteIndex: number } {
-    this.ensureDeck();
-    const spriteIndex = this.deckOrder[this.deckPtr]!;
-    this.deckPtr += 1;
+    const n = EPHIRIUM_VORTEX_CARDS.length;
+    const spriteIndex = Math.floor(Math.random() * n);
     return { def: EPHIRIUM_VORTEX_CARDS[spriteIndex]!, spriteIndex };
   }
 

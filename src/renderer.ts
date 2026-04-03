@@ -195,13 +195,11 @@ export class Renderer {
   private backgroundImageSrcLoaded: string | null = null;
   private backgroundImageSrcFailed: string | null = null;
 
-  private godDiscardWorld: Point = { x: 0, y: 0 };
-  private godDiscardTopId: string | null = null;
-  private godDiscardPreviewWorld: Point | null = null;
   /** God cards / decks on the table. */
   private godTablePieces: GodTablePiece[] = [];
   private godLooseDraggingIndex: number | null = null;
   private godLoosePreviewWorld: Point | null = null;
+  private selectedGodTablePieceIndex: number | null = null;
   /** Active flip animation for one loose god piece (index in `godTablePieces`). */
   private godPieceFlipAnim: {
     index: number;
@@ -312,20 +310,11 @@ export class Renderer {
     this.etherVortexPreviewWorld = previewWorld;
   }
 
-  setGodTablePieces(opts: {
-    discardWorld: Point;
-    discardTopId: string | null;
-    discardPreviewWorld: Point | null;
-  }): void {
-    this.godDiscardWorld = { ...opts.discardWorld };
-    this.godDiscardTopId = opts.discardTopId;
-    this.godDiscardPreviewWorld = opts.discardPreviewWorld ? { ...opts.discardPreviewWorld } : null;
-  }
-
   setGodLoosePieces(
     pieces: ReadonlyArray<GodTablePiece>,
     draggingIndex: number | null,
     previewWorld: Point | null,
+    selectedPieceIndex: number | null = null,
   ): void {
     this.godTablePieces = pieces.map((p) =>
       p.kind === 'single'
@@ -334,6 +323,7 @@ export class Renderer {
     );
     this.godLooseDraggingIndex = draggingIndex;
     this.godLoosePreviewWorld = previewWorld ? { ...previewWorld } : null;
+    this.selectedGodTablePieceIndex = selectedPieceIndex;
   }
 
   setGodPieceFlipAnim(
@@ -498,14 +488,12 @@ export class Renderer {
     this.drawTerrainSelectionRing();
     this.drawEtherVortexSelectionRing();
 
-    // Pass 8c: god deck + discard (board space)
-    this.drawGodTablePieces();
-
     // Pass 9: unit miniature (small)
     this.drawUnits();
 
-    // Pass 9b: loose god cards on table
+    // Pass 9b: loose god cards on the table
     this.drawGodLooseCards();
+    this.drawGodTablePieceSelectionRing();
 
     // Pass 10: coordinate labels
     if (config.showCoordinates) {
@@ -928,9 +916,30 @@ export class Renderer {
     }
   }
 
-  private drawGodTablePieces(): void {
-    const discP = this.godDiscardPreviewWorld ?? this.godDiscardWorld;
-    this.drawGodCardFaceWorld(discP, this.godDiscardTopId, 'Сброс');
+  /** Green outline for selected god card / deck (same accent as terrain). */
+  private drawGodTablePieceSelectionRing(): void {
+    if (this.selectedGodTablePieceIndex === null) return;
+    const i = this.selectedGodTablePieceIndex;
+    const p = this.godTablePieces[i];
+    if (!p) return;
+    const world =
+      this.godLooseDraggingIndex === i && this.godLoosePreviewWorld
+        ? this.godLoosePreviewWorld
+        : p.world;
+    const { ctx } = this;
+    const z = this.camera.zoom;
+    const hw = GOD_TABLE_CARD_HW * 1.08;
+    const hh = GOD_TABLE_CARD_HH * 1.08;
+    const r = 5 / z;
+    ctx.save();
+    ctx.translate(world.x, world.y);
+    this.applyGodTableCardVisualRotation(ctx);
+    ctx.beginPath();
+    ctx.roundRect(-hw, -hh, hw * 2, hh * 2, r);
+    ctx.strokeStyle = '#4caf50';
+    ctx.lineWidth = 3 / z;
+    ctx.stroke();
+    ctx.restore();
   }
 
   private drawUnits(): void {

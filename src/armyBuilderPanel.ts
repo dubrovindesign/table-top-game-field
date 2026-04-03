@@ -12,6 +12,8 @@ import {
   type LeaderDef,
   type RosterRowView,
 } from './armyCatalog';
+
+const ARMY_CAP_OPTIONS = [200, 300, 400] as const;
 import { GOD_CARDS } from './godCards';
 import { UnitCard, type DiceRequest } from './unitCard';
 
@@ -45,12 +47,15 @@ export class ArmyBuilderPanel {
   private overlay: HTMLElement;
   private panel: HTMLElement;
   private menuWrap: HTMLElement;
-  private menuPopover: HTMLElement;
   private factionTabs: HTMLElement;
   private leadersSection: HTMLElement;
   private leadersListEl: HTMLElement;
   private searchInput: HTMLInputElement;
-  private pointsEl: HTMLElement;
+  private pointsBlock: HTMLElement;
+  private pointsCapBtn: HTMLButtonElement;
+  private pointsFillEl: HTMLElement;
+  private pointsCapMenu: HTMLElement;
+  private armyPointsCap: number = ARMY_POINTS_CAP;
   private listEl: HTMLElement;
   private godSection: HTMLElement;
   private godCatalogEl: HTMLElement;
@@ -73,49 +78,78 @@ export class ArmyBuilderPanel {
     parent.appendChild(this.root);
 
     this.menuWrap = el('div', 'army-menu-wrap');
-    const menuBtn = el('button', 'army-menu-btn', '☰');
+    const menuBtn = el('button', 'army-menu-btn');
     menuBtn.type = 'button';
-    menuBtn.setAttribute('aria-haspopup', 'true');
-    menuBtn.setAttribute('aria-expanded', 'false');
-    this.menuPopover = el('div', 'army-menu-popover');
-    this.menuPopover.setAttribute('role', 'menu');
-    const openArmyBtn = el('button', 'army-menu-item', 'Добавить юнитов');
-    openArmyBtn.type = 'button';
-    openArmyBtn.setAttribute('role', 'menuitem');
-    this.menuPopover.appendChild(openArmyBtn);
+    menuBtn.setAttribute('aria-label', 'Открыть панель выбора юнитов');
+    menuBtn.title = 'Армия';
+    menuBtn.innerHTML = `<svg class="army-open-panel-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>`;
     this.menuWrap.appendChild(menuBtn);
-    this.menuWrap.appendChild(this.menuPopover);
     this.root.appendChild(this.menuWrap);
 
     menuBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const vis = this.menuPopover.classList.toggle('army-menu-popover-visible');
-      menuBtn.setAttribute('aria-expanded', vis ? 'true' : 'false');
-    });
-    openArmyBtn.addEventListener('click', () => {
-      this.menuPopover.classList.remove('army-menu-popover-visible');
-      menuBtn.setAttribute('aria-expanded', 'false');
       this.setOpen(true);
     });
-    document.addEventListener('click', () => {
-      this.menuPopover.classList.remove('army-menu-popover-visible');
-      menuBtn.setAttribute('aria-expanded', 'false');
-    });
-    this.menuPopover.addEventListener('click', (e) => e.stopPropagation());
 
     this.overlay = el('div', 'army-panel-overlay');
     this.overlay.addEventListener('click', () => this.setOpen(false));
 
     this.panel = el('aside', 'army-panel');
     const header = el('div', 'army-panel-header');
+    const headerMain = el('div', 'army-panel-header-text');
     const title = el('div', 'army-panel-title', 'Армия');
+    const subtitle = el('div', 'army-panel-subtitle', 'Субтитры создал DimaTorzok');
+    headerMain.appendChild(title);
+    headerMain.appendChild(subtitle);
     const closeBtn = el('button', 'army-panel-close', '×');
     closeBtn.type = 'button';
-    header.appendChild(title);
+    header.appendChild(headerMain);
     header.appendChild(closeBtn);
     closeBtn.addEventListener('click', () => this.setOpen(false));
 
+    this.pointsBlock = el('div', 'army-points-block');
+    const pointsInner = el('div', 'army-points-inner');
+    this.pointsCapBtn = el('button', 'army-points-cap-btn') as HTMLButtonElement;
+    this.pointsCapBtn.type = 'button';
+    this.pointsCapBtn.textContent = `0 / ${this.armyPointsCap}`;
+    this.pointsCapBtn.setAttribute('aria-haspopup', 'listbox');
+    this.pointsCapBtn.setAttribute('aria-expanded', 'false');
+    this.pointsCapBtn.title = 'Нажмите, чтобы выбрать лимит очков армии';
+    const track = el('div', 'army-points-track');
+    this.pointsFillEl = el('div', 'army-points-fill');
+    track.appendChild(this.pointsFillEl);
+    pointsInner.appendChild(this.pointsCapBtn);
+    pointsInner.appendChild(track);
+    this.pointsCapMenu = el('div', 'army-points-cap-menu');
+    this.pointsCapMenu.setAttribute('role', 'listbox');
+    this.pointsCapMenu.hidden = true;
+    for (const cap of ARMY_CAP_OPTIONS) {
+      const opt = el('button', 'army-points-cap-option', String(cap)) as HTMLButtonElement;
+      opt.type = 'button';
+      opt.setAttribute('role', 'option');
+      opt.dataset.cap = String(cap);
+      opt.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.setArmyPointsCap(cap);
+      });
+      this.pointsCapMenu.appendChild(opt);
+    }
+    this.syncPointsCapMenuActive();
+    this.pointsCapBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.togglePointsCapMenu();
+    });
+    this.pointsBlock.appendChild(pointsInner);
+    this.pointsBlock.appendChild(this.pointsCapMenu);
+
     this.factionTabs = el('div', 'army-faction-tabs');
+
+    this.searchInput = el('input', 'army-search-input') as HTMLInputElement;
+    this.searchInput.type = 'search';
+    this.searchInput.placeholder = 'Имя или ключевое слово…';
+    this.searchInput.setAttribute('aria-label', 'Фильтр по имени или ключевому слову');
+    const searchRow = el('div', 'army-search-row');
+    searchRow.appendChild(this.searchInput);
 
     this.leadersSection = el('div', 'army-leaders-section');
     const leadersTitle = el('div', 'army-section-title', 'Лидеры');
@@ -123,25 +157,15 @@ export class ArmyBuilderPanel {
     this.leadersSection.appendChild(leadersTitle);
     this.leadersSection.appendChild(this.leadersListEl);
 
-    this.searchInput = el('input', 'army-search-input') as HTMLInputElement;
-    this.searchInput.type = 'search';
-    this.searchInput.placeholder = 'Имя или ключевое слово…';
-    const searchLabel = el('label', 'army-field-label');
-    const searchSpan = el('span', 'army-field-label-text', 'Поиск');
-    searchLabel.appendChild(searchSpan);
-    searchLabel.appendChild(this.searchInput);
-
     const rosterTitle = el('div', 'army-section-title', 'Ростер');
-
-    this.pointsEl = el('div', 'army-points-bar', '0 / 300');
 
     this.listEl = el('div', 'army-unit-list');
 
     this.panel.appendChild(header);
-    this.panel.appendChild(this.pointsEl);
+    this.panel.appendChild(this.pointsBlock);
     this.panel.appendChild(this.factionTabs);
+    this.panel.appendChild(searchRow);
     this.panel.appendChild(this.leadersSection);
-    this.panel.appendChild(searchLabel);
     this.panel.appendChild(rosterTitle);
     this.panel.appendChild(this.listEl);
 
@@ -150,7 +174,7 @@ export class ArmyBuilderPanel {
     const godHint = el(
       'div',
       'army-god-hint',
-      'Перетащите карту на поле или за пределы сетки — как юнита или лидера. На столе карту можно снова сдвинуть; в зону сброса внизу — положить в сброс.',
+      'Перетащите карту на поле или за пределы сетки — как юнита или лидера. На столе: клик выделяет карту, Delete/Backspace — убрать с поля.',
     );
     const catLabel = el('div', 'army-field-label-text', 'Каталог');
     catLabel.classList.add('army-god-catalog-label');
@@ -177,11 +201,17 @@ export class ArmyBuilderPanel {
 
     window.addEventListener('keydown', this.boundKey);
     window.addEventListener('pointermove', this.boundMove, { passive: true });
+    document.addEventListener('click', this.boundDocClick);
   }
+
+  private boundDocClick = (): void => {
+    this.closePointsCapMenu();
+  };
 
   dispose(): void {
     window.removeEventListener('keydown', this.boundKey);
     window.removeEventListener('pointermove', this.boundMove);
+    document.removeEventListener('click', this.boundDocClick);
     this.root.remove();
   }
 
@@ -270,11 +300,18 @@ export class ArmyBuilderPanel {
   private buildFactionTabs(): void {
     this.factionTabs.replaceChildren();
     for (const f of FACTIONS) {
-      const tab = el('button', 'army-faction-tab', f.name.slice(0, 2).toUpperCase());
+      const tab = el('button', 'army-faction-tab');
       tab.type = 'button';
       tab.title = `${f.name} (${f.domain})`;
+      tab.setAttribute('aria-label', `${f.name}, домен ${f.domain}`);
       tab.dataset.factionId = f.id;
       if (f.id === this.selectedFactionId) tab.classList.add('army-faction-tab-active');
+      const img = document.createElement('img');
+      img.className = 'army-faction-tab-icon';
+      img.src = f.panelIconSrc;
+      img.alt = '';
+      img.draggable = false;
+      tab.appendChild(img);
       tab.addEventListener('click', () => this.selectFaction(f.id));
       this.factionTabs.appendChild(tab);
     }
@@ -369,15 +406,48 @@ export class ArmyBuilderPanel {
     return wrap;
   }
 
+  private setArmyPointsCap(cap: number): void {
+    this.armyPointsCap = cap;
+    this.syncPointsCapMenuActive();
+    this.closePointsCapMenu();
+    this.updatePointsBar();
+  }
+
+  private syncPointsCapMenuActive(): void {
+    for (const child of this.pointsCapMenu.children) {
+      const b = child as HTMLButtonElement;
+      const v = Number(b.dataset.cap);
+      b.classList.toggle('army-points-cap-option-active', v === this.armyPointsCap);
+      b.setAttribute('aria-selected', v === this.armyPointsCap ? 'true' : 'false');
+    }
+  }
+
+  private togglePointsCapMenu(): void {
+    const open = this.pointsCapMenu.hidden;
+    this.pointsCapMenu.hidden = !open;
+    this.pointsCapBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) this.syncPointsCapMenuActive();
+  }
+
+  private closePointsCapMenu(): void {
+    if (this.pointsCapMenu.hidden) return;
+    this.pointsCapMenu.hidden = true;
+    this.pointsCapBtn.setAttribute('aria-expanded', 'false');
+  }
+
   private updatePointsBar(): void {
     const spent = this.opts.getPointsSpent();
-    const over = spent > ARMY_POINTS_CAP;
-    this.pointsEl.textContent = `${spent} / ${ARMY_POINTS_CAP}`;
-    this.pointsEl.classList.toggle('army-points-over', over);
+    const cap = this.armyPointsCap;
+    const over = spent > cap;
+    const pct = cap > 0 ? Math.min(100, (spent / cap) * 100) : 0;
+    this.pointsCapBtn.textContent = `${spent} / ${cap}`;
+    this.pointsFillEl.style.width = `${pct}%`;
+    this.pointsBlock.classList.toggle('army-points-block-over', over);
+    this.pointsCapBtn.classList.toggle('army-points-cap-btn-over', over);
     if (over) {
-      this.pointsEl.title = `Перерасход: +${spent - ARMY_POINTS_CAP}`;
+      this.pointsCapBtn.title = `Перерасход: +${spent - cap}. Нажмите, чтобы сменить лимит.`;
     } else {
-      this.pointsEl.title = '';
+      this.pointsCapBtn.title = 'Нажмите, чтобы выбрать лимит очков армии (200 / 300 / 400)';
     }
   }
 

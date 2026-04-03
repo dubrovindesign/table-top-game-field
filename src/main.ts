@@ -168,32 +168,10 @@ function getBoardCenterWorld(): { x: number; y: number } {
   };
 }
 
-/** Extra board-space offset below the grid bottom for deck / discard (outside hex field). */
-const GOD_TABLE_BELOW_GRID_EXTRA = 156;
-function initialGodDiscardWorld(): Point {
-  const allHexes = grid.allHexes();
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  for (const hex of allHexes) {
-    const p = layout.hexToPixel(hex);
-    if (p.x < minX) minX = p.x;
-    if (p.y < minY) minY = p.y;
-    if (p.x > maxX) maxX = p.x;
-    if (p.y > maxY) maxY = p.y;
-  }
-  const cx = (minX + maxX) / 2;
-  const belowY = maxY + layout.size.y * 2.25 + GOD_TABLE_BELOW_GRID_EXTRA;
-  return { x: cx, y: belowY };
-}
-
-let godDiscardWorld: Point = { ...initialGodDiscardWorld() };
-/** Top of discard pile = last entry (face-up on canvas). */
-let godDiscardIds: string[] = [];
-
 /** God cards / decks on the table (from panel DnD or merged stacks). */
 let godTablePieces: GodTablePiece[] = [];
+/** Selected loose god piece index (same pattern as terrain / big mini). */
+let selectedGodTablePieceIndex: number | null = null;
 const GOD_DECK_LONG_PRESS_MS = 1000;
 let godPiecePointerDownAt = 0;
 /** After ≥1 s press on a deck, next drag moves the whole stack (otherwise peel top card). */
@@ -292,6 +270,7 @@ type SelectedEntity =
   | { kind: 'big'; index: number }
   | { kind: 'terrain'; index: number }
   | { kind: 'etherVortex'; index: number }
+  | { kind: 'godTable'; index: number }
   | null;
 
 type ClipboardEntity =
@@ -521,6 +500,7 @@ function getSelectedEntity(): SelectedEntity {
   if (selectedBigMiniIndex !== null) return { kind: 'big', index: selectedBigMiniIndex };
   if (selectedTerrainIndex !== null) return { kind: 'terrain', index: selectedTerrainIndex };
   if (selectedEtherVortexIndex !== null) return { kind: 'etherVortex', index: selectedEtherVortexIndex };
+  if (selectedGodTablePieceIndex !== null) return { kind: 'godTable', index: selectedGodTablePieceIndex };
   return null;
 }
 
@@ -529,6 +509,7 @@ function clearSelection(): void {
   selectedBigMiniIndex = null;
   selectedTerrainIndex = null;
   selectedEtherVortexIndex = null;
+  selectedGodTablePieceIndex = null;
   showSelectedDetails = false;
 }
 
@@ -742,17 +723,11 @@ function loop(): void {
     );
     renderer.setEtherVortexes(etherVortexes, selectedEtherVortexIndex);
     renderer.setEtherVortexDrag(draggingEtherVortexIndex, etherVortexPreviewWorld, etherVortexDragOverCenter);
-    const discardTop =
-      godDiscardIds.length > 0 ? godDiscardIds[godDiscardIds.length - 1]! : null;
-    renderer.setGodTablePieces({
-      discardWorld: godDiscardWorld,
-      discardTopId: discardTop,
-      discardPreviewWorld: isDraggingGodDiscardStack ? godDiscardStackPreviewWorld : null,
-    });
     renderer.setGodLoosePieces(
       godTablePieces,
       isDraggingGodLoose ? godDraggingLooseIndex : null,
       godLooseDragPreviewWorld,
+      selectedGodTablePieceIndex,
     );
     renderer.setGodPieceFlipAnim(godPieceFlipAnim);
     updateMovementHighlights();
@@ -808,15 +783,7 @@ let etherVortexDragPendingStartY = 0;
 let etherVortexPreviewWorld: Point | null = null;
 let etherVortexDragOverCenter: Hex | null = null;
 
-/** Pending drag of the god discard pile on the table. */
-let godDiscardStackDragPending = false;
-let godDiscardStackPendingStartX = 0;
-let godDiscardStackPendingStartY = 0;
-let isDraggingGodDiscardStack = false;
-let godDiscardStackPreviewWorld: Point | null = null;
 let godLooseCapturePointerId: number | null = null;
-/** Pointer that started discard-stack interaction (capture so pointerup fires after dragging over DOM UI). */
-let godStackCapturePointerId: number | null = null;
 
 // ── Helper: get hex under cursor ───────────────────────────────
 
@@ -848,16 +815,6 @@ function godEllipseContains(world: Point, center: Point, hw: number, hh: number)
   return a * a + b * b <= 1;
 }
 
-function godTableHit(clientX: number, clientY: number): 'discard' | null {
-  const w = screenToBoardWorld(clientX, clientY);
-  const discC =
-    isDraggingGodDiscardStack && godDiscardStackPreviewWorld
-      ? godDiscardStackPreviewWorld
-      : godDiscardWorld;
-  if (godEllipseContains(w, discC, GOD_TABLE_CARD_HW, GOD_TABLE_CARD_HH)) return 'discard';
-  return null;
-}
-
 /** Topmost loose god card under cursor (board-space hit). */
 function godLooseHitIndex(clientX: number, clientY: number): number | null {
   const w = screenToBoardWorld(clientX, clientY);
@@ -870,10 +827,6 @@ function godLooseHitIndex(clientX: number, clientY: number): number | null {
     if (godEllipseContains(w, center, GOD_TABLE_CARD_HW, GOD_TABLE_CARD_HH)) return i;
   }
   return null;
-}
-
-function allGodPieceIds(piece: GodTablePiece): string[] {
-  return piece.kind === 'single' ? [piece.id] : [...piece.ids];
 }
 
 function normalizeGodTablePiece(p: GodTablePiece): GodTablePiece {
@@ -906,6 +859,43 @@ function godPieceHitIndexFromWorld(world: Point, excludeIdx: number | null): num
     if (godEllipseContains(world, c, GOD_TABLE_CARD_HW, GOD_TABLE_CARD_HH)) return i;
   }
   return null;
+}
+
+/** Remove loose god piece from the table entirely. */
+function removeGodTablePieceAtIndex(i: number): void {
+  if (i < 0 || i >= godTablePieces.length) return;
+
+  if (isDraggingGodLoose && godDraggingLooseIndex === i) {
+    isDraggingGodLoose = false;
+    godDraggingLooseIndex = null;
+    godLooseDragPreviewWorld = null;
+    godDeckDragWholeStackAfterHold = false;
+    releaseGodLoosePointerCaptureIfAny();
+  } else if (isDraggingGodLoose && godDraggingLooseIndex !== null && godDraggingLooseIndex > i) {
+    godDraggingLooseIndex -= 1;
+  }
+
+  if (godLooseDragPending && godLooseDragPendingIndex === i) {
+    godLooseDragPending = false;
+    godLooseDragPendingIndex = null;
+    godDeckDragWholeStackAfterHold = false;
+    releaseGodLoosePointerCaptureIfAny();
+  } else if (godLooseDragPending && godLooseDragPendingIndex !== null && godLooseDragPendingIndex > i) {
+    godLooseDragPendingIndex -= 1;
+  }
+
+  godTablePieces.splice(i, 1);
+
+  if (godPieceFlipAnim) {
+    if (godPieceFlipAnim.index === i) godPieceFlipAnim = null;
+    else if (godPieceFlipAnim.index > i)
+      godPieceFlipAnim = { ...godPieceFlipAnim, index: godPieceFlipAnim.index - 1 };
+  }
+
+  if (selectedGodTablePieceIndex !== null) {
+    if (selectedGodTablePieceIndex === i) selectedGodTablePieceIndex = null;
+    else if (selectedGodTablePieceIndex > i) selectedGodTablePieceIndex -= 1;
+  }
 }
 
 function hexAtScreen(sx: number, sy: number): Hex | null {
@@ -1411,17 +1401,6 @@ function tryPromoteEtherVortexDragFromPending(e: MouseEvent): void {
   scheduleRender();
 }
 
-function tryPromoteGodDiscardStackDrag(e: MouseEvent): void {
-  if (!godDiscardStackDragPending || isDraggingGodDiscardStack) return;
-  const dx = e.clientX - godDiscardStackPendingStartX;
-  const dy = e.clientY - godDiscardStackPendingStartY;
-  if (dx * dx + dy * dy <= UNIT_DRAG_THRESHOLD_PX * UNIT_DRAG_THRESHOLD_PX) return;
-  godDiscardStackDragPending = false;
-  isDraggingGodDiscardStack = true;
-  godDiscardStackPreviewWorld = screenToBoardWorld(e.clientX, e.clientY);
-  scheduleRender();
-}
-
 function tryPromoteGodLooseDrag(e: MouseEvent): void {
   if (!godLooseDragPending || isDraggingGodLoose || godLooseDragPendingIndex === null) return;
   const dx = e.clientX - godLooseDragPendingStartX;
@@ -1669,6 +1648,11 @@ function duplicateSelected(): void {
 function deleteSelected(): void {
   const sel = getSelectedEntity();
   if (!sel) return;
+  if (sel.kind === 'godTable') {
+    removeGodTablePieceAtIndex(sel.index);
+    clearSelection();
+    return;
+  }
   if (sel.kind === 'small') {
     units.splice(sel.index, 1);
     unitCardData.splice(sel.index, 1);
@@ -1921,14 +1905,9 @@ window.addEventListener('pointermove', (e) => {
       godDeckDragWholeStackAfterHold = true;
     }
   }
-  tryPromoteGodDiscardStackDrag(e);
   tryPromoteGodLooseDrag(e);
   if (isDraggingGodLoose) {
     godLooseDragPreviewWorld = screenToBoardWorld(e.clientX, e.clientY);
-    scheduleRender();
-  }
-  if (isDraggingGodDiscardStack) {
-    godDiscardStackPreviewWorld = screenToBoardWorld(e.clientX, e.clientY);
     scheduleRender();
   }
 });
@@ -1937,7 +1916,6 @@ canvas.addEventListener('mousemove', (e) => {
   pointerScreenX = e.clientX;
   pointerScreenY = e.clientY;
   tryPromoteGodLooseDrag(e);
-  tryPromoteGodDiscardStackDrag(e);
   tryPromoteUnitDragFromPending(e);
   tryPromoteBigMiniDragFromPending(e);
   tryPromoteTerrainDragFromPending(e);
@@ -2056,16 +2034,6 @@ function releaseGodLoosePointerCaptureIfAny(): void {
   godLooseCapturePointerId = null;
 }
 
-function releaseGodStackPointerCaptureIfAny(): void {
-  if (godStackCapturePointerId == null) return;
-  try {
-    canvas.releasePointerCapture(godStackCapturePointerId);
-  } catch {
-    /* not capturing */
-  }
-  godStackCapturePointerId = null;
-}
-
 /** End loose god-card drag (pointerup is required — mouseup alone can be missing after canvas+DOM mixes). */
 function finishGodLooseDragIfActive(e: MouseEvent | PointerEvent): void {
   if (e.button !== 0) return;
@@ -2081,10 +2049,7 @@ function finishGodLooseDragIfActive(e: MouseEvent | PointerEvent): void {
       godLooseDragPreviewWorld ?? screenToBoardWorld(e.clientX, e.clientY);
     const idx = godDraggingLooseIndex;
     const entry = godTablePieces[idx];
-    if (entry && godEllipseContains(w, godDiscardWorld, GOD_TABLE_CARD_HW, GOD_TABLE_CARD_HH)) {
-      for (const id of allGodPieceIds(entry)) godDiscardIds.push(id);
-      godTablePieces.splice(idx, 1);
-    } else if (entry) {
+    if (entry) {
       const mergeI = godPieceHitIndexFromWorld(w, idx);
       if (mergeI !== null) {
         const target = godTablePieces[mergeI]!;
@@ -2094,9 +2059,18 @@ function finishGodLooseDragIfActive(e: MouseEvent | PointerEvent): void {
         );
         const hi = Math.max(idx, mergeI);
         const lo = Math.min(idx, mergeI);
+        const sel = selectedGodTablePieceIndex;
+        const mergedWasSelected = sel === idx || sel === mergeI;
         godTablePieces.splice(hi, 1);
         godTablePieces.splice(lo, 1);
         godTablePieces.push(merged);
+        if (mergedWasSelected) selectedGodTablePieceIndex = godTablePieces.length - 1;
+        else if (sel !== null) {
+          let s = sel;
+          if (s > hi) s -= 1;
+          if (s > lo) s -= 1;
+          selectedGodTablePieceIndex = s;
+        }
       } else {
         godTablePieces[idx] = withGodPieceWorld(entry, w);
       }
@@ -2111,37 +2085,11 @@ function finishGodLooseDragIfActive(e: MouseEvent | PointerEvent): void {
   }
 }
 
-/** Deck/discard stack drag: must run on pointerup — mouseup is not always fired after Pointer Events. */
-function finishGodTableStackDragsIfActive(e: MouseEvent | PointerEvent): void {
-  if (e.button !== 0) return;
-  const cap = godStackCapturePointerId;
-  if (cap !== null) {
-    const hasPid = 'pointerId' in e && typeof (e as PointerEvent).pointerId === 'number';
-    const pid = hasPid ? (e as PointerEvent).pointerId : cap;
-    if (pid !== cap) return;
-  }
-  if (godDiscardStackDragPending && !isDraggingGodDiscardStack) {
-    godDiscardStackDragPending = false;
-    scheduleRender();
-  }
-  if (isDraggingGodDiscardStack && godDiscardStackPreviewWorld) {
-    godDiscardWorld = { ...godDiscardStackPreviewWorld };
-    isDraggingGodDiscardStack = false;
-    godDiscardStackPreviewWorld = null;
-    godDiscardStackDragPending = false;
-    scheduleRender();
-  }
-  releaseGodStackPointerCaptureIfAny();
-}
-
 function onWindowGodPointerEnd(e: PointerEvent): void {
   finishGodLooseDragIfActive(e);
-  finishGodTableStackDragsIfActive(e);
 }
 
-/**
- * God discard pile + loose cards on canvas (primary button).
- */
+/** Loose god cards on canvas (primary button). */
 function tryHandleGodTablePrimaryDown(clientX: number, clientY: number, altKey: boolean): boolean {
   if (!isPointOverCanvas(clientX, clientY)) return false;
   if (!altKey && godTablePieces.length > 0) {
@@ -2154,7 +2102,8 @@ function tryHandleGodTablePrimaryDown(clientX: number, clientY: number, altKey: 
       etherVortexDragPending = false;
       etherVortexDragPendingIndex = null;
       releaseGodLoosePointerCaptureIfAny();
-      godDiscardStackDragPending = false;
+      clearSelection();
+      selectedGodTablePieceIndex = looseI;
       godPiecePointerDownAt = Date.now();
       godDeckDragWholeStackAfterHold = false;
       godLooseDragPending = true;
@@ -2163,19 +2112,6 @@ function tryHandleGodTablePrimaryDown(clientX: number, clientY: number, altKey: 
       godLooseDragPendingStartY = clientY;
       return true;
     }
-  }
-  const godHit = godTableHit(clientX, clientY);
-  if (godHit === 'discard') {
-    unitDragPendingIndex = null;
-    bigMiniDragPendingIndex = null;
-    terrainDragPending = false;
-    terrainDragPendingIndex = null;
-    etherVortexDragPending = false;
-    etherVortexDragPendingIndex = null;
-    godDiscardStackDragPending = true;
-    godDiscardStackPendingStartX = clientX;
-    godDiscardStackPendingStartY = clientY;
-    return true;
   }
 
   return false;
@@ -2251,13 +2187,6 @@ canvas.addEventListener('pointerdown', (e: PointerEvent) => {
       } catch {
         godLooseCapturePointerId = null;
       }
-    } else if (godDiscardStackDragPending) {
-      try {
-        canvas.setPointerCapture(e.pointerId);
-        godStackCapturePointerId = e.pointerId;
-      } catch {
-        godStackCapturePointerId = null;
-      }
     }
     e.preventDefault();
     scheduleRender();
@@ -2303,12 +2232,6 @@ canvas.addEventListener('mousedown', (e) => {
       return;
     }
 
-    if (godDiscardStackDragPending || isDraggingGodDiscardStack) {
-      e.preventDefault();
-      scheduleRender();
-      return;
-    }
-
     const hex = hexAtScreen(e.clientX, e.clientY);
     if (!hex) {
       // Check off-board elements before giving up
@@ -2329,6 +2252,7 @@ canvas.addEventListener('mousedown', (e) => {
           selectedUnitIndex = obUnit;
           selectedBigMiniIndex = null;
           selectedTerrainIndex = null;
+          selectedGodTablePieceIndex = null;
           updateBigMiniMovementHighlights();
           updateMovementHighlights();
         }
@@ -2352,6 +2276,7 @@ canvas.addEventListener('mousedown', (e) => {
           updateMovementHighlights();
           selectedBigMiniIndex = obBig;
           selectedTerrainIndex = null;
+          selectedGodTablePieceIndex = null;
           updateBigMiniMovementHighlights();
         }
         scheduleRender();
@@ -2396,7 +2321,8 @@ canvas.addEventListener('mousedown', (e) => {
         selectedUnitIndex !== null ||
         selectedBigMiniIndex !== null ||
         selectedTerrainIndex !== null ||
-        selectedEtherVortexIndex !== null
+        selectedEtherVortexIndex !== null ||
+        selectedGodTablePieceIndex !== null
       ) {
         unitDragPendingIndex = null;
         bigMiniDragPendingIndex = null;
@@ -2453,6 +2379,7 @@ canvas.addEventListener('mousedown', (e) => {
         selectedUnitIndex = clickedUnitIndex;
         selectedBigMiniIndex = null;
         selectedTerrainIndex = null;
+        selectedGodTablePieceIndex = null;
         updateBigMiniMovementHighlights();
         updateMovementHighlights();
       }
@@ -2479,6 +2406,7 @@ canvas.addEventListener('mousedown', (e) => {
         updateMovementHighlights();
         selectedBigMiniIndex = bigMiniIdx;
         selectedTerrainIndex = null;
+        selectedGodTablePieceIndex = null;
         updateBigMiniMovementHighlights();
       }
       scheduleRender();
@@ -2529,7 +2457,8 @@ canvas.addEventListener('mousedown', (e) => {
       selectedUnitIndex !== null ||
       selectedBigMiniIndex !== null ||
       selectedTerrainIndex !== null ||
-      selectedEtherVortexIndex !== null
+      selectedEtherVortexIndex !== null ||
+      selectedGodTablePieceIndex !== null
     ) {
       unitDragPendingIndex = null;
       bigMiniDragPendingIndex = null;
@@ -2553,7 +2482,6 @@ window.addEventListener('pointercancel', onWindowGodPointerEnd);
 
 window.addEventListener('mouseup', (e) => {
   finishGodLooseDragIfActive(e);
-  finishGodTableStackDragsIfActive(e);
   if (e.button === 0 && unitDragPendingIndex !== null) {
     unitDragPendingIndex = null;
     if (draggingUnitIndex === null) {
@@ -2713,15 +2641,8 @@ window.addEventListener('keyup', (e) => {
 
 window.addEventListener('blur', () => {
   releaseGodLoosePointerCaptureIfAny();
-  releaseGodStackPointerCaptureIfAny();
   godPieceFlipAnim = null;
   godDeckDragWholeStackAfterHold = false;
-  godDiscardStackDragPending = false;
-  if (isDraggingGodDiscardStack && godDiscardStackPreviewWorld) {
-    godDiscardWorld = { ...godDiscardStackPreviewWorld };
-  }
-  isDraggingGodDiscardStack = false;
-  godDiscardStackPreviewWorld = null;
 
   godLooseDragPending = false;
   godLooseDragPendingIndex = null;
