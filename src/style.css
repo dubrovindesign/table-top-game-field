@@ -23,7 +23,7 @@ html, body {
   position: fixed;
   bottom: 20px;
   left: 20px;
-  z-index: 100;
+  z-index: 140;
 }
 
 .cw-crystals-row {
@@ -213,7 +213,7 @@ html, body {
   flex-direction: column;
   align-items: flex-end;
   gap: 8px;
-  z-index: 100;
+  z-index: 140;
   pointer-events: none;
 }
 
@@ -1085,4 +1085,727 @@ html, body {
   color: rgba(255, 255, 255, 0.45);
   text-transform: uppercase;
   letter-spacing: 0.4px;
+}
+
+/* ── Army Builder ─────────────────────────────────────────────── */
+
+.army-builder-root {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 180;
+}
+
+.army-menu-wrap {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  pointer-events: auto;
+  z-index: 190;
+}
+
+.army-menu-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(22, 22, 26, 0.92);
+  color: #e8e8e8;
+  font-size: 20px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+
+.army-menu-btn:hover {
+  background: rgba(36, 36, 42, 0.96);
+}
+
+.army-menu-popover {
+  display: none;
+  position: absolute;
+  top: 48px;
+  left: 0;
+  min-width: 200px;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(22, 22, 26, 0.98);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(12px);
+}
+
+.army-menu-popover-visible {
+  display: block;
+}
+
+.army-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #eee;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.army-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.army-panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.army-panel-overlay-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.army-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: min(50vw, 520px);
+  height: 100%;
+  max-height: 100vh;
+  background: rgba(18, 18, 22, 0.97);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 12px 0 48px rgba(0, 0, 0, 0.5);
+  transform: translateX(-100%);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 16px;
+  pointer-events: auto;
+  backdrop-filter: blur(16px);
+}
+
+.army-panel-open {
+  transform: translateX(0);
+}
+
+.army-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.army-panel-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #f2f2f2;
+}
+
+.army-panel-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ccc;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.army-panel-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.army-points-bar {
+  margin: 10px 16px 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(76, 175, 80, 0.12);
+  border: 1px solid rgba(76, 175, 80, 0.35);
+  color: #a5d6a7;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+}
+
+.army-points-bar.army-points-over {
+  background: rgba(211, 47, 47, 0.15);
+  border-color: rgba(239, 83, 80, 0.45);
+  color: #ef9a9a;
+}
+
+.army-faction-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 16px 10px;
+  max-height: 72px;
+  overflow-y: auto;
+}
+
+.army-faction-tab {
+  padding: 6px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+}
+
+.army-faction-tab-active {
+  background: rgba(74, 144, 217, 0.25);
+  border-color: rgba(74, 144, 217, 0.5);
+  color: #fff;
+}
+
+.army-leaders-section {
+  padding: 0 12px 10px;
+  flex-shrink: 0;
+}
+
+.army-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 0 4px 8px;
+}
+
+.army-leaders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: min(40vh, 220px);
+  overflow-y: auto;
+  padding-bottom: 2px;
+}
+
+.army-leader-row.army-leader-row-active:not(.army-unit-row-disabled) {
+  border-color: rgba(74, 144, 217, 0.55);
+  background: rgba(74, 144, 217, 0.12);
+  box-shadow: 0 0 0 1px rgba(74, 144, 217, 0.2);
+}
+
+.army-field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 16px 10px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.army-field-label-text {
+  font-weight: 600;
+}
+
+.army-search-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.25);
+  color: #eee;
+  font-size: 14px;
+}
+
+.army-unit-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.army-list-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 13px;
+}
+
+.army-unit-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: grab;
+}
+
+.army-unit-row:active {
+  cursor: grabbing;
+}
+
+.army-unit-row-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.army-unit-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.army-unit-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.army-unit-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.army-unit-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #eee;
+}
+
+.army-unit-sub {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 2px;
+}
+
+.unit-card.army-catalog-hover {
+  z-index: 220;
+  max-height: min(70vh, 520px);
+}
+
+/* ── Ephirium vortex cards (top-right) ───────────────────────── */
+
+.ev-root {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 175;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.ev-root > * {
+  pointer-events: auto;
+}
+
+.ev-cards-row {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: min(600px, calc(100vw - 88px));
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.ev-draw-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 14px;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.45));
+  transition: transform 0.12s ease, opacity 0.2s ease, filter 0.15s ease;
+  flex-shrink: 0;
+}
+
+.ev-draw-btn:hover:not(:disabled) {
+  transform: scale(1.06);
+  filter: drop-shadow(0 6px 18px rgba(69, 190, 222, 0.35));
+}
+
+.ev-draw-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.ev-draw-btn-disabled,
+.ev-draw-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  filter: grayscale(0.25) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+}
+
+.ev-draw-btn-img {
+  width: 52px;
+  height: 52px;
+  display: block;
+  pointer-events: none;
+}
+
+.ev-card {
+  position: relative;
+  width: min(224px, calc((100vw - 96px) * 0.8));
+  border-radius: 12px;
+  overflow: visible;
+  background: transparent;
+  border: none;
+  filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.55));
+}
+
+@keyframes ev-card-exit {
+  to {
+    transform: translate3d(calc(40px + 14vw), 0, 0);
+    opacity: 0;
+  }
+}
+
+.ev-card--exit {
+  pointer-events: none;
+  animation: ev-card-exit 0.52s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.ev-card-close {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  z-index: 5;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(8, 8, 12, 0.55);
+  color: #e8e8e8;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+  backdrop-filter: blur(6px);
+}
+
+.ev-card-close:hover {
+  background: rgba(24, 24, 32, 0.75);
+}
+
+/* Sprite card + back → face flip (see ephiriumVortexSprite.ts) */
+.ev-card-flip {
+  perspective: 1400px;
+  width: 100%;
+  aspect-ratio: 550 / 767;
+}
+
+.ev-card-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.72s cubic-bezier(0.4, 0.2, 0.2, 1);
+}
+
+.ev-card-flip-inner--revealed {
+  transform: rotateY(180deg);
+}
+
+.ev-card-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background-color: #1a1a22;
+  background-repeat: no-repeat;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.ev-card-face--back {
+  transform: rotateY(0deg);
+}
+
+.ev-card-face--front {
+  transform: rotateY(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ev-card-flip-inner {
+    transition-duration: 0.01ms;
+  }
+
+  .ev-card--exit {
+    animation: none;
+    opacity: 0;
+    transform: translate3d(24px, 0, 0);
+  }
+}
+
+/* ── Ether vortex: radial domain menu (RMB) ───────────────────── */
+
+.ether-vortex-domain-radial {
+  position: fixed;
+  z-index: 115;
+  pointer-events: auto;
+  background: rgba(22, 22, 26, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.55);
+}
+
+.ether-vortex-domain-radial-ring {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.ether-vortex-domain-radial-btn {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  padding: 0;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  background: rgba(40, 40, 48, 0.95);
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px)));
+  transition: transform 0.1s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ether-vortex-domain-radial-btn:hover {
+  border-color: rgba(74, 144, 217, 0.65);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  z-index: 2;
+}
+
+.ether-vortex-domain-radial-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+.ether-vortex-domain-radial-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  border: 2px dashed rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  background: rgba(32, 32, 38, 0.98);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.ether-vortex-domain-radial-center::after {
+  content: '∅';
+  font-family: 'Segoe UI Symbol', 'Noto Sans Symbols 2', system-ui, sans-serif;
+  transform: translateY(-0.05em);
+}
+
+.ether-vortex-domain-radial-center:hover {
+  border-color: rgba(255, 255, 255, 0.55);
+  border-style: solid;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(48, 48, 56, 0.98);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Ether vortex crystal popover (click chip on board) ─────── */
+
+.ether-vortex-crystal-popover {
+  position: fixed;
+  z-index: 116;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: rgba(30, 30, 30, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+}
+
+.ether-vortex-crystal-popover-val {
+  font-size: 15px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  min-width: 1.25em;
+  text-align: center;
+}
+
+.ether-vortex-crystal-popover-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(30, 100, 180, 0.5);
+  background: rgba(30, 136, 229, 0.25);
+  color: #e3f2fd;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s ease;
+}
+
+.ether-vortex-crystal-popover-btn:hover {
+  background: rgba(30, 136, 229, 0.45);
+}
+
+/* ── Army panel: god cards roster ────────────────────────────── */
+
+.army-god-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.army-god-hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.35;
+}
+
+.army-god-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ce93d8;
+  margin-bottom: 4px;
+}
+
+.army-god-selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-height: 28px;
+}
+
+.army-god-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px 4px 8px;
+  border-radius: 8px;
+  background: rgba(74, 20, 90, 0.35);
+  border: 1px solid rgba(186, 104, 200, 0.35);
+  font-size: 11px;
+  max-width: 100%;
+}
+
+.army-god-chip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}
+
+.army-god-chip-remove {
+  border: none;
+  background: rgba(0, 0, 0, 0.25);
+  color: #ffcdd2;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.army-god-chip-remove:hover {
+  background: rgba(183, 28, 28, 0.45);
+}
+
+.army-god-catalog-label {
+  display: block;
+  margin-top: 6px;
+  margin-bottom: 4px;
+}
+
+.army-god-catalog {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.army-god-add-btn {
+  text-align: left;
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(35, 35, 42, 0.9);
+  color: #e0e0e8;
+  cursor: pointer;
+}
+
+.army-god-add-btn:hover:not(:disabled) {
+  border-color: rgba(186, 104, 200, 0.4);
+  background: rgba(50, 40, 58, 0.95);
+}
+
+.army-god-add-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.army-god-dnd-row {
+  cursor: grab;
+}
+
+.army-god-dnd-row:active {
+  cursor: grabbing;
+}
+
+.army-god-thumb {
+  background: linear-gradient(145deg, #5e35b1 0%, #311b92 50%, #4527a0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.army-god-thumb-mark {
+  font-size: 18px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.88);
+  user-select: none;
 }

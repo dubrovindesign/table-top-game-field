@@ -148,8 +148,8 @@ export class UnitCard {
   /** Called when pointer enters/leaves an attack row (for board range preview). */
   onAttackHover: ((attack: AttackAbility | null) => void) | null = null;
 
-  constructor(parent: HTMLElement) {
-    this.container = el('div', 'unit-card');
+  constructor(parent: HTMLElement, extraClass?: string) {
+    this.container = el('div', extraClass ? `unit-card ${extraClass}` : 'unit-card');
     parent.appendChild(this.container);
   }
 
