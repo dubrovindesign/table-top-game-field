@@ -30,6 +30,7 @@ import {
 } from './etherVortex';
 import { getGodCardById, type GodTablePiece } from './godCards';
 import { EFFECT_MARKERS, type EffectMarkerId } from './effectMarkerMenu';
+import type { TableDragKind, TableDragState } from './multiplayer/protocol.ts';
 
 /** Canvas font stack for HP digits (see index.html Google Fonts link). */
 const HEALTH_VALUE_FONT = '"Langar", cursive';
@@ -41,6 +42,13 @@ export const GOD_TABLE_CARD_HH = Math.round(93 * 0.8);
 export const GOD_TABLE_CARD_ROT_CW_DEG = 10;
 /** Double-click flip duration (ms). */
 export const GOD_TABLE_CARD_FLIP_MS = 400;
+
+/** Remote peer drag overlay (multiplayer ghost). */
+export type RemotePeerTableDragPaint = {
+  fromId: string;
+  color: string;
+  drag: TableDragState;
+};
 
 // ── Visual config ──────────────────────────────────────────────
 
@@ -264,6 +272,17 @@ export class Renderer {
     durationMs: number;
     fromFaceUp: boolean;
   } | null = null;
+
+  /** Other players' cursors in board/world space (same as hex layout). */
+  private remoteBoardPointers: Array<{
+    boardX: number;
+    boardY: number;
+    color: string;
+    label?: string;
+  }> = [];
+
+  /** In-flight table drags from other peers (ghost previews). */
+  private remotePeerTableDrags: RemotePeerTableDragPaint[] = [];
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -587,6 +606,32 @@ export class Renderer {
     this.config = { ...this.config, ...patch };
   }
 
+  setRemoteBoardPointers(
+    pointers: Array<{
+      boardX: number;
+      boardY: number;
+      color: string;
+      label?: string;
+    }>,
+  ): void {
+    this.remoteBoardPointers = [...pointers];
+  }
+
+  setRemotePeerTableDrags(peers: RemotePeerTableDragPaint[]): void {
+    this.remotePeerTableDrags = [...peers];
+  }
+
+  private isPeerDraggingEntity(kind: TableDragKind, index: number): boolean {
+    if (kind === 'none') return false;
+    return this.remotePeerTableDrags.some(
+      (p) =>
+        p.drag.kind === kind &&
+        p.drag.index === index &&
+        p.drag.worldX !== null &&
+        p.drag.worldY !== null,
+    );
+  }
+
   render(): void {
     const { ctx, canvas, config } = this;
     const dpr = window.devicePixelRatio || 1;
@@ -681,7 +726,40 @@ export class Renderer {
       }
     }
 
+    this.drawRemoteBoardPointers();
+
     ctx.restore();
+  }
+
+  private drawRemoteBoardPointers(): void {
+    if (this.remoteBoardPointers.length === 0) return;
+    const { ctx } = this;
+    const z = this.camera.zoom;
+    const r = 9 / z;
+    const ring = 2 / z;
+    for (const p of this.remoteBoardPointers) {
+      ctx.beginPath();
+      ctx.arc(p.boardX, p.boardY, r, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = 0.92;
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+      ctx.lineWidth = ring;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      if (p.label) {
+        ctx.font = `${Math.max(9, 11 / z)}px sans-serif`;
+        ctx.fillStyle = '#111827';
+        ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+        ctx.lineWidth = 3 / z;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        const tx = p.boardX + r * 1.15;
+        const ty = p.boardY - r * 0.2;
+        ctx.strokeText(p.label, tx, ty);
+        ctx.fillText(p.label, tx, ty);
+      }
+    }
   }
 
   private getGridWorldBounds(): { minX: number; minY: number; maxX: number; maxY: number; width: number; height: number } {
@@ -1089,10 +1167,19 @@ export class Renderer {
   private drawGodLooseCards(): void {
     for (let i = 0; i < this.godTablePieces.length; i++) {
       const p = this.godTablePieces[i]!;
-      const w =
-        this.godLooseDraggingIndex === i && this.godLoosePreviewWorld
-          ? this.godLoosePreviewWorld
-          : p.world;
+      const remoteGod = this.remotePeerTableDrags.find(
+        (x) =>
+          x.drag.kind === 'godLoose' &&
+          x.drag.index === i &&
+          x.drag.worldX !== null &&
+          x.drag.worldY !== null,
+      );
+      let w: Point = p.world;
+      if (this.godLooseDraggingIndex === i && this.godLoosePreviewWorld) {
+        w = this.godLoosePreviewWorld;
+      } else if (remoteGod) {
+        w = { x: remoteGod.drag.worldX!, y: remoteGod.drag.worldY! };
+      }
       this.drawGodTablePiece(p, w, i);
     }
   }
@@ -1129,6 +1216,9 @@ export class Renderer {
 
     this.unitHexes.forEach((unitHex, index) => {
       if (this.draggingUnitIndex === index && this.dragPreviewPosition) {
+        return;
+      }
+      if (this.isPeerDraggingEntity('unit', index)) {
         return;
       }
       const offBoard = this.unitOffBoardWorlds[index];
@@ -1234,6 +1324,51 @@ export class Renderer {
           rotRad,
         );
       }
+    }
+
+    for (const rp of this.remotePeerTableDrags) {
+      const d = rp.drag;
+      if (d.kind !== 'unit' || d.index === null || d.worldX === null || d.worldY === null) continue;
+      if (d.index < 0 || d.index >= this.unitHexes.length) continue;
+      const pos = { x: d.worldX, y: d.worldY };
+      const rotRad = ((this.unitRotationDeg[d.index] ?? 0) * Math.PI) / 180;
+      const sprite = this.getSpriteImage(this.unitSpriteSrcs[d.index] ?? null);
+      ctx.save();
+      ctx.globalAlpha = 0.72;
+      this.drawSmallUnitInHex(pos, rotRad, sprite, () => {
+        ctx.save();
+        ctx.translate(pos.x, pos.y);
+        ctx.rotate(rotRad);
+        const offs = [0, 1, 2, 3, 4, 5].map((i) => layout.hexCornerOffset(i));
+        ctx.beginPath();
+        this.roundHexPathLocal(ctx, offs, this.smallUnitHexCornerRadius());
+        ctx.fillStyle = config.unitFillColor;
+        ctx.fill();
+        ctx.strokeStyle = config.unitStrokeColor;
+        ctx.lineWidth = 2 / this.camera.zoom;
+        ctx.stroke();
+        ctx.restore();
+      });
+      this.drawHealthBadgeAt(
+        pos,
+        halfH,
+        this.unitHealthValues[d.index] ?? 0,
+        false,
+        SMALL_UNIT_HEALTH_BADGE_SCALE,
+        'insideHexSmallUnit',
+        rotRad,
+      );
+      {
+        const tr = halfH * 0.2175;
+        const tc = smallUnitActivationToggleCenterWorldRad(pos, rotRad, layout);
+        this.drawActivationToggle(tc, tr, this.unitActivated[d.index] !== false);
+      }
+      const rMarkers = this.unitEffectMarkers[d.index];
+      if (rMarkers && rMarkers.length > 0) {
+        this.drawEffectMarkers(pos, rMarkers, halfH, 'small', rotRad);
+      }
+      ctx.restore();
+      this.strokeHexAtCenterRotated(pos, rotRad, rp.color, 2.4);
     }
   }
 
@@ -1888,6 +2023,7 @@ export class Renderer {
     // Like big mini: while dragging, hide dragged piece and draw full terrain at cursor.
     this.terrainCenterHexes.forEach((center, index) => {
       if (drag && this.draggingTerrainIndex === index) return;
+      if (this.isPeerDraggingEntity('terrain', index)) return;
       const offBoard = this.terrainOffBoardWorlds[index];
       const pivot = offBoard ?? layout.hexToPixel(center);
       this.drawTerrainStyleHexonAtWorldPivot(pivot, rotRad, {
@@ -1899,6 +2035,18 @@ export class Renderer {
         domainBlendColor: null,
       });
     }
+    for (const rp of this.remotePeerTableDrags) {
+      const d = rp.drag;
+      if (d.kind !== 'terrain' || d.index === null || d.worldX === null || d.worldY === null) continue;
+      if (d.index < 0 || d.index >= this.terrainCenterHexes.length) continue;
+      const { ctx } = this;
+      ctx.save();
+      ctx.globalAlpha = 0.72;
+      this.drawTerrainStyleHexonAtWorldPivot({ x: d.worldX, y: d.worldY }, rotRad, {
+        domainBlendColor: null,
+      });
+      ctx.restore();
+    }
   }
 
   private drawEtherVortexes(): void {
@@ -1907,6 +2055,7 @@ export class Renderer {
     const drag = this.draggingEtherVortexIndex !== null;
     this.etherVortexEntries.forEach((v, index) => {
       if (drag && this.draggingEtherVortexIndex === index) return;
+      if (this.isPeerDraggingEntity('ether', index)) return;
       const blend = getEtherVortexBlendColor(v.domain);
       const pivot = v.offBoardWorld ?? layout.hexToPixel(v.center);
       this.drawTerrainStyleHexonAtWorldPivot(pivot, rotRad, {
@@ -1920,6 +2069,21 @@ export class Renderer {
         domainBlendColor: blend,
       });
     }
+    for (const rp of this.remotePeerTableDrags) {
+      const d = rp.drag;
+      if (d.kind !== 'ether' || d.index === null || d.worldX === null || d.worldY === null) continue;
+      if (d.index < 0 || d.index >= this.etherVortexEntries.length) continue;
+      const entry = this.etherVortexEntries[d.index];
+      if (!entry) continue;
+      const { ctx } = this;
+      ctx.save();
+      ctx.globalAlpha = 0.72;
+      const blend = getEtherVortexBlendColor(entry.domain);
+      this.drawTerrainStyleHexonAtWorldPivot({ x: d.worldX, y: d.worldY }, rotRad, {
+        domainBlendColor: blend,
+      });
+      ctx.restore();
+    }
     this.drawEtherVortexCrystalBadgesWorld();
   }
 
@@ -1930,10 +2094,19 @@ export class Renderer {
     const half = etherVortexCrystalBadgeHalfWorld(layout);
     for (let vi = 0; vi < this.etherVortexEntries.length; vi++) {
       const v = this.etherVortexEntries[vi]!;
+      const remoteEther = this.remotePeerTableDrags.find(
+        (p) =>
+          p.drag.kind === 'ether' &&
+          p.drag.index === vi &&
+          p.drag.worldX !== null &&
+          p.drag.worldY !== null,
+      );
       const pivot =
         this.draggingEtherVortexIndex === vi && this.etherVortexPreviewWorld
           ? this.etherVortexPreviewWorld
-          : (v.offBoardWorld ?? layout.hexToPixel(v.center));
+          : remoteEther
+            ? { x: remoteEther.drag.worldX!, y: remoteEther.drag.worldY! }
+            : (v.offBoardWorld ?? layout.hexToPixel(v.center));
       const world = this.etherVortexBadgeWorldFromPivot(pivot, this.terrainRotationDeg);
       ctx.save();
       ctx.translate(world.x, world.y);
@@ -2127,6 +2300,7 @@ export class Renderer {
     this.bigMiniCenters.forEach((center, index) => {
       // Skip the one being dragged (we draw preview instead)
       if (this.draggingBigMiniIndex === index) return;
+      if (this.isPeerDraggingEntity('big', index)) return;
 
       const offBoard = this.bigMiniOffBoardWorlds[index];
       const rotDeg = this.bigMiniRotationDeg[index] ?? 0;
@@ -2233,6 +2407,51 @@ export class Renderer {
           this.bigMiniActivated[this.draggingBigMiniIndex] !== false,
         );
       }
+    }
+
+    for (const rp of this.remotePeerTableDrags) {
+      const d = rp.drag;
+      if (d.kind !== 'big' || d.index === null || d.worldX === null || d.worldY === null) continue;
+      if (d.index < 0 || d.index >= this.bigMiniCenters.length) continue;
+      const previewRot = this.bigMiniRotationDeg[d.index] ?? 0;
+      const p = { x: d.worldX, y: d.worldY };
+      ctx.save();
+      ctx.globalAlpha = 0.72;
+      this.drawBigMiniHexonAtPoint(p, baseRadius, config.bigMiniPreviewColor, previewRot);
+      ctx.globalAlpha = 0.55;
+      this.drawBigMiniRingAtPoint(
+        p,
+        ringPreviewInner,
+        rp.color,
+        2.5,
+        previewRot,
+      );
+      ctx.globalAlpha = 1;
+      this.drawHealthBadgeAt(
+        p,
+        badgeRadius,
+        this.bigMiniHealthValues[d.index] ?? 0,
+        false,
+        BIG_UNIT_HEALTH_UI_SCALE,
+        'insideHexBigUnitBottom',
+        (previewRot * Math.PI) / 180,
+      );
+      const rBm = this.bigMiniEffectMarkers[d.index];
+      if (rBm && rBm.length > 0) {
+        this.drawEffectMarkers(
+          p,
+          rBm,
+          badgeRadius,
+          'bigHexon',
+          (previewRot * Math.PI) / 180,
+        );
+      }
+      this.drawActivationToggle(
+        bigMiniActivationToggleCenterWorld(p, previewRot, layout),
+        bigActR,
+        this.bigMiniActivated[d.index] !== false,
+      );
+      ctx.restore();
     }
   }
 
@@ -2503,6 +2722,7 @@ export class Renderer {
 
     this.largeMiniAnchors.forEach((anchor, index) => {
       if (this.draggingLargeMiniIndex === index) return;
+      if (this.isPeerDraggingEntity('large', index)) return;
       const offBoard = this.largeMiniOffBoardWorlds[index];
       const rotDeg = this.largeMiniRotationDeg[index] ?? 0;
       const rotRad = (rotDeg * Math.PI) / 180;
@@ -2575,6 +2795,44 @@ export class Renderer {
           this.largeMiniActivated[this.draggingLargeMiniIndex] !== false,
         );
       }
+    }
+
+    for (const rp of this.remotePeerTableDrags) {
+      const d = rp.drag;
+      if (d.kind !== 'large' || d.index === null || d.worldX === null || d.worldY === null) continue;
+      if (d.index < 0 || d.index >= this.largeMiniAnchors.length) continue;
+      const previewRot = this.largeMiniRotationDeg[d.index] ?? 0;
+      const p = { x: d.worldX, y: d.worldY };
+      ctx.save();
+      ctx.globalAlpha = 0.72;
+      this.drawLargeMiniShapeAtPoint(
+        p, cells, bounds, boxW, boxH,
+        config.largeMiniPreviewColor, previewRot, null,
+        largeLocalOrigin,
+      );
+      ctx.globalAlpha = 0.5;
+      this.drawShapeRingAtPoint(
+        p, cells, layout,
+        0.62 * LARGE_MINI_VISUAL_SCALE, rp.color, 2.2, previewRot, largeLocalOrigin,
+      );
+      ctx.globalAlpha = 1;
+      const rotRad = (previewRot * Math.PI) / 180;
+      this.drawHealthBadgeAt(
+        p, badgeRadius,
+        this.largeMiniHealthValues[d.index] ?? 0,
+        false,
+        LARGE_UNIT_HEALTH_UI_SCALE, 'insideHexLargeUnit', rotRad,
+      );
+      const rLm = this.largeMiniEffectMarkers[d.index];
+      if (rLm && rLm.length > 0) {
+        this.drawEffectMarkers(p, rLm, badgeRadius, 'largeTri', rotRad);
+      }
+      this.drawActivationToggle(
+        largeMiniActivationToggleCenterWorld(p, previewRot, layout),
+        largeActR,
+        this.largeMiniActivated[d.index] !== false,
+      );
+      ctx.restore();
     }
   }
 
@@ -2673,6 +2931,7 @@ export class Renderer {
 
     this.hugeMiniAnchors.forEach((anchor, index) => {
       if (this.draggingHugeMiniIndex === index) return;
+      if (this.isPeerDraggingEntity('huge', index)) return;
       const offBoard = this.hugeMiniOffBoardWorlds[index];
       const rotDeg = this.hugeMiniRotationDeg[index] ?? 0;
       const rotRad = (rotDeg * Math.PI) / 180;
@@ -2738,6 +2997,43 @@ export class Renderer {
           this.hugeMiniActivated[this.draggingHugeMiniIndex] !== false,
         );
       }
+    }
+
+    for (const rp of this.remotePeerTableDrags) {
+      const d = rp.drag;
+      if (d.kind !== 'huge' || d.index === null || d.worldX === null || d.worldY === null) continue;
+      if (d.index < 0 || d.index >= this.hugeMiniAnchors.length) continue;
+      const previewRot = this.hugeMiniRotationDeg[d.index] ?? 0;
+      const p = { x: d.worldX, y: d.worldY };
+      ctx.save();
+      ctx.globalAlpha = 0.72;
+      this.drawHugeMiniShapeAtPoint(
+        p, cells, bounds, boxW, boxH,
+        config.hugeMiniPreviewColor, previewRot,
+      );
+      ctx.globalAlpha = 0.5;
+      this.drawShapeRingAtPoint(
+        p, cells, layout,
+        0.62 * HUGE_MINI_VISUAL_SCALE, rp.color, 2.2, previewRot,
+      );
+      ctx.globalAlpha = 1;
+      const rotRad = (previewRot * Math.PI) / 180;
+      this.drawHealthBadgeAt(
+        p, badgeRadius,
+        this.hugeMiniHealthValues[d.index] ?? 0,
+        false,
+        HUGE_UNIT_HEALTH_UI_SCALE, 'insideHexHugeUnit', rotRad,
+      );
+      const rHm = this.hugeMiniEffectMarkers[d.index];
+      if (rHm && rHm.length > 0) {
+        this.drawEffectMarkers(p, rHm, badgeRadius, 'hugeTri', rotRad);
+      }
+      this.drawActivationToggle(
+        hugeMiniActivationToggleCenterFromPivotWorld(p, previewRot, layout),
+        hugeActR,
+        this.hugeMiniActivated[d.index] !== false,
+      );
+      ctx.restore();
     }
   }
 

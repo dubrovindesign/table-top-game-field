@@ -50,12 +50,27 @@ import { EphiriumVortexUi } from './ephiriumVortexUi';
 import {
   etherVortexCrystalBadgeHitRadiusWorld,
   etherVortexFootprint,
+  type EtherVortexDomainId,
   type EtherVortexState,
 } from './etherVortex';
 import { EtherVortexContextMenu } from './etherVortexContextMenu';
 import { EtherVortexCrystalPopover } from './etherVortexCrystalPopover';
-import { EffectMarkerMenu, type EffectMarkerId } from './effectMarkerMenu';
+import {
+  EFFECT_MARKERS,
+  EffectMarkerMenu,
+  type EffectMarkerId,
+} from './effectMarkerMenu';
 import { getGodCardById, type GodTablePiece } from './godCards';
+import type { SerializedBoardStateV1 } from './multiplayer/boardState.ts';
+import { isSerializedBoardStateV1 } from './multiplayer/boardState.ts';
+import {
+  notifyBoardEditLocal,
+  registerBoardSyncApi,
+} from './multiplayer/boardSync.ts';
+import type { TableDragState } from './multiplayer/protocol.ts';
+import { EMPTY_TABLE_DRAG } from './multiplayer/protocol.ts';
+import { tickTableDragOutbound } from './multiplayer/tableDragOutbound.ts';
+import { initMultiplayerSession } from './multiplayer/session.ts';
 import './style.css';
 
 // ── Config ─────────────────────────────────────────────────────
@@ -930,6 +945,9 @@ function pushPieceRotationsToRenderer(): void {
   renderer.setBigMiniActivated(bigMiniatures.map((m) => m.activated !== false));
   renderer.setLargeMiniActivated(largeMiniatures.map((m) => m.activated !== false));
   renderer.setHugeMiniActivated(hugeMiniatures.map((m) => m.activated !== false));
+  // Effect markers live only in the model; push every frame with other piece state so
+  // remote board snapshots and local toggles both show on canvas without opening the menu.
+  syncEffectMarkersToRenderer();
 }
 
 /**
@@ -1159,6 +1177,7 @@ let needsRender = true;
 
 function scheduleRender(): void {
   needsRender = true;
+  notifyBoardEditLocal();
 }
 
 function loop(): void {
@@ -1218,6 +1237,7 @@ function loop(): void {
     needsRender = false;
   }
   if (godPieceFlipAnim !== null) needsRender = true;
+  tickTableDragOutbound(captureTableDragForNetwork);
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
@@ -1276,6 +1296,80 @@ let etherVortexPreviewWorld: Point | null = null;
 let etherVortexDragOverCenter: Hex | null = null;
 
 let godLooseCapturePointerId: number | null = null;
+
+function captureTableDragForNetwork(): TableDragState {
+  if (isDraggingGodLoose && godDraggingLooseIndex !== null && godLooseDragPreviewWorld) {
+    return {
+      kind: 'godLoose',
+      index: godDraggingLooseIndex,
+      worldX: godLooseDragPreviewWorld.x,
+      worldY: godLooseDragPreviewWorld.y,
+      overQ: null,
+      overR: null,
+    };
+  }
+  if (isDraggingEtherVortex && draggingEtherVortexIndex !== null && etherVortexPreviewWorld) {
+    return {
+      kind: 'ether',
+      index: draggingEtherVortexIndex,
+      worldX: etherVortexPreviewWorld.x,
+      worldY: etherVortexPreviewWorld.y,
+      overQ: etherVortexDragOverCenter?.q ?? null,
+      overR: etherVortexDragOverCenter?.r ?? null,
+    };
+  }
+  if (isDraggingTerrain && draggingTerrainIndex !== null && terrainPreviewWorld) {
+    return {
+      kind: 'terrain',
+      index: draggingTerrainIndex,
+      worldX: terrainPreviewWorld.x,
+      worldY: terrainPreviewWorld.y,
+      overQ: terrainDragOverCenter?.q ?? null,
+      overR: terrainDragOverCenter?.r ?? null,
+    };
+  }
+  if (draggingHugeMiniIndex !== null && hugeMiniPreviewPosition) {
+    return {
+      kind: 'huge',
+      index: draggingHugeMiniIndex,
+      worldX: hugeMiniPreviewPosition.x,
+      worldY: hugeMiniPreviewPosition.y,
+      overQ: hugeMiniDragOverAnchor?.q ?? null,
+      overR: hugeMiniDragOverAnchor?.r ?? null,
+    };
+  }
+  if (draggingLargeMiniIndex !== null && largeMiniPreviewPosition) {
+    return {
+      kind: 'large',
+      index: draggingLargeMiniIndex,
+      worldX: largeMiniPreviewPosition.x,
+      worldY: largeMiniPreviewPosition.y,
+      overQ: largeMiniDragOverAnchor?.q ?? null,
+      overR: largeMiniDragOverAnchor?.r ?? null,
+    };
+  }
+  if (draggingBigMiniIndex !== null && bigMiniPreviewPosition) {
+    return {
+      kind: 'big',
+      index: draggingBigMiniIndex,
+      worldX: bigMiniPreviewPosition.x,
+      worldY: bigMiniPreviewPosition.y,
+      overQ: bigMiniDragOverCenter?.q ?? null,
+      overR: bigMiniDragOverCenter?.r ?? null,
+    };
+  }
+  if (draggingUnitIndex !== null && dragPreviewPosition) {
+    return {
+      kind: 'unit',
+      index: draggingUnitIndex,
+      worldX: dragPreviewPosition.x,
+      worldY: dragPreviewPosition.y,
+      overQ: dragOverHex?.q ?? null,
+      overR: dragOverHex?.r ?? null,
+    };
+  }
+  return EMPTY_TABLE_DRAG;
+}
 
 // ── Helper: get hex under cursor ───────────────────────────────
 
@@ -4305,4 +4399,274 @@ canvas.addEventListener('contextmenu', (e) => {
     return;
   }
   e.preventDefault();
+});
+
+// ── Multiplayer: full board snapshot (units, terrain, god cards, …) ──
+
+const VALID_EFFECT_IDS = new Set<string>(EFFECT_MARKERS.map((m) => m.id));
+
+function effectMarkersFromStrings(arr: unknown): Set<EffectMarkerId> {
+  const s = new Set<EffectMarkerId>();
+  if (!Array.isArray(arr)) return s;
+  for (const x of arr) {
+    if (typeof x === 'string' && VALID_EFFECT_IDS.has(x)) s.add(x as EffectMarkerId);
+  }
+  return s;
+}
+
+function parseEtherDomain(d: unknown): EtherVortexDomainId | null {
+  if (d === null) return null;
+  if (d === 'life' || d === 'creation' || d === 'death' || d === 'destruction')
+    return d;
+  return null;
+}
+
+function captureBoardSnapshot(): SerializedBoardStateV1 {
+  return {
+    v: 1,
+    units: units.map((u) => ({
+      position: { q: u.position.q, r: u.position.r },
+      offBoardWorld: u.offBoardWorld,
+      walk: u.walk,
+      run: u.run,
+      rotationDeg: u.rotationDeg,
+      health: u.health,
+      activated: u.activated,
+      effectMarkers: [...u.effectMarkers],
+      spawnedFromArmyPanel: u.spawnedFromArmyPanel,
+      catalogUnitId: u.catalogUnitId,
+      rosterLeaderId: u.rosterLeaderId,
+    })),
+    unitCardData: structuredClone(unitCardData),
+    bigMiniatures: bigMiniatures.map((m) => ({
+      center: { q: m.center.q, r: m.center.r },
+      offBoardWorld: m.offBoardWorld,
+      walk: m.walk,
+      run: m.run,
+      rotationDeg: m.rotationDeg,
+      health: m.health,
+      activated: m.activated,
+      effectMarkers: [...m.effectMarkers],
+      spawnedFromArmyPanel: m.spawnedFromArmyPanel,
+      catalogUnitId: m.catalogUnitId,
+      rosterLeaderId: m.rosterLeaderId,
+    })),
+    bigMiniCardData: structuredClone(bigMiniCardData),
+    largeMiniatures: largeMiniatures.map((m) => ({
+      anchor: { q: m.anchor.q, r: m.anchor.r },
+      offBoardWorld: m.offBoardWorld,
+      walk: m.walk,
+      run: m.run,
+      rotationDeg: m.rotationDeg,
+      health: m.health,
+      activated: m.activated,
+      effectMarkers: [...m.effectMarkers],
+      spawnedFromArmyPanel: m.spawnedFromArmyPanel,
+      catalogUnitId: m.catalogUnitId,
+      rosterLeaderId: m.rosterLeaderId,
+    })),
+    largeMiniCardData: structuredClone(largeMiniCardData),
+    hugeMiniatures: hugeMiniatures.map((m) => ({
+      anchor: { q: m.anchor.q, r: m.anchor.r },
+      offBoardWorld: m.offBoardWorld,
+      walk: m.walk,
+      run: m.run,
+      rotationDeg: m.rotationDeg,
+      health: m.health,
+      activated: m.activated,
+      effectMarkers: [...m.effectMarkers],
+      spawnedFromArmyPanel: m.spawnedFromArmyPanel,
+      catalogUnitId: m.catalogUnitId,
+      rosterLeaderId: m.rosterLeaderId,
+    })),
+    hugeMiniCardData: structuredClone(hugeMiniCardData),
+    terrains: terrains.map((h) => ({ q: h.q, r: h.r })),
+    terrainOffBoardWorlds: terrainOffBoardWorlds.map((p) =>
+      p ? { x: p.x, y: p.y } : undefined,
+    ),
+    terrainRotationDeg,
+    etherVortexes: etherVortexes.map((v) => ({
+      center: { q: v.center.q, r: v.center.r },
+      etherCrystals: v.etherCrystals,
+      domain: v.domain,
+      offBoardWorld: v.offBoardWorld,
+    })),
+    godTablePieces: structuredClone(godTablePieces),
+  };
+}
+
+function resetTransientMultiplayerInteractionState(): void {
+  draggingUnitIndex = null;
+  dragOverHex = null;
+  dragPreviewPosition = null;
+  unitDragPendingIndex = null;
+  bigMiniDragPendingIndex = null;
+  largeMiniDragPendingIndex = null;
+  hugeMiniDragPendingIndex = null;
+  terrainDragPending = false;
+  terrainDragPendingIndex = null;
+  etherVortexDragPending = false;
+  etherVortexDragPendingIndex = null;
+  isDraggingTerrain = false;
+  draggingTerrainIndex = null;
+  terrainPreviewWorld = null;
+  terrainDragOverCenter = null;
+  draggingBigMiniIndex = null;
+  bigMiniPreviewPosition = null;
+  bigMiniDragOverCenter = null;
+  draggingLargeMiniIndex = null;
+  largeMiniPreviewPosition = null;
+  largeMiniDragOverAnchor = null;
+  draggingHugeMiniIndex = null;
+  hugeMiniPreviewPosition = null;
+  hugeMiniDragOverAnchor = null;
+  isDraggingEtherVortex = false;
+  draggingEtherVortexIndex = null;
+  etherVortexPreviewWorld = null;
+  etherVortexDragOverCenter = null;
+  isDraggingGodLoose = false;
+  godDraggingLooseIndex = null;
+  godLooseDragPreviewWorld = null;
+  godLooseDragPending = false;
+  godLooseDragPendingIndex = null;
+  godPieceFlipAnim = null;
+  godDeckDragWholeStackAfterHold = false;
+  godLooseCapturePointerId = null;
+  hoveredHexUnderPointer = null;
+  renderer.setHoveredHex(null);
+  clearSelection();
+  openHealthControlsUnitIndex = null;
+  openHealthControlsBigMiniIndex = null;
+  openHealthControlsLargeMiniIndex = null;
+  openHealthControlsHugeMiniIndex = null;
+}
+
+function applyBoardSnapshot(raw: unknown): void {
+  if (!isSerializedBoardStateV1(raw)) {
+    if (import.meta.env.DEV) {
+      console.warn('[mp] boardState ignored: snapshot failed validation', raw);
+    }
+    return;
+  }
+  const s = raw;
+  resetTransientMultiplayerInteractionState();
+
+  units.length = 0;
+  for (const u of s.units) {
+    units.push({
+      position: new Hex(u.position.q, u.position.r),
+      offBoardWorld: u.offBoardWorld,
+      walk: u.walk,
+      run: u.run,
+      rotationDeg: u.rotationDeg,
+      health: u.health,
+      activated: u.activated,
+      effectMarkers: effectMarkersFromStrings(u.effectMarkers),
+      spawnedFromArmyPanel: u.spawnedFromArmyPanel,
+      catalogUnitId: u.catalogUnitId,
+      rosterLeaderId: u.rosterLeaderId,
+    });
+  }
+
+  unitCardData.length = 0;
+  unitCardData.push(...structuredClone(s.unitCardData));
+
+  bigMiniatures.length = 0;
+  for (const m of s.bigMiniatures) {
+    bigMiniatures.push({
+      center: new Hex(m.center.q, m.center.r),
+      offBoardWorld: m.offBoardWorld,
+      walk: m.walk,
+      run: m.run,
+      rotationDeg: m.rotationDeg,
+      health: m.health,
+      activated: m.activated,
+      effectMarkers: effectMarkersFromStrings(m.effectMarkers),
+      spawnedFromArmyPanel: m.spawnedFromArmyPanel,
+      catalogUnitId: m.catalogUnitId,
+      rosterLeaderId: m.rosterLeaderId,
+    });
+  }
+  bigMiniCardData.length = 0;
+  bigMiniCardData.push(...structuredClone(s.bigMiniCardData));
+
+  largeMiniatures.length = 0;
+  for (const m of s.largeMiniatures) {
+    largeMiniatures.push({
+      anchor: new Hex(m.anchor.q, m.anchor.r),
+      offBoardWorld: m.offBoardWorld,
+      walk: m.walk,
+      run: m.run,
+      rotationDeg: m.rotationDeg,
+      health: m.health,
+      activated: m.activated,
+      effectMarkers: effectMarkersFromStrings(m.effectMarkers),
+      spawnedFromArmyPanel: m.spawnedFromArmyPanel,
+      catalogUnitId: m.catalogUnitId,
+      rosterLeaderId: m.rosterLeaderId,
+    });
+  }
+  largeMiniCardData.length = 0;
+  largeMiniCardData.push(...structuredClone(s.largeMiniCardData));
+
+  hugeMiniatures.length = 0;
+  for (const m of s.hugeMiniatures) {
+    hugeMiniatures.push({
+      anchor: new Hex(m.anchor.q, m.anchor.r),
+      offBoardWorld: m.offBoardWorld,
+      walk: m.walk,
+      run: m.run,
+      rotationDeg: m.rotationDeg,
+      health: m.health,
+      activated: m.activated,
+      effectMarkers: effectMarkersFromStrings(m.effectMarkers),
+      spawnedFromArmyPanel: m.spawnedFromArmyPanel,
+      catalogUnitId: m.catalogUnitId,
+      rosterLeaderId: m.rosterLeaderId,
+    });
+  }
+  hugeMiniCardData.length = 0;
+  hugeMiniCardData.push(...structuredClone(s.hugeMiniCardData));
+
+  terrains.length = 0;
+  for (const h of s.terrains) {
+    terrains.push(new Hex(h.q, h.r));
+  }
+  terrainOffBoardWorlds.length = 0;
+  for (const p of s.terrainOffBoardWorlds) {
+    terrainOffBoardWorlds.push(p ? { x: p.x, y: p.y } : undefined);
+  }
+  terrainRotationDeg = s.terrainRotationDeg;
+
+  etherVortexes.length = 0;
+  for (const v of s.etherVortexes) {
+    etherVortexes.push({
+      center: new Hex(v.center.q, v.center.r),
+      etherCrystals: v.etherCrystals,
+      domain: parseEtherDomain(v.domain),
+      offBoardWorld: v.offBoardWorld,
+    });
+  }
+
+  godTablePieces.length = 0;
+  godTablePieces.push(...structuredClone(s.godTablePieces));
+
+  armyBuilderPanel.refresh();
+  updateMovementHighlights();
+  updateBigMiniMovementHighlights();
+  updateLargeMiniMovementHighlights();
+  updateHugeMiniMovementHighlights();
+  updateAttackRangeHighlights();
+  updateUnitCard();
+}
+
+registerBoardSyncApi({
+  capture: captureBoardSnapshot,
+  apply: applyBoardSnapshot,
+});
+
+initMultiplayerSession({
+  renderer,
+  scheduleRender,
+  screenToBoard: screenToBoardWorld,
 });

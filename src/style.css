@@ -2073,3 +2073,106 @@ html, body {
   color: rgba(255, 255, 255, 0.88);
   user-select: none;
 }
+
+/* ── Multiplayer lobby (top-right) ───────────────────────────── */
+
+.mp-root {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 200;
+  max-width: min(360px, calc(100vw - 24px));
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.mp-panel {
+  background: rgba(22, 22, 28, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+}
+
+.mp-hidden {
+  display: none !important;
+}
+
+.mp-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: #f3f4f6;
+  margin-bottom: 10px;
+}
+
+.mp-hint {
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 10px;
+}
+
+.mp-hint code {
+  font-size: 11px;
+  color: #a5b4fc;
+  word-break: break-all;
+}
+
+.mp-btn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e5e7eb;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.mp-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mp-btn-primary {
+  background: rgba(99, 102, 241, 0.35);
+  border-color: rgba(129, 140, 248, 0.45);
+}
+
+.mp-btn-primary:hover {
+  background: rgba(99, 102, 241, 0.5);
+}
+
+.mp-btn-ghost {
+  background: transparent;
+  margin-top: 12px;
+}
+
+.mp-btn-danger {
+  margin-top: 12px;
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #fecaca;
+}
+
+.mp-btn-danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.mp-invite-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  align-items: stretch;
+}
+
+.mp-invite-input-ingame {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  color: #e5e7eb;
+  font-size: 11px;
+}
