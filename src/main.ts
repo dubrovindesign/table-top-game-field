@@ -16,9 +16,11 @@ import {
 import { DiceRoller } from './dice';
 import { UnitCard, type AttackAbility, type DiceRequest, type UnitCardData } from './unitCard';
 import {
+  BIG_MINI_VISUAL_SCALE,
   BIG_UNIT_HEALTH_UI_SCALE,
-  SMALL_UNIT_HEALTH_BADGE_OFFSET_Y_FRAC,
+  bigMiniHealthBadgeCenterWorld,
   SMALL_UNIT_HEALTH_BADGE_SCALE,
+  smallUnitHealthBadgeCenterWorldRad,
 } from './healthUi';
 import { CrystalWallet } from './crystalWallet';
 import { getCatalogUnit, getLeader, LEADER_MINI_MAX_COPIES, maxCopiesForSlot } from './armyCatalog';
@@ -31,6 +33,7 @@ import {
 } from './etherVortex';
 import { EtherVortexContextMenu } from './etherVortexContextMenu';
 import { EtherVortexCrystalPopover } from './etherVortexCrystalPopover';
+import { EffectMarkerMenu, type EffectMarkerId } from './effectMarkerMenu';
 import { getGodCardById, type GodTablePiece } from './godCards';
 import './style.css';
 
@@ -228,6 +231,8 @@ type Unit = {
   /** Facing in degrees (0 = east, CCW positive). */
   rotationDeg: number;
   health: number;
+  /** Active effect markers shown on the miniature. */
+  effectMarkers: Set<EffectMarkerId>;
   spawnedFromArmyPanel?: boolean;
   catalogUnitId?: string;
   rosterLeaderId?: string;
@@ -240,6 +245,7 @@ const units: Unit[] = [
     run: UNIT_RUN_RANGE,
     rotationDeg: 0,
     health: 10,
+    effectMarkers: new Set(),
   },
   {
     position: new Hex(5, -1),
@@ -247,6 +253,7 @@ const units: Unit[] = [
     run: UNIT_RUN_RANGE,
     rotationDeg: 0,
     health: 10,
+    effectMarkers: new Set(),
   },
 ];
 let selectedUnitIndex: number | null = null;
@@ -257,6 +264,7 @@ let etherVortexes: EtherVortexState[] = [
   { center: new Hex(11, 4), etherCrystals: 0, domain: null },
 ];
 const etherVortexMenu = new EtherVortexContextMenu();
+const effectMarkerMenu = new EffectMarkerMenu();
 const etherVortexCrystalPopover = new EtherVortexCrystalPopover();
 let selectedTerrainIndex: number | null = null;
 let selectedEtherVortexIndex: number | null = null;
@@ -293,6 +301,8 @@ type BigMini = {
   run: number;
   rotationDeg: number;
   health: number;
+  /** Active effect markers shown on the miniature. */
+  effectMarkers: Set<EffectMarkerId>;
   spawnedFromArmyPanel?: boolean;
   catalogUnitId?: string;
   rosterLeaderId?: string;
@@ -305,6 +315,7 @@ const bigMiniatures: BigMini[] = [
     run: BIG_MINI_RUN_RANGE,
     rotationDeg: 0,
     health: 20,
+    effectMarkers: new Set(),
   },
 ];
 let selectedBigMiniIndex: number | null = null;
@@ -545,6 +556,12 @@ function bigMiniOffBoards(): (Point | undefined)[] {
   return bigMiniatures.map((m) => m.offBoardWorld);
 }
 
+/** Push current effect markers from data model into renderer. */
+function syncEffectMarkersToRenderer(): void {
+  renderer.setUnitEffectMarkers(units.map((u) => [...u.effectMarkers]));
+  renderer.setBigMiniEffectMarkers(bigMiniatures.map((m) => [...m.effectMarkers]));
+}
+
 function updateMovementHighlights(): void {
   // Must keep indices aligned with `units[]` (sprites, drag, selection) — do not filter.
   renderer.setUnits(
@@ -690,6 +707,11 @@ armyBuilderPanel = new ArmyBuilderPanel(document.body, {
 });
 
 // ── Render loop ────────────────────────────────────────────────
+
+/** Redraw once Langar is ready so canvas HP digits use the webfont. */
+if (document.fonts) {
+  void document.fonts.load('16px Langar').then(() => scheduleRender());
+}
 
 let needsRender = true;
 
@@ -1093,6 +1115,7 @@ function trySpawnTroopFromArmyBuilder(
         run: card.run,
         rotationDeg: 0,
         health: card.health,
+        effectMarkers: new Set(),
         ...rosterMeta,
       });
     } else {
@@ -1103,6 +1126,7 @@ function trySpawnTroopFromArmyBuilder(
         run: card.run,
         rotationDeg: 0,
         health: card.health,
+        effectMarkers: new Set(),
         ...rosterMeta,
       });
     }
@@ -1125,6 +1149,7 @@ function trySpawnTroopFromArmyBuilder(
       run: card.run,
       rotationDeg: 0,
       health: card.health,
+      effectMarkers: new Set(),
       ...rosterMeta,
     });
   } else {
@@ -1135,6 +1160,7 @@ function trySpawnTroopFromArmyBuilder(
       run: card.run,
       rotationDeg: 0,
       health: card.health,
+      effectMarkers: new Set(),
       ...rosterMeta,
     });
   }
@@ -1175,6 +1201,7 @@ function trySpawnLeaderMiniFromArmyBuilder(
       run: card.run,
       rotationDeg: 0,
       health: card.health,
+      effectMarkers: new Set(),
       ...rosterMeta,
     });
   } else {
@@ -1185,6 +1212,7 @@ function trySpawnLeaderMiniFromArmyBuilder(
       run: card.run,
       rotationDeg: 0,
       health: card.health,
+      effectMarkers: new Set(),
       ...rosterMeta,
     });
   }
@@ -1595,7 +1623,7 @@ function pasteClipboard(): void {
       nextPos = offsetHexForPaste(clipboardEntity.unit.position);
     }
     if (!grid.has(nextPos) || units.some((u) => u.position.key === nextPos.key)) return;
-    units.push({ ...clipboardEntity.unit, position: nextPos });
+    units.push({ ...clipboardEntity.unit, position: nextPos, effectMarkers: new Set(clipboardEntity.unit.effectMarkers) });
     unitCardData.push(structuredClone(clipboardEntity.card));
     clearSelection();
     selectedUnitIndex = units.length - 1;
@@ -1607,7 +1635,7 @@ function pasteClipboard(): void {
     const nextCenter = cursorWorld
       ? nearestHexonCenterFromWorld(cursorWorld)
       : offsetHexonCenterForPaste(clipboardEntity.unit.center);
-    bigMiniatures.push({ ...clipboardEntity.unit, center: nextCenter });
+    bigMiniatures.push({ ...clipboardEntity.unit, center: nextCenter, effectMarkers: new Set(clipboardEntity.unit.effectMarkers) });
     bigMiniCardData.push(structuredClone(clipboardEntity.card));
     clearSelection();
     selectedBigMiniIndex = bigMiniatures.length - 1;
@@ -1714,11 +1742,13 @@ function getUnitHealthUiGeometry(unitIndex: number): {
   const unitCenterWorld = draggingPreview
     ? dragPreviewPosition!
     : layout.hexToPixel(units[unitIndex].position);
+  const rotRad = (units[unitIndex].rotationDeg * Math.PI) / 180;
   const effectiveR = halfH * SMALL_UNIT_HEALTH_BADGE_SCALE;
-  const badgeCenterWorld = {
-    x: unitCenterWorld.x,
-    y: unitCenterWorld.y + halfH * SMALL_UNIT_HEALTH_BADGE_OFFSET_Y_FRAC,
-  };
+  const badgeCenterWorld = smallUnitHealthBadgeCenterWorldRad(
+    unitCenterWorld,
+    rotRad,
+    layout,
+  );
   const badgeRadiusWorld = effectiveR * 0.48;
   const buttonRadiusWorld = badgeRadiusWorld * 0.55;
   const buttonOffsetWorld = badgeRadiusWorld * 1.55;
@@ -1737,16 +1767,27 @@ function getUnitHealthUiGeometry(unitIndex: number): {
   };
 }
 
-function getBigMiniHealthUiGeometry(centerWorld: { x: number; y: number }): {
+function getBigMiniHealthUiGeometry(
+  centerWorld: { x: number; y: number },
+  rotationDeg: number,
+): {
   badgeCenter: { x: number; y: number };
   badgeRadius: number;
   minusCenter: { x: number; y: number };
   plusCenter: { x: number; y: number };
   buttonRadius: number;
 } {
-  const baseRadiusWorld = Math.min(layout.size.x, layout.size.y) * 1.58 * BIG_UNIT_HEALTH_UI_SCALE;
-  const badgeCenterWorld = { x: centerWorld.x, y: centerWorld.y - baseRadiusWorld * 1.55 };
-  const badgeRadiusWorld = baseRadiusWorld * 0.48;
+  const badgeRadiusWorld =
+    Math.min(layout.size.x, layout.size.y) *
+    1.58 *
+    BIG_MINI_VISUAL_SCALE *
+    BIG_UNIT_HEALTH_UI_SCALE *
+    0.48;
+  const badgeCenterWorld = bigMiniHealthBadgeCenterWorld(
+    centerWorld,
+    rotationDeg,
+    layout,
+  );
   const buttonRadiusWorld = badgeRadiusWorld * 0.55;
   const buttonOffsetWorld = badgeRadiusWorld * 1.55;
   return {
@@ -1836,8 +1877,10 @@ function handleMiniatureHealthClick(screenX: number, screenY: number): boolean {
   }
 
   if (openHealthControlsBigMiniIndex !== null) {
+    const bi = openHealthControlsBigMiniIndex;
     const openGeom = getBigMiniHealthUiGeometry(
-      bigMiniHealthCenterWorld(openHealthControlsBigMiniIndex),
+      bigMiniHealthCenterWorld(bi),
+      bigMiniatures[bi].rotationDeg,
     );
     if (isPointInCircle(screenX, screenY, openGeom.minusCenter, openGeom.buttonRadius)) {
       bigMiniatures[openHealthControlsBigMiniIndex].health = Math.max(
@@ -1863,7 +1906,10 @@ function handleMiniatureHealthClick(screenX: number, screenY: number): boolean {
 
   for (let i = 0; i < bigMiniatures.length; i++) {
     if (draggingBigMiniIndex === i && bigMiniPreviewPosition !== null) {
-      const geom = getBigMiniHealthUiGeometry(bigMiniPreviewPosition);
+      const geom = getBigMiniHealthUiGeometry(
+        bigMiniPreviewPosition,
+        bigMiniatures[i].rotationDeg,
+      );
       if (isPointInCircle(screenX, screenY, geom.badgeCenter, geom.badgeRadius)) {
         openHealthControlsBigMiniIndex = i;
         openHealthControlsUnitIndex = null;
@@ -1871,7 +1917,10 @@ function handleMiniatureHealthClick(screenX: number, screenY: number): boolean {
       }
       continue;
     }
-    const geom = getBigMiniHealthUiGeometry(layout.hexToPixel(bigMiniatures[i].center));
+    const geom = getBigMiniHealthUiGeometry(
+      layout.hexToPixel(bigMiniatures[i].center),
+      bigMiniatures[i].rotationDeg,
+    );
     if (isPointInCircle(screenX, screenY, geom.badgeCenter, geom.badgeRadius)) {
       openHealthControlsBigMiniIndex = i;
       openHealthControlsUnitIndex = null;
@@ -2793,10 +2842,64 @@ window.addEventListener('keydown', (e) => {
 
 canvas.addEventListener('contextmenu', (e) => {
   const hex = hexAtScreen(e.clientX, e.clientY);
+
+  // Off-board unit right-click
   if (!hex) {
+    const obUnit = findOffBoardUnitAtScreen(e.clientX, e.clientY);
+    if (obUnit !== -1) {
+      e.preventDefault();
+      const unit = units[obUnit];
+      effectMarkerMenu.show(e.clientX, e.clientY, unit.effectMarkers, {
+        onToggle: () => {
+          syncEffectMarkersToRenderer();
+          scheduleRender();
+        },
+      });
+      return;
+    }
+    const obBig = findOffBoardBigMiniAtScreen(e.clientX, e.clientY);
+    if (obBig !== -1) {
+      e.preventDefault();
+      const bm = bigMiniatures[obBig];
+      effectMarkerMenu.show(e.clientX, e.clientY, bm.effectMarkers, {
+        onToggle: () => {
+          syncEffectMarkersToRenderer();
+          scheduleRender();
+        },
+      });
+      return;
+    }
     e.preventDefault();
     return;
   }
+
+  // On-board: check units first, then big minis, then ether vortexes
+  const clickedUnitIndex = units.findIndex((unit) => unit.position.key === hex.key);
+  if (clickedUnitIndex !== -1) {
+    e.preventDefault();
+    const unit = units[clickedUnitIndex];
+    effectMarkerMenu.show(e.clientX, e.clientY, unit.effectMarkers, {
+      onToggle: () => {
+        syncEffectMarkersToRenderer();
+        scheduleRender();
+      },
+    });
+    return;
+  }
+
+  const bigIdx = findBigMiniAtHex(hex);
+  if (bigIdx !== -1) {
+    e.preventDefault();
+    const bm = bigMiniatures[bigIdx];
+    effectMarkerMenu.show(e.clientX, e.clientY, bm.effectMarkers, {
+      onToggle: () => {
+        syncEffectMarkersToRenderer();
+        scheduleRender();
+      },
+    });
+    return;
+  }
+
   const vi = findEtherVortexAtHex(hex);
   if (vi !== -1) {
     e.preventDefault();

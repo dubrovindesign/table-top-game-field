@@ -5,9 +5,11 @@
 import { Hex, Layout, type Point } from './hex';
 import { type HexGrid } from './grid';
 import {
+  BIG_MINI_VISUAL_SCALE,
   BIG_UNIT_HEALTH_UI_SCALE,
-  SMALL_UNIT_HEALTH_BADGE_OFFSET_Y_FRAC,
+  bigMiniHealthBadgeCenterWorld,
   SMALL_UNIT_HEALTH_BADGE_SCALE,
+  smallUnitHealthBadgeCenterWorldRad,
 } from './healthUi';
 import {
   etherVortexCrystalBadgeHalfWorld,
@@ -15,9 +17,10 @@ import {
   type EtherVortexDomainId,
 } from './etherVortex';
 import { getGodCardById, type GodTablePiece } from './godCards';
+import { EFFECT_MARKERS, type EffectMarkerId } from './effectMarkerMenu';
 
-/** Big-mini silhouette vs hexon footprint (smaller leaves margin for terrain / ether vortex rim). */
-const BIG_MINI_VISUAL_SCALE = 0.92;
+/** Canvas font stack for HP digits (see index.html Google Fonts link). */
+const HEALTH_VALUE_FONT = '"Langar", cursive';
 
 /** God deck / discard / loose cards — half-extents in board/world space (scale with zoom). */
 export const GOD_TABLE_CARD_HW = Math.round(66 * 0.8);
@@ -184,10 +187,11 @@ export class Renderer {
   private draggingEtherVortexIndex: number | null = null;
   private etherVortexPreviewWorld: Point | null = null;
   private selectedEtherVortexIndex: number | null = null;
+  private unitEffectMarkers: EffectMarkerId[][] = [];
+  private bigMiniEffectMarkers: EffectMarkerId[][] = [];
+  private effectMarkerImages = new Map<string, HTMLImageElement>();
+  private effectMarkerImagesLoading = new Set<string>();
   private bigMiniRotationDeg: number[] = [];
-  private healthBadgeImage: HTMLImageElement | null = null;
-  private healthBadgeLoaded = false;
-  private healthBadgeFailed = false;
   private spriteImageCache = new Map<string, HTMLImageElement>();
   private spriteImageLoading = new Set<string>();
   private spriteImageFailed = new Set<string>();
@@ -308,6 +312,14 @@ export class Renderer {
   ): void {
     this.draggingEtherVortexIndex = draggingIndex;
     this.etherVortexPreviewWorld = previewWorld;
+  }
+
+  setUnitEffectMarkers(markers: EffectMarkerId[][]): void {
+    this.unitEffectMarkers = markers;
+  }
+
+  setBigMiniEffectMarkers(markers: EffectMarkerId[][]): void {
+    this.bigMiniEffectMarkers = markers;
   }
 
   setGodLoosePieces(
@@ -986,9 +998,14 @@ export class Renderer {
         this.unitHealthValues[index] ?? 0,
         this.openHealthControlsUnitIndex === index,
         SMALL_UNIT_HEALTH_BADGE_SCALE,
-        'insideHexBottom',
-        halfH,
+        'insideHexSmallUnit',
+        rotRad,
       );
+
+      const markers = this.unitEffectMarkers[index];
+      if (markers && markers.length > 0) {
+        this.drawEffectMarkers(center, markers, halfH, false, rotRad);
+      }
     });
 
     if (this.draggingUnitIndex !== null && this.dragPreviewPosition) {
@@ -1017,9 +1034,19 @@ export class Renderer {
         this.unitHealthValues[this.draggingUnitIndex] ?? 0,
         this.openHealthControlsUnitIndex === this.draggingUnitIndex,
         SMALL_UNIT_HEALTH_BADGE_SCALE,
-        'insideHexBottom',
-        halfH,
+        'insideHexSmallUnit',
+        rotRad,
       );
+      const dragMarkers = this.unitEffectMarkers[this.draggingUnitIndex];
+      if (dragMarkers && dragMarkers.length > 0) {
+        this.drawEffectMarkers(
+          this.dragPreviewPosition,
+          dragMarkers,
+          halfH,
+          false,
+          rotRad,
+        );
+      }
     }
   }
 
@@ -1290,70 +1317,52 @@ export class Renderer {
     ctx.restore();
   }
 
-  private ensureHealthBadgeLoaded(): void {
-    if (this.healthBadgeLoaded || this.healthBadgeFailed) return;
-    const image = new Image();
-    image.onload = () => {
-      this.healthBadgeImage = image;
-      this.healthBadgeLoaded = true;
-      this.healthBadgeFailed = false;
-    };
-    image.onerror = () => {
-      this.healthBadgeImage = null;
-      this.healthBadgeLoaded = false;
-      this.healthBadgeFailed = true;
-    };
-    image.src = '/health.svg';
-  }
-
-  /** HP badge: above center (big mini) or inside bottom of hex cell (small units). */
+  /** HP badge: red circle + white ring; small unit = bottom-right in hex; big = bottom inside hexon. */
   private drawHealthBadgeAt(
     miniatureCenter: Point,
     miniatureRadius: number,
     health: number,
     showPlusMinus: boolean,
     scale = 1,
-    verticalPlacement: 'above' | 'insideHexBottom' = 'above',
-    hexHalfHeight?: number,
+    verticalPlacement:
+      | 'above'
+      | 'insideHexSmallUnit'
+      | 'insideHexBigUnitBottom' = 'above',
+    rotationRad = 0,
   ): void {
-    this.ensureHealthBadgeLoaded();
     const { ctx } = this;
     const effectiveRadius = miniatureRadius * scale;
-    const badgeCenter =
-      verticalPlacement === 'insideHexBottom' && hexHalfHeight !== undefined
-        ? {
-            x: miniatureCenter.x,
-            y:
-              miniatureCenter.y +
-              hexHalfHeight * SMALL_UNIT_HEALTH_BADGE_OFFSET_Y_FRAC,
-          }
-        : {
-            x: miniatureCenter.x,
-            y: miniatureCenter.y - effectiveRadius * 1.55,
-          };
-    const badgeRadius = effectiveRadius * 0.48;
-
-    if (this.healthBadgeImage) {
-      const imageSize = badgeRadius * 2.35;
-      ctx.drawImage(
-        this.healthBadgeImage,
-        badgeCenter.x - imageSize / 2,
-        badgeCenter.y - imageSize / 2,
-        imageSize,
-        imageSize,
+    let badgeCenter: Point;
+    if (verticalPlacement === 'insideHexSmallUnit') {
+      badgeCenter = smallUnitHealthBadgeCenterWorldRad(
+        miniatureCenter,
+        rotationRad,
+        this.layout,
+      );
+    } else if (verticalPlacement === 'insideHexBigUnitBottom') {
+      badgeCenter = bigMiniHealthBadgeCenterWorld(
+        miniatureCenter,
+        (rotationRad * 180) / Math.PI,
+        this.layout,
       );
     } else {
-      ctx.beginPath();
-      ctx.arc(badgeCenter.x, badgeCenter.y, badgeRadius, 0, Math.PI * 2);
-      ctx.fillStyle = '#1f2937';
-      ctx.fill();
-      ctx.strokeStyle = '#f3f4f6';
-      ctx.lineWidth = 1.4 / this.camera.zoom;
-      ctx.stroke();
+      badgeCenter = {
+        x: miniatureCenter.x,
+        y: miniatureCenter.y - effectiveRadius * 1.55,
+      };
     }
+    const badgeRadius = effectiveRadius * 0.48;
+
+    ctx.beginPath();
+    ctx.arc(badgeCenter.x, badgeCenter.y, badgeRadius, 0, Math.PI * 2);
+    ctx.fillStyle = '#e53935';
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.35 / this.camera.zoom;
+    ctx.stroke();
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = `${Math.max(8, effectiveRadius * 0.72)}px sans-serif`;
+    ctx.font = `${Math.max(8, effectiveRadius * 0.72)}px ${HEALTH_VALUE_FONT}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(String(health), badgeCenter.x, badgeCenter.y);
@@ -1388,6 +1397,131 @@ export class Renderer {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(label, center.x, center.y);
+  }
+
+  /** Load an effect marker SVG image (lazy, cached). */
+  private getEffectMarkerImage(src: string): HTMLImageElement | null {
+    const ready = this.effectMarkerImages.get(src);
+    if (ready) return ready;
+    if (this.effectMarkerImagesLoading.has(src)) return null;
+    this.effectMarkerImagesLoading.add(src);
+    const img = new Image();
+    img.onload = () => {
+      this.effectMarkerImagesLoading.delete(src);
+      this.effectMarkerImages.set(src, img);
+    };
+    img.onerror = () => {
+      this.effectMarkerImagesLoading.delete(src);
+    };
+    img.src = src;
+    return null;
+  }
+
+  /**
+   * Flat-top hex: slot 0 = bottom-left vertex, 1 = mid of edge to left tip, then CCW around the hex
+   * (vertex / edge-mid alternating). Positions rotate with the unit.
+   */
+  private effectMarkerSlotLocalOffset(
+    layout: Layout,
+    slot: number,
+    insetFrac: number,
+  ): Point {
+    const startCorner = 2; // bottom-left vertex (+y, -x) for flat-top
+    if (slot % 2 === 0) {
+      const ci = (startCorner + slot / 2) % 6;
+      const v = layout.hexCornerOffset(ci);
+      return { x: v.x * insetFrac, y: v.y * insetFrac };
+    }
+    const ci = (startCorner + (slot - 1) / 2) % 6;
+    const a = layout.hexCornerOffset(ci);
+    const b = layout.hexCornerOffset((ci + 1) % 6);
+    return {
+      x: ((a.x + b.x) / 2) * insetFrac,
+      y: ((a.y + b.y) / 2) * insetFrac,
+    };
+  }
+
+  /**
+   * Effect markers: small units on single-hex perimeter (bottom-left, CCW);
+   * big minis in a column along the hexon’s left boundary (local layout space × visual scale).
+   */
+  private drawEffectMarkers(
+    center: Point,
+    markers: EffectMarkerId[],
+    miniatureRadius: number,
+    isBig: boolean,
+    rotationRad = 0,
+  ): void {
+    if (markers.length === 0) return;
+    const { ctx, layout } = this;
+    const cosR = Math.cos(rotationRad);
+    const sinR = Math.sin(rotationRad);
+
+    const iconSize = isBig
+      ? Math.max(10, miniatureRadius * 0.28 * 1.5)
+      : Math.max(6, miniatureRadius * 0.45);
+
+    if (isBig) {
+      const b = this.bigMiniHexonBoundsLocal(layout);
+      const n = markers.length;
+      const leftInset = 0.9;
+      const lx = b.minX * leftInset;
+      const spanY = b.maxY - b.minY;
+
+      for (let i = 0; i < n; i++) {
+        const markerId = markers[i];
+        const def = EFFECT_MARKERS.find((m) => m.id === markerId);
+        if (!def) continue;
+        const img = this.getEffectMarkerImage(def.iconSrc);
+        const t = n === 1 ? 0.5 : (i + 0.5) / n;
+        const ly = b.minY + t * spanY;
+        const sx = lx * BIG_MINI_VISUAL_SCALE;
+        const sy = ly * BIG_MINI_VISUAL_SCALE;
+        const cx = center.x + cosR * sx - sinR * sy;
+        const cy = center.y + sinR * sx + cosR * sy;
+        const half = iconSize / 2;
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, half + 1 / this.camera.zoom, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(17, 24, 39, 0.85)';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.35 / this.camera.zoom;
+        ctx.stroke();
+
+        if (img) {
+          ctx.drawImage(img, cx - half, cy - half, iconSize, iconSize);
+        }
+      }
+      return;
+    }
+
+    const insetFrac = 0.78;
+
+    for (let i = 0; i < markers.length; i++) {
+      const markerId = markers[i];
+      const def = EFFECT_MARKERS.find((m) => m.id === markerId);
+      if (!def) continue;
+      const img = this.getEffectMarkerImage(def.iconSrc);
+      const local = this.effectMarkerSlotLocalOffset(layout, i, insetFrac);
+      const sx = local.x;
+      const sy = local.y;
+      const cx = center.x + cosR * sx - sinR * sy;
+      const cy = center.y + sinR * sx + cosR * sy;
+      const half = iconSize / 2;
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, half + 1 / this.camera.zoom, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(17, 24, 39, 0.85)';
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.35 / this.camera.zoom;
+      ctx.stroke();
+
+      if (img) {
+        ctx.drawImage(img, cx - half, cy - half, iconSize, iconSize);
+      }
+    }
   }
 
   private drawDragHoverHex(): void {
@@ -1685,24 +1819,45 @@ export class Renderer {
 
       const offBoard = this.bigMiniOffBoardWorlds[index];
       const rotDeg = this.bigMiniRotationDeg[index] ?? 0;
+      const rotRad = (rotDeg * Math.PI) / 180;
 
       if (offBoard) {
         this.drawBigMiniHexonAtPoint(offBoard, baseRadius, config.bigMiniFillColor, rotDeg);
         if (this.selectedBigMiniIndex === index) {
           this.drawBigMiniRingAtPoint(offBoard, ringSel, '#4caf50', 3, rotDeg);
         }
-        this.drawHealthBadgeAt(offBoard, badgeRadius,
+        this.drawHealthBadgeAt(
+          offBoard,
+          badgeRadius,
           this.bigMiniHealthValues[index] ?? 0,
-          this.openHealthControlsBigMiniIndex === index, BIG_UNIT_HEALTH_UI_SCALE);
+          this.openHealthControlsBigMiniIndex === index,
+          BIG_UNIT_HEALTH_UI_SCALE,
+          'insideHexBigUnitBottom',
+          rotRad,
+        );
+        const bmMarkers = this.bigMiniEffectMarkers[index];
+        if (bmMarkers && bmMarkers.length > 0) {
+          this.drawEffectMarkers(offBoard, bmMarkers, badgeRadius, true, rotRad);
+        }
       } else {
         this.drawBigMiniHexon(center, baseRadius, config.bigMiniFillColor, rotDeg);
         if (this.selectedBigMiniIndex === index) {
           this.drawBigMiniRing(center, ringSel, '#4caf50', 3, rotDeg);
         }
         const p = layout.hexToPixel(center);
-        this.drawHealthBadgeAt(p, badgeRadius,
+        this.drawHealthBadgeAt(
+          p,
+          badgeRadius,
           this.bigMiniHealthValues[index] ?? 0,
-          this.openHealthControlsBigMiniIndex === index, BIG_UNIT_HEALTH_UI_SCALE);
+          this.openHealthControlsBigMiniIndex === index,
+          BIG_UNIT_HEALTH_UI_SCALE,
+          'insideHexBigUnitBottom',
+          rotRad,
+        );
+        const bmMarkers = this.bigMiniEffectMarkers[index];
+        if (bmMarkers && bmMarkers.length > 0) {
+          this.drawEffectMarkers(p, bmMarkers, badgeRadius, true, rotRad);
+        }
       }
     });
 
@@ -1734,7 +1889,19 @@ export class Renderer {
           this.bigMiniHealthValues[this.draggingBigMiniIndex] ?? 0,
           this.openHealthControlsBigMiniIndex === this.draggingBigMiniIndex,
           BIG_UNIT_HEALTH_UI_SCALE,
+          'insideHexBigUnitBottom',
+          (previewRot * Math.PI) / 180,
         );
+        const dragBmMarkers = this.bigMiniEffectMarkers[this.draggingBigMiniIndex];
+        if (dragBmMarkers && dragBmMarkers.length > 0) {
+          this.drawEffectMarkers(
+            this.bigMiniPreviewPosition,
+            dragBmMarkers,
+            badgeRadius,
+            true,
+            (previewRot * Math.PI) / 180,
+          );
+        }
       }
     }
   }
