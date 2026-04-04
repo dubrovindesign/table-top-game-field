@@ -7,8 +7,20 @@ import { type HexGrid } from './grid';
 import {
   BIG_MINI_VISUAL_SCALE,
   BIG_UNIT_HEALTH_UI_SCALE,
+  bigMiniActivationToggleCenterWorld,
   bigMiniHealthBadgeCenterWorld,
+  LARGE_MINI_VISUAL_SCALE,
+  LARGE_UNIT_HEALTH_UI_SCALE,
+  largeMiniActivationToggleCenterWorld,
+  largeMiniHealthBadgeCenterWorld,
+  HUGE_MINI_VISUAL_SCALE,
+  HUGE_UNIT_HEALTH_UI_SCALE,
+  hugeMiniActivationToggleCenterFromPivotWorld,
+  hugeMiniDrawPivotWorld,
+  hugeMiniHealthBadgeCenterWorld,
+  SMALL_UNIT_HEALTH_BADGE_EXPAND_WHEN_OPEN,
   SMALL_UNIT_HEALTH_BADGE_SCALE,
+  smallUnitActivationToggleCenterWorldRad,
   smallUnitHealthBadgeCenterWorldRad,
 } from './healthUi';
 import {
@@ -72,6 +84,10 @@ export interface RenderConfig {
   bigMiniStrokeColor: string;
   bigMiniSymbolColor: string;
   bigMiniPreviewColor: string;
+  largeMiniFillColor: string;
+  largeMiniPreviewColor: string;
+  hugeMiniFillColor: string;
+  hugeMiniPreviewColor: string;
 }
 
 export const defaultRenderConfig: RenderConfig = {
@@ -111,6 +127,10 @@ export const defaultRenderConfig: RenderConfig = {
   bigMiniStrokeColor: '#283593',
   bigMiniSymbolColor: '#c5cae9',
   bigMiniPreviewColor: 'rgba(63, 81, 181, 0.25)',
+  largeMiniFillColor: 'rgba(156, 39, 176, 0.40)',
+  largeMiniPreviewColor: 'rgba(156, 39, 176, 0.25)',
+  hugeMiniFillColor: 'rgba(233, 30, 99, 0.40)',
+  hugeMiniPreviewColor: 'rgba(233, 30, 99, 0.25)',
 };
 
 // ── Camera ─────────────────────────────────────────────────────
@@ -192,6 +212,39 @@ export class Renderer {
   private effectMarkerImages = new Map<string, HTMLImageElement>();
   private effectMarkerImagesLoading = new Set<string>();
   private bigMiniRotationDeg: number[] = [];
+  // ── Large mini (3-hex triangle) state ──
+  private largeMiniAnchors: Hex[] = [];
+  private largeMiniOffBoardWorlds: (Point | undefined)[] = [];
+  private largeMiniPreviewPosition: Point | null = null;
+  private draggingLargeMiniIndex: number | null = null;
+  private largeMiniDragOverAnchor: Hex | null = null;
+  private largeMiniWalkHexes: Hex[] = [];
+  private largeMiniRunHexes: Hex[] = [];
+  private selectedLargeMiniIndex: number | null = null;
+  private largeMiniRotationDeg: number[] = [];
+  private largeMiniHealthValues: number[] = [];
+  private openHealthControlsLargeMiniIndex: number | null = null;
+  private largeMiniEffectMarkers: EffectMarkerId[][] = [];
+  private largeMiniSpriteSrcs: (string | null)[] = [];
+  // ── Huge mini (3-hexon triangle) state ──
+  private hugeMiniAnchors: Hex[] = [];
+  private hugeMiniOffBoardWorlds: (Point | undefined)[] = [];
+  private hugeMiniPreviewPosition: Point | null = null;
+  private draggingHugeMiniIndex: number | null = null;
+  private hugeMiniDragOverAnchor: Hex | null = null;
+  private hugeMiniWalkHexonCenters: Hex[] = [];
+  private hugeMiniRunHexonCenters: Hex[] = [];
+  private selectedHugeMiniIndex: number | null = null;
+  private hugeMiniRotationDeg: number[] = [];
+  private hugeMiniHealthValues: number[] = [];
+  private openHealthControlsHugeMiniIndex: number | null = null;
+  private hugeMiniEffectMarkers: EffectMarkerId[][] = [];
+  private hugeMiniSpriteSrc: string | null = null;
+  private unitActivated: boolean[] = [];
+  private bigMiniActivated: boolean[] = [];
+  private largeMiniActivated: boolean[] = [];
+  private hugeMiniActivated: boolean[] = [];
+
   private spriteImageCache = new Map<string, HTMLImageElement>();
   private spriteImageLoading = new Set<string>();
   private spriteImageFailed = new Set<string>();
@@ -406,6 +459,22 @@ export class Renderer {
     this.openHealthControlsUnitIndex = openControlsUnitIndex;
   }
 
+  setUnitActivated(values: boolean[]): void {
+    this.unitActivated = [...values];
+  }
+
+  setBigMiniActivated(values: boolean[]): void {
+    this.bigMiniActivated = [...values];
+  }
+
+  setLargeMiniActivated(values: boolean[]): void {
+    this.largeMiniActivated = [...values];
+  }
+
+  setHugeMiniActivated(values: boolean[]): void {
+    this.hugeMiniActivated = [...values];
+  }
+
   setBigMiniHealth(values: number[], openControlsBigMiniIndex: number | null): void {
     this.bigMiniHealthValues = [...values];
     this.openHealthControlsBigMiniIndex = openControlsBigMiniIndex;
@@ -426,6 +495,92 @@ export class Renderer {
 
   setBigMiniRotations(degrees: number[]): void {
     this.bigMiniRotationDeg = [...degrees];
+  }
+
+  // ── Large mini setters ──
+
+  setLargeMiniatures(
+    anchors: Hex[],
+    previewPosition: Point | null,
+    draggingIndex: number | null,
+    dragOverAnchor: Hex | null,
+    offBoardWorlds?: (Point | undefined)[],
+  ): void {
+    this.largeMiniAnchors = [...anchors];
+    this.largeMiniPreviewPosition = previewPosition;
+    this.draggingLargeMiniIndex = draggingIndex;
+    this.largeMiniDragOverAnchor = dragOverAnchor;
+    this.largeMiniOffBoardWorlds = offBoardWorlds ? [...offBoardWorlds] : [];
+  }
+
+  setLargeMiniMovement(
+    selectedIndex: number | null,
+    walkHexes: Hex[],
+    runHexes: Hex[],
+  ): void {
+    this.selectedLargeMiniIndex = selectedIndex;
+    this.largeMiniWalkHexes = [...walkHexes];
+    this.largeMiniRunHexes = [...runHexes];
+  }
+
+  setLargeMiniRotations(degrees: number[]): void {
+    this.largeMiniRotationDeg = [...degrees];
+  }
+
+  setLargeMiniHealth(values: number[], openControlsIndex: number | null): void {
+    this.largeMiniHealthValues = [...values];
+    this.openHealthControlsLargeMiniIndex = openControlsIndex;
+  }
+
+  setLargeMiniEffectMarkers(markers: EffectMarkerId[][]): void {
+    this.largeMiniEffectMarkers = markers;
+  }
+
+  setLargeMiniSpriteSources(srcs: (string | null)[]): void {
+    this.largeMiniSpriteSrcs = [...srcs];
+  }
+
+  // ── Huge mini setters ──
+
+  setHugeMiniatures(
+    anchors: Hex[],
+    previewPosition: Point | null,
+    draggingIndex: number | null,
+    dragOverAnchor: Hex | null,
+    offBoardWorlds?: (Point | undefined)[],
+  ): void {
+    this.hugeMiniAnchors = [...anchors];
+    this.hugeMiniPreviewPosition = previewPosition;
+    this.draggingHugeMiniIndex = draggingIndex;
+    this.hugeMiniDragOverAnchor = dragOverAnchor;
+    this.hugeMiniOffBoardWorlds = offBoardWorlds ? [...offBoardWorlds] : [];
+  }
+
+  setHugeMiniMovement(
+    selectedIndex: number | null,
+    walkHexonCenters: Hex[],
+    runHexonCenters: Hex[],
+  ): void {
+    this.selectedHugeMiniIndex = selectedIndex;
+    this.hugeMiniWalkHexonCenters = [...walkHexonCenters];
+    this.hugeMiniRunHexonCenters = [...runHexonCenters];
+  }
+
+  setHugeMiniRotations(degrees: number[]): void {
+    this.hugeMiniRotationDeg = [...degrees];
+  }
+
+  setHugeMiniHealth(values: number[], openControlsIndex: number | null): void {
+    this.hugeMiniHealthValues = [...values];
+    this.openHealthControlsHugeMiniIndex = openControlsIndex;
+  }
+
+  setHugeMiniEffectMarkers(markers: EffectMarkerId[][]): void {
+    this.hugeMiniEffectMarkers = markers;
+  }
+
+  setHugeMiniSpriteSource(src: string | null): void {
+    this.hugeMiniSpriteSrc = src;
   }
 
   updateConfig(patch: Partial<RenderConfig>): void {
@@ -490,15 +645,27 @@ export class Renderer {
     // Pass 7: big mini movement range (hexon-level)
     this.drawBigMiniMovement();
 
+    // Pass 7a: huge mini movement range (hexon-level, 3-hexon triangles)
+    this.drawHugeMiniMovement();
+
     // Pass 7b: attack range for big miniatures (on top of walk/run rings)
     this.drawAttackRangeBigHighlights();
 
     // Pass 8: big miniatures (hexon-sized)
     this.drawBigMiniatures();
 
+    // Pass 8a: huge miniatures (3-hexon triangle)
+    this.drawHugeMiniatures();
+
     // Pass 8b: terrain selection (on top of big minis that share hexes with terrain)
     this.drawTerrainSelectionRing();
     this.drawEtherVortexSelectionRing();
+
+    // Pass 8c: large mini movement range (hex-level, 3-hex triangles)
+    this.drawLargeMiniMovement();
+
+    // Pass 8d: large miniatures (3-hex triangle)
+    this.drawLargeMiniatures();
 
     // Pass 9: unit miniature (small)
     this.drawUnits();
@@ -604,6 +771,8 @@ export class Renderer {
     const showBaseHover =
       this.draggingUnitIndex === null &&
       this.draggingBigMiniIndex === null &&
+      this.draggingLargeMiniIndex === null &&
+      this.draggingHugeMiniIndex === null &&
       !this.terrainDragging;
     const isHovered = showBaseHover && this.hoveredHex !== null && hex.key === this.hoveredHex.key;
 
@@ -1001,10 +1170,15 @@ export class Renderer {
         'insideHexSmallUnit',
         rotRad,
       );
+      {
+        const tr = halfH * 0.2175;
+        const tc = smallUnitActivationToggleCenterWorldRad(center, rotRad, layout);
+        this.drawActivationToggle(tc, tr, this.unitActivated[index] !== false);
+      }
 
       const markers = this.unitEffectMarkers[index];
       if (markers && markers.length > 0) {
-        this.drawEffectMarkers(center, markers, halfH, false, rotRad);
+        this.drawEffectMarkers(center, markers, halfH, 'small', rotRad);
       }
     });
 
@@ -1037,13 +1211,26 @@ export class Renderer {
         'insideHexSmallUnit',
         rotRad,
       );
+      {
+        const tr = halfH * 0.2175;
+        const tc = smallUnitActivationToggleCenterWorldRad(
+          this.dragPreviewPosition!,
+          rotRad,
+          layout,
+        );
+        this.drawActivationToggle(
+          tc,
+          tr,
+          this.unitActivated[this.draggingUnitIndex] !== false,
+        );
+      }
       const dragMarkers = this.unitEffectMarkers[this.draggingUnitIndex];
       if (dragMarkers && dragMarkers.length > 0) {
         this.drawEffectMarkers(
           this.dragPreviewPosition,
           dragMarkers,
           halfH,
-          false,
+          'small',
           rotRad,
         );
       }
@@ -1075,6 +1262,16 @@ export class Renderer {
         return { x: p.x - o.x, y: p.y - o.y };
       }),
     ];
+  }
+
+  /** Bbox center of a shape in local layout units (rotation pivot for multi-hex minis). */
+  private localBoundsCenter(b: {
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+  }): Point {
+    return { x: (b.minX + b.maxX) / 2, y: (b.minY + b.maxY) / 2 };
   }
 
   private bigMiniHexonBoundsLocal(layout: Layout): {
@@ -1327,11 +1524,13 @@ export class Renderer {
     verticalPlacement:
       | 'above'
       | 'insideHexSmallUnit'
-      | 'insideHexBigUnitBottom' = 'above',
+      | 'insideHexBigUnitBottom'
+      | 'insideHexLargeUnit'
+      | 'insideHexHugeUnit' = 'above',
     rotationRad = 0,
   ): void {
     const { ctx } = this;
-    const effectiveRadius = miniatureRadius * scale;
+    let effectiveRadius = miniatureRadius * scale;
     let badgeCenter: Point;
     if (verticalPlacement === 'insideHexSmallUnit') {
       badgeCenter = smallUnitHealthBadgeCenterWorldRad(
@@ -1345,11 +1544,26 @@ export class Renderer {
         (rotationRad * 180) / Math.PI,
         this.layout,
       );
+    } else if (verticalPlacement === 'insideHexLargeUnit') {
+      badgeCenter = largeMiniHealthBadgeCenterWorld(
+        miniatureCenter,
+        (rotationRad * 180) / Math.PI,
+        this.layout,
+      );
+    } else if (verticalPlacement === 'insideHexHugeUnit') {
+      badgeCenter = hugeMiniHealthBadgeCenterWorld(
+        miniatureCenter,
+        (rotationRad * 180) / Math.PI,
+        this.layout,
+      );
     } else {
       badgeCenter = {
         x: miniatureCenter.x,
         y: miniatureCenter.y - effectiveRadius * 1.55,
       };
+    }
+    if (verticalPlacement === 'insideHexSmallUnit' && showPlusMinus) {
+      effectiveRadius *= SMALL_UNIT_HEALTH_BADGE_EXPAND_WHEN_OPEN;
     }
     const badgeRadius = effectiveRadius * 0.48;
 
@@ -1381,6 +1595,22 @@ export class Renderer {
       buttonRadius,
       '+',
     );
+  }
+
+  /** Activation state: yellow = active, gray = inactive (board/world space). */
+  private drawActivationToggle(
+    centerWorld: Point,
+    radiusWorld: number,
+    activated: boolean,
+  ): void {
+    const { ctx } = this;
+    ctx.beginPath();
+    ctx.arc(centerWorld.x, centerWorld.y, radiusWorld, 0, Math.PI * 2);
+    ctx.fillStyle = activated ? '#f5d000' : '#9ca3af';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.32)';
+    ctx.lineWidth = Math.max(1, 1.2 / this.camera.zoom);
+    ctx.stroke();
   }
 
   private drawHealthButton(center: Point, radius: number, label: '+' | '-'): void {
@@ -1441,15 +1671,33 @@ export class Renderer {
     };
   }
 
+  /** Multi-hex mini silhouettes: effect markers sit on the left edge, same pivot as draw. */
+  private effectMarkerMultiFootprintBounds(
+    layout: Layout,
+    footprint: 'bigHexon' | 'largeTri' | 'hugeTri',
+  ): { b: { minX: number; maxX: number; minY: number; maxY: number }; vis: number } {
+    if (footprint === 'bigHexon') {
+      return { b: this.bigMiniHexonBoundsLocal(layout), vis: BIG_MINI_VISUAL_SCALE };
+    }
+    const cells =
+      footprint === 'largeTri'
+        ? this.largeTriangleLocalCellCenters(layout)
+        : this.hugeTriangleLocalCellCenters(layout);
+    return {
+      b: this.boundsFromCells(cells, layout),
+      vis: footprint === 'largeTri' ? LARGE_MINI_VISUAL_SCALE : HUGE_MINI_VISUAL_SCALE,
+    };
+  }
+
   /**
    * Effect markers: small units on single-hex perimeter (bottom-left, CCW);
-   * big minis in a column along the hexon’s left boundary (local layout space × visual scale).
+   * multi-hex minis in a column on the left silhouette edge (pivot = bbox center).
    */
   private drawEffectMarkers(
     center: Point,
     markers: EffectMarkerId[],
     miniatureRadius: number,
-    isBig: boolean,
+    footprint: 'small' | 'bigHexon' | 'largeTri' | 'hugeTri',
     rotationRad = 0,
   ): void {
     if (markers.length === 0) return;
@@ -1457,12 +1705,15 @@ export class Renderer {
     const cosR = Math.cos(rotationRad);
     const sinR = Math.sin(rotationRad);
 
-    const iconSize = isBig
-      ? Math.max(10, miniatureRadius * 0.28 * 1.5)
-      : Math.max(6, miniatureRadius * 0.45);
+    const iconSize =
+      footprint === 'small'
+        ? Math.max(6, miniatureRadius * 0.45)
+        : Math.max(10, miniatureRadius * 0.28 * 1.5);
 
-    if (isBig) {
-      const b = this.bigMiniHexonBoundsLocal(layout);
+    if (footprint !== 'small') {
+      const { b, vis } = this.effectMarkerMultiFootprintBounds(layout, footprint);
+      const cx0 = (b.minX + b.maxX) / 2;
+      const cy0 = (b.minY + b.maxY) / 2;
       const n = markers.length;
       const leftInset = 0.9;
       const lx = b.minX * leftInset;
@@ -1475,8 +1726,10 @@ export class Renderer {
         const img = this.getEffectMarkerImage(def.iconSrc);
         const t = n === 1 ? 0.5 : (i + 0.5) / n;
         const ly = b.minY + t * spanY;
-        const sx = lx * BIG_MINI_VISUAL_SCALE;
-        const sy = ly * BIG_MINI_VISUAL_SCALE;
+        const sx =
+          footprint === 'largeTri' ? lx * vis : (lx - cx0) * vis;
+        const sy =
+          footprint === 'largeTri' ? ly * vis : (ly - cy0) * vis;
         const cx = center.x + cosR * sx - sinR * sy;
         const cy = center.y + sinR * sx + cosR * sy;
         const half = iconSize / 2;
@@ -1543,15 +1796,72 @@ export class Renderer {
 
     if (this.bigMiniDragOverCenter) {
       const p = layout.hexToPixel(this.bigMiniDragOverCenter);
+      const rotDeg =
+        this.draggingBigMiniIndex !== null
+          ? (this.bigMiniRotationDeg[this.draggingBigMiniIndex] ?? 0)
+          : 0;
+      const rotRad = (rotDeg * Math.PI) / 180;
+      const hb = this.bigMiniHexonBoundsLocal(layout);
+      const { x: hcx, y: hcy } = this.localBoundsCenter(hb);
       ctx.save();
       ctx.translate(p.x, p.y);
+      ctx.rotate(rotRad);
       ctx.scale(BIG_MINI_VISUAL_SCALE, BIG_MINI_VISUAL_SCALE);
+      ctx.translate(-hcx, -hcy);
       ctx.beginPath();
       this.addBigMiniHexonOuterPath(ctx, layout, 1);
       ctx.fillStyle = config.dragHoverFillColor;
       ctx.fill();
       ctx.strokeStyle = config.dragHoverStrokeColor;
       ctx.lineWidth = 2 / this.camera.zoom / BIG_MINI_VISUAL_SCALE;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    if (this.largeMiniDragOverAnchor) {
+      const cells = this.largeTriangleLocalCellCenters(layout);
+      const rotDeg =
+        this.draggingLargeMiniIndex !== null
+          ? (this.largeMiniRotationDeg[this.draggingLargeMiniIndex] ?? 0)
+          : 0;
+      const anchorP = layout.hexToPixel(this.largeMiniDragOverAnchor);
+      const rotRad = (rotDeg * Math.PI) / 180;
+      ctx.save();
+      ctx.translate(anchorP.x, anchorP.y);
+      ctx.rotate(rotRad);
+      ctx.scale(LARGE_MINI_VISUAL_SCALE, LARGE_MINI_VISUAL_SCALE);
+      ctx.translate(0, 0);
+      ctx.beginPath();
+      this.addOuterPathFromCells(ctx, layout, cells, 1);
+      ctx.fillStyle = config.dragHoverFillColor;
+      ctx.fill();
+      ctx.strokeStyle = config.dragHoverStrokeColor;
+      ctx.lineWidth = 2 / this.camera.zoom / LARGE_MINI_VISUAL_SCALE;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    if (this.hugeMiniDragOverAnchor) {
+      const cells = this.hugeTriangleLocalCellCenters(layout);
+      const rotDeg =
+        this.draggingHugeMiniIndex !== null
+          ? (this.hugeMiniRotationDeg[this.draggingHugeMiniIndex] ?? 0)
+          : 0;
+      const pivotP = hugeMiniDrawPivotWorld(this.hugeMiniDragOverAnchor, rotDeg, layout);
+      const rotRad = (rotDeg * Math.PI) / 180;
+      const ub = this.boundsFromCells(cells, layout);
+      const { x: ucx, y: ucy } = this.localBoundsCenter(ub);
+      ctx.save();
+      ctx.translate(pivotP.x, pivotP.y);
+      ctx.rotate(rotRad);
+      ctx.scale(HUGE_MINI_VISUAL_SCALE, HUGE_MINI_VISUAL_SCALE);
+      ctx.translate(-ucx, -ucy);
+      ctx.beginPath();
+      this.addOuterPathFromCells(ctx, layout, cells, 1);
+      ctx.fillStyle = config.dragHoverFillColor;
+      ctx.fill();
+      ctx.strokeStyle = config.dragHoverStrokeColor;
+      ctx.lineWidth = 2 / this.camera.zoom / HUGE_MINI_VISUAL_SCALE;
       ctx.stroke();
       ctx.restore();
     }
@@ -1811,6 +2121,7 @@ export class Renderer {
     const ringSel = 1.08 * BIG_MINI_VISUAL_SCALE;
     const ringPreviewInner = 0.62 * BIG_MINI_VISUAL_SCALE;
     const badgeRadius = baseRadius * BIG_MINI_VISUAL_SCALE;
+    const bigActR = baseRadius * BIG_MINI_VISUAL_SCALE * 0.22;
 
     // Draw each big mini
     this.bigMiniCenters.forEach((center, index) => {
@@ -1835,9 +2146,14 @@ export class Renderer {
           'insideHexBigUnitBottom',
           rotRad,
         );
+        this.drawActivationToggle(
+          bigMiniActivationToggleCenterWorld(offBoard, rotDeg, layout),
+          bigActR,
+          this.bigMiniActivated[index] !== false,
+        );
         const bmMarkers = this.bigMiniEffectMarkers[index];
         if (bmMarkers && bmMarkers.length > 0) {
-          this.drawEffectMarkers(offBoard, bmMarkers, badgeRadius, true, rotRad);
+          this.drawEffectMarkers(offBoard, bmMarkers, badgeRadius, 'bigHexon', rotRad);
         }
       } else {
         this.drawBigMiniHexon(center, baseRadius, config.bigMiniFillColor, rotDeg);
@@ -1854,9 +2170,14 @@ export class Renderer {
           'insideHexBigUnitBottom',
           rotRad,
         );
+        this.drawActivationToggle(
+          bigMiniActivationToggleCenterWorld(p, rotDeg, layout),
+          bigActR,
+          this.bigMiniActivated[index] !== false,
+        );
         const bmMarkers = this.bigMiniEffectMarkers[index];
         if (bmMarkers && bmMarkers.length > 0) {
-          this.drawEffectMarkers(p, bmMarkers, badgeRadius, true, rotRad);
+          this.drawEffectMarkers(p, bmMarkers, badgeRadius, 'bigHexon', rotRad);
         }
       }
     });
@@ -1898,10 +2219,19 @@ export class Renderer {
             this.bigMiniPreviewPosition,
             dragBmMarkers,
             badgeRadius,
-            true,
+            'bigHexon',
             (previewRot * Math.PI) / 180,
           );
         }
+        this.drawActivationToggle(
+          bigMiniActivationToggleCenterWorld(
+            this.bigMiniPreviewPosition,
+            previewRot,
+            layout,
+          ),
+          bigActR,
+          this.bigMiniActivated[this.draggingBigMiniIndex] !== false,
+        );
       }
     }
   }
@@ -1927,6 +2257,7 @@ export class Renderer {
     const { ctx, config, layout } = this;
     const rotRad = (rotationDeg * Math.PI) / 180;
     const bounds = this.bigMiniHexonBoundsLocal(layout);
+    const { x: pcx, y: pcy } = this.localBoundsCenter(bounds);
     const boxW = bounds.maxX - bounds.minX;
     const boxH = bounds.maxY - bounds.minY;
     const lwOuter = 2 / this.camera.zoom / BIG_MINI_VISUAL_SCALE;
@@ -1936,6 +2267,7 @@ export class Renderer {
     ctx.translate(point.x, point.y);
     ctx.rotate(rotRad);
     ctx.scale(BIG_MINI_VISUAL_SCALE, BIG_MINI_VISUAL_SCALE);
+    ctx.translate(-pcx, -pcy);
     const sprite = this.getSpriteImage(this.bigMiniSpriteSrc);
     if (sprite && sprite.naturalWidth > 0 && sprite.naturalHeight > 0) {
       const iw = sprite.naturalWidth;
@@ -2015,13 +2347,473 @@ export class Renderer {
   ): void {
     const { ctx, layout } = this;
     const rotRad = (rotationDeg * Math.PI) / 180;
+    const hb = this.bigMiniHexonBoundsLocal(layout);
+    const { x: hcx, y: hcy } = this.localBoundsCenter(hb);
     const lineW = width / this.camera.zoom / pathScale;
     ctx.save();
     ctx.translate(point.x, point.y);
     ctx.rotate(rotRad);
     ctx.scale(pathScale, pathScale);
+    ctx.translate(-hcx, -hcy);
     ctx.beginPath();
     this.addBigMiniHexonOuterPath(ctx, layout, 1);
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = lineW;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // ── Generic outer-path from arbitrary cell list ──
+
+  /** 3-hex triangle cell centers in local space (relative to anchor hex). */
+  private largeTriangleLocalCellCenters(layout: Layout): Point[] {
+    const zero = new Hex(0, 0);
+    const o = layout.hexToPixel(zero);
+    const offsets = [new Hex(0, 0), new Hex(1, 0), new Hex(0, 1)];
+    return offsets.map((off) => {
+      const p = layout.hexToPixel(off);
+      return { x: p.x - o.x, y: p.y - o.y };
+    });
+  }
+
+  /** 3-hexon triangle (21 cells) in local space (relative to anchor hexon center). */
+  private hugeTriangleLocalCellCenters(layout: Layout): Point[] {
+    const zero = new Hex(0, 0);
+    const o = layout.hexToPixel(zero);
+    const hexonOffsets = [new Hex(0, 0), new Hex(3, -1), new Hex(1, 2)];
+    const cells: Point[] = [];
+    for (const hOff of hexonOffsets) {
+      const hc = layout.hexToPixel(hOff);
+      cells.push({ x: hc.x - o.x, y: hc.y - o.y });
+      for (const d of Hex.directions) {
+        const nb = hOff.add(d);
+        const np = layout.hexToPixel(nb);
+        cells.push({ x: np.x - o.x, y: np.y - o.y });
+      }
+    }
+    return cells;
+  }
+
+  /**
+   * Outer contour vertices for an arbitrary set of hex cell centers (local coords).
+   * Generalized from bigMiniHexonOuterVerticesLocal.
+   */
+  private outerVerticesFromCells(cells: Point[], layout: Layout, scale: number): Point[] {
+    const segKey = (p: Point, q: Point): string => {
+      const k1 = `${p.x.toFixed(4)},${p.y.toFixed(4)}`;
+      const k2 = `${q.x.toFixed(4)},${q.y.toFixed(4)}`;
+      return k1 < k2 ? `${k1}|${k2}` : `${k2}|${k1}`;
+    };
+    const edgeCounts = new Map<string, number>();
+    const edgeA = new Map<string, Point>();
+    const edgeB = new Map<string, Point>();
+    for (const cell of cells) {
+      for (let i = 0; i < 6; i++) {
+        const o1 = layout.hexCornerOffset(i);
+        const o2 = layout.hexCornerOffset((i + 1) % 6);
+        const a = { x: scale * (cell.x + o1.x), y: scale * (cell.y + o1.y) };
+        const b = { x: scale * (cell.x + o2.x), y: scale * (cell.y + o2.y) };
+        const k = segKey(a, b);
+        edgeCounts.set(k, (edgeCounts.get(k) ?? 0) + 1);
+        if (!edgeA.has(k)) { edgeA.set(k, a); edgeB.set(k, b); }
+      }
+    }
+    const vertsMap = new Map<string, Point>();
+    for (const [k, cnt] of edgeCounts) {
+      if (cnt !== 1) continue;
+      const a = edgeA.get(k)!;
+      const b = edgeB.get(k)!;
+      vertsMap.set(`${a.x.toFixed(4)},${a.y.toFixed(4)}`, a);
+      vertsMap.set(`${b.x.toFixed(4)},${b.y.toFixed(4)}`, b);
+    }
+    const verts = [...vertsMap.values()];
+    if (verts.length < 3) return verts;
+    let cx = 0, cy = 0;
+    for (const v of verts) { cx += v.x; cy += v.y; }
+    cx /= verts.length; cy /= verts.length;
+    verts.sort((p, q) => Math.atan2(p.y - cy, p.x - cx) - Math.atan2(q.y - cy, q.x - cx));
+    return verts;
+  }
+
+  private addOuterPathFromCells(
+    ctx: CanvasRenderingContext2D,
+    layout: Layout,
+    cells: Point[],
+    scale: number,
+  ): void {
+    const verts = this.outerVerticesFromCells(cells, layout, scale);
+    if (verts.length < 3) return;
+    this.roundHexPathLocal(ctx, verts, this.smallUnitHexCornerRadius());
+  }
+
+  private boundsFromCells(cells: Point[], layout: Layout): {
+    minX: number; maxX: number; minY: number; maxY: number;
+  } {
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const cell of cells) {
+      for (let i = 0; i < 6; i++) {
+        const off = layout.hexCornerOffset(i);
+        const x = cell.x + off.x, y = cell.y + off.y;
+        if (x < minX) minX = x; if (x > maxX) maxX = x;
+        if (y < minY) minY = y; if (y > maxY) maxY = y;
+      }
+    }
+    return { minX, maxX, minY, maxY };
+  }
+
+  // ── Large miniatures (3-hex triangle) ──
+
+  private drawLargeMiniMovement(): void {
+    const { ctx, layout, config } = this;
+    for (const hex of this.largeMiniRunHexes) {
+      if (this.largeMiniWalkHexes.some((w) => w.key === hex.key)) continue;
+      const corners = layout.hexCorners(hex);
+      ctx.beginPath();
+      ctx.moveTo(corners[0].x, corners[0].y);
+      for (let i = 1; i < 6; i++) ctx.lineTo(corners[i].x, corners[i].y);
+      ctx.closePath();
+      ctx.fillStyle = config.runRangeFillColor;
+      ctx.fill();
+    }
+    for (const hex of this.largeMiniWalkHexes) {
+      const corners = layout.hexCorners(hex);
+      ctx.beginPath();
+      ctx.moveTo(corners[0].x, corners[0].y);
+      for (let i = 1; i < 6; i++) ctx.lineTo(corners[i].x, corners[i].y);
+      ctx.closePath();
+      ctx.fillStyle = config.walkRangeFillColor;
+      ctx.fill();
+    }
+  }
+
+  private drawLargeMiniatures(): void {
+    const { ctx, config, layout } = this;
+    const cells = this.largeTriangleLocalCellCenters(layout);
+    const bounds = this.boundsFromCells(cells, layout);
+    const boxW = bounds.maxX - bounds.minX;
+    const boxH = bounds.maxY - bounds.minY;
+    const baseRadius = Math.min(layout.size.x, layout.size.y) * 1.58;
+    const badgeRadius = baseRadius * LARGE_MINI_VISUAL_SCALE;
+    const largeActR =
+      Math.min(layout.size.x, layout.size.y) *
+      1.2 *
+      LARGE_MINI_VISUAL_SCALE *
+      0.22;
+    const largeLocalOrigin: Point = { x: 0, y: 0 };
+
+    this.largeMiniAnchors.forEach((anchor, index) => {
+      if (this.draggingLargeMiniIndex === index) return;
+      const offBoard = this.largeMiniOffBoardWorlds[index];
+      const rotDeg = this.largeMiniRotationDeg[index] ?? 0;
+      const rotRad = (rotDeg * Math.PI) / 180;
+      const pivot = offBoard ?? layout.hexToPixel(anchor);
+
+      this.drawLargeMiniShapeAtPoint(
+        pivot, cells, bounds, boxW, boxH, config.largeMiniFillColor, rotDeg, this.largeMiniSpriteSrcs[index] ?? null,
+        largeLocalOrigin,
+      );
+      if (this.selectedLargeMiniIndex === index) {
+        this.drawShapeRingAtPoint(
+          pivot, cells, layout, 1.08 * LARGE_MINI_VISUAL_SCALE, '#4caf50', 3, rotDeg, largeLocalOrigin,
+        );
+      }
+      this.drawHealthBadgeAt(
+        pivot, badgeRadius,
+        this.largeMiniHealthValues[index] ?? 0,
+        this.openHealthControlsLargeMiniIndex === index,
+        LARGE_UNIT_HEALTH_UI_SCALE,
+        'insideHexLargeUnit', rotRad,
+      );
+      this.drawActivationToggle(
+        largeMiniActivationToggleCenterWorld(pivot, rotDeg, layout),
+        largeActR,
+        this.largeMiniActivated[index] !== false,
+      );
+      const markers = this.largeMiniEffectMarkers[index];
+      if (markers && markers.length > 0) {
+        this.drawEffectMarkers(pivot, markers, badgeRadius, 'largeTri', rotRad);
+      }
+    });
+
+    // Ghost follows cursor; snapped drop target is only in drawDragHoverHex (like big mini).
+    if (this.largeMiniPreviewPosition) {
+      const previewRot = this.draggingLargeMiniIndex !== null
+        ? (this.largeMiniRotationDeg[this.draggingLargeMiniIndex] ?? 0) : 0;
+      const p = this.largeMiniPreviewPosition;
+      this.drawLargeMiniShapeAtPoint(
+        p, cells, bounds, boxW, boxH,
+        config.largeMiniPreviewColor, previewRot, null,
+        largeLocalOrigin,
+      );
+      ctx.globalAlpha = 0.6;
+      this.drawShapeRingAtPoint(
+        p, cells, layout,
+        0.62 * LARGE_MINI_VISUAL_SCALE, config.bigMiniSymbolColor, 2, previewRot, largeLocalOrigin,
+      );
+      ctx.globalAlpha = 1.0;
+      if (this.draggingLargeMiniIndex !== null) {
+        const rotRad = (previewRot * Math.PI) / 180;
+        this.drawHealthBadgeAt(
+          p, badgeRadius,
+          this.largeMiniHealthValues[this.draggingLargeMiniIndex] ?? 0,
+          this.openHealthControlsLargeMiniIndex === this.draggingLargeMiniIndex,
+          LARGE_UNIT_HEALTH_UI_SCALE, 'insideHexLargeUnit', rotRad,
+        );
+        const dragMarkers = this.largeMiniEffectMarkers[this.draggingLargeMiniIndex];
+        if (dragMarkers && dragMarkers.length > 0) {
+          this.drawEffectMarkers(
+            p,
+            dragMarkers,
+            badgeRadius,
+            'largeTri',
+            rotRad,
+          );
+        }
+        this.drawActivationToggle(
+          largeMiniActivationToggleCenterWorld(p, previewRot, layout),
+          largeActR,
+          this.largeMiniActivated[this.draggingLargeMiniIndex] !== false,
+        );
+      }
+    }
+  }
+
+  private drawLargeMiniShapeAtPoint(
+    point: Point,
+    cells: Point[],
+    bounds: { minX: number; maxX: number; minY: number; maxY: number },
+    boxW: number,
+    boxH: number,
+    fillColor: string,
+    rotationDeg: number,
+    spriteSrc: string | null,
+    /** Local point (anchor hex center = 0,0) that maps to `point` in world after rotate/scale. */
+    localOriginInCellSpace: Point,
+  ): void {
+    const { ctx, config, layout } = this;
+    const rotRad = (rotationDeg * Math.PI) / 180;
+    const lw = 2 / this.camera.zoom / LARGE_MINI_VISUAL_SCALE;
+    const { x: pcx, y: pcy } = localOriginInCellSpace;
+
+    ctx.save();
+    ctx.translate(point.x, point.y);
+    ctx.rotate(rotRad);
+    ctx.scale(LARGE_MINI_VISUAL_SCALE, LARGE_MINI_VISUAL_SCALE);
+    ctx.translate(-pcx, -pcy);
+
+    const sprite = this.getSpriteImage(spriteSrc);
+    if (sprite && sprite.naturalWidth > 0) {
+      // Stretch to footprint axis-aligned bbox (fill). Centered at anchor would miss
+      // most of the triangle; use bounds.min/max in local cell space.
+      ctx.save();
+      ctx.beginPath();
+      this.addOuterPathFromCells(ctx, layout, cells, 1);
+      ctx.clip();
+      ctx.drawImage(sprite, bounds.minX, bounds.minY, boxW, boxH);
+      ctx.restore();
+    } else {
+      ctx.beginPath();
+      this.addOuterPathFromCells(ctx, layout, cells, 1);
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+    }
+    ctx.beginPath();
+    this.addOuterPathFromCells(ctx, layout, cells, 1);
+    ctx.strokeStyle = config.unitStrokeColor;
+    ctx.lineWidth = lw;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // ── Huge miniatures (3-hexon triangle) ──
+
+  private drawHugeMiniMovement(): void {
+    const { ctx, layout, config } = this;
+    const walkKeys = new Set(this.hugeMiniWalkHexonCenters.map((c) => c.key));
+    for (const center of this.hugeMiniRunHexonCenters) {
+      if (walkKeys.has(center.key)) continue;
+      const hCells = [center, ...Hex.directions.map((d) => center.add(d))];
+      for (const hex of hCells) {
+        const corners = layout.hexCorners(hex);
+        ctx.beginPath();
+        ctx.moveTo(corners[0].x, corners[0].y);
+        for (let i = 1; i < 6; i++) ctx.lineTo(corners[i].x, corners[i].y);
+        ctx.closePath();
+        ctx.fillStyle = config.runRangeFillColor;
+        ctx.fill();
+      }
+    }
+    for (const center of this.hugeMiniWalkHexonCenters) {
+      const hCells = [center, ...Hex.directions.map((d) => center.add(d))];
+      for (const hex of hCells) {
+        const corners = layout.hexCorners(hex);
+        ctx.beginPath();
+        ctx.moveTo(corners[0].x, corners[0].y);
+        for (let i = 1; i < 6; i++) ctx.lineTo(corners[i].x, corners[i].y);
+        ctx.closePath();
+        ctx.fillStyle = config.walkRangeFillColor;
+        ctx.fill();
+      }
+    }
+  }
+
+  private drawHugeMiniatures(): void {
+    const { ctx, config, layout } = this;
+    const cells = this.hugeTriangleLocalCellCenters(layout);
+    const bounds = this.boundsFromCells(cells, layout);
+    const boxW = bounds.maxX - bounds.minX;
+    const boxH = bounds.maxY - bounds.minY;
+    const baseRadius = Math.min(layout.size.x, layout.size.y) * 1.58;
+    const badgeRadius = baseRadius * HUGE_MINI_VISUAL_SCALE;
+    const hugeActR =
+      Math.min(layout.size.x, layout.size.y) *
+      1.58 *
+      HUGE_MINI_VISUAL_SCALE *
+      0.22;
+
+    this.hugeMiniAnchors.forEach((anchor, index) => {
+      if (this.draggingHugeMiniIndex === index) return;
+      const offBoard = this.hugeMiniOffBoardWorlds[index];
+      const rotDeg = this.hugeMiniRotationDeg[index] ?? 0;
+      const rotRad = (rotDeg * Math.PI) / 180;
+      const pivot = offBoard ?? hugeMiniDrawPivotWorld(anchor, rotDeg, layout);
+
+      this.drawHugeMiniShapeAtPoint(pivot, cells, bounds, boxW, boxH, config.hugeMiniFillColor, rotDeg);
+      if (this.selectedHugeMiniIndex === index) {
+        this.drawShapeRingAtPoint(pivot, cells, layout, 1.08 * HUGE_MINI_VISUAL_SCALE, '#4caf50', 3, rotDeg);
+      }
+      this.drawHealthBadgeAt(
+        pivot, badgeRadius,
+        this.hugeMiniHealthValues[index] ?? 0,
+        this.openHealthControlsHugeMiniIndex === index,
+        HUGE_UNIT_HEALTH_UI_SCALE,
+        'insideHexHugeUnit', rotRad,
+      );
+      this.drawActivationToggle(
+        hugeMiniActivationToggleCenterFromPivotWorld(pivot, rotDeg, layout),
+        hugeActR,
+        this.hugeMiniActivated[index] !== false,
+      );
+      const markers = this.hugeMiniEffectMarkers[index];
+      if (markers && markers.length > 0) {
+        this.drawEffectMarkers(pivot, markers, badgeRadius, 'hugeTri', rotRad);
+      }
+    });
+
+    if (this.hugeMiniPreviewPosition) {
+      const previewRot = this.draggingHugeMiniIndex !== null
+        ? (this.hugeMiniRotationDeg[this.draggingHugeMiniIndex] ?? 0) : 0;
+      const p = this.hugeMiniPreviewPosition;
+      this.drawHugeMiniShapeAtPoint(
+        p, cells, bounds, boxW, boxH,
+        config.hugeMiniPreviewColor, previewRot,
+      );
+      ctx.globalAlpha = 0.6;
+      this.drawShapeRingAtPoint(
+        p, cells, layout,
+        0.62 * HUGE_MINI_VISUAL_SCALE, config.bigMiniSymbolColor, 2, previewRot,
+      );
+      ctx.globalAlpha = 1.0;
+      if (this.draggingHugeMiniIndex !== null) {
+        const rotRad = (previewRot * Math.PI) / 180;
+        this.drawHealthBadgeAt(
+          p, badgeRadius,
+          this.hugeMiniHealthValues[this.draggingHugeMiniIndex] ?? 0,
+          this.openHealthControlsHugeMiniIndex === this.draggingHugeMiniIndex,
+          HUGE_UNIT_HEALTH_UI_SCALE, 'insideHexHugeUnit', rotRad,
+        );
+        const dragMarkers = this.hugeMiniEffectMarkers[this.draggingHugeMiniIndex];
+        if (dragMarkers && dragMarkers.length > 0) {
+          this.drawEffectMarkers(
+            p,
+            dragMarkers,
+            badgeRadius,
+            'hugeTri',
+            rotRad,
+          );
+        }
+        this.drawActivationToggle(
+          hugeMiniActivationToggleCenterFromPivotWorld(p, previewRot, layout),
+          hugeActR,
+          this.hugeMiniActivated[this.draggingHugeMiniIndex] !== false,
+        );
+      }
+    }
+  }
+
+  private drawHugeMiniShapeAtPoint(
+    point: Point,
+    cells: Point[],
+    bounds: { minX: number; maxX: number; minY: number; maxY: number },
+    boxW: number,
+    boxH: number,
+    fillColor: string,
+    rotationDeg: number,
+  ): void {
+    const { ctx, config, layout } = this;
+    const rotRad = (rotationDeg * Math.PI) / 180;
+    const lw = 2 / this.camera.zoom / HUGE_MINI_VISUAL_SCALE;
+    const { x: pcx, y: pcy } = this.localBoundsCenter(bounds);
+
+    ctx.save();
+    ctx.translate(point.x, point.y);
+    ctx.rotate(rotRad);
+    ctx.scale(HUGE_MINI_VISUAL_SCALE, HUGE_MINI_VISUAL_SCALE);
+    ctx.translate(-pcx, -pcy);
+
+    const sprite = this.getSpriteImage(this.hugeMiniSpriteSrc);
+    if (sprite && sprite.naturalWidth > 0) {
+      const iw = sprite.naturalWidth;
+      const ih = sprite.naturalHeight;
+      const cover = Math.max(boxW / iw, boxH / ih);
+      const dw = iw * cover;
+      const dh = ih * cover;
+      ctx.save();
+      ctx.beginPath();
+      this.addOuterPathFromCells(ctx, layout, cells, 1);
+      ctx.clip();
+      ctx.drawImage(sprite, -dw / 2, -dh / 2, dw, dh);
+      ctx.restore();
+    } else {
+      ctx.beginPath();
+      this.addOuterPathFromCells(ctx, layout, cells, 1);
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+    }
+    ctx.beginPath();
+    this.addOuterPathFromCells(ctx, layout, cells, 1);
+    ctx.strokeStyle = config.unitStrokeColor;
+    ctx.lineWidth = lw;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /** Generic ring (selection/preview) for an arbitrary cell shape. */
+  private drawShapeRingAtPoint(
+    point: Point,
+    cells: Point[],
+    layout: Layout,
+    pathScale: number,
+    strokeColor: string,
+    width: number,
+    rotationDeg: number,
+    /** Large mini: `{0,0}` = rotate around anchor hex; omit = bbox center (huge / default). */
+    localOriginInCellSpace?: Point,
+  ): void {
+    const { ctx } = this;
+    const rotRad = (rotationDeg * Math.PI) / 180;
+    const b = this.boundsFromCells(cells, layout);
+    const d = localOriginInCellSpace ?? this.localBoundsCenter(b);
+    const cx = d.x;
+    const cy = d.y;
+    const lineW = width / this.camera.zoom / pathScale;
+    ctx.save();
+    ctx.translate(point.x, point.y);
+    ctx.rotate(rotRad);
+    ctx.scale(pathScale, pathScale);
+    ctx.translate(-cx, -cy);
+    ctx.beginPath();
+    this.addOuterPathFromCells(ctx, layout, cells, 1);
     ctx.strokeStyle = strokeColor;
     ctx.lineWidth = lineW;
     ctx.stroke();

@@ -6,7 +6,7 @@
 
 // ── Types ──────────────────────────────────────────────────────
 
-export type UnitSize = 'small' | 'big';
+export type UnitSize = 'small' | 'big' | 'large' | 'huge';
 
 export type DamageType = 'physical' | 'fire' | 'mental' | 'poison';
 export type AttackRange = 'melee' | 'ranged';
@@ -59,6 +59,13 @@ export interface UnitCardData {
   concentration: DicePool;
   /** Defense reaction: extra dice added on reaction */
   defenseReaction: { white?: number; green?: number };
+  /** Exploration: dice pool for exploration checks (optional). */
+  exploration?: DicePool;
+  /**
+   * Max distance for “take / pick up” interactions.
+   * Display uses hexes for small & large, hexons for big & huge (same as walk/run).
+   */
+  grabRange?: number;
   /** Attack abilities */
   attacks: AttackAbility[];
   /** Passive/special traits */
@@ -119,6 +126,10 @@ const DICE_COLORS: Record<string, string> = {
   black: '#424242',
   white: '#e0e0e0',
 };
+
+function dicePoolTotal(pool: DicePool): number {
+  return (pool.red ?? 0) + (pool.green ?? 0) + (pool.black ?? 0) + (pool.white ?? 0);
+}
 
 function renderDicePool(pool: DicePool, container: HTMLElement): void {
   const entries = Object.entries(pool).filter(([, v]) => v && v > 0) as [string, number][];
@@ -189,8 +200,8 @@ export class UnitCard {
     headerInfo.appendChild(name);
 
     const badges = el('div', 'uc-badges');
-    const sizeBadge = el('span', `uc-badge uc-badge-${data.size}`,
-      data.size === 'big' ? 'Large' : 'Infantry');
+    const sizeLabel = data.size === 'big' ? 'Large' : data.size === 'large' ? 'Heavy' : data.size === 'huge' ? 'Colossal' : 'Infantry';
+    const sizeBadge = el('span', `uc-badge uc-badge-${data.size}`, sizeLabel);
     badges.appendChild(sizeBadge);
     headerInfo.appendChild(badges);
     header.appendChild(headerInfo);
@@ -229,7 +240,7 @@ export class UnitCard {
     this.container.appendChild(healthSection);
 
     // ── Core stats grid ──
-    const movementLabel = data.size === 'big' ? 'hexons' : 'hexes';
+    const movementLabel = (data.size === 'big' || data.size === 'huge') ? 'hexons' : 'hexes';
     const statsGrid = el('div', 'uc-stats-grid');
 
     // Defense (clickable)
@@ -288,6 +299,38 @@ export class UnitCard {
     reactInfo.appendChild(reactValue);
     reactStat.appendChild(reactInfo);
     statsGrid.appendChild(reactStat);
+
+    // Exploration (clickable when pool has dice)
+    const explorationPool = data.exploration ?? {};
+    const explorationTotal = dicePoolTotal(explorationPool);
+    const exploreStat = el('div', 'uc-stat');
+    if (explorationTotal > 0) {
+      exploreStat.classList.add('uc-stat-clickable');
+      exploreStat.title = 'Click to add exploration dice';
+      exploreStat.addEventListener('click', () => this.emitDice(explorationPool, source));
+    }
+    exploreStat.appendChild(el('span', 'uc-stat-icon', '\uD83D\uDD0D'));
+    const exploreInfo = el('div', 'uc-stat-info');
+    exploreInfo.appendChild(el('span', 'uc-stat-label', 'Исследование'));
+    const exploreValue = el('span', 'uc-stat-value uc-dice-inline');
+    if (explorationTotal > 0) renderDicePool(explorationPool, exploreValue);
+    else exploreValue.appendChild(document.createTextNode('—'));
+    exploreInfo.appendChild(exploreValue);
+    exploreStat.appendChild(exploreInfo);
+    statsGrid.appendChild(exploreStat);
+
+    // Take (grab range)
+    const takeStat = el('div', 'uc-stat');
+    takeStat.appendChild(el('span', 'uc-stat-icon', '\u270B'));
+    const takeInfo = el('div', 'uc-stat-info');
+    takeInfo.appendChild(el('span', 'uc-stat-label', 'Взять'));
+    const takeVal =
+      data.grabRange != null && data.grabRange >= 0
+        ? `${data.grabRange} ${movementLabel}`
+        : '—';
+    takeInfo.appendChild(el('span', 'uc-stat-value', takeVal));
+    takeStat.appendChild(takeInfo);
+    statsGrid.appendChild(takeStat);
 
     this.container.appendChild(statsGrid);
 
@@ -435,5 +478,10 @@ export class UnitCard {
 
   get isVisible(): boolean {
     return this.visible;
+  }
+
+  /** Used to ignore "click away" handling when the pointer is on the card. */
+  containsEventTarget(t: EventTarget | null): boolean {
+    return t instanceof Node && this.container.contains(t);
   }
 }

@@ -220,3 +220,146 @@ export function hexLineDraw(a: Hex, b: Hex): Hex[] {
   }
   return results;
 }
+
+// ── Multi-hex footprints (board logic; keep in sync across main / renderer / healthUi) ──
+
+const LARGE_TRI_OFFSET_E = new Hex(1, 0);
+const LARGE_TRI_OFFSET_SE = new Hex(0, 1);
+
+function rotateAxialOffsetCWSteps(offset: Hex, stepsCW: number): Hex {
+  let h = offset;
+  let n = stepsCW % 6;
+  if (n < 0) n += 6;
+  for (let i = 0; i < n; i++) h = h.rotateCW();
+  return h;
+}
+
+/**
+ * Large unit footprint: 3 small hexes sharing one vertex, rotated in 60° steps
+ * around the anchor (must match renderer canvas rotation in `rotationDeg`).
+ */
+export function largeTriangleCellsOriented(anchor: Hex, rotationDeg: number): Hex[] {
+  const steps = ((Math.round(rotationDeg / 60) % 6) + 6) % 6;
+  return [
+    anchor,
+    anchor.add(rotateAxialOffsetCWSteps(LARGE_TRI_OFFSET_E, steps)),
+    anchor.add(rotateAxialOffsetCWSteps(LARGE_TRI_OFFSET_SE, steps)),
+  ];
+}
+
+/** Large unit at rotation 0: anchor + E + SE. */
+export function largeTriangleCells(anchor: Hex): Hex[] {
+  return largeTriangleCellsOriented(anchor, 0);
+}
+
+const HUGE_TRI_HEX_EAST = new Hex(3, -1);
+const HUGE_TRI_HEX_SE = new Hex(1, 2);
+
+/**
+ * Huge unit: 3 hexon centers (same relative triangle as large mini, hexon-scale axial steps),
+ * rotated in 60° steps around `anchor` (must match renderer rotation in `rotationDeg`).
+ */
+export function hugeTriangleHexonCentersOriented(anchor: Hex, rotationDeg: number): Hex[] {
+  const steps = ((Math.round(rotationDeg / 60) % 6) + 6) % 6;
+  return [
+    anchor,
+    anchor.add(rotateAxialOffsetCWSteps(HUGE_TRI_HEX_EAST, steps)),
+    anchor.add(rotateAxialOffsetCWSteps(HUGE_TRI_HEX_SE, steps)),
+  ];
+}
+
+/** Huge unit at rotation 0: anchor + hexon East + hexon SE offsets. */
+export function hugeTriangleHexonCenters(anchor: Hex): Hex[] {
+  return hugeTriangleHexonCentersOriented(anchor, 0);
+}
+
+/** All small hex cells covered by a huge mini (3×7), with hexon triangle orientation. */
+export function hugeTriangleAllCellsOriented(anchor: Hex, rotationDeg: number): Hex[] {
+  return hugeTriangleHexonCentersOriented(anchor, rotationDeg).flatMap((hc) => [
+    hc,
+    ...Hex.directions.map((d) => hc.add(d)),
+  ]);
+}
+
+export function hugeTriangleAllCells(anchor: Hex): Hex[] {
+  return hugeTriangleAllCellsOriented(anchor, 0);
+}
+
+const CORNER_MATCH_EPS2 = 1e-4;
+
+/**
+ * The single vertex where three mutually adjacent small hexes meet (Y junction).
+ * Fallback: centroid of the three hex centers.
+ */
+export function layoutSharedVertexThreeHexes(layout: Layout, a: Hex, b: Hex, c: Hex): Point {
+  const cornersA = layout.hexCorners(a);
+  const cornersB = layout.hexCorners(b);
+  const cornersC = layout.hexCorners(c);
+  for (const pa of cornersA) {
+    for (const pb of cornersB) {
+      if ((pa.x - pb.x) ** 2 + (pa.y - pb.y) ** 2 > CORNER_MATCH_EPS2) continue;
+      for (const pc of cornersC) {
+        if ((pa.x - pc.x) ** 2 + (pa.y - pc.y) ** 2 <= CORNER_MATCH_EPS2) return pa;
+      }
+    }
+  }
+  const p0 = layout.hexToPixel(a);
+  const p1 = layout.hexToPixel(b);
+  const p2 = layout.hexToPixel(c);
+  return { x: (p0.x + p1.x + p2.x) / 3, y: (p0.y + p1.y + p2.y) / 3 };
+}
+
+/**
+ * Inner triple junction of three hexon silhouettes (21 small hexes), in world space.
+ * Picks a corner cluster touched by all three hexon centers, closest to their centroid.
+ */
+export function layoutHugeMiniTriplePointWorld(layout: Layout, anchor: Hex, rotationDeg = 0): Point {
+  const centers = hugeTriangleHexonCentersOriented(anchor, rotationDeg);
+  const cells = hugeTriangleAllCellsOriented(anchor, rotationDeg);
+  const centerByCell = new Map<string, Hex>();
+  for (const hc of centers) {
+    for (const cell of [hc, ...Hex.directions.map((d) => hc.add(d))]) {
+      centerByCell.set(cell.key, hc);
+    }
+  }
+  type Agg = { sx: number; sy: number; n: number; parents: Set<string> };
+  const bucket = new Map<string, Agg>();
+  const keyOf = (p: Point) => `${Math.round(p.x * 16)}_${Math.round(p.y * 16)}`;
+  for (const cell of cells) {
+    const parent = centerByCell.get(cell.key);
+    if (!parent) continue;
+    for (const cor of layout.hexCorners(cell)) {
+      const k = keyOf(cor);
+      let ag = bucket.get(k);
+      if (!ag) {
+        ag = { sx: 0, sy: 0, n: 0, parents: new Set() };
+        bucket.set(k, ag);
+      }
+      ag.sx += cor.x;
+      ag.sy += cor.y;
+      ag.n += 1;
+      ag.parents.add(parent.key);
+    }
+  }
+  let tcx = 0;
+  let tcy = 0;
+  for (const hc of centers) {
+    const w = layout.hexToPixel(hc);
+    tcx += w.x;
+    tcy += w.y;
+  }
+  tcx /= 3;
+  tcy /= 3;
+  let best: Point = { x: tcx, y: tcy };
+  let bestD = Infinity;
+  for (const ag of bucket.values()) {
+    if (ag.parents.size < 3) continue;
+    const p = { x: ag.sx / ag.n, y: ag.sy / ag.n };
+    const d2 = (p.x - tcx) ** 2 + (p.y - tcy) ** 2;
+    if (d2 < bestD) {
+      bestD = d2;
+      best = p;
+    }
+  }
+  return best;
+}

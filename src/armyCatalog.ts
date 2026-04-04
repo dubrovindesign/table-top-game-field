@@ -64,6 +64,8 @@ function gruntCard(
     domains,
     concentration: {},
     defenseReaction: { white: 1 },
+    exploration: {},
+    grabRange: 1,
     attacks: [
       {
         name: 'Strike',
@@ -96,6 +98,8 @@ export const CATALOG_UNITS: Record<string, CatalogUnitDef> = {
       domains: ['order'],
       concentration: { red: 1 },
       defenseReaction: { white: 1 },
+      exploration: { white: 1 },
+      grabRange: 1,
       attacks: [
         {
           name: 'Sword Strike',
@@ -143,6 +147,8 @@ export const CATALOG_UNITS: Record<string, CatalogUnitDef> = {
       domains: ['nature', 'order'],
       concentration: { green: 1 },
       defenseReaction: { green: 1 },
+      exploration: { green: 1 },
+      grabRange: 2,
       attacks: [
         {
           name: 'Aimed Shot',
@@ -191,6 +197,8 @@ export const CATALOG_UNITS: Record<string, CatalogUnitDef> = {
       domains: ['order', 'chaos'],
       concentration: { red: 2 },
       defenseReaction: { white: 2 },
+      exploration: { white: 1, green: 1 },
+      grabRange: 1,
       attacks: [
         {
           name: 'Stomp',
