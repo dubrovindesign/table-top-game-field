@@ -1,0 +1,14 @@
+# WebSocket room server only. Build client separately (or on static host).
+FROM node:22-alpine
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+COPY server ./server
+COPY src/multiplayer ./src/multiplayer
+
+ENV MP_PORT=3333
+EXPOSE 3333
+
+CMD ["npx", "tsx", "server/roomServer.ts"]

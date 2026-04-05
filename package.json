@@ -10,7 +10,8 @@
     "dev:vite-only": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview --host",
-    "preview:mp": "npm run build && concurrently -n ws,preview -c blue,magenta \"tsx server/roomServer.ts\" \"vite preview --host\""
+    "preview:mp": "npm run build && concurrently -n ws,preview -c blue,magenta \"tsx server/roomServer.ts\" \"vite preview --host\"",
+    "start:room": "tsx server/roomServer.ts"
   },
   "dependencies": {
     "ws": "^8.18.3"

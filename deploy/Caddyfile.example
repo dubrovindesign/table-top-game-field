@@ -1,0 +1,23 @@
+# Example Caddy v2 site: static SPA from dist/ + WebSocket proxy to roomServer.
+# Copy to your server, adjust domain and paths, then: caddy run --config Caddyfile
+#
+# Prerequisites on the server:
+#   - `npm ci && VITE_MP_WS_URL=wss://game.example.com/__mp_ws npm run build`
+#   - roomServer running on 127.0.0.1:3333 (see systemd unit or docker-compose)
+#   - root points to the `dist` folder from the build
+
+game.example.com {
+	root * /var/www/hex-board-game/dist
+	encode gzip
+
+	# WebSocket upgrade → room server (path must match client default /__mp_ws)
+	handle /__mp_ws* {
+		reverse_proxy 127.0.0.1:3333
+	}
+
+	# SPA: non-file routes → index.html
+	handle {
+		try_files {path} /index.html
+		file_server
+	}
+}

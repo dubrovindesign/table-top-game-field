@@ -1,0 +1,16 @@
+[Unit]
+Description=Hex board game — multiplayer room WebSocket server
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/hex-board-game
+# Install Node on the server; or use full path to node/tsx.
+Environment=MP_PORT=3333
+ExecStart=/usr/bin/npx tsx server/roomServer.ts
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

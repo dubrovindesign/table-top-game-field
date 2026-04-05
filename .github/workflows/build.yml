@@ -1,0 +1,28 @@
+name: Build
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Optional: set repo secret VITE_MP_WS_URL so CI matches production.
+      # If unset, build still succeeds; runtime URL falls back in the client.
+      - name: Production build
+        run: npm run build
+        env:
+          VITE_MP_WS_URL: ${{ secrets.VITE_MP_WS_URL }}

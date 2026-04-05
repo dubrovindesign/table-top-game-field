@@ -1,0 +1,14 @@
+# Run only the multiplayer room server (variant B: static site elsewhere).
+#   docker compose up -d
+# Map public wss:// (e.g. via Caddy/nginx on the host) to localhost:3333.
+
+services:
+  roomserver:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.roomserver
+    ports:
+      - "127.0.0.1:3333:3333"
+    environment:
+      MP_PORT: "3333"
+    restart: unless-stopped
