@@ -3020,7 +3020,9 @@ export class Renderer {
       if (this.isPeerDraggingEntity('large', index)) return;
       const offBoard = this.largeMiniOffBoardWorlds[index];
       const rotDegModel = this.largeMiniRotationDeg[index] ?? 0;
-      const rotRadModel = (rotDegModel * Math.PI) / 180;
+      const rotDegVisual =
+        rotDegModel + this.config.oppositeSeatUnitRotationCorrectionDeg;
+      const rotRadVisual = (rotDegVisual * Math.PI) / 180;
       const pivot = offBoard ?? layout.hexToPixel(anchor);
 
       this.drawLargeMiniShapeAtPoint(
@@ -3037,16 +3039,16 @@ export class Renderer {
         this.largeMiniHealthValues[index] ?? 0,
         this.openHealthControlsLargeMiniIndex === index,
         LARGE_UNIT_HEALTH_UI_SCALE,
-        'insideHexLargeUnit', rotRadModel,
+        'insideHexLargeUnit', rotRadVisual,
       );
       this.drawActivationToggle(
-        largeMiniActivationToggleCenterWorld(pivot, rotDegModel, layout),
+        largeMiniActivationToggleCenterWorld(pivot, rotDegVisual, layout),
         largeActR,
         this.largeMiniActivated[index] !== false,
       );
       const markers = this.largeMiniEffectMarkers[index];
       if (markers && markers.length > 0) {
-        this.drawEffectMarkers(pivot, markers, badgeRadius, 'largeTri', rotRadModel);
+        this.drawEffectMarkers(pivot, markers, badgeRadius, 'largeTri', rotRadVisual);
       }
     });
 
@@ -3054,7 +3056,9 @@ export class Renderer {
     if (this.largeMiniPreviewPosition) {
       const previewRotModel = this.draggingLargeMiniIndex !== null
         ? (this.largeMiniRotationDeg[this.draggingLargeMiniIndex] ?? 0) : 0;
-      const previewRotRadModel = (previewRotModel * Math.PI) / 180;
+      const previewRotVisual =
+        previewRotModel + this.config.oppositeSeatUnitRotationCorrectionDeg;
+      const previewRotRadVisual = (previewRotVisual * Math.PI) / 180;
       const p = this.largeMiniPreviewPosition;
       this.drawLargeMiniShapeAtPoint(
         p, cells, bounds, boxW, boxH,
@@ -3072,7 +3076,7 @@ export class Renderer {
           p, badgeRadius,
           this.largeMiniHealthValues[this.draggingLargeMiniIndex] ?? 0,
           this.openHealthControlsLargeMiniIndex === this.draggingLargeMiniIndex,
-          LARGE_UNIT_HEALTH_UI_SCALE, 'insideHexLargeUnit', previewRotRadModel,
+          LARGE_UNIT_HEALTH_UI_SCALE, 'insideHexLargeUnit', previewRotRadVisual,
         );
         const dragMarkers = this.largeMiniEffectMarkers[this.draggingLargeMiniIndex];
         if (dragMarkers && dragMarkers.length > 0) {
@@ -3081,11 +3085,11 @@ export class Renderer {
             dragMarkers,
             badgeRadius,
             'largeTri',
-            previewRotRadModel,
+            previewRotRadVisual,
           );
         }
         this.drawActivationToggle(
-          largeMiniActivationToggleCenterWorld(p, previewRotModel, layout),
+          largeMiniActivationToggleCenterWorld(p, previewRotVisual, layout),
           largeActR,
           this.largeMiniActivated[this.draggingLargeMiniIndex] !== false,
         );
@@ -3097,7 +3101,9 @@ export class Renderer {
       if (d.kind !== 'large' || d.index === null || d.worldX === null || d.worldY === null) continue;
       if (d.index < 0 || d.index >= this.largeMiniAnchors.length) continue;
       const previewRotModel = this.largeMiniRotationDeg[d.index] ?? 0;
-      const previewRotRadModel = (previewRotModel * Math.PI) / 180;
+      const previewRotVisual =
+        previewRotModel + this.config.oppositeSeatUnitRotationCorrectionDeg;
+      const previewRotRadVisual = (previewRotVisual * Math.PI) / 180;
       const p = { x: d.worldX, y: d.worldY };
       ctx.save();
       ctx.globalAlpha = 0.72;
@@ -3116,14 +3122,14 @@ export class Renderer {
         p, badgeRadius,
         this.largeMiniHealthValues[d.index] ?? 0,
         false,
-        LARGE_UNIT_HEALTH_UI_SCALE, 'insideHexLargeUnit', previewRotRadModel,
+        LARGE_UNIT_HEALTH_UI_SCALE, 'insideHexLargeUnit', previewRotRadVisual,
       );
       const rLm = this.largeMiniEffectMarkers[d.index];
       if (rLm && rLm.length > 0) {
-        this.drawEffectMarkers(p, rLm, badgeRadius, 'largeTri', previewRotRadModel);
+        this.drawEffectMarkers(p, rLm, badgeRadius, 'largeTri', previewRotRadVisual);
       }
       this.drawActivationToggle(
-        largeMiniActivationToggleCenterWorld(p, previewRotModel, layout),
+        largeMiniActivationToggleCenterWorld(p, previewRotVisual, layout),
         largeActR,
         this.largeMiniActivated[d.index] !== false,
       );

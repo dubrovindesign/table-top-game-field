@@ -102,6 +102,47 @@ function effectiveBoardRotationDeg(): number {
   return BOARD_ROTATION_DEG + viewSeatExtraRotationDeg;
 }
 
+/** Same as `renderer` `oppositeSeatUnitRotationCorrectionDeg` (MP slot 1 = −180). */
+function oppositeSeatUnitRotationCorrectionDeg(): number {
+  return viewSeatExtraRotationDeg === 180 ? -180 : 0;
+}
+
+/** Model rotation + seat fix — HP / activation / effect-marker anchors (matches `rotRadVisual` in renderer). */
+function unitRotationDegForMiniatureLocalUi(modelDeg: number): number {
+  return modelDeg + oppositeSeatUnitRotationCorrectionDeg();
+}
+
+function unitRotationRadForMiniatureLocalUi(modelDeg: number): number {
+  return (unitRotationDegForMiniatureLocalUi(modelDeg) * Math.PI) / 180;
+}
+
+/**
+ * World centers for − / + around HP badge — matches `drawHealthBadgeAt` rotate when seat fix ≠ 0.
+ */
+function healthBadgePlusMinusCentersWorld(
+  badgeCenterWorld: Point,
+  buttonOffsetWorld: number,
+): { minus: Point; plus: Point } {
+  const fix = oppositeSeatUnitRotationCorrectionDeg();
+  if (fix === 0) {
+    return {
+      minus: { x: badgeCenterWorld.x - buttonOffsetWorld, y: badgeCenterWorld.y },
+      plus: { x: badgeCenterWorld.x + buttonOffsetWorld, y: badgeCenterWorld.y },
+    };
+  }
+  const rad = ((-fix) * Math.PI) / 180;
+  const c = Math.cos(rad);
+  const s = Math.sin(rad);
+  const rot = (vx: number, vy: number): Point => ({
+    x: badgeCenterWorld.x + c * vx - s * vy,
+    y: badgeCenterWorld.y + s * vx + c * vy,
+  });
+  return {
+    minus: rot(-buttonOffsetWorld, 0),
+    plus: rot(buttonOffsetWorld, 0),
+  };
+}
+
 const UNIT_WALK_RANGE = 4;
 const UNIT_RUN_RANGE = 7;
 const BIG_MINI_WALK_RANGE = 2;
@@ -3222,7 +3263,7 @@ function getUnitHealthUiGeometry(unitIndex: number): {
   const unitCenterWorld = draggingPreview
     ? dragPreviewPosition!
     : layout.hexToPixel(units[unitIndex].position);
-  const rotRad = (units[unitIndex].rotationDeg * Math.PI) / 180;
+  const rotRad = unitRotationRadForMiniatureLocalUi(units[unitIndex].rotationDeg);
   const expanded = openHealthControlsUnitIndex === unitIndex;
   const effectiveR =
     halfH *
@@ -3236,17 +3277,12 @@ function getUnitHealthUiGeometry(unitIndex: number): {
   const badgeRadiusWorld = effectiveR * 0.48;
   const buttonRadiusWorld = badgeRadiusWorld * 0.55;
   const buttonOffsetWorld = badgeRadiusWorld * 1.55;
+  const pm = healthBadgePlusMinusCentersWorld(badgeCenterWorld, buttonOffsetWorld);
   return {
     badgeCenter: boardWorldToScreen(badgeCenterWorld),
     badgeRadius: badgeRadiusWorld * camera.zoom,
-    minusCenter: boardWorldToScreen({
-      x: badgeCenterWorld.x - buttonOffsetWorld,
-      y: badgeCenterWorld.y,
-    }),
-    plusCenter: boardWorldToScreen({
-      x: badgeCenterWorld.x + buttonOffsetWorld,
-      y: badgeCenterWorld.y,
-    }),
+    minusCenter: boardWorldToScreen(pm.minus),
+    plusCenter: boardWorldToScreen(pm.plus),
     buttonRadius: buttonRadiusWorld * camera.zoom,
   };
 }
@@ -3269,22 +3305,17 @@ function getBigMiniHealthUiGeometry(
     0.48;
   const badgeCenterWorld = bigMiniHealthBadgeCenterWorld(
     centerWorld,
-    rotationDeg,
+    unitRotationDegForMiniatureLocalUi(rotationDeg),
     layout,
   );
   const buttonRadiusWorld = badgeRadiusWorld * 0.55;
   const buttonOffsetWorld = badgeRadiusWorld * 1.55;
+  const pm = healthBadgePlusMinusCentersWorld(badgeCenterWorld, buttonOffsetWorld);
   return {
     badgeCenter: boardWorldToScreen(badgeCenterWorld),
     badgeRadius: badgeRadiusWorld * camera.zoom,
-    minusCenter: boardWorldToScreen({
-      x: badgeCenterWorld.x - buttonOffsetWorld,
-      y: badgeCenterWorld.y,
-    }),
-    plusCenter: boardWorldToScreen({
-      x: badgeCenterWorld.x + buttonOffsetWorld,
-      y: badgeCenterWorld.y,
-    }),
+    minusCenter: boardWorldToScreen(pm.minus),
+    plusCenter: boardWorldToScreen(pm.plus),
     buttonRadius: buttonRadiusWorld * camera.zoom,
   };
 }
@@ -3317,22 +3348,17 @@ function getLargeMiniHealthUiGeometry(
     0.48;
   const badgeCenterWorld = largeMiniHealthBadgeCenterWorld(
     anchorWorld,
-    rotationDeg,
+    unitRotationDegForMiniatureLocalUi(rotationDeg),
     layout,
   );
   const buttonRadiusWorld = badgeRadiusWorld * 0.55;
   const buttonOffsetWorld = badgeRadiusWorld * 1.55;
+  const pm = healthBadgePlusMinusCentersWorld(badgeCenterWorld, buttonOffsetWorld);
   return {
     badgeCenter: boardWorldToScreen(badgeCenterWorld),
     badgeRadius: badgeRadiusWorld * camera.zoom,
-    minusCenter: boardWorldToScreen({
-      x: badgeCenterWorld.x - buttonOffsetWorld,
-      y: badgeCenterWorld.y,
-    }),
-    plusCenter: boardWorldToScreen({
-      x: badgeCenterWorld.x + buttonOffsetWorld,
-      y: badgeCenterWorld.y,
-    }),
+    minusCenter: boardWorldToScreen(pm.minus),
+    plusCenter: boardWorldToScreen(pm.plus),
     buttonRadius: buttonRadiusWorld * camera.zoom,
   };
 }
@@ -3364,22 +3390,17 @@ function getHugeMiniHealthUiGeometry(
     0.48;
   const badgeCenterWorld = hugeMiniHealthBadgeCenterWorld(
     anchorWorld,
-    rotationDeg,
+    unitRotationDegForMiniatureLocalUi(rotationDeg),
     layout,
   );
   const buttonRadiusWorld = badgeRadiusWorld * 0.55;
   const buttonOffsetWorld = badgeRadiusWorld * 1.55;
+  const pm = healthBadgePlusMinusCentersWorld(badgeCenterWorld, buttonOffsetWorld);
   return {
     badgeCenter: boardWorldToScreen(badgeCenterWorld),
     badgeRadius: badgeRadiusWorld * camera.zoom,
-    minusCenter: boardWorldToScreen({
-      x: badgeCenterWorld.x - buttonOffsetWorld,
-      y: badgeCenterWorld.y,
-    }),
-    plusCenter: boardWorldToScreen({
-      x: badgeCenterWorld.x + buttonOffsetWorld,
-      y: badgeCenterWorld.y,
-    }),
+    minusCenter: boardWorldToScreen(pm.minus),
+    plusCenter: boardWorldToScreen(pm.plus),
     buttonRadius: buttonRadiusWorld * camera.zoom,
   };
 }
@@ -3418,7 +3439,7 @@ function getUnitActivationToggleGeometry(unitIndex: number): {
 } {
   const { halfH } = smallUnitHexHalfExtent();
   const cw = unitCenterWorldForHud(unitIndex);
-  const rotRad = (units[unitIndex]!.rotationDeg * Math.PI) / 180;
+  const rotRad = unitRotationRadForMiniatureLocalUi(units[unitIndex]!.rotationDeg);
   const world = smallUnitActivationToggleCenterWorldRad(cw, rotRad, layout);
   const rw = halfH * 0.2175;
   return {
@@ -3440,7 +3461,11 @@ function getBigMiniActivationToggleGeometry(
   centerWorld: Point,
   rotationDeg: number,
 ): { center: Point; radiusScreen: number } {
-  const w = bigMiniActivationToggleCenterWorld(centerWorld, rotationDeg, layout);
+  const w = bigMiniActivationToggleCenterWorld(
+    centerWorld,
+    unitRotationDegForMiniatureLocalUi(rotationDeg),
+    layout,
+  );
   const rw = bigActivationToggleRadiusWorld();
   return { center: boardWorldToScreen(w), radiusScreen: rw * camera.zoom };
 }
@@ -3458,7 +3483,11 @@ function getLargeMiniActivationToggleGeometry(
   anchorWorld: Point,
   rotationDeg: number,
 ): { center: Point; radiusScreen: number } {
-  const w = largeMiniActivationToggleCenterWorld(anchorWorld, rotationDeg, layout);
+  const w = largeMiniActivationToggleCenterWorld(
+    anchorWorld,
+    unitRotationDegForMiniatureLocalUi(rotationDeg),
+    layout,
+  );
   const rw = largeActivationToggleRadiusWorld();
   return { center: boardWorldToScreen(w), radiusScreen: rw * camera.zoom };
 }
@@ -3478,7 +3507,7 @@ function getHugeMiniActivationToggleGeometry(
 ): { center: Point; radiusScreen: number } {
   const w = hugeMiniActivationToggleCenterFromPivotWorld(
     pivotWorld,
-    rotationDeg,
+    unitRotationDegForMiniatureLocalUi(rotationDeg),
     layout,
   );
   const rw = hugeActivationToggleRadiusWorld();
