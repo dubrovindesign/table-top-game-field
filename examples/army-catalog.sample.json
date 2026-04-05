@@ -1,0 +1,143 @@
+{
+  "_description": "Образец структуры для armyCatalog: factions + leaders + units. Домены: order|chaos|nature|shadow. size: small|big|large|huge. damageType: physical|fire|mental|poison. attackRange: melee|ranged. В игре это пока не импортируется автоматически — ориентир для правок в armyCatalog.ts.",
+  "factions": [
+    {
+      "id": "example_realm",
+      "name": "Примерное королевство",
+      "domain": "order",
+      "panelIconSrc": "/castilla.webp"
+    }
+  ],
+  "leaders": [
+    {
+      "id": "example_captain",
+      "name": "Капитан Пример",
+      "factionId": "example_realm",
+      "catalogUnitId": "example_leader_unit",
+      "roster": [
+        { "unitId": "example_grunt", "maxCopies": 3 },
+        { "unitId": "example_elite", "maxCopies": 1 }
+      ]
+    }
+  ],
+  "units": [
+    {
+      "id": "example_leader_unit",
+      "points": 120,
+      "card": {
+        "name": "Капитан Пример",
+        "size": "small",
+        "health": 12,
+        "maxHealth": 12,
+        "defense": { "white": 2, "green": 1 },
+        "walk": 4,
+        "run": 7,
+        "sprite": "/tern-unit-1.jpg",
+        "domains": ["order"],
+        "concentration": { "red": 1 },
+        "defenseReaction": { "white": 1 },
+        "exploration": { "white": 1 },
+        "grabRange": 1,
+        "attacks": [
+          {
+            "name": "Удар мечом",
+            "range": 1,
+            "attackRange": "melee",
+            "damageType": "physical",
+            "damage": 3,
+            "dice": { "red": 2 },
+            "modifiers": [
+              {
+                "kind": "icon",
+                "label": "Кровотечение",
+                "description": "Цель теряет 1 HP в начале хода."
+              }
+            ]
+          }
+        ],
+        "traits": [
+          {
+            "name": "Командир",
+            "description": "Союзники в радиусе 2 гексов получают +1 к защите."
+          }
+        ],
+        "keywords": ["Leader", "Order", "Human"]
+      }
+    },
+    {
+      "id": "example_grunt",
+      "points": 45,
+      "card": {
+        "name": "Примерный солдат",
+        "size": "small",
+        "health": 6,
+        "maxHealth": 6,
+        "defense": { "white": 1 },
+        "walk": 4,
+        "run": 7,
+        "sprite": "/tern-unit-1.jpg",
+        "domains": ["order"],
+        "concentration": {},
+        "defenseReaction": { "white": 1 },
+        "exploration": {},
+        "grabRange": 1,
+        "attacks": [
+          {
+            "name": "Удар",
+            "range": 1,
+            "attackRange": "melee",
+            "damageType": "physical",
+            "damage": 2,
+            "dice": { "red": 1 }
+          }
+        ],
+        "traits": [],
+        "keywords": ["Infantry", "Order"]
+      }
+    },
+    {
+      "id": "example_elite",
+      "points": 70,
+      "card": {
+        "name": "Примерный элитник",
+        "size": "big",
+        "health": 14,
+        "maxHealth": 14,
+        "defense": { "white": 2 },
+        "walk": 2,
+        "run": 4,
+        "sprite": "/Frame 118.png",
+        "domains": ["order"],
+        "concentration": { "green": 1 },
+        "defenseReaction": { "green": 1 },
+        "exploration": { "white": 1 },
+        "grabRange": 1,
+        "attacks": [
+          {
+            "name": "Тяжёлый удар",
+            "range": 1,
+            "attackRange": "melee",
+            "damageType": "physical",
+            "damage": 4,
+            "dice": { "red": 2, "black": 1 }
+          },
+          {
+            "name": "Бросок",
+            "range": 4,
+            "attackRange": "ranged",
+            "damageType": "physical",
+            "damage": 2,
+            "dice": { "white": 2 }
+          }
+        ],
+        "traits": [
+          {
+            "name": "Броня",
+            "description": "Первый полученный удар в раунде ослаблен на 1."
+          }
+        ],
+        "keywords": ["Heavy", "Order"]
+      }
+    }
+  ]
+}
