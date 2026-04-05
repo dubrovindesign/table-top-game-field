@@ -91,7 +91,8 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       <p class="mp-hint mp-lan-hint"></p>
     </div>
     <div class="mp-panel mp-hidden" data-view="join">
-      <div class="mp-title">Комната <code class="mp-room-id"></code></div>
+      <div class="mp-title" id="mp-join-gate-title">Комната <code class="mp-room-id"></code></div>
+      <p class="mp-hint mp-join-gate-hint">Выберите роль, чтобы открыть стол. Поле снизу будет недоступно, пока вы не присоединитесь.</p>
       <button type="button" class="mp-btn mp-btn-primary" data-action="join-player">Присоединиться игроком</button>
       <button type="button" class="mp-btn" data-action="join-spectator">Присоединиться зрителем</button>
       <button type="button" class="mp-btn mp-btn-ghost" data-action="back">Назад</button>
@@ -114,6 +115,15 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
     toggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
 
+  const joinGate = document.createElement('div');
+  joinGate.className = 'mp-join-gate mp-hidden';
+  joinGate.setAttribute('role', 'dialog');
+  joinGate.setAttribute('aria-modal', 'true');
+  joinGate.setAttribute('aria-labelledby', 'mp-join-gate-title');
+  joinGate.innerHTML =
+    '<div class="mp-join-gate-backdrop" aria-hidden="true"></div><div class="mp-join-gate-dialog"></div>';
+  const joinGateDialog = joinGate.querySelector('.mp-join-gate-dialog') as HTMLElement;
+
   toolbarAnchor.appendChild(toggleBtn);
   toolbarAnchor.appendChild(root);
   if (toolbarMount) {
@@ -121,6 +131,7 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
   } else {
     document.body.appendChild(toolbarAnchor);
   }
+  document.body.appendChild(joinGate);
 
   toggleBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -154,6 +165,19 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
   function show(view: keyof typeof views): void {
     for (const v of Object.values(views)) v.classList.add('mp-hidden');
     views[view].classList.remove('mp-hidden');
+  }
+
+  function reparentJoinPanelToGate(): void {
+    if (views.join.parentElement !== joinGateDialog) {
+      joinGateDialog.appendChild(views.join);
+    }
+  }
+
+  function dismissJoinGate(): void {
+    joinGate.classList.add('mp-hidden');
+    if (views.join.parentElement === joinGateDialog) {
+      root.insertBefore(views.join, views.ingame);
+    }
   }
 
   let myId: string | null = null;
@@ -320,6 +344,7 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       currentRoomId = msg.roomId;
       setRoomInUrl(msg.roomId);
       show('ingame');
+      dismissJoinGate();
       const roleLabel =
         msg.role === 'spectator'
           ? 'зритель'
@@ -411,6 +436,7 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
         clearPointers();
         myId = null;
         currentRoomId = null;
+        dismissJoinGate();
         show('home');
         if (intent !== null && !hadRoom) {
           window.alert(
@@ -425,7 +451,7 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
     });
   }
 
-  root.addEventListener('click', (e) => {
+  function onMpRootClick(e: MouseEvent): void {
     const t = (e.target as HTMLElement).closest('[data-action]') as HTMLElement | null;
     if (!t) return;
     const action = t.dataset.action;
@@ -461,6 +487,7 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       const u = new URL(location.href);
       u.searchParams.delete('room');
       history.replaceState(null, '', u.pathname + u.search + u.hash);
+      dismissJoinGate();
       show('home');
       return;
     }
@@ -485,12 +512,16 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       stopTableSync();
       client.disconnect();
       clearPointers();
+      dismissJoinGate();
       const u = new URL(location.href);
       u.searchParams.delete('room');
       history.replaceState(null, '', u.pathname + u.search + u.hash);
       show('home');
     }
-  });
+  }
+
+  root.addEventListener('click', onMpRootClick);
+  joinGate.addEventListener('click', onMpRootClick);
 
   window.addEventListener('pointermove', (e) => {
     if (!currentRoomId || !client.connected) return;
@@ -500,8 +531,10 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
   const roomParam = getRoomFromUrl();
   if (roomParam) {
     (root.querySelector('.mp-room-id') as HTMLElement).textContent = roomParam;
+    reparentJoinPanelToGate();
+    joinGate.classList.remove('mp-hidden');
     show('join');
-    setPopoverOpen(true);
+    setPopoverOpen(false);
   } else {
     show('home');
     setPopoverOpen(false);
