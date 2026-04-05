@@ -321,14 +321,18 @@ export const CATALOG_UNITS: Record<string, CatalogUnitDef> = {
 };
 
 export const FACTIONS: FactionDef[] = [
-  { id: 'tern_concord', name: 'Tern Concord', domain: 'order', panelIconSrc: '/castilla.webp' },
-  { id: 'ash_legion', name: 'Ash Legion', domain: 'chaos', panelIconSrc: '/priory_of_hope.webp' },
-  { id: 'sylvan_enclave', name: 'Sylvan Enclave', domain: 'nature', panelIconSrc: '/engeln.webp' },
-  { id: 'umbral_court', name: 'Umbral Court', domain: 'shadow', panelIconSrc: '/keld.webp' },
-  { id: 'iron_covenant', name: 'Iron Covenant', domain: 'order', panelIconSrc: '/blackthorn.webp' },
-  { id: 'blood_pact', name: 'Blood Pact', domain: 'chaos', panelIconSrc: '/krigmark.webp' },
-  { id: 'wild_horde', name: 'Wild Horde', domain: 'nature', panelIconSrc: '/broomgar_horde.webp' },
-  { id: 'broken_veil', name: 'Broken Veil', domain: 'shadow', panelIconSrc: '/chasm.webp' },
+  /** Разрушение */
+  { id: 'tern_concord', name: 'Кастилия', domain: 'order', panelIconSrc: '/castilla.webp' },
+  { id: 'broken_veil', name: 'Бездна', domain: 'order', panelIconSrc: '/chasm.webp' },
+  { id: 'wild_horde', name: 'Орда Брумгаров', domain: 'order', panelIconSrc: '/broomgar_horde.webp' },
+  /** Созидание */
+  { id: 'sylvan_enclave', name: 'Ангельн', domain: 'chaos', panelIconSrc: '/engeln.webp' },
+  { id: 'ash_legion', name: 'Приорат Надежды', domain: 'chaos', panelIconSrc: '/priory_of_hope.webp' },
+  /** Смерть */
+  { id: 'iron_covenant', name: 'Великий Терновник', domain: 'nature', panelIconSrc: '/blackthorn.webp' },
+  { id: 'blood_pact', name: 'Кригмарк', domain: 'nature', panelIconSrc: '/krigmark.webp' },
+  /** Жизнь */
+  { id: 'umbral_court', name: 'Кельд', domain: 'shadow', panelIconSrc: '/keld.webp' },
 ];
 
 export const LEADERS: LeaderDef[] = [

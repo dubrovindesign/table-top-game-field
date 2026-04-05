@@ -1,6 +1,7 @@
 /**
  * Ephirium vortex — fixed button (top-right): each draw picks a random card (uniform among 16);
  * up to two cards visible next to the button; each closable with ×.
+ * В мультиплеере набор открытых карт синхронизируется через снимок стола (см. `applyOpenIndices`).
  */
 
 import { EPHIRIUM_VORTEX_CARDS, type EphiriumVortexCardDef } from './ephiriumVortexCards';
@@ -22,14 +23,22 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return e;
 }
 
+export type EphiriumVortexUiOptions = {
+  /** Вытянуть карту (случайный индекс задаётся снаружи, затем вызывается `applyOpenIndices`). */
+  requestDraw: () => void;
+  /** Закрыть карту по индексу слота (0 — первая по порядку вытягивания). */
+  requestCloseSlot: (slotIndex: number) => void;
+};
+
 export class EphiriumVortexUi {
   private root: HTMLElement;
   private cardsRow: HTMLElement;
   private drawBtn: HTMLButtonElement;
-  /** Open card roots in DOM order: first drawn = index 0 (visually nearest button in row-reverse). */
-  private openRoots: HTMLElement[] = [];
+  private lastRenderedIndices: number[] = [];
+  private opts: EphiriumVortexUiOptions;
 
-  constructor(parent: HTMLElement) {
+  constructor(parent: HTMLElement, opts: EphiriumVortexUiOptions) {
+    this.opts = opts;
     this.root = el('div', 'ev-root');
     parent.appendChild(this.root);
 
@@ -48,6 +57,21 @@ export class EphiriumVortexUi {
     this.drawBtn.addEventListener('click', () => this.onDrawClick());
     this.root.appendChild(this.drawBtn);
 
+    this.cardsRow.addEventListener('click', (e) => {
+      const t = e.target;
+      if (!(t instanceof Element)) return;
+      const btn = t.closest('button.ev-card-close');
+      if (!btn || !this.cardsRow.contains(btn)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const card = btn.closest('.ev-card');
+      if (!card || card.parentElement !== this.cardsRow) return;
+      const slotIndex = Array.from(this.cardsRow.children).indexOf(card);
+      if (slotIndex < 0) return;
+      this.opts.requestCloseSlot(slotIndex);
+    });
+
+    this.applyOpenIndices([]);
     this.syncButtonState();
   }
 
@@ -55,8 +79,67 @@ export class EphiriumVortexUi {
     this.root.remove();
   }
 
+  /** Полная перерисовка открытых карт из индексов спрайта (синхронизация MP / локальное состояние). */
+  applyOpenIndices(spriteIndices: readonly number[]): void {
+    const next = spriteIndices.slice(0, 2);
+    if (
+      next.length === this.lastRenderedIndices.length &&
+      next.every((v, i) => v === this.lastRenderedIndices[i])
+    ) {
+      this.syncButtonState();
+      return;
+    }
+
+    const prev = this.lastRenderedIndices;
+    const row = this.cardsRow;
+
+    // Одна новая карта в конце — не трогаем уже открытые DOM-узлы (без повторного flip).
+    if (next.length === prev.length + 1 && prev.every((v, i) => v === next[i])) {
+      const spriteIndex = next[next.length - 1]!;
+      const def = EPHIRIUM_VORTEX_CARDS[spriteIndex];
+      if (def) row.appendChild(this.buildCard(def, spriteIndex, { animateFlip: true }));
+      this.lastRenderedIndices = next;
+      this.syncButtonState();
+      return;
+    }
+
+    // Закрыли последнюю карту — снять только последний узел.
+    if (
+      next.length === prev.length - 1 &&
+      prev.slice(0, next.length).every((v, i) => v === next[i])
+    ) {
+      row.lastElementChild?.remove();
+      this.lastRenderedIndices = next;
+      this.syncButtonState();
+      return;
+    }
+
+    // Закрыли первую из двух — убрать первый ребёнок, вторая карта остаётся как есть.
+    if (
+      next.length === prev.length - 1 &&
+      prev.length >= 2 &&
+      next.length >= 1 &&
+      next.every((v, i) => v === prev[i + 1]!)
+    ) {
+      row.firstElementChild?.remove();
+      this.lastRenderedIndices = next;
+      this.syncButtonState();
+      return;
+    }
+
+    this.lastRenderedIndices = next;
+    row.replaceChildren();
+    for (let slot = 0; slot < next.length; slot++) {
+      const spriteIndex = next[slot]!;
+      const def = EPHIRIUM_VORTEX_CARDS[spriteIndex];
+      if (!def) continue;
+      row.appendChild(this.buildCard(def, spriteIndex));
+    }
+    this.syncButtonState();
+  }
+
   private syncButtonState(): void {
-    const full = this.openRoots.length >= 2;
+    const full = this.lastRenderedIndices.length >= 2;
     this.drawBtn.disabled = full;
     this.drawBtn.classList.toggle('ev-draw-btn-disabled', full);
     this.drawBtn.title = full
@@ -64,19 +147,9 @@ export class EphiriumVortexUi {
       : 'Вытянуть карту вихря';
   }
 
-  private drawNextCard(): { def: EphiriumVortexCardDef; spriteIndex: number } {
-    const n = EPHIRIUM_VORTEX_CARDS.length;
-    const spriteIndex = Math.floor(Math.random() * n);
-    return { def: EPHIRIUM_VORTEX_CARDS[spriteIndex]!, spriteIndex };
-  }
-
   private onDrawClick(): void {
-    if (this.openRoots.length >= 2) return;
-    const { def, spriteIndex } = this.drawNextCard();
-    const cardRoot = this.buildCard(def, spriteIndex);
-    this.openRoots.push(cardRoot);
-    this.cardsRow.appendChild(cardRoot);
-    this.syncButtonState();
+    if (this.lastRenderedIndices.length >= 2) return;
+    this.opts.requestDraw();
   }
 
   private applySpriteBg(el: HTMLElement, xPct: number, yPct: number): void {
@@ -86,7 +159,13 @@ export class EphiriumVortexUi {
     el.style.backgroundPosition = `${xPct}% ${yPct}%`;
   }
 
-  private buildCard(def: EphiriumVortexCardDef, spriteIndex: number): HTMLElement {
+  private buildCard(
+    def: EphiriumVortexCardDef,
+    spriteIndex: number,
+    opts?: { animateFlip?: boolean },
+  ): HTMLElement {
+    const animateFlip = opts?.animateFlip !== false;
+
     const wrap = el('div', 'ev-card');
     wrap.setAttribute('role', 'dialog');
     wrap.setAttribute(
@@ -99,10 +178,6 @@ export class EphiriumVortexUi {
     close.textContent = '×';
     close.title = 'Закрыть';
     close.setAttribute('aria-label', 'Закрыть карту');
-    close.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.closeCard(wrap);
-    });
     wrap.appendChild(close);
 
     const flip = el('div', 'ev-card-flip');
@@ -123,7 +198,7 @@ export class EphiriumVortexUi {
     const prefersReduced =
       typeof window !== 'undefined' &&
       window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReduced) {
+    if (prefersReduced || !animateFlip) {
       inner.classList.add('ev-card-flip-inner--revealed');
     } else {
       requestAnimationFrame(() => {
@@ -134,30 +209,5 @@ export class EphiriumVortexUi {
     }
 
     return wrap;
-  }
-
-  private closeCard(wrap: HTMLElement): void {
-    const i = this.openRoots.indexOf(wrap);
-    if (i === -1 || wrap.classList.contains('ev-card--exit')) return;
-    this.openRoots.splice(i, 1);
-    this.syncButtonState();
-
-    const reduce =
-      typeof window !== 'undefined' &&
-      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-
-    const cleanup = (): void => {
-      if (!wrap.parentNode) return;
-      wrap.remove();
-    };
-
-    if (reduce) {
-      cleanup();
-      return;
-    }
-
-    wrap.classList.add('ev-card--exit');
-    wrap.addEventListener('animationend', cleanup, { once: true });
-    window.setTimeout(cleanup, 700);
   }
 }

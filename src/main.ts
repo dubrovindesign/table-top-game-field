@@ -46,6 +46,7 @@ import {
 import { CrystalWallet } from './crystalWallet';
 import { getCatalogUnit, getLeader, LEADER_MINI_MAX_COPIES, maxCopiesForSlot } from './armyCatalog';
 import { ArmyBuilderPanel, DND_MIME, type ArmyDragPayload } from './armyBuilderPanel';
+import { EPHIRIUM_VORTEX_CARDS } from './ephiriumVortexCards';
 import { EphiriumVortexUi } from './ephiriumVortexUi';
 import {
   etherVortexCrystalBadgeHitRadiusWorld,
@@ -60,23 +61,47 @@ import {
   EffectMarkerMenu,
   type EffectMarkerId,
 } from './effectMarkerMenu';
-import { getGodCardById, type GodTablePiece } from './godCards';
-import type { SerializedBoardStateV1 } from './multiplayer/boardState.ts';
-import { isSerializedBoardStateV1 } from './multiplayer/boardState.ts';
 import {
+  clonePile,
+  createInitialGodPiles,
+  EMPTY_GOD_PILE,
+  GOD_BLIND_ZONE_MAX_CARDS,
+  shuffleIds,
+  type GodSlotPile,
+} from './godDeckState.ts';
+import { GodHandBlindDock, type GodBlindZoneLayout } from './godHandBlindDock.ts';
+import { getGodCardById, preloadGodCardSpriteSheets, type GodTablePiece } from './godCards';
+import type {
+  SerializedBoardStateV1,
+  SerializedGodDeckSlotsV1,
+  SerializedGodSlotV1,
+} from './multiplayer/boardState.ts';
+import { isSerializedBoardStateV1, parseSharedDiceState } from './multiplayer/boardState.ts';
+import {
+  isBoardMultiplayerSyncActive,
   notifyBoardEditLocal,
   registerBoardSyncApi,
 } from './multiplayer/boardSync.ts';
-import type { TableDragState } from './multiplayer/protocol.ts';
+import type { PlayerSlot, TableDragState } from './multiplayer/protocol.ts';
 import { EMPTY_TABLE_DRAG } from './multiplayer/protocol.ts';
 import { tickTableDragOutbound } from './multiplayer/tableDragOutbound.ts';
 import { initMultiplayerSession } from './multiplayer/session.ts';
+import { getWheelBehavior, mountAppSettingsToolbar } from './appSettings.ts';
 import './style.css';
 
 // ── Config ─────────────────────────────────────────────────────
 
 const HEX_SIZE = 28;
 const BOARD_ROTATION_DEG = -10;
+/** +180° for multiplayer `playerSlot === 1` (opposite seat); 0 otherwise. */
+let viewSeatExtraRotationDeg = 0;
+/** Local seat in room (`null` = solo / disconnected / spectator). Used for roster points / copy limits. */
+let localViewPlayerSlot: PlayerSlot | null = null;
+
+function effectiveBoardRotationDeg(): number {
+  return BOARD_ROTATION_DEG + viewSeatExtraRotationDeg;
+}
+
 const UNIT_WALK_RANGE = 4;
 const UNIT_RUN_RANGE = 7;
 const BIG_MINI_WALK_RANGE = 2;
@@ -214,6 +239,9 @@ function getBoardCenterWorld(): { x: number; y: number } {
 
 /** God cards / decks on the table (from panel DnD or merged stacks). */
 let godTablePieces: GodTablePiece[] = [];
+/** Колода / рука / сброс / слепая зона по слотам 0 и 1. */
+let godPiles: [GodSlotPile, GodSlotPile] = createInitialGodPiles();
+let godHandBlindDock: GodHandBlindDock | null = null;
 /** Selected loose god piece index (same pattern as terrain / big mini). */
 let selectedGodTablePieceIndex: number | null = null;
 const GOD_DECK_LONG_PRESS_MS = 1000;
@@ -234,6 +262,231 @@ let godPieceFlipAnim: {
   durationMs: number;
   fromFaceUp: boolean;
 } | null = null;
+
+const GOD_BLIND_ZONE_GAP_FROM_BOARD = 28;
+/** Базовый зазор между картами в экранных px при zoom=1 (далее × camera.zoom). */
+const GOD_BLIND_CARD_GAP_BASE_SCREEN = 8;
+/** Базовый внутренний отступ рамки от карт при zoom=1 (далее × camera.zoom). */
+const GOD_BLIND_HUG_MARGIN_BASE_SCREEN = 10;
+/** Базовая толщина рамки слепой зоны в экранных px при zoom=1 (далее × camera.zoom). */
+const GOD_BLIND_BORDER_BASE_SCREEN = 4;
+
+function godBlindCardGapScreenPx(): number {
+  return GOD_BLIND_CARD_GAP_BASE_SCREEN * camera.zoom;
+}
+
+function godBlindHugMarginScreenPx(): number {
+  return GOD_BLIND_HUG_MARGIN_BASE_SCREEN * camera.zoom;
+}
+
+function godBlindZoneBorderScreenPx(): number {
+  return GOD_BLIND_BORDER_BASE_SCREEN * camera.zoom;
+}
+
+function getBoardWorldExtentsForGodBlind(): {
+  cx: number;
+  cy: number;
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+  halfSpanX: number;
+  halfSpanY: number;
+} {
+  const allHexes = grid.allHexes();
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const hex of allHexes) {
+    const p = layout.hexToPixel(hex);
+    if (p.x < minX) minX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y > maxY) maxY = p.y;
+  }
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  return {
+    cx,
+    cy,
+    minX,
+    maxX,
+    minY,
+    maxY,
+    halfSpanX: (maxX - minX) / 2,
+    halfSpanY: (maxY - minY) / 2,
+  };
+}
+
+function godTableCardRotRad(): number {
+  return ((GOD_TABLE_CARD_ROT_CW_DEG + godTableCardOppositeSeatFixDeg()) * Math.PI) / 180;
+}
+
+/** Экранный bbox карты богов в мировой точке — как на канвасе (поворот + зум). */
+function godTableCardScreenAabb(worldCenter: { x: number; y: number }): {
+  minSX: number;
+  minSY: number;
+  maxSX: number;
+  maxSY: number;
+} {
+  const hw = GOD_TABLE_CARD_HW;
+  const hh = GOD_TABLE_CARD_HH;
+  const C = godTableCardRotRad();
+  const locals = [
+    { x: -hw, y: -hh },
+    { x: hw, y: -hh },
+    { x: hw, y: hh },
+    { x: -hw, y: hh },
+  ];
+  let minSX = Infinity;
+  let minSY = Infinity;
+  let maxSX = -Infinity;
+  let maxSY = -Infinity;
+  for (const lc of locals) {
+    const wx = worldCenter.x + lc.x * Math.cos(C) - lc.y * Math.sin(C);
+    const wy = worldCenter.y + lc.x * Math.sin(C) + lc.y * Math.cos(C);
+    const s = boardWorldToScreen({ x: wx, y: wy });
+    minSX = Math.min(minSX, s.x);
+    minSY = Math.min(minSY, s.y);
+    maxSX = Math.max(maxSX, s.x);
+    maxSY = Math.max(maxSY, s.y);
+  }
+  return { minSX, minSY, maxSX, maxSY };
+}
+
+function getGodBlindFieldEdgeMidAndOutward(slot: PlayerSlot): {
+  best: { x: number; y: number };
+  nx: number;
+  ny: number;
+} {
+  const mine = effectiveMyGodSlot();
+  const preferMaxScreenY = slot === mine;
+  const ext = getBoardWorldExtentsForGodBlind();
+  const edgeMids = [
+    { x: ext.cx, y: ext.maxY },
+    { x: ext.cx, y: ext.minY },
+    { x: ext.minX, y: ext.cy },
+    { x: ext.maxX, y: ext.cy },
+  ];
+  let best = edgeMids[0]!;
+  let bestSy = boardWorldToScreen(best).y;
+  for (const p of edgeMids) {
+    const sy = boardWorldToScreen(p).y;
+    const better = preferMaxScreenY ? sy > bestSy : sy < bestSy;
+    if (better) {
+      best = p;
+      bestSy = sy;
+    }
+  }
+  const dx = best.x - ext.cx;
+  const dy = best.y - ext.cy;
+  const len = Math.hypot(dx, dy) || 1;
+  return { best, nx: dx / len, ny: dy / len };
+}
+
+/** Якорь ряда у края поля; касательная к ряду в мире: (tx, ty). */
+function getGodBlindRowFrameWorld(slot: PlayerSlot): {
+  anchor: { x: number; y: number };
+  tx: number;
+  ty: number;
+} {
+  const { best, nx, ny } = getGodBlindFieldEdgeMidAndOutward(slot);
+  const pushOut = GOD_BLIND_ZONE_GAP_FROM_BOARD + GOD_TABLE_CARD_HH;
+  return {
+    anchor: { x: best.x + nx * pushOut, y: best.y + ny * pushOut },
+    tx: -ny,
+    ty: nx,
+  };
+}
+
+function godBlindCardCountForSlot(slot: PlayerSlot): number {
+  const p = godPiles[slot];
+  return p.blindCardIds.length > 0 ? p.blindCardIds.length : p.remoteBlindCount;
+}
+
+function computeBlindZoneLayoutForSlot(slot: PlayerSlot): GodBlindZoneLayout {
+  const n = godBlindCardCountForSlot(slot);
+  const { anchor: anchorW, tx, ty } = getGodBlindRowFrameWorld(slot);
+  const abb = godTableCardScreenAabb(anchorW);
+  const Ws = abb.maxSX - abb.minSX;
+  const Hs = abb.maxSY - abb.minSY;
+
+  const anchorS = boardWorldToScreen(anchorW);
+  const tTipS = boardWorldToScreen({ x: anchorW.x + tx, y: anchorW.y + ty });
+  const tdx = tTipS.x - anchorS.x;
+  const tdy = tTipS.y - anchorS.y;
+  const tLen = Math.hypot(tdx, tdy) || 1;
+  const tsx = tdx / tLen;
+  /** Ряд в экране — строго по горизонтали (иначе проекция касательной даёт «лестницу»). */
+  const rowDirX = Math.sign(tsx) || 1;
+
+  const cardsAbs: Array<{ left: number; top: number; width: number; height: number }> = [];
+  const gapPx = Math.max(0, Math.round(godBlindCardGapScreenPx()));
+  const step = Ws + gapPx;
+
+  if (n === 0) {
+    cardsAbs.push({
+      left: anchorS.x - Ws / 2,
+      top: anchorS.y - Hs / 2,
+      width: Ws,
+      height: Hs,
+    });
+  } else {
+    const rowY = anchorS.y;
+    for (let i = 0; i < n; i++) {
+      const off = i - (n - 1) / 2;
+      const cx = anchorS.x + rowDirX * off * step;
+      const cy = rowY;
+      cardsAbs.push({ left: cx - Ws / 2, top: cy - Hs / 2, width: Ws, height: Hs });
+    }
+  }
+
+  let minL = Infinity;
+  let minT = Infinity;
+  let maxR = -Infinity;
+  let maxB = -Infinity;
+  for (const c of cardsAbs) {
+    minL = Math.min(minL, c.left);
+    minT = Math.min(minT, c.top);
+    maxR = Math.max(maxR, c.left + c.width);
+    maxB = Math.max(maxB, c.top + c.height);
+  }
+
+  const m = Math.max(0, Math.round(godBlindHugMarginScreenPx()));
+  const b = Math.max(0, Math.round(godBlindZoneBorderScreenPx()));
+  const container = {
+    left: minL - m - b,
+    top: minT - m - b,
+    width: maxR - minL + 2 * (m + b),
+    height: maxB - minT + 2 * (m + b),
+  };
+
+  const cards = cardsAbs.map((c) => ({
+    left: c.left - container.left,
+    top: c.top - container.top,
+    width: c.width,
+    height: c.height,
+  }));
+
+  return { container, cards, borderScreenPx: b };
+}
+
+function godBlindZoneContainsWorldForSlot(
+  w: { x: number; y: number },
+  slot: PlayerSlot,
+): boolean {
+  const ps = boardWorldToScreen(w);
+  const layout = computeBlindZoneLayoutForSlot(slot);
+  for (const c of layout.cards) {
+    const left = c.left + layout.container.left;
+    const top = c.top + layout.container.top;
+    if (ps.x >= left && ps.x <= left + c.width && ps.y >= top && ps.y <= top + c.height) {
+      return true;
+    }
+  }
+  return false;
+}
 
 // ── Renderer ───────────────────────────────────────────────────
 
@@ -279,6 +532,8 @@ type Unit = {
   spawnedFromArmyPanel?: boolean;
   catalogUnitId?: string;
   rosterLeaderId?: string;
+  /** Who placed this roster unit in multiplayer (`PlayerSlot`); omitted in solo. */
+  armyOwnerPlayerSlot?: PlayerSlot;
 };
 
 const units: Unit[] = [
@@ -306,7 +561,7 @@ let openHealthControlsUnitIndex: number | null = null;
 let terrains: Hex[] = [new Hex(8, -2)];
 /** Ether vortexes — same hexon footprint as terrain; domain tint + crystal count on canvas. */
 let etherVortexes: EtherVortexState[] = [
-  { center: new Hex(11, 4), etherCrystals: 0, domain: null },
+  { center: new Hex(11, 4), etherCrystals: 0, domain: null, rotationDeg: 0 },
 ];
 const etherVortexMenu = new EtherVortexContextMenu();
 const effectMarkerMenu = new EffectMarkerMenu();
@@ -315,7 +570,7 @@ let selectedTerrainIndex: number | null = null;
 let selectedEtherVortexIndex: number | null = null;
 /** Parallel array: off-board world positions for terrain hexons. */
 let terrainOffBoardWorlds: (Point | undefined)[] = terrains.map(() => undefined);
-let terrainRotationDeg = 0;
+let terrainRotationDegs: number[] = terrains.map(() => 0);
 /** Show selected piece card + move ranges only after Alt+click selection. */
 let showSelectedDetails = false;
 type SelectedEntity =
@@ -333,7 +588,7 @@ type ClipboardEntity =
   | { kind: 'big'; unit: BigMini; card: UnitCardData }
   | { kind: 'large'; unit: LargeMini; card: UnitCardData }
   | { kind: 'huge'; unit: HugeMini; card: UnitCardData }
-  | { kind: 'terrain'; center: Hex }
+  | { kind: 'terrain'; center: Hex; rotationDeg: number }
   | { kind: 'etherVortex'; state: EtherVortexState }
   | null;
 
@@ -356,6 +611,7 @@ type BigMini = {
   spawnedFromArmyPanel?: boolean;
   catalogUnitId?: string;
   rosterLeaderId?: string;
+  armyOwnerPlayerSlot?: PlayerSlot;
 };
 
 const bigMiniatures: BigMini[] = [
@@ -386,6 +642,7 @@ type LargeMini = {
   spawnedFromArmyPanel?: boolean;
   catalogUnitId?: string;
   rosterLeaderId?: string;
+  armyOwnerPlayerSlot?: PlayerSlot;
 };
 
 function largeMiniFootprint(m: Pick<LargeMini, 'anchor' | 'rotationDeg'>): Hex[] {
@@ -431,6 +688,7 @@ type HugeMini = {
   spawnedFromArmyPanel?: boolean;
   catalogUnitId?: string;
   rosterLeaderId?: string;
+  armyOwnerPlayerSlot?: PlayerSlot;
 };
 
 function hugeMiniFootprintCenters(m: Pick<HugeMini, 'anchor' | 'rotationDeg'>): Hex[] {
@@ -931,7 +1189,7 @@ function pushPieceRotationsToRenderer(): void {
   renderer.setUnitRotations(units.map((u) => u.rotationDeg));
   renderer.setUnitHealth(units.map((u) => u.health), openHealthControlsUnitIndex);
   renderer.setBigMiniHealth(bigMiniatures.map((m) => m.health), openHealthControlsBigMiniIndex);
-  renderer.setTerrainRotation(terrainRotationDeg);
+  renderer.setTerrainRotations(terrainRotationDegs);
   renderer.setBigMiniRotations(bigMiniatures.map((m) => m.rotationDeg));
   // Large minis
   renderer.setLargeMiniRotations(largeMiniatures.map((m) => m.rotationDeg));
@@ -998,12 +1256,14 @@ function rotateElementUnderHex(hex: Hex | null, deltaDeg: number): boolean {
   if (hugeIdxHex !== -1) {
     return applyHugeMiniRotation(hugeIdxHex, deltaDeg);
   }
-  if (findEtherVortexAtHex(hex) !== -1) {
-    terrainRotationDeg += deltaDeg;
+  const etherIdx = findEtherVortexAtHex(hex);
+  if (etherIdx !== -1) {
+    etherVortexes[etherIdx]!.rotationDeg += deltaDeg;
     return true;
   }
-  if (isHexInTerrain(hex)) {
-    terrainRotationDeg += deltaDeg;
+  const terrainIdx = findTerrainAtHex(hex);
+  if (terrainIdx !== -1) {
+    terrainRotationDegs[terrainIdx] = (terrainRotationDegs[terrainIdx] ?? 0) + deltaDeg;
     return true;
   }
   const hiNear = findHugeMiniIndexNearPivotWorld(world);
@@ -1155,7 +1415,158 @@ unitCard.onDiceRequest = (req: DiceRequest) => {
   diceRoller.addDice(req.pool, req.source);
 };
 
-new EphiriumVortexUi(document.body);
+/** Открытые карты эфирного вихря (индексы в `EPHIRIUM_VORTEX_CARDS`), синхронизируются в MP через снимок стола. */
+let ephiriumOpenSpriteIndices: number[] = [];
+
+const ephiriumVortexUi = new EphiriumVortexUi(document.body, {
+  requestDraw: () => {
+    if (ephiriumOpenSpriteIndices.length >= 2) return;
+    const n = EPHIRIUM_VORTEX_CARDS.length;
+    ephiriumOpenSpriteIndices = [
+      ...ephiriumOpenSpriteIndices,
+      Math.floor(Math.random() * n),
+    ];
+    notifyBoardEditLocal();
+    ephiriumVortexUi.applyOpenIndices(ephiriumOpenSpriteIndices);
+  },
+  requestCloseSlot: (slotIndex: number) => {
+    if (slotIndex < 0 || slotIndex >= ephiriumOpenSpriteIndices.length) return;
+    ephiriumOpenSpriteIndices = ephiriumOpenSpriteIndices.filter((_, i) => i !== slotIndex);
+    notifyBoardEditLocal();
+    ephiriumVortexUi.applyOpenIndices(ephiriumOpenSpriteIndices);
+  },
+});
+
+function effectiveMyGodSlot(): PlayerSlot {
+  return localViewPlayerSlot ?? 0;
+}
+
+function effectiveOpponentGodSlot(): PlayerSlot {
+  return effectiveMyGodSlot() === 0 ? 1 : 0;
+}
+
+function isGodDockInteractive(): boolean {
+  if (isBoardMultiplayerSyncActive() && localViewPlayerSlot === null) return false;
+  return true;
+}
+
+function refreshGodDock(): void {
+  if (!godHandBlindDock) return;
+  const my = effectiveMyGodSlot();
+  const opp = effectiveOpponentGodSlot();
+  const myP = godPiles[my];
+  const oppP = godPiles[opp];
+  const oppBlind =
+    oppP.blindCardIds.length > 0 ? oppP.blindCardIds.length : oppP.remoteBlindCount;
+  godHandBlindDock.refresh({
+    interactive: isGodDockInteractive(),
+    myBlindCardIds: [...myP.blindCardIds],
+    opponentBlindCount: oppBlind,
+  });
+}
+
+function serializedWireBlindCount(s: SerializedGodSlotV1): number {
+  if (typeof s.blindCount === 'number') return s.blindCount;
+  return s.blindHasCard === true ? 1 : 0;
+}
+
+function serializeGodSlotForCapture(slot: PlayerSlot): SerializedGodSlotV1 {
+  const mp = isBoardMultiplayerSyncActive();
+  const v = localViewPlayerSlot;
+  const mine = !mp || v === null ? slot === 0 : v === slot;
+  const p = godPiles[slot];
+
+  if (mine) {
+    return {
+      discardIds: [...p.discardIds],
+      deckCount: p.deckIds.length,
+      deckIds: [...p.deckIds],
+      handCount: p.handIds.length,
+      handIds: [...p.handIds],
+      blindCount: p.blindCardIds.length,
+      blindCardIds: [...p.blindCardIds],
+    };
+  }
+
+  const oppBlind =
+    p.blindCardIds.length > 0 ? p.blindCardIds.length : p.remoteBlindCount;
+  return {
+    discardIds: [...p.discardIds],
+    deckCount: p.deckIds.length > 0 ? p.deckIds.length : p.remoteDeckCount,
+    handCount: p.handIds.length > 0 ? p.handIds.length : p.remoteHandCount,
+    blindCount: oppBlind,
+  };
+}
+
+function applySerializedGodSlot(slot: PlayerSlot, s: SerializedGodSlotV1): void {
+  const mp = isBoardMultiplayerSyncActive();
+  const v = localViewPlayerSlot;
+  const imOwner = !mp || v === null ? slot === 0 : v === slot;
+  const prev = clonePile(godPiles[slot]);
+
+  if (imOwner) {
+    const next: GodSlotPile = {
+      ...EMPTY_GOD_PILE,
+      discardIds: [...s.discardIds],
+      remoteBlindCount: 0,
+      remoteHandCount: 0,
+      remoteDeckCount: 0,
+    };
+    next.handIds = s.handIds !== undefined ? [...s.handIds] : [...prev.handIds];
+    next.deckIds = s.deckIds !== undefined ? [...s.deckIds] : [...prev.deckIds];
+
+    if (s.blindCardIds !== undefined) {
+      next.blindCardIds = [...s.blindCardIds];
+    } else if (s.blindCardId !== undefined && s.blindCardId !== null) {
+      next.blindCardIds = [s.blindCardId];
+    } else if (serializedWireBlindCount(s) === 0) {
+      next.blindCardIds = [];
+    } else {
+      next.blindCardIds = [...prev.blindCardIds];
+    }
+    godPiles[slot] = next;
+    return;
+  }
+
+  godPiles[slot] = {
+    ...EMPTY_GOD_PILE,
+    discardIds: [...s.discardIds],
+    deckIds: [],
+    handIds: [],
+    blindCardIds:
+      s.blindCardIds !== undefined ? [...s.blindCardIds] : [],
+    remoteBlindCount:
+      s.blindCardIds !== undefined && s.blindCardIds.length > 0
+        ? 0
+        : serializedWireBlindCount(s),
+    remoteHandCount: s.handCount,
+    remoteDeckCount: s.deckCount,
+  };
+}
+
+function applyGodDeckSlotsFromSnapshot(slots: SerializedGodDeckSlotsV1): void {
+  applySerializedGodSlot(0, slots['0']);
+  applySerializedGodSlot(1, slots['1']);
+}
+
+function moveBlindCardToTableFromZone(
+  blindIndex: number,
+  clientX: number,
+  clientY: number,
+): void {
+  if (!isGodDockInteractive()) return;
+  const s = effectiveMyGodSlot();
+  const p = godPiles[s];
+  const id = p.blindCardIds[blindIndex];
+  if (!id) return;
+  const { x, y } = screenToBoardWorld(clientX, clientY);
+  godTablePieces.push({ kind: 'single', id, world: { x, y }, faceUp: true });
+  p.blindCardIds = p.blindCardIds.filter((_, i) => i !== blindIndex);
+  notifyBoardEditLocal();
+  scheduleRender();
+  refreshGodDock();
+  armyBuilderPanel.refresh();
+}
 
 new CrystalWallet(document.body);
 
@@ -1165,6 +1576,14 @@ armyBuilderPanel = new ArmyBuilderPanel(document.body, {
   getPointsSpent: () => sumRosterPoints(),
   onDiceRequest: (req) => diceRoller.addDice(req.pool, req.source),
 });
+
+godHandBlindDock = new GodHandBlindDock(document.body, {
+  isInteractive: isGodDockInteractive,
+  onBlindCardToTable: moveBlindCardToTableFromZone,
+});
+refreshGodDock();
+
+void preloadGodCardSpriteSheets().catch((err) => console.warn(err));
 
 // ── Render loop ────────────────────────────────────────────────
 
@@ -1178,6 +1597,19 @@ let needsRender = true;
 function scheduleRender(): void {
   needsRender = true;
   notifyBoardEditLocal();
+}
+
+/** Multiplayer seat: slot 1 sees the board rotated 180° (same model, opposite view). */
+function applyMultiplayerViewSeat(slot: PlayerSlot | null): void {
+  localViewPlayerSlot = slot;
+  diceRoller.setLocalPlayerSlot(slot);
+  viewSeatExtraRotationDeg = slot === 1 ? 180 : 0;
+  renderer.updateConfig({
+    boardRotationDeg: effectiveBoardRotationDeg(),
+    oppositeSeatUnitRotationCorrectionDeg: slot === 1 ? -180 : 0,
+  });
+  scheduleRender();
+  refreshGodDock();
 }
 
 function loop(): void {
@@ -1236,6 +1668,10 @@ function loop(): void {
     renderer.render();
     needsRender = false;
   }
+  godHandBlindDock?.applyDualBlindLayouts(
+    computeBlindZoneLayoutForSlot(effectiveMyGodSlot()),
+    computeBlindZoneLayoutForSlot(effectiveOpponentGodSlot()),
+  );
   if (godPieceFlipAnim !== null) needsRender = true;
   tickTableDragOutbound(captureTableDragForNetwork);
   requestAnimationFrame(loop);
@@ -1376,7 +1812,7 @@ function captureTableDragForNetwork(): TableDragState {
 function screenToBoardWorld(sx: number, sy: number): { x: number; y: number } {
   const world = camera.screenToWorld(sx, sy);
   const boardCenter = getBoardCenterWorld();
-  const angleRad = (BOARD_ROTATION_DEG * Math.PI) / 180;
+  const angleRad = (effectiveBoardRotationDeg() * Math.PI) / 180;
   const inverseAngle = -angleRad;
   const dx = world.x - boardCenter.x;
   const dy = world.y - boardCenter.y;
@@ -1386,14 +1822,19 @@ function screenToBoardWorld(sx: number, sy: number): { x: number; y: number } {
   };
 }
 
-/** Ellipse in card-local space (matches board R then GOD_TABLE_CARD_ROT_CW_DEG on canvas). */
+/** Доп. поворот карт богов на месте напротив (как `oppositeSeatUnitRotationCorrectionDeg` в рендерере). */
+function godTableCardOppositeSeatFixDeg(): number {
+  return viewSeatExtraRotationDeg === 180 ? -180 : 0;
+}
+
+/** Ellipse in card-local space (matches board R then поворот карты на canvas). */
 function godEllipseContains(world: Point, center: Point, hw: number, hh: number): boolean {
   const dx = world.x - center.x;
   const dy = world.y - center.y;
-  const B = (BOARD_ROTATION_DEG * Math.PI) / 180;
+  const B = (effectiveBoardRotationDeg() * Math.PI) / 180;
   const dpx = dx * Math.cos(B) + dy * Math.sin(B);
   const dpy = -dx * Math.sin(B) + dy * Math.cos(B);
-  const C = (GOD_TABLE_CARD_ROT_CW_DEG * Math.PI) / 180;
+  const C = ((GOD_TABLE_CARD_ROT_CW_DEG + godTableCardOppositeSeatFixDeg()) * Math.PI) / 180;
   const sx = dpx * Math.cos(C) - dpy * Math.sin(C);
   const sy = dpx * Math.sin(C) + dpy * Math.cos(C);
   const a = sx / hw;
@@ -1516,10 +1957,6 @@ function findTerrainAtHex(hex: Hex): number {
   return terrains.findIndex((center) =>
     hexonCells(center).some((cell) => cell.key === hex.key),
   );
-}
-
-function isHexInTerrain(hex: Hex): boolean {
-  return findTerrainAtHex(hex) !== -1;
 }
 
 function findBigMiniAtHex(hex: Hex): number {
@@ -1660,11 +2097,37 @@ function findOffBoardHugeMiniAtScreen(sx: number, sy: number): number {
   return -1;
 }
 
+type RosterTaggedPiece = {
+  spawnedFromArmyPanel?: boolean;
+  armyOwnerPlayerSlot?: PlayerSlot;
+};
+
+/** Solo: all roster pieces count. MP player: only own slot. MP spectator: none. */
+function rosterPieceCountsForLocalArmiesPanel(p: RosterTaggedPiece): boolean {
+  if (!isBoardMultiplayerSyncActive()) return true;
+  if (localViewPlayerSlot === null) return false;
+  return p.armyOwnerPlayerSlot === localViewPlayerSlot;
+}
+
+/** On paste in MP: assign local slot to roster pieces missing owner (e.g. legacy clipboard). */
+function rosterPasteOwnerOverride<T extends RosterTaggedPiece>(src: T): { armyOwnerPlayerSlot?: PlayerSlot } {
+  if (
+    !isBoardMultiplayerSyncActive() ||
+    localViewPlayerSlot === null ||
+    !src.spawnedFromArmyPanel ||
+    src.armyOwnerPlayerSlot !== undefined
+  ) {
+    return {};
+  }
+  return { armyOwnerPlayerSlot: localViewPlayerSlot };
+}
+
 function countRosterCopies(leaderId: string, unitId: string): number {
   let n = 0;
   for (const u of units) {
     if (
       u.spawnedFromArmyPanel &&
+      rosterPieceCountsForLocalArmiesPanel(u) &&
       u.rosterLeaderId === leaderId &&
       u.catalogUnitId === unitId
     ) {
@@ -1672,13 +2135,31 @@ function countRosterCopies(leaderId: string, unitId: string): number {
     }
   }
   for (const m of bigMiniatures) {
-    if (m.spawnedFromArmyPanel && m.rosterLeaderId === leaderId && m.catalogUnitId === unitId) n++;
+    if (
+      m.spawnedFromArmyPanel &&
+      rosterPieceCountsForLocalArmiesPanel(m) &&
+      m.rosterLeaderId === leaderId &&
+      m.catalogUnitId === unitId
+    )
+      n++;
   }
   for (const m of largeMiniatures) {
-    if (m.spawnedFromArmyPanel && m.rosterLeaderId === leaderId && m.catalogUnitId === unitId) n++;
+    if (
+      m.spawnedFromArmyPanel &&
+      rosterPieceCountsForLocalArmiesPanel(m) &&
+      m.rosterLeaderId === leaderId &&
+      m.catalogUnitId === unitId
+    )
+      n++;
   }
   for (const m of hugeMiniatures) {
-    if (m.spawnedFromArmyPanel && m.rosterLeaderId === leaderId && m.catalogUnitId === unitId) n++;
+    if (
+      m.spawnedFromArmyPanel &&
+      rosterPieceCountsForLocalArmiesPanel(m) &&
+      m.rosterLeaderId === leaderId &&
+      m.catalogUnitId === unitId
+    )
+      n++;
   }
   return n;
 }
@@ -1686,22 +2167,22 @@ function countRosterCopies(leaderId: string, unitId: string): number {
 function sumRosterPoints(): number {
   let s = 0;
   for (const u of units) {
-    if (!u.spawnedFromArmyPanel || !u.catalogUnitId) continue;
+    if (!u.spawnedFromArmyPanel || !u.catalogUnitId || !rosterPieceCountsForLocalArmiesPanel(u)) continue;
     const d = getCatalogUnit(u.catalogUnitId);
     if (d) s += d.points;
   }
   for (const m of bigMiniatures) {
-    if (!m.spawnedFromArmyPanel || !m.catalogUnitId) continue;
+    if (!m.spawnedFromArmyPanel || !m.catalogUnitId || !rosterPieceCountsForLocalArmiesPanel(m)) continue;
     const d = getCatalogUnit(m.catalogUnitId);
     if (d) s += d.points;
   }
   for (const m of largeMiniatures) {
-    if (!m.spawnedFromArmyPanel || !m.catalogUnitId) continue;
+    if (!m.spawnedFromArmyPanel || !m.catalogUnitId || !rosterPieceCountsForLocalArmiesPanel(m)) continue;
     const d = getCatalogUnit(m.catalogUnitId);
     if (d) s += d.points;
   }
   for (const m of hugeMiniatures) {
-    if (!m.spawnedFromArmyPanel || !m.catalogUnitId) continue;
+    if (!m.spawnedFromArmyPanel || !m.catalogUnitId || !rosterPieceCountsForLocalArmiesPanel(m)) continue;
     const d = getCatalogUnit(m.catalogUnitId);
     if (d) s += d.points;
   }
@@ -1913,11 +2394,19 @@ function trySpawnTroopFromArmyBuilder(
   if (countRosterCopies(leaderId, unitId) >= maxC) return false;
 
   const card = structuredClone(def.card);
-  const rosterMeta = {
-    spawnedFromArmyPanel: true as const,
-    catalogUnitId: unitId,
-    rosterLeaderId: leaderId,
-  };
+  const rosterMeta =
+    isBoardMultiplayerSyncActive() && localViewPlayerSlot !== null
+      ? ({
+          spawnedFromArmyPanel: true as const,
+          catalogUnitId: unitId,
+          rosterLeaderId: leaderId,
+          armyOwnerPlayerSlot: localViewPlayerSlot,
+        } as const)
+      : ({
+          spawnedFromArmyPanel: true as const,
+          catalogUnitId: unitId,
+          rosterLeaderId: leaderId,
+        } as const);
 
   if (def.card.size === 'small') {
     const world = screenToBoardWorld(screenX, screenY);
@@ -2004,11 +2493,19 @@ function trySpawnLeaderMiniFromArmyBuilder(
   if (countRosterCopies(leaderId, unitId) >= LEADER_MINI_MAX_COPIES) return false;
 
   const card = structuredClone(def.card);
-  const rosterMeta = {
-    spawnedFromArmyPanel: true as const,
-    catalogUnitId: unitId,
-    rosterLeaderId: leaderId,
-  };
+  const rosterMeta =
+    isBoardMultiplayerSyncActive() && localViewPlayerSlot !== null
+      ? ({
+          spawnedFromArmyPanel: true as const,
+          catalogUnitId: unitId,
+          rosterLeaderId: leaderId,
+          armyOwnerPlayerSlot: localViewPlayerSlot,
+        } as const)
+      : ({
+          spawnedFromArmyPanel: true as const,
+          catalogUnitId: unitId,
+          rosterLeaderId: leaderId,
+        } as const);
 
   const world = screenToBoardWorld(screenX, screenY);
   const hex = hexAtScreen(screenX, screenY);
@@ -2499,13 +2996,18 @@ function copySelected(): void {
         center: new Hex(v.center.q, v.center.r),
         etherCrystals: v.etherCrystals,
         domain: v.domain,
+        rotationDeg: v.rotationDeg,
         offBoardWorld: v.offBoardWorld ? { ...v.offBoardWorld } : undefined,
       },
     };
     return;
   }
   const t = terrains[sel.index];
-  clipboardEntity = { kind: 'terrain', center: new Hex(t.q, t.r) };
+  clipboardEntity = {
+    kind: 'terrain',
+    center: new Hex(t.q, t.r),
+    rotationDeg: terrainRotationDegs[sel.index] ?? 0,
+  };
 }
 
 function pasteClipboard(): void {
@@ -2517,7 +3019,12 @@ function pasteClipboard(): void {
       nextPos = offsetHexForPaste(clipboardEntity.unit.position);
     }
     if (!grid.has(nextPos) || units.some((u) => u.position.key === nextPos.key)) return;
-    units.push({ ...clipboardEntity.unit, position: nextPos, effectMarkers: new Set(clipboardEntity.unit.effectMarkers) });
+    units.push({
+      ...clipboardEntity.unit,
+      ...rosterPasteOwnerOverride(clipboardEntity.unit),
+      position: nextPos,
+      effectMarkers: new Set(clipboardEntity.unit.effectMarkers),
+    });
     unitCardData.push(structuredClone(clipboardEntity.card));
     clearSelection();
     selectedUnitIndex = units.length - 1;
@@ -2529,7 +3036,12 @@ function pasteClipboard(): void {
     const nextCenter = cursorWorld
       ? nearestHexonCenterFromWorld(cursorWorld)
       : offsetHexonCenterForPaste(clipboardEntity.unit.center);
-    bigMiniatures.push({ ...clipboardEntity.unit, center: nextCenter, effectMarkers: new Set(clipboardEntity.unit.effectMarkers) });
+    bigMiniatures.push({
+      ...clipboardEntity.unit,
+      ...rosterPasteOwnerOverride(clipboardEntity.unit),
+      center: nextCenter,
+      effectMarkers: new Set(clipboardEntity.unit.effectMarkers),
+    });
     bigMiniCardData.push(structuredClone(clipboardEntity.card));
     clearSelection();
     selectedBigMiniIndex = bigMiniatures.length - 1;
@@ -2554,7 +3066,12 @@ function pasteClipboard(): void {
       nextAnchor = offsetHexForPaste(clipboardEntity.unit.anchor);
     }
     if (!canPlaceLargeMiniAt(nextAnchor, -1, pasteRot)) return;
-    largeMiniatures.push({ ...clipboardEntity.unit, anchor: nextAnchor, effectMarkers: new Set(clipboardEntity.unit.effectMarkers) });
+    largeMiniatures.push({
+      ...clipboardEntity.unit,
+      ...rosterPasteOwnerOverride(clipboardEntity.unit),
+      anchor: nextAnchor,
+      effectMarkers: new Set(clipboardEntity.unit.effectMarkers),
+    });
     largeMiniCardData.push(structuredClone(clipboardEntity.card));
     clearSelection();
     selectedLargeMiniIndex = largeMiniatures.length - 1;
@@ -2576,7 +3093,12 @@ function pasteClipboard(): void {
       nextAnchor = offsetHexonCenterForPaste(clipboardEntity.unit.anchor);
     }
     if (!canPlaceHugeMiniAt(nextAnchor, -1, pasteRot)) return;
-    hugeMiniatures.push({ ...clipboardEntity.unit, anchor: nextAnchor, effectMarkers: new Set(clipboardEntity.unit.effectMarkers) });
+    hugeMiniatures.push({
+      ...clipboardEntity.unit,
+      ...rosterPasteOwnerOverride(clipboardEntity.unit),
+      anchor: nextAnchor,
+      effectMarkers: new Set(clipboardEntity.unit.effectMarkers),
+    });
     hugeMiniCardData.push(structuredClone(clipboardEntity.card));
     clearSelection();
     selectedHugeMiniIndex = hugeMiniatures.length - 1;
@@ -2593,6 +3115,7 @@ function pasteClipboard(): void {
       center: nextCenter,
       etherCrystals: s.etherCrystals,
       domain: s.domain,
+      rotationDeg: s.rotationDeg ?? 0,
     });
     clearSelection();
     selectedEtherVortexIndex = etherVortexes.length - 1;
@@ -2605,6 +3128,7 @@ function pasteClipboard(): void {
     : offsetHexonCenterForPaste(base);
   terrains.push(nextCenter);
   terrainOffBoardWorlds.push(undefined);
+  terrainRotationDegs.push(clipboardEntity.rotationDeg);
   clearSelection();
   selectedTerrainIndex = terrains.length - 1;
 }
@@ -2657,12 +3181,13 @@ function deleteSelected(): void {
   }
   terrains.splice(sel.index, 1);
   terrainOffBoardWorlds.splice(sel.index, 1);
+  terrainRotationDegs.splice(sel.index, 1);
   clearSelection();
 }
 
 function boardWorldToScreen(world: { x: number; y: number }): { x: number; y: number } {
   const boardCenter = getBoardCenterWorld();
-  const angleRad = (BOARD_ROTATION_DEG * Math.PI) / 180;
+  const angleRad = (effectiveBoardRotationDeg() * Math.PI) / 180;
   const dx = world.x - boardCenter.x;
   const dy = world.y - boardCenter.y;
   const rotatedX = boardCenter.x + dx * Math.cos(angleRad) - dy * Math.sin(angleRad);
@@ -2786,7 +3311,7 @@ function getLargeMiniHealthUiGeometry(
 } {
   const badgeRadiusWorld =
     Math.min(layout.size.x, layout.size.y) *
-    1.2 *
+    1.58 *
     LARGE_MINI_VISUAL_SCALE *
     LARGE_UNIT_HEALTH_UI_SCALE *
     0.48;
@@ -3012,7 +3537,7 @@ function tryEtherVortexCrystalBadgeOpen(screenX: number, screenY: number): boole
       draggingEtherVortexIndex === i && isDraggingEtherVortex && etherVortexPreviewWorld
         ? etherVortexPreviewWorld
         : (v.offBoardWorld ?? layout.hexToPixel(v.center));
-    const badge = renderer.getEtherVortexCrystalBadgeBoardAtPivot(pivot, terrainRotationDeg);
+    const badge = renderer.getEtherVortexCrystalBadgeBoardAtPivot(pivot, v.rotationDeg);
     const dx = w.x - badge.x;
     const dy = w.y - badge.y;
     if (dx * dx + dy * dy <= hitR2) {
@@ -3351,6 +3876,33 @@ function finishGodLooseDragIfActive(e: MouseEvent | PointerEvent): void {
     const idx = godDraggingLooseIndex;
     const entry = godTablePieces[idx];
     if (entry) {
+      const slot = effectiveMyGodSlot();
+      const pile = godPiles[slot];
+      if (
+        isGodDockInteractive() &&
+        godBlindZoneContainsWorldForSlot(w, effectiveMyGodSlot()) &&
+        entry.kind === 'single' &&
+        pile.blindCardIds.length < GOD_BLIND_ZONE_MAX_CARDS
+      ) {
+        pile.blindCardIds.push(entry.id);
+        godTablePieces.splice(idx, 1);
+        if (selectedGodTablePieceIndex !== null) {
+          if (selectedGodTablePieceIndex === idx) selectedGodTablePieceIndex = null;
+          else if (selectedGodTablePieceIndex > idx) selectedGodTablePieceIndex -= 1;
+        }
+        notifyBoardEditLocal();
+        refreshGodDock();
+        armyBuilderPanel.refresh();
+        isDraggingGodLoose = false;
+        godDraggingLooseIndex = null;
+        godLooseDragPreviewWorld = null;
+        godLooseDragPending = false;
+        godLooseDragPendingIndex = null;
+        godDeckDragWholeStackAfterHold = false;
+        scheduleRender();
+        return;
+      }
+
       const mergeI = godPieceHitIndexFromWorld(w, idx);
       if (mergeI !== null) {
         const target = godTablePieces[mergeI]!;
@@ -4081,6 +4633,25 @@ window.addEventListener('keydown', (e) => {
     scheduleRender();
     return;
   }
+  if (!mod && !e.repeat && e.code === 'KeyR') {
+    if (
+      isPointOverCanvas(pointerScreenX, pointerScreenY) &&
+      !armyBuilderPanel.isScreenPointOverPanel(pointerScreenX, pointerScreenY) &&
+      !godHandBlindDock?.isPointOverBlindZoneChrome(pointerScreenX, pointerScreenY)
+    ) {
+      const hi = godLooseHitIndex(pointerScreenX, pointerScreenY);
+      if (hi !== null) {
+        const p = godTablePieces[hi]!;
+        if (p.kind === 'deck' && p.ids.length >= 2) {
+          godTablePieces[hi] = { ...p, ids: shuffleIds(p.ids) };
+          notifyBoardEditLocal();
+          e.preventDefault();
+          scheduleRender();
+          return;
+        }
+      }
+    }
+  }
   if (e.key === 'Delete' || e.key === 'Backspace') {
     deleteSelected();
     e.preventDefault();
@@ -4141,18 +4712,82 @@ window.addEventListener('blur', () => {
   scheduleRender();
 });
 
-// ── Input: zoom (scroll wheel) ────────────────────────────────
+// ── Input: zoom + pan (wheel / trackpad) ────────────────────────
+// Режим «Зум»: любая прокрутка меняет масштаб.
+// Режим «Панорама»: прокрутка сдвигает камеру; Ctrl/Cmd+wheel (пинч) — зум.
+// Панорама: только сырые дельты (coalesced + нормализация deltaMode), без подмешивания осей.
+// Зум: линейно от нормализованной dy; тачпад (DOM_DELTA_PIXEL) — тот же k × множитель, мышь LINE/PAGE не трогаем.
 
-canvas.addEventListener(
+/** Базовый коэффициент для мыши (LINE / PAGE). Тачпад: × WHEEL_ZOOM_TOUCHPAD_MULT. */
+const WHEEL_ZOOM_LINEAR = 0.00052;
+const WHEEL_ZOOM_TOUCHPAD_MULT = 3;
+
+function wheelDeltasInCssPixels(e: WheelEvent): { dx: number; dy: number } {
+  const rawToPixels = (ev: WheelEvent): { dx: number; dy: number } => {
+    let x = ev.deltaX;
+    let y = ev.deltaY;
+    const mode = ev.deltaMode;
+    if (mode === WheelEvent.DOM_DELTA_LINE) {
+      x *= 16;
+      y *= 16;
+    } else if (mode === WheelEvent.DOM_DELTA_PAGE) {
+      x *= window.innerWidth;
+      y *= window.innerHeight;
+    }
+    return { dx: x, dy: y };
+  };
+
+  const coalesce = (e as WheelEvent & { getCoalescedEvents?: () => WheelEvent[] }).getCoalescedEvents;
+  const parts = typeof coalesce === 'function' ? coalesce.call(e) : [];
+  if (parts.length > 0) {
+    let dx = 0;
+    let dy = 0;
+    for (const ev of parts) {
+      const p = rawToPixels(ev);
+      dx += p.dx;
+      dy += p.dy;
+    }
+    return { dx, dy };
+  }
+  return rawToPixels(e);
+}
+
+/** Колесо над канвасом или слепой зоной богов (оверлей поверх канваса — target не canvas). */
+function shouldApplyBoardCameraWheel(e: WheelEvent): boolean {
+  if (isEditableTarget(e.target)) return false;
+  const t = e.target;
+  if (!(t instanceof Node)) return false;
+  if (t === canvas || canvas.contains(t)) return true;
+  if (t instanceof Element && t.closest('.god-blind-table-wrap')) return true;
+  return false;
+}
+
+window.addEventListener(
   'wheel',
   (e) => {
+    if (!shouldApplyBoardCameraWheel(e)) return;
     e.preventDefault();
-    const zoomFactor = 1.08;
-    const oldZoom = camera.zoom;
-    const direction = e.deltaY < 0 ? 1 : -1;
-    const newZoom = oldZoom * Math.pow(zoomFactor, direction);
+    const pinchOrZoomGesture = e.ctrlKey || e.metaKey;
+    const wheelMode = getWheelBehavior();
 
-    camera.zoom = Math.max(0.2, Math.min(5, newZoom));
+    if (wheelMode === 'pan' && !pinchOrZoomGesture) {
+      e.stopPropagation();
+      const { dx, dy } = wheelDeltasInCssPixels(e);
+      camera.offsetX -= dx;
+      camera.offsetY -= dy;
+      scheduleRender();
+      return;
+    }
+
+    const oldZoom = camera.zoom;
+    const { dy } = wheelDeltasInCssPixels(e);
+    const zoomK =
+      e.deltaMode === WheelEvent.DOM_DELTA_PIXEL
+        ? WHEEL_ZOOM_LINEAR * WHEEL_ZOOM_TOUCHPAD_MULT
+        : WHEEL_ZOOM_LINEAR;
+    let newZoom = oldZoom * (1 - dy * zoomK);
+    newZoom = Math.max(0.2, Math.min(5, newZoom));
+    camera.zoom = newZoom;
 
     const mouseX = e.clientX;
     const mouseY = e.clientY;
@@ -4161,7 +4796,7 @@ canvas.addEventListener(
 
     scheduleRender();
   },
-  { passive: false },
+  { passive: false, capture: true },
 );
 
 // ── Resize ─────────────────────────────────────────────────────
@@ -4436,6 +5071,7 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
       spawnedFromArmyPanel: u.spawnedFromArmyPanel,
       catalogUnitId: u.catalogUnitId,
       rosterLeaderId: u.rosterLeaderId,
+      armyOwnerPlayerSlot: u.armyOwnerPlayerSlot,
     })),
     unitCardData: structuredClone(unitCardData),
     bigMiniatures: bigMiniatures.map((m) => ({
@@ -4450,6 +5086,7 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
       spawnedFromArmyPanel: m.spawnedFromArmyPanel,
       catalogUnitId: m.catalogUnitId,
       rosterLeaderId: m.rosterLeaderId,
+      armyOwnerPlayerSlot: m.armyOwnerPlayerSlot,
     })),
     bigMiniCardData: structuredClone(bigMiniCardData),
     largeMiniatures: largeMiniatures.map((m) => ({
@@ -4464,6 +5101,7 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
       spawnedFromArmyPanel: m.spawnedFromArmyPanel,
       catalogUnitId: m.catalogUnitId,
       rosterLeaderId: m.rosterLeaderId,
+      armyOwnerPlayerSlot: m.armyOwnerPlayerSlot,
     })),
     largeMiniCardData: structuredClone(largeMiniCardData),
     hugeMiniatures: hugeMiniatures.map((m) => ({
@@ -4478,20 +5116,28 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
       spawnedFromArmyPanel: m.spawnedFromArmyPanel,
       catalogUnitId: m.catalogUnitId,
       rosterLeaderId: m.rosterLeaderId,
+      armyOwnerPlayerSlot: m.armyOwnerPlayerSlot,
     })),
     hugeMiniCardData: structuredClone(hugeMiniCardData),
     terrains: terrains.map((h) => ({ q: h.q, r: h.r })),
     terrainOffBoardWorlds: terrainOffBoardWorlds.map((p) =>
       p ? { x: p.x, y: p.y } : undefined,
     ),
-    terrainRotationDeg,
+    terrainRotationDegs: [...terrainRotationDegs],
     etherVortexes: etherVortexes.map((v) => ({
       center: { q: v.center.q, r: v.center.r },
       etherCrystals: v.etherCrystals,
       domain: v.domain,
+      rotationDeg: v.rotationDeg,
       offBoardWorld: v.offBoardWorld,
     })),
     godTablePieces: structuredClone(godTablePieces),
+    ephiriumOpenSpriteIndices: [...ephiriumOpenSpriteIndices],
+    godDeckSlots: {
+      '0': serializeGodSlotForCapture(0),
+      '1': serializeGodSlotForCapture(1),
+    },
+    sharedDice: diceRoller.exportSharedState(),
   };
 }
 
@@ -4565,6 +5211,7 @@ function applyBoardSnapshot(raw: unknown): void {
       spawnedFromArmyPanel: u.spawnedFromArmyPanel,
       catalogUnitId: u.catalogUnitId,
       rosterLeaderId: u.rosterLeaderId,
+      armyOwnerPlayerSlot: u.armyOwnerPlayerSlot,
     });
   }
 
@@ -4585,6 +5232,7 @@ function applyBoardSnapshot(raw: unknown): void {
       spawnedFromArmyPanel: m.spawnedFromArmyPanel,
       catalogUnitId: m.catalogUnitId,
       rosterLeaderId: m.rosterLeaderId,
+      armyOwnerPlayerSlot: m.armyOwnerPlayerSlot,
     });
   }
   bigMiniCardData.length = 0;
@@ -4604,6 +5252,7 @@ function applyBoardSnapshot(raw: unknown): void {
       spawnedFromArmyPanel: m.spawnedFromArmyPanel,
       catalogUnitId: m.catalogUnitId,
       rosterLeaderId: m.rosterLeaderId,
+      armyOwnerPlayerSlot: m.armyOwnerPlayerSlot,
     });
   }
   largeMiniCardData.length = 0;
@@ -4623,6 +5272,7 @@ function applyBoardSnapshot(raw: unknown): void {
       spawnedFromArmyPanel: m.spawnedFromArmyPanel,
       catalogUnitId: m.catalogUnitId,
       rosterLeaderId: m.rosterLeaderId,
+      armyOwnerPlayerSlot: m.armyOwnerPlayerSlot,
     });
   }
   hugeMiniCardData.length = 0;
@@ -4636,7 +5286,17 @@ function applyBoardSnapshot(raw: unknown): void {
   for (const p of s.terrainOffBoardWorlds) {
     terrainOffBoardWorlds.push(p ? { x: p.x, y: p.y } : undefined);
   }
-  terrainRotationDeg = s.terrainRotationDeg;
+  terrainRotationDegs.length = 0;
+  if (
+    Array.isArray(s.terrainRotationDegs) &&
+    s.terrainRotationDegs.length === s.terrains.length
+  ) {
+    terrainRotationDegs.push(...s.terrainRotationDegs);
+  } else {
+    const legacy =
+      typeof s.terrainRotationDeg === 'number' ? s.terrainRotationDeg : 0;
+    for (let i = 0; i < s.terrains.length; i++) terrainRotationDegs.push(legacy);
+  }
 
   etherVortexes.length = 0;
   for (const v of s.etherVortexes) {
@@ -4644,6 +5304,7 @@ function applyBoardSnapshot(raw: unknown): void {
       center: new Hex(v.center.q, v.center.r),
       etherCrystals: v.etherCrystals,
       domain: parseEtherDomain(v.domain),
+      rotationDeg: v.rotationDeg ?? 0,
       offBoardWorld: v.offBoardWorld,
     });
   }
@@ -4651,6 +5312,16 @@ function applyBoardSnapshot(raw: unknown): void {
   godTablePieces.length = 0;
   godTablePieces.push(...structuredClone(s.godTablePieces));
 
+  if (s.godDeckSlots) {
+    applyGodDeckSlotsFromSnapshot(s.godDeckSlots);
+  }
+
+  ephiriumOpenSpriteIndices = [...(s.ephiriumOpenSpriteIndices ?? [])].slice(0, 2);
+  ephiriumVortexUi.applyOpenIndices(ephiriumOpenSpriteIndices);
+
+  diceRoller.applySharedStateFromBoard(parseSharedDiceState(s.sharedDice));
+
+  refreshGodDock();
   armyBuilderPanel.refresh();
   updateMovementHighlights();
   updateBigMiniMovementHighlights();
@@ -4665,8 +5336,12 @@ registerBoardSyncApi({
   apply: applyBoardSnapshot,
 });
 
+const toolbarMountEl = armyBuilderPanel.getToolbarMount();
 initMultiplayerSession({
   renderer,
   scheduleRender,
   screenToBoard: screenToBoardWorld,
+  onViewPlayerSlot: applyMultiplayerViewSeat,
+  toolbarMount: toolbarMountEl,
 });
+mountAppSettingsToolbar(toolbarMountEl);

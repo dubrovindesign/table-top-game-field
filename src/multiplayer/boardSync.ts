@@ -97,3 +97,8 @@ export function receiveRemoteBoardState(payload: unknown): void {
 export function isApplyingRemoteBoardState(): boolean {
   return applyingRemote;
 }
+
+/** True while connected to a room with periodic board sync (not solo). */
+export function isBoardMultiplayerSyncActive(): boolean {
+  return mpActive;
+}

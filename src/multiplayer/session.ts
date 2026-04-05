@@ -6,7 +6,7 @@ import {
   setBoardSyncTransport,
   setMultiplayerBoardSyncActive,
 } from './boardSync.ts';
-import type { ServerToClientMessage, TableDragState } from './protocol.ts';
+import type { PlayerSlot, ServerToClientMessage, TableDragState } from './protocol.ts';
 import { RoomClient } from './roomClient.ts';
 import {
   setTableDragOutboundActive,
@@ -20,13 +20,27 @@ export type MultiplayerSessionOptions = {
   scheduleRender: () => void;
   /** Screen coords → same board space as game (e.g. `screenToBoardWorld`). */
   screenToBoard: (sx: number, sy: number) => Point;
+  /**
+   * Local board view: `1` = rotate field 180° for opposite seat; `0`/`null` = default.
+   * Call with `null` when leaving the room (spectator or disconnect).
+   */
+  onViewPlayerSlot?: (slot: PlayerSlot | null) => void;
+  /**
+   * Контейнер для кнопки «Мультиплеер» в одном ряду с другими кнопками (например панель армии).
+   * Если не задан — кнопка и всплывающая панель закрепляются в правом верхнем углу.
+   */
+  toolbarMount?: HTMLElement;
 };
 
 function defaultWsUrl(): string {
   const fromEnv = import.meta.env.VITE_MP_WS_URL;
   if (fromEnv && typeof fromEnv === 'string' && fromEnv.length > 0) return fromEnv;
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${proto}//${location.hostname}:3333`;
+  // Same-origin path → vite.config proxy → 127.0.0.1:3333 (roomServer). Avoids localhost/LAN/IPv6 mismatches.
+  if (typeof location.host === 'string' && location.host.length > 0) {
+    return `${proto}//${location.host}/__mp_ws`;
+  }
+  return `${proto}//127.0.0.1:3333`;
 }
 
 function colorForPeerId(id: string): string {
@@ -51,15 +65,28 @@ function setRoomInUrl(roomId: string): void {
  * Live multiplayer: lobby UI, room join, remote pointers on the renderer.
  */
 export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
-  const { renderer, scheduleRender, screenToBoard } = opts;
+  const { renderer, scheduleRender, screenToBoard, onViewPlayerSlot, toolbarMount } = opts;
   const client = new RoomClient();
 
+  const toolbarAnchor = document.createElement('div');
+  toolbarAnchor.className =
+    'mp-toolbar-anchor' + (toolbarMount ? '' : ' mp-toolbar-anchor-standalone');
+
+  const toggleBtn = document.createElement('button');
+  toggleBtn.type = 'button';
+  toggleBtn.className = 'mp-menu-btn';
+  toggleBtn.setAttribute('aria-label', 'Мультиплеер');
+  toggleBtn.title = 'Мультиплеер';
+  toggleBtn.setAttribute('aria-expanded', 'false');
+  toggleBtn.innerHTML = `<svg class="mp-menu-btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.87 2.13 7.13 2.13 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 7.14 8.87 7.14 5 13z"/></svg>`;
+
   const root = document.createElement('div');
-  root.className = 'mp-root';
+  root.className = 'mp-root mp-popover-hidden';
   root.innerHTML = `
     <div class="mp-panel" data-view="home">
       <div class="mp-title">Мультиплеер</div>
       <p class="mp-hint">WebSocket: <code class="mp-ws-url"></code></p>
+      <p class="mp-hint mp-connect-status mp-hidden" aria-live="polite"></p>
       <button type="button" class="mp-btn mp-btn-primary" data-action="create">Создать стол</button>
       <p class="mp-hint mp-lan-hint"></p>
     </div>
@@ -79,13 +106,44 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       <button type="button" class="mp-btn mp-btn-danger" data-action="disconnect">Отключиться</button>
     </div>
   `;
-  document.body.appendChild(root);
+
+  let popoverOpen = false;
+  function setPopoverOpen(open: boolean): void {
+    popoverOpen = open;
+    root.classList.toggle('mp-popover-hidden', !open);
+    toggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  toolbarAnchor.appendChild(toggleBtn);
+  toolbarAnchor.appendChild(root);
+  if (toolbarMount) {
+    toolbarMount.appendChild(toolbarAnchor);
+  } else {
+    document.body.appendChild(toolbarAnchor);
+  }
+
+  toggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setPopoverOpen(!popoverOpen);
+  });
+
+  document.addEventListener(
+    'pointerdown',
+    (e) => {
+      if (!popoverOpen) return;
+      if (toolbarAnchor.contains(e.target as Node)) return;
+      setPopoverOpen(false);
+    },
+    true,
+  );
 
   const wsUrl = defaultWsUrl();
   root.querySelector('.mp-ws-url')!.textContent = wsUrl;
 
   const lanHint = root.querySelector('.mp-lan-hint') as HTMLElement;
-  lanHint.textContent = `Другой игрок: тот же Wi‑Fi, в браузере открыть ссылку с ?room=… (порт Vite и WS см. README).`;
+  lanHint.textContent =
+    'Сервер комнат: npm run dev:server (порт 3333). Страница подключается через прокси /__mp_ws к 127.0.0.1:3333. ' +
+    'Другой игрок: тот же Wi‑Fi, ссылка с ?room=…';
 
   const views = {
     home: root.querySelector('[data-view="home"]') as HTMLElement,
@@ -100,6 +158,9 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
 
   let myId: string | null = null;
   let currentRoomId: string | null = null;
+  /** Set when user starts create/join; cleared on success or onClose. Used to explain silent WS failures. */
+  let pendingWsIntent: 'create' | 'joinPlayer' | 'joinSpectator' | null = null;
+  let roomResponseWatchdog: ReturnType<typeof setTimeout> | null = null;
   const peerPointers = new Map<string, { x: number; y: number; color: string }>();
   const peerTableDragById = new Map<string, TableDragState>();
 
@@ -152,6 +213,49 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
     input.value = inviteUrl();
   }
 
+  const connectStatusEl = root.querySelector('.mp-connect-status') as HTMLElement;
+  function setConnectStatus(text: string, visible: boolean): void {
+    connectStatusEl.textContent = text;
+    connectStatusEl.classList.toggle('mp-hidden', !visible);
+  }
+
+  function clearConnectStatus(): void {
+    setConnectStatus('', false);
+  }
+
+  function clearRoomResponseWatchdog(): void {
+    if (roomResponseWatchdog !== null) {
+      clearTimeout(roomResponseWatchdog);
+      roomResponseWatchdog = null;
+    }
+  }
+
+  /** If TCP connects but peer is not our roomServer, we never get roomCreated / joined. */
+  function armRoomResponseWatchdog(expectedIntent: typeof pendingWsIntent): void {
+    clearRoomResponseWatchdog();
+    if (
+      expectedIntent !== 'create' &&
+      expectedIntent !== 'joinPlayer' &&
+      expectedIntent !== 'joinSpectator'
+    ) {
+      return;
+    }
+    roomResponseWatchdog = window.setTimeout(() => {
+      roomResponseWatchdog = null;
+      if (currentRoomId !== null) return;
+      if (pendingWsIntent !== expectedIntent) return;
+      pendingWsIntent = null;
+      const short =
+        'Сервер не ответил roomCreated/joined — на :3333 часто другая служба, не roomServer.';
+      const detail =
+        `${short}\n\n` +
+        'Запустите из корня проекта: npm run dev:server\n' +
+        'или задайте VITE_MP_WS_URL на нужный ws://… в .env';
+      setConnectStatus(short, true);
+      window.alert(`${detail}\n\nТекущий URL: ${wsUrl}`);
+    }, 5000);
+  }
+
   function wireTableSync(): void {
     setBoardSyncTransport((m) => {
       client.send(m);
@@ -164,6 +268,7 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
   }
 
   function stopTableSync(): void {
+    onViewPlayerSlot?.(null);
     setTableDragOutboundActive(false);
     setTableDragOutboundTransport(null);
     setBoardSyncTransport(null);
@@ -174,7 +279,27 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
   }
 
   function onServerMessage(msg: ServerToClientMessage): void {
+    try {
+      dispatchServerMessage(msg);
+    } catch (e) {
+      console.error('[mp] onServerMessage handler failed', e);
+      pendingWsIntent = null;
+      clearRoomResponseWatchdog();
+      setConnectStatus('Ошибка при обработке ответа сервера (см. консоль).', true);
+      window.alert(
+        `Внутренняя ошибка клиента при разборе ответа мультиплеера.\nПодробности в консоли (F12).\n\n${String(e)}`,
+      );
+    }
+  }
+
+  function dispatchServerMessage(msg: ServerToClientMessage): void {
+    if (msg.type === 'pong') {
+      return;
+    }
     if (msg.type === 'roomCreated') {
+      pendingWsIntent = null;
+      clearRoomResponseWatchdog();
+      clearConnectStatus();
       myId = msg.yourId;
       currentRoomId = msg.roomId;
       setRoomInUrl(msg.roomId);
@@ -183,10 +308,14 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
         `Комната ${msg.roomId} — вы хост (игрок 1). Поделитесь ссылкой со вторым игроком.`;
       fillIngameInvite();
       wireTableSync();
+      onViewPlayerSlot?.(msg.playerSlot);
       pushBoardStateImmediate();
       return;
     }
     if (msg.type === 'joined') {
+      pendingWsIntent = null;
+      clearRoomResponseWatchdog();
+      clearConnectStatus();
       myId = msg.yourId;
       currentRoomId = msg.roomId;
       setRoomInUrl(msg.roomId);
@@ -198,9 +327,13 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       root.querySelector('.mp-ingame-room')!.textContent = `Комната ${msg.roomId} · ${roleLabel}`;
       fillIngameInvite();
       wireTableSync();
+      onViewPlayerSlot?.(msg.role === 'spectator' ? null : msg.playerSlot);
       return;
     }
     if (msg.type === 'joinError') {
+      pendingWsIntent = null;
+      clearRoomResponseWatchdog();
+      clearConnectStatus();
       alert(msg.message);
       return;
     }
@@ -248,24 +381,45 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       applyPeerTableDragsToRenderer();
       return;
     }
+    console.warn('[mp] неизвестный тип сообщения сервера', msg);
   }
 
   function ensureConnectedThen(fn: () => void): void {
-    if (client.connected) {
+    const intentSnapshot = pendingWsIntent;
+    const run = (): void => {
+      lastPointerSent = 0;
+      clearConnectStatus();
       fn();
+      armRoomResponseWatchdog(intentSnapshot);
+    };
+    if (client.connected) {
+      run();
       return;
     }
+    setConnectStatus('Подключение к серверу комнат…', true);
     client.connect(wsUrl, {
       onOpen: () => {
-        lastPointerSent = 0;
-        fn();
+        run();
       },
       onClose: () => {
+        const intent = pendingWsIntent;
+        const hadRoom = currentRoomId !== null;
+        pendingWsIntent = null;
+        clearRoomResponseWatchdog();
+        clearConnectStatus();
         stopTableSync();
         clearPointers();
         myId = null;
         currentRoomId = null;
         show('home');
+        if (intent !== null && !hadRoom) {
+          window.alert(
+            `Не удалось удержать соединение с сервером комнат:\n${wsUrl}\n\n` +
+              'Частая причина: запущен только превью статики (vite preview), а процесс WebSocket не поднят.\n\n' +
+              'Запустите в проекте: npm run dev:server\nили полностью: npm run dev\n' +
+              '(для production-сборки с комнатами: npm run preview:mp)',
+          );
+        }
       },
       onServerMessage: onServerMessage,
     });
@@ -276,6 +430,7 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
     if (!t) return;
     const action = t.dataset.action;
     if (action === 'create') {
+      pendingWsIntent = 'create';
       ensureConnectedThen(() => {
         client.send({ type: 'createRoom' });
       });
@@ -284,6 +439,7 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
     if (action === 'join-player') {
       const id = getRoomFromUrl();
       if (!id) return;
+      pendingWsIntent = 'joinPlayer';
       ensureConnectedThen(() => {
         client.send({ type: 'joinRoom', roomId: id, role: 'player' });
       });
@@ -292,12 +448,16 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
     if (action === 'join-spectator') {
       const id = getRoomFromUrl();
       if (!id) return;
+      pendingWsIntent = 'joinSpectator';
       ensureConnectedThen(() => {
         client.send({ type: 'joinRoom', roomId: id, role: 'spectator' });
       });
       return;
     }
     if (action === 'back') {
+      pendingWsIntent = null;
+      clearRoomResponseWatchdog();
+      clearConnectStatus();
       const u = new URL(location.href);
       u.searchParams.delete('room');
       history.replaceState(null, '', u.pathname + u.search + u.hash);
@@ -319,6 +479,9 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       return;
     }
     if (action === 'disconnect') {
+      pendingWsIntent = null;
+      clearRoomResponseWatchdog();
+      clearConnectStatus();
       stopTableSync();
       client.disconnect();
       clearPointers();
@@ -338,7 +501,9 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
   if (roomParam) {
     (root.querySelector('.mp-room-id') as HTMLElement).textContent = roomParam;
     show('join');
+    setPopoverOpen(true);
   } else {
     show('home');
+    setPopoverOpen(false);
   }
 }

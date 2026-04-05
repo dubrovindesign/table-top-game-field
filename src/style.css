@@ -8,13 +8,51 @@ html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  overscroll-behavior: none;
   background: #1a1a1a;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* Scrollbars — match dark glass / accent palette (Firefox + Chromium/WebKit) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(74, 144, 217, 0.42) rgba(255, 255, 255, 0.06);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(74, 144, 217, 0.38);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(74, 144, 217, 0.55);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 #game-canvas {
   display: block;
   cursor: crosshair;
+  position: relative;
+  z-index: 1;
+  touch-action: none;
+  overscroll-behavior: none;
 }
 
 /* ── Crystal Wallet (bottom-right, above dice) ─────────────── */
@@ -203,18 +241,24 @@ html, body {
   padding: 4px 8px;
 }
 
-/* ── Dice Container (bottom-right) ───────────────────────────── */
+/* ── Dice Container (bottom-right: результаты слева, набор кубиков справа) ── */
 
 .dice-container {
   position: fixed;
   bottom: 20px;
   right: 20px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   align-items: flex-end;
-  gap: 8px;
+  justify-content: flex-end;
+  gap: 10px;
   z-index: 140;
   pointer-events: none;
+  max-width: calc(100vw - 40px);
+  /* Вся группа не выходит за экран по высоте; лог внутри скроллится */
+  max-height: calc(100vh - 40px);
+  min-height: 0;
 }
 
 .dice-container > * {
@@ -231,12 +275,13 @@ html, body {
   backdrop-filter: blur(12px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   transition: box-shadow 0.3s ease;
+  flex-shrink: 0;
 }
 
-.dice-panel,
-.dice-results {
+.dice-panel {
   width: min(360px, calc(100vw - 40px));
-  max-width: 360px;
+  max-width: min(360px, calc(100vw - 40px));
+  box-sizing: border-box;
 }
 
 .dice-panel-pulse {
@@ -358,26 +403,87 @@ html, body {
   cursor: not-allowed;
 }
 
-/* ── Results Panel (slides up) ───────────────────────────────── */
+/* ── Results Panel (слева от панели набора; скрыта без бросков) ── */
 
+/* Общая обёртка без фона; «стекло» только у колонок .dice-player-block */
 .dice-results {
-  background: rgba(30, 30, 30, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 12px;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  /* Hidden by default */
-  opacity: 0;
-  transform: translateY(20px);
-  pointer-events: none;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  backdrop-filter: none;
+  box-shadow: none;
+  box-sizing: border-box;
+  width: min(360px, calc(100vw - 40px));
+  max-width: min(360px, calc(100vw - 40px));
+  max-height: min(520px, calc(100vh - 120px));
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  display: none;
+  flex-shrink: 1;
 }
 
-.dice-results-visible {
+.dice-results.dice-results-visible {
+  display: flex;
+  padding: 14px 16px 16px;
+  /* visible — иначе box-shadow колонок обрезается; скролл только внутри .dice-log */
+  overflow: visible;
   opacity: 1;
-  transform: translateY(0);
+  transform: translateX(0);
   pointer-events: auto;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.dice-results.dice-results-visible.dice-results-mp {
+  width: min(640px, calc(100vw - 40px));
+  max-width: min(640px, calc(100vw - 40px));
+}
+
+.dice-results-columns {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  align-items: stretch;
+  min-height: 0;
+  flex: 1;
+  overflow: visible;
+}
+
+.dice-player-block {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(30, 30, 30, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.dice-player-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.48);
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+
+.dice-results-global-actions {
+  margin-top: 10px;
+  flex-shrink: 0;
+}
+
+.dice-results-global-actions .dice-clear-btn {
+  width: 100%;
+}
+
+.dice-hidden {
+  display: none !important;
 }
 
 /* ── Slot Machine ────────────────────────────────────────────── */
@@ -523,26 +629,24 @@ html, body {
   transform: scale(0.95);
 }
 
-/* ── Dice log (compact previous rolls) ──────────────────────── */
+/* ── Dice log (все броски сессии; рост до края экрана, дальше скролл) ── */
 
 .dice-log {
-  max-height: 120px;
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.dice-log:empty {
-  display: none;
+.dice-active-result {
+  flex-shrink: 0;
 }
 
-.dice-log::-webkit-scrollbar {
-  width: 3px;
-}
-.dice-log::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 2px;
+.dice-log:empty {
+  display: none;
 }
 
 .dice-log-entry {
@@ -657,14 +761,6 @@ html, body {
   transform: translateX(30px);
   pointer-events: none;
   transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-.unit-card::-webkit-scrollbar {
-  width: 4px;
-}
-.unit-card::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 2px;
 }
 
 .unit-card-visible {
@@ -1103,6 +1199,10 @@ html, body {
   pointer-events: auto;
   z-index: 190;
   transition: opacity 0.18s ease, visibility 0.18s ease;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .army-builder-root:has(.army-panel.army-panel-open) .army-menu-wrap {
@@ -1368,6 +1468,74 @@ html, body {
   border: 1px solid rgba(74, 144, 217, 0.55);
   background: rgba(74, 144, 217, 0.22);
   box-shadow: 0 0 0 1px rgba(74, 144, 217, 0.35);
+}
+
+.army-main-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 6px 16px 0;
+  padding-bottom: 0;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.army-main-tab {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 8px;
+  margin-bottom: -1px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 0.12s ease,
+    background 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.army-main-tab:hover {
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.army-main-tab--active {
+  color: #e3f2fd;
+  background: rgba(74, 144, 217, 0.12);
+  border-bottom-color: rgba(74, 144, 217, 0.75);
+}
+
+.army-tab-panels-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 0 16px;
+  overflow: hidden;
+}
+
+.army-tab-panel {
+  flex: 1;
+  min-height: 0;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.army-tab-panel:not([hidden]) {
+  display: flex;
+}
+
+.army-inventory-placeholder {
+  padding: 32px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.38);
+  line-height: 1.45;
 }
 
 .army-leaders-section {
@@ -1959,10 +2127,12 @@ html, body {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.army-god-hint {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
-  line-height: 1.35;
+.army-god-section.army-god-section--in-tab {
+  flex: 1;
+  min-height: 0;
+  margin-top: 0;
+  padding-top: 8px;
+  border-top: none;
 }
 
 .army-god-count {
@@ -2016,19 +2186,47 @@ html, body {
   background: rgba(183, 28, 28, 0.45);
 }
 
-.army-god-catalog-label {
-  display: block;
-  margin-top: 6px;
-  margin-bottom: 4px;
-}
-
 .army-god-catalog {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 14px;
+  justify-items: center;
+  align-content: start;
   max-height: 200px;
   overflow-y: auto;
-  padding-right: 4px;
+  overflow-x: hidden;
+  padding: 4px 6px 8px 4px;
+}
+
+.army-god-section--in-tab .army-god-catalog {
+  max-height: none;
+  flex: 1;
+  min-height: 72px;
+}
+
+.army-god-catalog-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 112px;
+  height: 156px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: grab;
+  border-radius: 0;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.army-god-catalog-item:focus-visible {
+  box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.75);
+  border-radius: 6px;
+}
+
+.army-god-catalog-item:active {
+  cursor: grabbing;
 }
 
 .army-god-add-btn {
@@ -2052,37 +2250,112 @@ html, body {
   cursor: not-allowed;
 }
 
-.army-god-dnd-row {
-  cursor: grab;
-}
-
-.army-god-dnd-row:active {
-  cursor: grabbing;
-}
-
 .army-god-thumb {
-  background: linear-gradient(145deg, #5e35b1 0%, #311b92 50%, #4527a0 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 112px;
+  height: 156px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #1a1a22;
+  background-repeat: no-repeat;
 }
 
-.army-god-thumb-mark {
-  font-size: 18px;
-  line-height: 1;
-  color: rgba(255, 255, 255, 0.88);
-  user-select: none;
+/* Увеличение карты бога на месте ячейки (без затемнения всего экрана) */
+
+.army-god-preview-floater {
+  position: fixed;
+  z-index: 450;
+  pointer-events: auto;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #1a1a22;
+  background-repeat: no-repeat;
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+  transform-origin: center center;
+  transform: scale(1);
+  transition:
+    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.24s ease;
+  will-change: transform;
 }
 
-/* ── Multiplayer lobby (top-right) ───────────────────────────── */
+.army-god-preview-floater.army-god-preview-floater--open {
+  transform: scale(2.05);
+  box-shadow:
+    0 22px 50px rgba(0, 0, 0, 0.48),
+    0 0 0 1px rgba(255, 255, 255, 0.12);
+}
 
-.mp-root {
+.army-god-preview-floater[hidden] {
+  display: none !important;
+}
+
+/* ── Multiplayer (toggle + popover; default docked next to Army button) ── */
+
+.mp-toolbar-anchor {
+  position: relative;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: flex-start;
+  flex-shrink: 0;
+}
+
+.mp-toolbar-anchor-standalone {
   position: fixed;
   top: 12px;
   right: 12px;
-  z-index: 200;
-  max-width: min(360px, calc(100vw - 24px));
+  z-index: 10000;
+}
+
+.mp-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(22, 22, 26, 0.92);
+  color: #e8e8e8;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+
+.mp-menu-btn:hover {
+  background: rgba(36, 36, 42, 0.96);
+}
+
+.mp-menu-btn-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.mp-root {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  /* Above army hover cards (220), Ephirium UI, context menus appended to body */
+  z-index: 10000;
+  /* Явная ширина: иначе shrink-to-fit берёт ширину якоря (~42px — только кнопка). */
+  width: min(360px, calc(100vw - 24px));
+  min-width: min(280px, calc(100vw - 24px));
+  box-sizing: border-box;
   font-family: 'Segoe UI', system-ui, sans-serif;
+  pointer-events: auto;
+}
+
+.mp-toolbar-anchor-standalone .mp-root {
+  left: auto;
+  right: 0;
+}
+
+.mp-popover-hidden {
+  display: none !important;
 }
 
 .mp-panel {
@@ -2175,4 +2448,283 @@ html, body {
   background: rgba(0, 0, 0, 0.35);
   color: #e5e7eb;
   font-size: 11px;
+}
+
+/* ── App settings (toolbar, рядом с мультиплеером) ─────────────── */
+
+.app-settings-toolbar-anchor {
+  position: relative;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: flex-start;
+  flex-shrink: 0;
+}
+
+.app-settings-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(22, 22, 26, 0.92);
+  color: #e8e8e8;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+
+.app-settings-menu-btn:hover {
+  background: rgba(36, 36, 42, 0.96);
+}
+
+.app-settings-menu-btn-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.app-settings-root {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 10000;
+  width: min(320px, calc(100vw - 24px));
+  min-width: min(260px, calc(100vw - 24px));
+  box-sizing: border-box;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  pointer-events: auto;
+}
+
+.app-settings-popover-hidden {
+  display: none !important;
+}
+
+.app-settings-panel {
+  background: rgba(22, 22, 28, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+}
+
+.app-settings-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: #f3f4f6;
+  margin-bottom: 12px;
+}
+
+.app-settings-fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.app-settings-legend {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.72);
+  margin-bottom: 8px;
+  padding: 0;
+}
+
+.app-settings-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #e5e7eb;
+  cursor: pointer;
+}
+
+.app-settings-option:first-of-type {
+  margin-top: 0;
+}
+
+.app-settings-option input {
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: #818cf8;
+}
+
+.app-settings-hint {
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 12px 0 0;
+}
+
+.app-settings-hint strong {
+  color: rgba(255, 255, 255, 0.72);
+  font-weight: 600;
+}
+
+/* ── Слепая зона на столе (позиция из JS: мир → экран) ─────── */
+
+.god-blind-table-wrap {
+  position: fixed;
+  z-index: 60;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.god-blind-table-wrap--inactive {
+  opacity: 0.55;
+}
+
+.god-blind-zone {
+  width: min(420px, 88vw);
+  min-height: 120px;
+  border-radius: 18px;
+  box-sizing: border-box;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+
+.god-blind-zone--on-table {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-width: none;
+  pointer-events: auto;
+  padding: 0;
+  /* Толщина и цвет рамки задаются в JS (масштаб с camera.zoom). */
+  border: none;
+}
+
+.god-blind-zone-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+/*
+ * Размеры карт в слепой зоне задаёт JS (масштаб как у карт на столе при зуме).
+ * Ограничиваем типографику, чтобы текст не ломал вёрстку.
+ */
+.god-dock-card--blind-slot.god-dock-card--face,
+.god-dock-card--blind-slot.god-dock-card--back {
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.god-dock-card--blind-slot.god-dock-card--face {
+  padding: 0;
+  background-color: #1a1a22;
+  background-repeat: no-repeat;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+}
+
+.god-dock-card--blind-slot.god-dock-card--back .god-dock-back-mark {
+  font-size: calc(var(--god-blind-card-h, 96px) * 0.28);
+}
+
+.god-dock-card {
+  border-radius: 10px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+}
+
+.god-dock-card--face {
+  width: 140px;
+  min-height: 96px;
+  background: rgba(28, 28, 34, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.god-dock-card--hand {
+  width: 128px;
+  min-height: 88px;
+}
+
+.god-dock-card--blind {
+  width: min(200px, 70vw);
+  min-height: 100px;
+}
+
+.god-dock-card--small {
+  width: 52px;
+  height: 72px;
+}
+
+.god-dock-card--back {
+  background: linear-gradient(145deg, #5e35b1, #1a237e 55%, #4527a0);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.god-dock-back-mark {
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.god-dock-card--small .god-dock-back-mark {
+  font-size: 16px;
+}
+
+.god-dock-card-title {
+  font-weight: 700;
+  font-size: 12px;
+  color: #f3e5f5;
+  line-height: 1.2;
+}
+
+.god-dock-card-text {
+  font-size: 10px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.72);
+  flex: 1;
+  overflow: hidden;
+}
+
+.god-dock-empty-hint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.god-dock-drag-ghost {
+  position: fixed;
+  z-index: 10001;
+  pointer-events: none;
+  opacity: 0.92;
+}
+
+.god-dock-card--ghost {
+  width: 140px;
+  height: 96px;
+  min-height: 96px;
+  max-height: 96px;
+  box-sizing: border-box;
+}
+
+.god-dock-card--ghost .god-dock-card-text {
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: 52px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
 }

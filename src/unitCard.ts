@@ -99,11 +99,12 @@ const DOMAIN_COLORS: Record<Domain, string> = {
   shadow: '#9c27b0',
 };
 
-const DOMAIN_LABELS: Record<Domain, string> = {
-  order: 'Order',
-  chaos: 'Chaos',
-  nature: 'Nature',
-  shadow: 'Shadow',
+/** Подписи доменов (ключи каталога: order/chaos/nature/shadow). */
+export const DOMAIN_LABELS: Record<Domain, string> = {
+  order: 'Разрушение',
+  chaos: 'Созидание',
+  nature: 'Смерть',
+  shadow: 'Жизнь',
 };
 
 const DAMAGE_TYPE_ICONS: Record<DamageType, string> = {

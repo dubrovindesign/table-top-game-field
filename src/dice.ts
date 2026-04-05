@@ -9,9 +9,19 @@
  * Left-click = +1, right-click = −1.
  *
  * After a roll, each result die is clickable for a single reroll.
- * "New Roll" pushes the current result into a compact log above.
+ * In multiplayer, results and history are split per player slot.
  */
 
+import {
+  isBoardMultiplayerSyncActive,
+  pushBoardStateImmediate,
+} from './multiplayer/boardSync.ts';
+import type {
+  SerializedSharedDicePerSlotV1,
+  SerializedSharedDiceRollRowV1,
+  SerializedSharedDiceStateV2,
+} from './multiplayer/boardState.ts';
+import type { PlayerSlot } from './multiplayer/protocol.ts';
 import { UnitCard, type UnitCardData } from './unitCard';
 
 // ── Types ──────────────────────────────────────────────────────
@@ -27,7 +37,7 @@ interface DieConfig {
 }
 
 const DIE_CONFIGS: DieConfig[] = [
-  { color: 'red',   label: 'Red',   bg: '#d32f2f', fg: '#ffffff', border: '#b71c1c' },
+  { color: 'red', label: 'Red', bg: '#d32f2f', fg: '#ffffff', border: '#b71c1c' },
   { color: 'green', label: 'Green', bg: '#388e3c', fg: '#ffffff', border: '#1b5e20' },
   { color: 'black', label: 'Black', bg: '#424242', fg: '#ffffff', border: '#212121' },
   { color: 'white', label: 'White', bg: '#f5f5f5', fg: '#212121', border: '#bdbdbd' },
@@ -40,11 +50,25 @@ interface DieResult {
   rerolled: boolean;
 }
 
-/** A snapshot of a completed roll for the log. */
 interface RollLogEntry {
   dice: { color: DieColor; value: number; rerolled: boolean }[];
   rollIndex: number;
   source: UnitCardData | null;
+}
+
+interface SlotBucket {
+  rollCounter: number;
+  rollLog: RollLogEntry[];
+  currentDice: DieResult[];
+  currentResultSource: UnitCardData | null;
+  slotColumns: HTMLElement[];
+}
+
+interface SlotDom {
+  block: HTMLElement;
+  titleEl: HTMLElement;
+  logEl: HTMLElement;
+  activeEl: HTMLElement;
 }
 
 // ── Pip patterns for d6 faces ──────────────────────────────────
@@ -121,7 +145,53 @@ const GREEN_DIE_FACE_ASSET: Record<GreenDieFace, string> = {
   success: '/green-success.svg',
 };
 
-// ── DOM builder helper ─────────────────────────────────────────
+function perSlotEqual(a: SerializedSharedDicePerSlotV1, b: SerializedSharedDicePerSlotV1): boolean {
+  if (a.rollCounter !== b.rollCounter) return false;
+  if (a.log.length !== b.log.length) return false;
+  for (let i = 0; i < a.log.length; i++) {
+    if (!sharedDiceRowEqual(a.log[i], b.log[i])) return false;
+  }
+  if ((a.active === null) !== (b.active === null)) return false;
+  if (a.active && b.active && !sharedDiceRowEqual(a.active, b.active)) return false;
+  return true;
+}
+
+function sharedDiceV2Equal(a: SerializedSharedDiceStateV2, b: SerializedSharedDiceStateV2): boolean {
+  return perSlotEqual(a.bySlot['0'], b.bySlot['0']) && perSlotEqual(a.bySlot['1'], b.bySlot['1']);
+}
+
+function sharedDiceRowEqual(
+  x: SerializedSharedDiceRollRowV1,
+  y: SerializedSharedDiceRollRowV1,
+): boolean {
+  if (x.rollIndex !== y.rollIndex) return false;
+  if (x.sourceName !== y.sourceName || x.sourceSprite !== y.sourceSprite) return false;
+  if (x.dice.length !== y.dice.length) return false;
+  for (let i = 0; i < x.dice.length; i++) {
+    const d = x.dice[i];
+    const e = y.dice[i];
+    if (d.color !== e.color || d.value !== e.value || d.rerolled !== e.rerolled) return false;
+  }
+  return true;
+}
+
+function minimalDiceSource(name: string | null, sprite: string | null): UnitCardData | null {
+  if (!name && !sprite) return null;
+  return {
+    name: name?.trim() ? name : 'Unit',
+    size: 'small',
+    health: 1,
+    maxHealth: 1,
+    defense: {},
+    walk: 0,
+    run: 0,
+    sprite: sprite ?? undefined,
+    domains: [],
+    concentration: {},
+    defenseReaction: {},
+    attacks: [],
+  };
+}
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -134,6 +204,16 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return e;
 }
 
+function emptyBucket(): SlotBucket {
+  return {
+    rollCounter: 0,
+    rollLog: [],
+    currentDice: [],
+    currentResultSource: null,
+    slotColumns: [],
+  };
+}
+
 // ── Main class ─────────────────────────────────────────────────
 
 export class DiceRoller {
@@ -143,55 +223,70 @@ export class DiceRoller {
   private sourceAvatarButton: HTMLButtonElement;
   private sourceAvatarImg: HTMLImageElement;
   private resetButton: HTMLButtonElement;
-  private resultsArea: HTMLElement;   // wraps log + active result
-  private logContainer: HTMLElement;  // compact log of previous rolls
-  private activeResult: HTMLElement;  // current interactive result
+  private resultsArea: HTMLElement;
+  private columnsWrap: HTMLElement;
+  private globalActions: HTMLElement;
+  private slotDom: Record<PlayerSlot, SlotDom>;
+  private bucket: Record<PlayerSlot, SlotBucket> = {
+    0: emptyBucket(),
+    1: emptyBucket(),
+  };
   private counts: Map<DieColor, number> = new Map();
   private diceButtons: Map<DieColor, HTMLElement> = new Map();
   private rollButton: HTMLButtonElement;
-  private isRolling = false;
-
-  /** Currently displayed dice (interactive, rerollable). */
-  private currentDice: DieResult[] = [];
-  /** DOM elements for each current die result. */
-  private currentSlotColumns: HTMLElement[] = [];
-  /** Log of past rolls in this session. */
-  private rollLog: RollLogEntry[] = [];
-  /** Counter for labeling rolls. */
-  private rollCounter = 0;
-  /** First unit that fed current selector counts. */
+  /** True while the local player's roll / reroll animation runs (blocks selector). */
+  private myRollAnimating = false;
   private pendingSource: UnitCardData | null = null;
-  /** Source unit of currently active result. */
-  private currentResultSource: UnitCardData | null = null;
-  /** Alt-hover target source from selector/log avatars. */
   private hoverSource: UnitCardData | null = null;
   private pointerX = 0;
   private pointerY = 0;
   private altHeld = false;
   private hoverCard: UnitCard;
+  private pendingRollFinishBySlot: Record<PlayerSlot, ReturnType<typeof setTimeout> | null> = {
+    0: null,
+    1: null,
+  };
+  private pendingRerollBySlot: Record<PlayerSlot, ReturnType<typeof setTimeout> | null> = {
+    0: null,
+    1: null,
+  };
+  /** Снимает обработчик клика переброса с колонки (перед сетевым обновлением / пересборкой). */
+  private columnRerollAbort = new WeakMap<HTMLElement, AbortController>();
+  /** Multiplayer seat for this client; `null` = solo or spectator. */
+  private localViewSlot: PlayerSlot | null = null;
 
   constructor(parent: HTMLElement) {
     for (const dc of DIE_CONFIGS) {
       this.counts.set(dc.color, 0);
     }
 
-    // ── Container ──
     this.container = el('div', 'dice-container');
     parent.appendChild(this.container);
 
-    // ── Results area (log + active) ──
     this.resultsArea = el('div', 'dice-results');
     this.container.appendChild(this.resultsArea);
 
-    this.logContainer = el('div', 'dice-log');
-    this.resultsArea.appendChild(this.logContainer);
+    this.columnsWrap = el('div', 'dice-results-columns');
+    this.resultsArea.appendChild(this.columnsWrap);
 
-    this.activeResult = el('div', 'dice-active-result');
-    this.resultsArea.appendChild(this.activeResult);
+    this.slotDom = {
+      0: this.createPlayerBlock(0),
+      1: this.createPlayerBlock(1),
+    };
+
+    this.globalActions = el('div', 'dice-results-global-actions');
+    const globalClear = el('button', 'dice-clear-btn', 'Очистить всё');
+    globalClear.type = 'button';
+    globalClear.addEventListener('click', () => this.clearAllDiceState());
+    this.globalActions.appendChild(globalClear);
+    this.resultsArea.appendChild(this.globalActions);
+    this.globalActions.classList.add('dice-hidden');
+
+    this.reorderColumns();
+    this.refreshDiceLayoutMode();
 
     this.hoverCard = new UnitCard(document.body);
 
-    // ── Selector panel ──
     this.panel = el('div', 'dice-panel');
     this.container.appendChild(this.panel);
 
@@ -230,7 +325,6 @@ export class DiceRoller {
       this.selectorRow.appendChild(btn);
     }
 
-    // Roll button
     this.rollButton = el('button', 'dice-roll-btn', 'Roll Dice');
     this.rollButton.addEventListener('click', () => this.roll());
     this.panel.appendChild(this.rollButton);
@@ -271,8 +365,315 @@ export class DiceRoller {
     });
   }
 
+  private createPlayerBlock(slot: PlayerSlot): SlotDom {
+    const block = el('div', 'dice-player-block');
+    block.dataset.playerSlot = String(slot);
+    const titleEl = el('div', 'dice-player-title', '');
+    const logEl = el('div', 'dice-log');
+    const activeEl = el('div', 'dice-active-result');
+    block.appendChild(titleEl);
+    block.appendChild(logEl);
+    block.appendChild(activeEl);
+    return { block, titleEl, logEl, activeEl };
+  }
+
+  /** Вызывается из main при смене места за столом (мультиплеер). */
+  setLocalPlayerSlot(slot: PlayerSlot | null): void {
+    this.localViewSlot = slot;
+    this.reorderColumns();
+    this.refreshDiceLayoutMode();
+  }
+
+  private myDiceSlot(): PlayerSlot {
+    return this.localViewSlot ?? 0;
+  }
+
+  private canInteractWithSlot(slot: PlayerSlot): boolean {
+    if (!isBoardMultiplayerSyncActive()) return slot === 0;
+    if (this.localViewSlot === null) return false;
+    return slot === this.localViewSlot;
+  }
+
+  private reorderColumns(): void {
+    this.columnsWrap.replaceChildren();
+    /** Порядок колонок не должен зависеть от `isBoardMultiplayerSyncActive`: иначе при слоте 0 снова 0→1 и «ваши» оказываются слева. */
+    if (this.localViewSlot !== null) {
+      const me = this.localViewSlot;
+      const opp = (1 - me) as PlayerSlot;
+      this.columnsWrap.appendChild(this.slotDom[opp].block);
+      this.columnsWrap.appendChild(this.slotDom[me].block);
+    } else {
+      this.columnsWrap.appendChild(this.slotDom[0].block);
+      this.columnsWrap.appendChild(this.slotDom[1].block);
+    }
+  }
+
+  private refreshDiceLayoutMode(): void {
+    const mp = isBoardMultiplayerSyncActive() && this.localViewSlot !== null;
+    this.resultsArea.classList.toggle('dice-results-mp', mp);
+    this.slotDom[1].block.classList.toggle('dice-hidden', !mp);
+    this.updateSlotTitles();
+  }
+
+  private updateSlotTitles(): void {
+    const mp = isBoardMultiplayerSyncActive();
+    const spec = mp && this.localViewSlot === null;
+    for (const slot of [0, 1] as const) {
+      let t: string;
+      if (!mp) {
+        t = slot === 0 ? 'Броски' : '';
+      } else if (spec) {
+        t = `Игрок ${slot + 1}`;
+      } else if (slot === this.localViewSlot) {
+        t = 'Ваши броски';
+      } else {
+        t = 'Броски оппонента';
+      }
+      this.slotDom[slot].titleEl.textContent = t;
+      this.slotDom[slot].titleEl.classList.toggle('dice-hidden', t === '');
+    }
+  }
+
+  private hasAnyDiceContent(): boolean {
+    for (const slot of [0, 1] as const) {
+      const b = this.bucket[slot];
+      if (b.rollLog.length > 0 || b.currentDice.length > 0) return true;
+    }
+    return false;
+  }
+
+  private updateResultsChrome(): void {
+    const any = this.hasAnyDiceContent();
+    if (any) {
+      this.resultsArea.classList.add('dice-results-visible');
+      this.globalActions.classList.remove('dice-hidden');
+    } else {
+      this.resultsArea.classList.remove('dice-results-visible');
+      this.globalActions.classList.add('dice-hidden');
+    }
+  }
+
+  private clearRollFinishTimerForSlot(slot: PlayerSlot): void {
+    const t = this.pendingRollFinishBySlot[slot];
+    if (t !== null) {
+      clearTimeout(t);
+      this.pendingRollFinishBySlot[slot] = null;
+    }
+  }
+
+  private clearDiceAnimTimers(): void {
+    this.clearRollFinishTimerForSlot(0);
+    this.clearRollFinishTimerForSlot(1);
+    for (const slot of [0, 1] as const) {
+      const t = this.pendingRerollBySlot[slot];
+      if (t !== null) {
+        clearTimeout(t);
+        this.pendingRerollBySlot[slot] = null;
+      }
+    }
+  }
+
+  private pushSharedDiceIfMp(): void {
+    if (!isBoardMultiplayerSyncActive()) return;
+    pushBoardStateImmediate();
+  }
+
+  private clearAllDiceState(): void {
+    this.clearDiceAnimTimers();
+    this.myRollAnimating = false;
+    this.rollButton.disabled = false;
+    this.rollButton.textContent = 'Roll Dice';
+    this.resetSelector();
+    this.hoverSource = null;
+    for (const slot of [0, 1] as const) {
+      this.bucket[slot] = emptyBucket();
+      this.slotDom[slot].logEl.innerHTML = '';
+      this.slotDom[slot].activeEl.innerHTML = '';
+    }
+    this.updateResultsChrome();
+    this.updateHoverCard();
+    this.pushSharedDiceIfMp();
+  }
+
+  exportSharedState(): SerializedSharedDiceStateV2 {
+    const exportSlot = (slot: PlayerSlot): SerializedSharedDicePerSlotV1 => {
+      const b = this.bucket[slot];
+      const active =
+        b.currentDice.length === 0
+          ? null
+          : {
+              rollIndex: b.rollCounter,
+              dice: b.currentDice.map((d) => ({
+                color: d.color,
+                value: d.value,
+                rerolled: d.rerolled,
+              })),
+              sourceName: b.currentResultSource?.name ?? null,
+              sourceSprite: b.currentResultSource?.sprite ?? null,
+            };
+      const log = b.rollLog.map((e) => ({
+        rollIndex: e.rollIndex,
+        dice: e.dice.map((d) => ({
+          color: d.color,
+          value: d.value,
+          rerolled: d.rerolled,
+        })),
+        sourceName: e.source?.name ?? null,
+        sourceSprite: e.source?.sprite ?? null,
+      }));
+      return { rollCounter: b.rollCounter, log, active };
+    };
+    return {
+      v: 2,
+      bySlot: {
+        '0': exportSlot(0),
+        '1': exportSlot(1),
+      },
+    };
+  }
+
+  applySharedStateFromBoard(parsed: SerializedSharedDiceStateV2 | undefined): void {
+    if (parsed === undefined) return;
+    if (sharedDiceV2Equal(parsed, this.exportSharedState())) return;
+
+    this.clearDiceAnimTimers();
+    this.myRollAnimating = false;
+    this.rollButton.disabled = false;
+    this.rollButton.textContent = 'Roll Dice';
+
+    for (const slot of [0, 1] as const) {
+      const raw = parsed.bySlot[String(slot) as '0' | '1'];
+      const b = this.bucket[slot];
+      const prevRollCounter = b.rollCounter;
+      const prevDice = b.currentDice;
+      const prevColumns = b.slotColumns.slice();
+      const { logEl, activeEl } = this.slotDom[slot];
+
+      b.rollCounter = raw.rollCounter;
+      b.rollLog = raw.log.map((row) => this.rowToLogEntry(row));
+      logEl.innerHTML = '';
+      for (const e of b.rollLog) this.renderLogEntry(e, logEl);
+
+      if (!raw.active || raw.active.dice.length === 0) {
+        b.currentDice = [];
+        b.currentResultSource = null;
+        b.slotColumns = [];
+        activeEl.innerHTML = '';
+        continue;
+      }
+
+      const nextDice = this.rowToDieResults(raw.active);
+      b.currentResultSource = this.diceSourceFromSyncRow(raw.active);
+
+      if (
+        this.dieResultArraysEqual(prevDice, nextDice) &&
+        raw.active.rollIndex === prevRollCounter
+      ) {
+        b.currentDice = nextDice;
+        continue;
+      }
+
+      const singleIdx = this.findSingleChangedDieIndex(prevDice, nextDice);
+      const canPatchColumn =
+        raw.active.rollIndex === prevRollCounter &&
+        prevDice.length === nextDice.length &&
+        prevColumns.length === prevDice.length &&
+        singleIdx !== null &&
+        prevColumns[singleIdx]?.isConnected;
+
+      if (canPatchColumn) {
+        b.currentDice = nextDice;
+        b.slotColumns = prevColumns;
+        this.abortColumnRerollInteraction(prevColumns[singleIdx]);
+        this.playColumnRerollAnimation(slot, prevColumns[singleIdx], nextDice[singleIdx], {
+          lockMyRoll: false,
+          pushAfter: false,
+        });
+        continue;
+      }
+
+      b.currentDice = nextDice;
+      b.slotColumns = [];
+      activeEl.innerHTML = '';
+      this.showResults(slot, nextDice, { lockGlobalRollButton: false });
+    }
+
+    this.updateResultsChrome();
+    this.updateHoverCard();
+  }
+
+  private dieResultArraysEqual(a: DieResult[], b: DieResult[]): boolean {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (
+        a[i].color !== b[i].color ||
+        a[i].value !== b[i].value ||
+        a[i].rerolled !== b[i].rerolled
+      ) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /** Ровно одна кость отличается (типичный сетевой переброс одной кости). */
+  private findSingleChangedDieIndex(prev: DieResult[], next: DieResult[]): number | null {
+    if (prev.length !== next.length || prev.length === 0) return null;
+    let idx = -1;
+    for (let i = 0; i < prev.length; i++) {
+      const a = prev[i];
+      const b = next[i];
+      if (a.color !== b.color || a.value !== b.value || a.rerolled !== b.rerolled) {
+        if (idx !== -1) return null;
+        idx = i;
+      }
+    }
+    return idx === -1 ? null : idx;
+  }
+
+  private abortColumnRerollInteraction(column: HTMLElement): void {
+    const ac = this.columnRerollAbort.get(column);
+    if (ac) {
+      ac.abort();
+      this.columnRerollAbort.delete(column);
+    }
+    column.classList.remove('dice-slot-rerollable', 'dice-slot-rerolling');
+    column.removeAttribute('title');
+    for (const m of column.querySelectorAll('.dice-reroll-marker')) {
+      m.remove();
+    }
+  }
+
+  private diceSourceFromSyncRow(row: SerializedSharedDiceRollRowV1): UnitCardData | null {
+    return minimalDiceSource(row.sourceName, row.sourceSprite);
+  }
+
+  private rowToLogEntry(row: SerializedSharedDiceRollRowV1): RollLogEntry {
+    return {
+      rollIndex: row.rollIndex,
+      dice: row.dice.map((d) => ({
+        color: d.color,
+        value: d.value,
+        rerolled: d.rerolled,
+      })),
+      source: this.diceSourceFromSyncRow(row),
+    };
+  }
+
+  private rowToDieResults(row: SerializedSharedDiceRollRowV1): DieResult[] {
+    return row.dice.map((d) => {
+      const config = DIE_CONFIGS.find((c) => c.color === d.color)!;
+      return {
+        color: d.color,
+        config,
+        value: d.value,
+        rerolled: d.rerolled,
+      };
+    });
+  }
+
   private adjustCount(color: DieColor, delta: number): void {
-    if (this.isRolling) return;
+    if (this.myRollAnimating) return;
     const current = this.counts.get(color) ?? 0;
     const next = Math.max(0, Math.min(20, current + delta));
     this.counts.set(color, next);
@@ -297,7 +698,7 @@ export class DiceRoller {
   }
 
   private resetSelector(force = false): void {
-    if (this.isRolling && !force) return;
+    if (this.myRollAnimating && !force) return;
     for (const dc of DIE_CONFIGS) {
       this.counts.set(dc.color, 0);
       const lbl = this.diceButtons.get(dc.color);
@@ -317,15 +718,13 @@ export class DiceRoller {
     this.hoverCard.show(this.hoverSource, { x: this.pointerX, y: this.pointerY });
   }
 
-  /** Add dice counts from external source (e.g. unit card). */
   addDice(pool: Partial<Record<DieColor, number>>, source?: UnitCardData): void {
-    if (this.isRolling) return;
+    if (this.myRollAnimating) return;
     if (source) {
       if (!this.pendingSource) {
         this.pendingSource = source;
         this.renderPendingSourceAvatar();
       } else if (!this.isSameSource(this.pendingSource, source)) {
-        // Switching unit source before roll: clear selector and start a fresh pool.
         this.resetSelector(true);
         this.pendingSource = source;
         this.renderPendingSourceAvatar();
@@ -335,7 +734,6 @@ export class DiceRoller {
       if (!count || count <= 0) continue;
       this.adjustCount(color, count);
     }
-    // Brief pulse on the panel to draw attention
     this.panel.classList.add('dice-panel-pulse');
     setTimeout(() => this.panel.classList.remove('dice-panel-pulse'), 400);
   }
@@ -346,23 +744,22 @@ export class DiceRoller {
     return total;
   }
 
-  // ── Roll ─────────────────────────────────────────────────────
-
   private roll(): void {
-    if (this.isRolling) return;
+    if (this.myRollAnimating) return;
     const total = this.getTotalDice();
     if (total === 0) return;
 
-    // If there's an active result, push it to the log first
-    if (this.currentDice.length > 0) {
-      this.pushCurrentToLog();
+    const slot = this.myDiceSlot();
+    const b = this.bucket[slot];
+    if (b.currentDice.length > 0) {
+      this.pushCurrentToLog(slot);
     }
 
-    this.isRolling = true;
+    this.myRollAnimating = true;
     this.rollButton.disabled = true;
     this.rollButton.textContent = 'Rolling...';
-    this.rollCounter++;
-    this.currentResultSource = this.pendingSource;
+    b.rollCounter++;
+    b.currentResultSource = this.pendingSource;
 
     const dice: DieResult[] = [];
     for (const dc of DIE_CONFIGS) {
@@ -377,36 +774,34 @@ export class DiceRoller {
       }
     }
 
-    this.currentDice = dice;
-
-    // Reset selector pool/source after creating roll payload
+    b.currentDice = dice;
     this.resetSelector(true);
-
-    this.showResults(dice);
+    this.showResults(slot, dice, { lockGlobalRollButton: true });
+    this.pushSharedDiceIfMp();
   }
 
-  // ── Push current result into compact log ─────────────────────
-
-  private pushCurrentToLog(): void {
-    if (this.currentDice.length === 0) return;
+  private pushCurrentToLog(slot: PlayerSlot): void {
+    const b = this.bucket[slot];
+    if (b.currentDice.length === 0) return;
 
     const entry: RollLogEntry = {
-      dice: this.currentDice.map((d) => ({
+      dice: b.currentDice.map((d) => ({
         color: d.color,
         value: d.value,
         rerolled: d.rerolled,
       })),
-      rollIndex: this.rollCounter,
-      source: this.currentResultSource,
+      rollIndex: b.rollCounter,
+      source: b.currentResultSource,
     };
-    this.rollLog.push(entry);
-    this.renderLogEntry(entry);
-    this.currentDice = [];
-    this.currentSlotColumns = [];
-    this.currentResultSource = null;
+    b.rollLog.push(entry);
+    this.renderLogEntry(entry, this.slotDom[slot].logEl);
+    b.currentDice = [];
+    b.slotColumns = [];
+    b.currentResultSource = null;
+    this.slotDom[slot].activeEl.innerHTML = '';
   }
 
-  private renderLogEntry(entry: RollLogEntry): void {
+  private renderLogEntry(entry: RollLogEntry, logContainer: HTMLElement): void {
     const row = el('div', 'dice-log-entry');
 
     if (entry.source?.sprite) {
@@ -470,28 +865,35 @@ export class DiceRoller {
     }
     row.appendChild(diceWrap);
 
-    this.logContainer.appendChild(row);
-    // Auto-scroll log to bottom
-    this.logContainer.scrollTop = this.logContainer.scrollHeight;
+    logContainer.appendChild(row);
+    logContainer.scrollTop = logContainer.scrollHeight;
   }
 
-  // ── Show animated results ────────────────────────────────────
+  private showResults(
+    slot: PlayerSlot,
+    dice: DieResult[],
+    opts: { lockGlobalRollButton: boolean },
+  ): void {
+    this.clearRollFinishTimerForSlot(slot);
+    const b = this.bucket[slot];
+    const activeEl = this.slotDom[slot].activeEl;
+    activeEl.innerHTML = '';
+    this.updateResultsChrome();
 
-  private showResults(dice: DieResult[]): void {
-    this.activeResult.innerHTML = '';
-    this.resultsArea.classList.add('dice-results-visible');
+    const interactive = this.canInteractWithSlot(slot);
 
-    if (this.currentResultSource?.sprite) {
+    if (b.currentResultSource?.sprite) {
       const sourceRow = el('div', 'dice-active-source');
       const sourceAvatar = el('button', 'dice-active-source-avatar');
       sourceAvatar.type = 'button';
-      sourceAvatar.title = this.currentResultSource.name;
+      sourceAvatar.title = b.currentResultSource.name;
       const sourceImg = el('img', 'dice-active-source-avatar-img');
-      sourceImg.src = this.currentResultSource.sprite;
-      sourceImg.alt = this.currentResultSource.name;
+      sourceImg.src = b.currentResultSource.sprite;
+      sourceImg.alt = b.currentResultSource.name;
       sourceAvatar.appendChild(sourceImg);
+      const srcRef = b.currentResultSource;
       sourceAvatar.addEventListener('pointerenter', () => {
-        this.hoverSource = this.currentResultSource;
+        this.hoverSource = srcRef;
         this.updateHoverCard();
       });
       sourceAvatar.addEventListener('pointerleave', () => {
@@ -499,19 +901,18 @@ export class DiceRoller {
         this.updateHoverCard();
       });
       sourceRow.appendChild(sourceAvatar);
-      sourceRow.appendChild(el('span', 'dice-active-source-name', this.currentResultSource.name));
-      this.activeResult.appendChild(sourceRow);
+      sourceRow.appendChild(el('span', 'dice-active-source-name', b.currentResultSource.name));
+      activeEl.appendChild(sourceRow);
     }
 
-    // Roll label
-    const rollLabel = el('div', 'dice-roll-label', `Roll #${this.rollCounter}`);
-    this.activeResult.appendChild(rollLabel);
+    const rollLabel = el('div', 'dice-roll-label', `Roll #${b.rollCounter}`);
+    activeEl.appendChild(rollLabel);
 
     const slotsContainer = el('div', 'dice-slots');
-    this.activeResult.appendChild(slotsContainer);
+    activeEl.appendChild(slotsContainer);
 
     const slots: { column: HTMLElement; dieIndex: number; config: DieConfig }[] = [];
-    this.currentSlotColumns = [];
+    b.slotColumns = [];
 
     for (let i = 0; i < dice.length; i++) {
       const die = dice[i];
@@ -532,39 +933,16 @@ export class DiceRoller {
       strip.appendChild(finalFace);
 
       slotsContainer.appendChild(column);
-      this.currentSlotColumns.push(column);
+      b.slotColumns.push(column);
       slots.push({ column, dieIndex: i, config: die.config });
     }
 
-    // Clear button
-    const buttonsRow = el('div', 'dice-result-buttons');
-
-    const clearBtn = el('button', 'dice-clear-btn', 'Clear All');
-    clearBtn.disabled = true;
-    clearBtn.addEventListener('click', () => {
-      this.resetSelector();
-      this.currentDice = [];
-      this.currentSlotColumns = [];
-      this.rollLog = [];
-      this.rollCounter = 0;
-      this.currentResultSource = null;
-      this.hoverSource = null;
-      this.logContainer.innerHTML = '';
-      this.activeResult.innerHTML = '';
-      this.resultsArea.classList.remove('dice-results-visible');
-      this.updateHoverCard();
-    });
-    buttonsRow.appendChild(clearBtn);
-
-    this.activeResult.appendChild(buttonsRow);
-
-    // Animate
     const FACE_SIZE = 52;
     const baseDuration = 1600;
     const staggerDelay = 120;
 
-    slots.forEach((slot, i) => {
-      const strip = slot.column.querySelector('.dice-slot-strip') as HTMLElement;
+    slots.forEach((sl, i) => {
+      const strip = sl.column.querySelector('.dice-slot-strip') as HTMLElement;
       const totalFaces = 21;
       const targetOffset = (totalFaces - 1) * FACE_SIZE;
 
@@ -581,59 +959,79 @@ export class DiceRoller {
       });
     });
 
-    // After all animations complete
     const totalDuration = baseDuration + (slots.length - 1) * staggerDelay + 200;
-    setTimeout(() => {
-      this.isRolling = false;
-      this.rollButton.disabled = false;
-      this.rollButton.textContent = 'Roll Dice';
-      clearBtn.disabled = false;
-
-      // Make each die clickable for reroll
-      slots.forEach((slot) => {
-        this.makeRerollable(slot.column, slot.dieIndex);
-      });
+    this.pendingRollFinishBySlot[slot] = setTimeout(() => {
+      this.pendingRollFinishBySlot[slot] = null;
+      if (opts.lockGlobalRollButton) {
+        this.myRollAnimating = false;
+        this.rollButton.disabled = false;
+        this.rollButton.textContent = 'Roll Dice';
+      }
+      if (interactive) {
+        for (const sl of slots) {
+          this.makeRerollable(slot, sl.column, sl.dieIndex);
+        }
+      }
     }, totalDuration);
   }
 
-  // ── Reroll a single die ──────────────────────────────────────
+  private makeRerollable(slot: PlayerSlot, column: HTMLElement, dieIndex: number): void {
+    if (!this.canInteractWithSlot(slot)) return;
+    this.abortColumnRerollInteraction(column);
 
-  private makeRerollable(column: HTMLElement, dieIndex: number): void {
+    const ac = new AbortController();
+    this.columnRerollAbort.set(column, ac);
     column.classList.add('dice-slot-rerollable');
     column.title = 'Click to reroll';
 
     const handler = () => {
-      if (this.isRolling) return;
-      const die = this.currentDice[dieIndex];
+      if (this.myRollAnimating) return;
+      const b = this.bucket[slot];
+      const die = b.currentDice[dieIndex];
       if (!die || die.rerolled) return;
 
-      // Mark as rerolled (only once)
+      ac.abort();
+      this.columnRerollAbort.delete(column);
+
       die.rerolled = true;
       die.value = Math.floor(Math.random() * 6) + 1;
 
-      // Remove handler & styling
-      column.removeEventListener('click', handler);
       column.classList.remove('dice-slot-rerollable');
       column.classList.add('dice-slot-rerolling');
       column.title = '';
 
-      this.animateReroll(column, die);
+      this.animateReroll(slot, column, die);
     };
 
-    column.addEventListener('click', handler);
+    column.addEventListener('click', handler, { signal: ac.signal });
   }
 
-  private animateReroll(column: HTMLElement, die: DieResult): void {
-    this.isRolling = true;
+  /**
+   * Анимация переброса одной колонки (локально или по сети).
+   * `pushAfter` — отправить снимок после завершения (только локальный клик).
+   */
+  private playColumnRerollAnimation(
+    slot: PlayerSlot,
+    column: HTMLElement,
+    die: DieResult,
+    opts: { lockMyRoll: boolean; pushAfter: boolean },
+  ): void {
+    const prevT = this.pendingRerollBySlot[slot];
+    if (prevT !== null) {
+      clearTimeout(prevT);
+      this.pendingRerollBySlot[slot] = null;
+    }
 
-    // Replace the strip with a new one for the reroll animation
+    if (opts.lockMyRoll) this.myRollAnimating = true;
+
+    column.classList.add('dice-slot-rerolling');
+
     const oldStrip = column.querySelector('.dice-slot-strip') as HTMLElement;
     if (oldStrip) column.removeChild(oldStrip);
 
     const strip = el('div', 'dice-slot-strip');
     column.appendChild(strip);
 
-    // Fewer faces for reroll (faster animation)
     const totalFaces = 10;
     for (let i = 0; i < totalFaces; i++) {
       const faceValue = Math.floor(Math.random() * 6) + 1;
@@ -657,18 +1055,22 @@ export class DiceRoller {
       });
     });
 
-    setTimeout(() => {
-      this.isRolling = false;
+    this.pendingRerollBySlot[slot] = setTimeout(() => {
+      this.pendingRerollBySlot[slot] = null;
+      if (opts.lockMyRoll) this.myRollAnimating = false;
       column.classList.remove('dice-slot-rerolling');
       column.classList.add('dice-slot-was-rerolled');
 
-      // Add reroll marker
       const marker = el('div', 'dice-reroll-marker', '\u21BB');
       column.appendChild(marker);
+
+      if (opts.pushAfter) this.pushSharedDiceIfMp();
     }, duration + 100);
   }
 
-  // ── Create die face ──────────────────────────────────────────
+  private animateReroll(slot: PlayerSlot, column: HTMLElement, die: DieResult): void {
+    this.playColumnRerollAnimation(slot, column, die, { lockMyRoll: true, pushAfter: true });
+  }
 
   private createDieFace(value: number, config: DieConfig): HTMLElement {
     const face = el('div', 'dice-face');
