@@ -70,7 +70,7 @@ import {
   type GodSlotPile,
 } from './godDeckState.ts';
 import { GodHandBlindDock, type GodBlindZoneLayout } from './godHandBlindDock.ts';
-import { getGodCardById, preloadGodCardSpriteSheets, type GodTablePiece } from './godCards';
+import { getGodCardById, type GodTablePiece } from './godCards';
 import type {
   SerializedBoardStateV1,
   SerializedGodDeckSlotsV1,
@@ -87,6 +87,7 @@ import { EMPTY_TABLE_DRAG } from './multiplayer/protocol.ts';
 import { tickTableDragOutbound } from './multiplayer/tableDragOutbound.ts';
 import { initMultiplayerSession } from './multiplayer/session.ts';
 import { getWheelBehavior, mountAppSettingsToolbar } from './appSettings.ts';
+import { runInitialBootScreen } from './bootScreen.ts';
 import './style.css';
 
 // ── Config ─────────────────────────────────────────────────────
@@ -554,6 +555,8 @@ const renderer = new Renderer(
   camera,
   renderConfig,
 );
+
+await runInitialBootScreen();
 
 // ── Highlighted hexon + unit ───────────────────────────────────
 
@@ -1624,14 +1627,7 @@ godHandBlindDock = new GodHandBlindDock(document.body, {
 });
 refreshGodDock();
 
-void preloadGodCardSpriteSheets().catch((err) => console.warn(err));
-
 // ── Render loop ────────────────────────────────────────────────
-
-/** Redraw once Langar is ready so canvas HP digits use the webfont. */
-if (document.fonts) {
-  void document.fonts.load('16px Langar').then(() => scheduleRender());
-}
 
 let needsRender = true;
 
