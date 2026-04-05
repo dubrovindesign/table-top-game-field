@@ -3346,9 +3346,10 @@ function getLargeMiniHealthUiGeometry(
     LARGE_MINI_VISUAL_SCALE *
     LARGE_UNIT_HEALTH_UI_SCALE *
     0.48;
+  // Model rotation only — matches renderer large tri (see drawLargeMiniatures).
   const badgeCenterWorld = largeMiniHealthBadgeCenterWorld(
     anchorWorld,
-    unitRotationDegForMiniatureLocalUi(rotationDeg),
+    rotationDeg,
     layout,
   );
   const buttonRadiusWorld = badgeRadiusWorld * 0.55;
@@ -3483,11 +3484,7 @@ function getLargeMiniActivationToggleGeometry(
   anchorWorld: Point,
   rotationDeg: number,
 ): { center: Point; radiusScreen: number } {
-  const w = largeMiniActivationToggleCenterWorld(
-    anchorWorld,
-    unitRotationDegForMiniatureLocalUi(rotationDeg),
-    layout,
-  );
+  const w = largeMiniActivationToggleCenterWorld(anchorWorld, rotationDeg, layout);
   const rw = largeActivationToggleRadiusWorld();
   return { center: boardWorldToScreen(w), radiusScreen: rw * camera.zoom };
 }

@@ -93,7 +93,7 @@ export function bigMiniActivationToggleCenterWorld(
   );
 }
 
-/** Large triangle: right side of silhouette, vertically centered. */
+/** Large triangle: right side of silhouette, vertically centered. Use model `rotationDeg` on all seats. */
 export function largeMiniActivationToggleCenterWorld(
   anchorHexCenterWorld: Point,
   rotationDeg: number,
@@ -313,6 +313,7 @@ function bottomLeftTipOfPolygon(verts: Point[]): Point {
 /**
  * Pivot = anchor hex center (same as large mini draw). Uses outer contour of the 3-hex triangle
  * in local space, then applies `LARGE_MINI_VISUAL_SCALE` and rotation like `drawLargeMiniShapeAtPoint`.
+ * Always pass **model** `rotationDeg` (not opposite-seat visual); board rotation handles the view.
  */
 export function largeMiniHealthBadgeCenterWorld(
   anchorHexCenterWorld: Point,
