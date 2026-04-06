@@ -95,7 +95,7 @@ export const CATALOG_UNITS: Record<string, CatalogUnitDef> = {
       walk: SMALL_WALK,
       run: SMALL_RUN,
       sprite: SMALL_SPRITES[0],
-      domains: ['order'],
+      domains: ['destruction'],
       concentration: { red: 1 },
       defenseReaction: { white: 1 },
       exploration: { white: 1 },
@@ -144,7 +144,7 @@ export const CATALOG_UNITS: Record<string, CatalogUnitDef> = {
       walk: SMALL_WALK,
       run: SMALL_RUN,
       sprite: SMALL_SPRITES[1],
-      domains: ['nature', 'order'],
+      domains: ['death', 'destruction'],
       concentration: { green: 1 },
       defenseReaction: { green: 1 },
       exploration: { green: 1 },
@@ -194,7 +194,7 @@ export const CATALOG_UNITS: Record<string, CatalogUnitDef> = {
       walk: BIG_WALK,
       run: BIG_RUN,
       sprite: BIG_SPRITE,
-      domains: ['order', 'chaos'],
+      domains: ['destruction', 'creation'],
       concentration: { red: 2 },
       defenseReaction: { white: 2 },
       exploration: { white: 1, green: 1 },
@@ -240,99 +240,99 @@ export const CATALOG_UNITS: Record<string, CatalogUnitDef> = {
   ash_legionnaire: {
     id: 'ash_legionnaire',
     points: 40,
-    card: gruntCard('Ash Legionnaire', SMALL_SPRITES[0], ['chaos'], ['Chaos', 'Melee', 'Ash']),
+    card: gruntCard('Ash Legionnaire', SMALL_SPRITES[0], ['creation'], ['Chaos', 'Melee', 'Ash']),
   },
   sylvan_warden: {
     id: 'sylvan_warden',
     points: 42,
-    card: gruntCard('Sylvan Warden', SMALL_SPRITES[1], ['nature'], ['Nature', 'Sylvan', 'Spear']),
+    card: gruntCard('Sylvan Warden', SMALL_SPRITES[1], ['death'], ['Nature', 'Sylvan', 'Spear']),
   },
   umbral_stalker: {
     id: 'umbral_stalker',
     points: 48,
-    card: gruntCard('Umbral Stalker', SMALL_SPRITES[0], ['shadow'], ['Shadow', 'Stealth', 'Blade']),
+    card: gruntCard('Umbral Stalker', SMALL_SPRITES[0], ['life'], ['Shadow', 'Stealth', 'Blade']),
   },
   iron_oath_knight: {
     id: 'iron_oath_knight',
     points: 52,
-    card: gruntCard('Iron Oath Knight', SMALL_SPRITES[1], ['order'], ['Order', 'Knight', 'Shield']),
+    card: gruntCard('Iron Oath Knight', SMALL_SPRITES[1], ['destruction'], ['Order', 'Knight', 'Shield']),
   },
   bloodbound_berzerker: {
     id: 'bloodbound_berzerker',
     points: 45,
-    card: gruntCard('Bloodbound Berserker', SMALL_SPRITES[0], ['chaos'], ['Chaos', 'Berserker', 'Axe']),
+    card: gruntCard('Bloodbound Berserker', SMALL_SPRITES[0], ['creation'], ['Chaos', 'Berserker', 'Axe']),
   },
   wildfang_runner: {
     id: 'wildfang_runner',
     points: 38,
-    card: gruntCard('Wildfang Runner', SMALL_SPRITES[1], ['nature'], ['Nature', 'Beast', 'Fast']),
+    card: gruntCard('Wildfang Runner', SMALL_SPRITES[1], ['death'], ['Nature', 'Beast', 'Fast']),
   },
   veil_revenant: {
     id: 'veil_revenant',
     points: 44,
-    card: gruntCard('Veil Revenant', SMALL_SPRITES[0], ['shadow'], ['Shadow', 'Undead', 'Zombie']),
+    card: gruntCard('Veil Revenant', SMALL_SPRITES[0], ['life'], ['Shadow', 'Undead', 'Zombie']),
   },
   // Leader miniatures (placeable; not part of `roster` slots; points count toward ARMY_POINTS_CAP)
   leader_tern_captain: {
     id: 'leader_tern_captain',
     points: 62,
-    card: gruntCard('Captain Aldric', SMALL_SPRITES[0], ['order'], ['Leader', 'Tern', 'Order']),
+    card: gruntCard('Captain Aldric', SMALL_SPRITES[0], ['destruction'], ['Leader', 'Tern', 'Order']),
   },
   leader_tern_warden: {
     id: 'leader_tern_warden',
     points: 60,
-    card: gruntCard('Warden Mira', SMALL_SPRITES[1], ['order'], ['Leader', 'Tern', 'Order']),
+    card: gruntCard('Warden Mira', SMALL_SPRITES[1], ['destruction'], ['Leader', 'Tern', 'Order']),
   },
   leader_ash_warlord: {
     id: 'leader_ash_warlord',
     points: 64,
-    card: gruntCard('Warlord Krask', SMALL_SPRITES[0], ['chaos'], ['Leader', 'Ash', 'Chaos']),
+    card: gruntCard('Warlord Krask', SMALL_SPRITES[0], ['creation'], ['Leader', 'Ash', 'Chaos']),
   },
   leader_sylvan_heartwood: {
     id: 'leader_sylvan_heartwood',
     points: 61,
-    card: gruntCard('Heartwood Seer', SMALL_SPRITES[1], ['nature'], ['Leader', 'Sylvan', 'Nature']),
+    card: gruntCard('Heartwood Seer', SMALL_SPRITES[1], ['death'], ['Leader', 'Sylvan', 'Nature']),
   },
   leader_umbral_prince: {
     id: 'leader_umbral_prince',
     points: 66,
-    card: gruntCard('Prince of Veils', SMALL_SPRITES[0], ['shadow'], ['Leader', 'Umbral', 'Shadow']),
+    card: gruntCard('Prince of Veils', SMALL_SPRITES[0], ['life'], ['Leader', 'Umbral', 'Shadow']),
   },
   leader_iron_highmarshal: {
     id: 'leader_iron_highmarshal',
     points: 68,
-    card: gruntCard('High Marshal', SMALL_SPRITES[1], ['order'], ['Leader', 'Iron', 'Order']),
+    card: gruntCard('High Marshal', SMALL_SPRITES[1], ['destruction'], ['Leader', 'Iron', 'Order']),
   },
   leader_blood_matriarch: {
     id: 'leader_blood_matriarch',
     points: 63,
-    card: gruntCard('Blood Matriarch', SMALL_SPRITES[0], ['chaos'], ['Leader', 'Blood', 'Chaos']),
+    card: gruntCard('Blood Matriarch', SMALL_SPRITES[0], ['creation'], ['Leader', 'Blood', 'Chaos']),
   },
   leader_wild_alpha: {
     id: 'leader_wild_alpha',
     points: 58,
-    card: gruntCard('Pack Alpha', SMALL_SPRITES[1], ['nature'], ['Leader', 'Wild', 'Nature']),
+    card: gruntCard('Pack Alpha', SMALL_SPRITES[1], ['death'], ['Leader', 'Wild', 'Nature']),
   },
   leader_veil_necromancer: {
     id: 'leader_veil_necromancer',
     points: 65,
-    card: gruntCard('Necromancer of the Rift', SMALL_SPRITES[0], ['shadow'], ['Leader', 'Veil', 'Shadow']),
+    card: gruntCard('Necromancer of the Rift', SMALL_SPRITES[0], ['life'], ['Leader', 'Veil', 'Shadow']),
   },
 };
 
 export const FACTIONS: FactionDef[] = [
   /** Разрушение */
-  { id: 'tern_concord', name: 'Кастилия', domain: 'order', panelIconSrc: '/castilla.webp' },
-  { id: 'broken_veil', name: 'Бездна', domain: 'order', panelIconSrc: '/chasm.webp' },
-  { id: 'wild_horde', name: 'Орда Брумгаров', domain: 'order', panelIconSrc: '/broomgar_horde.webp' },
+  { id: 'tern_concord', name: 'Кастилия', domain: 'destruction', panelIconSrc: '/castilla.webp' },
+  { id: 'broken_veil', name: 'Бездна', domain: 'destruction', panelIconSrc: '/chasm.webp' },
+  { id: 'wild_horde', name: 'Орда Брумгаров', domain: 'destruction', panelIconSrc: '/broomgar_horde.webp' },
   /** Созидание */
-  { id: 'sylvan_enclave', name: 'Ангельн', domain: 'chaos', panelIconSrc: '/engeln.webp' },
-  { id: 'ash_legion', name: 'Приорат Надежды', domain: 'chaos', panelIconSrc: '/priory_of_hope.webp' },
+  { id: 'sylvan_enclave', name: 'Ангельн', domain: 'creation', panelIconSrc: '/engeln.webp' },
+  { id: 'ash_legion', name: 'Приорат Надежды', domain: 'creation', panelIconSrc: '/priory_of_hope.webp' },
   /** Смерть */
-  { id: 'iron_covenant', name: 'Великий Терновник', domain: 'nature', panelIconSrc: '/blackthorn.webp' },
-  { id: 'blood_pact', name: 'Кригмарк', domain: 'nature', panelIconSrc: '/krigmark.webp' },
+  { id: 'iron_covenant', name: 'Великий Терновник', domain: 'death', panelIconSrc: '/blackthorn.webp' },
+  { id: 'blood_pact', name: 'Кригмарк', domain: 'death', panelIconSrc: '/krigmark.webp' },
   /** Жизнь */
-  { id: 'umbral_court', name: 'Кельд', domain: 'shadow', panelIconSrc: '/keld.webp' },
+  { id: 'umbral_court', name: 'Кельд', domain: 'life', panelIconSrc: '/keld.webp' },
 ];
 
 export const LEADERS: LeaderDef[] = [

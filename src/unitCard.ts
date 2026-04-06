@@ -4,13 +4,16 @@
  * when a unit (small or big) is selected.
  */
 
+import { ETHER_VORTEX_DOMAINS, type EtherVortexDomainId } from './etherVortex';
+
 // ── Types ──────────────────────────────────────────────────────
 
 export type UnitSize = 'small' | 'big' | 'large' | 'huge';
 
 export type DamageType = 'physical' | 'fire' | 'mental' | 'poison';
 export type AttackRange = 'melee' | 'ranged';
-export type Domain = 'order' | 'chaos' | 'nature' | 'shadow';
+/** Same ids as ether vortex domains (`life` | `creation` | `death` | `destruction`). */
+export type Domain = EtherVortexDomainId;
 
 /** Dice pool: counts of each colour */
 export interface DicePool {
@@ -92,20 +95,21 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return e;
 }
 
-const DOMAIN_COLORS: Record<Domain, string> = {
-  order: '#4a90d9',
-  chaos: '#d94a4a',
-  nature: '#4caf50',
-  shadow: '#9c27b0',
-};
+function rgbStringToHex(rgb: string): string {
+  const m = rgb.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
+  if (!m) return '#888888';
+  const hex = (n: string) => Number(n).toString(16).padStart(2, '0');
+  return `#${hex(m[1])}${hex(m[2])}${hex(m[3])}`;
+}
 
-/** Подписи доменов (ключи каталога: order/chaos/nature/shadow). */
-export const DOMAIN_LABELS: Record<Domain, string> = {
-  order: 'Разрушение',
-  chaos: 'Созидание',
-  nature: 'Смерть',
-  shadow: 'Жизнь',
-};
+const DOMAIN_COLORS: Record<Domain, string> = Object.fromEntries(
+  ETHER_VORTEX_DOMAINS.map((d) => [d.id, rgbStringToHex(d.blendColor)]),
+) as Record<Domain, string>;
+
+/** Подписи доменов (ключи каталога совпадают с `ETHER_VORTEX_DOMAINS`). */
+export const DOMAIN_LABELS: Record<Domain, string> = Object.fromEntries(
+  ETHER_VORTEX_DOMAINS.map((d) => [d.id, d.label]),
+) as Record<Domain, string>;
 
 const DAMAGE_TYPE_ICONS: Record<DamageType, string> = {
   physical: '\u2694',

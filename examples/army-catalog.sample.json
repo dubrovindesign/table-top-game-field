@@ -1,10 +1,10 @@
 {
-  "_description": "Образец структуры для armyCatalog: factions + leaders + units. Домены: order|chaos|nature|shadow. size: small|big|large|huge. damageType: physical|fire|mental|poison. attackRange: melee|ranged. В игре это пока не импортируется автоматически — ориентир для правок в armyCatalog.ts.",
+  "_description": "Образец структуры для armyCatalog: factions + leaders + units. Домены: life|creation|death|destruction (те же id, что у эфирных вихрей). size: small|big|large|huge. damageType: physical|fire|mental|poison. attackRange: melee|ranged. В игре это пока не импортируется автоматически — ориентир для правок в armyCatalog.ts.",
   "factions": [
     {
       "id": "example_realm",
       "name": "Примерное королевство",
-      "domain": "order",
+      "domain": "destruction",
       "panelIconSrc": "/castilla.webp"
     }
   ],
@@ -33,7 +33,7 @@
         "walk": 4,
         "run": 7,
         "sprite": "/tern-unit-1.jpg",
-        "domains": ["order"],
+        "domains": ["destruction"],
         "concentration": { "red": 1 },
         "defenseReaction": { "white": 1 },
         "exploration": { "white": 1 },
@@ -76,7 +76,7 @@
         "walk": 4,
         "run": 7,
         "sprite": "/tern-unit-1.jpg",
-        "domains": ["order"],
+        "domains": ["destruction"],
         "concentration": {},
         "defenseReaction": { "white": 1 },
         "exploration": {},
@@ -107,7 +107,7 @@
         "walk": 2,
         "run": 4,
         "sprite": "/Frame 118.png",
-        "domains": ["order"],
+        "domains": ["destruction"],
         "concentration": { "green": 1 },
         "defenseReaction": { "green": 1 },
         "exploration": { "white": 1 },
