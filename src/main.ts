@@ -615,7 +615,7 @@ let selectedEtherVortexIndex: number | null = null;
 /** Parallel array: off-board world positions for terrain hexons. */
 let terrainOffBoardWorlds: (Point | undefined)[] = terrains.map(() => undefined);
 let terrainRotationDegs: number[] = terrains.map(() => 0);
-/** Show selected piece card + move ranges only after Alt+click selection. */
+/** Show selected piece card + move ranges after double-click (2nd mousedown of a double-click). */
 let showSelectedDetails = false;
 type SelectedEntity =
   | { kind: 'small'; index: number }
@@ -810,7 +810,7 @@ unitCard.onAttackHover = (attack: AttackAbility | null) => {
   renderer.render();
 };
 
-/** Alt+selection card: dismiss when clicking anywhere except the board canvas or the card itself. */
+/** Pinned unit card (double-click): dismiss when clicking anywhere except the board canvas or the card itself. */
 document.addEventListener('mousedown', (e: MouseEvent) => {
   if (e.button !== 0) return;
   if (!showSelectedDetails) return;
@@ -4086,7 +4086,7 @@ canvas.addEventListener('mousedown', (e) => {
     return;
   }
 
-  // Left-click: select unit to show walk/run range
+  // Left-click: select piece; double-click: pin card + walk/run (Alt+hover still previews ranges)
   if (e.button === 0) {
     if (tryEtherVortexCrystalBadgeOpen(e.clientX, e.clientY)) {
       scheduleRender();
@@ -4127,7 +4127,7 @@ canvas.addEventListener('mousedown', (e) => {
         openHealthControlsUnitIndex = null;
         openHealthControlsBigMiniIndex = null;
         selectedEtherVortexIndex = null;
-        showSelectedDetails = altKeyHeld;
+        showSelectedDetails = e.detail === 2;
         unitDragPendingIndex = obUnit;
         unitDragPendingStartX = e.clientX;
         unitDragPendingStartY = e.clientY;
@@ -4151,7 +4151,7 @@ canvas.addEventListener('mousedown', (e) => {
         openHealthControlsUnitIndex = null;
         openHealthControlsBigMiniIndex = null;
         selectedEtherVortexIndex = null;
-        showSelectedDetails = altKeyHeld;
+        showSelectedDetails = e.detail === 2;
         bigMiniDragPendingIndex = obBig;
         bigMiniDragPendingStartX = e.clientX;
         bigMiniDragPendingStartY = e.clientY;
@@ -4177,7 +4177,7 @@ canvas.addEventListener('mousedown', (e) => {
         openHealthControlsLargeMiniIndex = null;
         openHealthControlsHugeMiniIndex = null;
         selectedEtherVortexIndex = null;
-        showSelectedDetails = altKeyHeld;
+        showSelectedDetails = e.detail === 2;
         largeMiniDragPendingIndex = obLarge;
         largeMiniDragPendingStartX = e.clientX;
         largeMiniDragPendingStartY = e.clientY;
@@ -4208,7 +4208,7 @@ canvas.addEventListener('mousedown', (e) => {
         openHealthControlsLargeMiniIndex = null;
         openHealthControlsHugeMiniIndex = null;
         selectedEtherVortexIndex = null;
-        showSelectedDetails = altKeyHeld;
+        showSelectedDetails = e.detail === 2;
         hugeMiniDragPendingIndex = obHuge;
         hugeMiniDragPendingStartX = e.clientX;
         hugeMiniDragPendingStartY = e.clientY;
@@ -4321,7 +4321,7 @@ canvas.addEventListener('mousedown', (e) => {
       openHealthControlsUnitIndex = null;
       openHealthControlsBigMiniIndex = null;
       selectedEtherVortexIndex = null;
-      showSelectedDetails = altKeyHeld;
+      showSelectedDetails = e.detail === 2;
       // Always use pending — drag starts only after threshold
       unitDragPendingIndex = clickedUnitIndex;
       unitDragPendingStartX = e.clientX;
@@ -4360,7 +4360,7 @@ canvas.addEventListener('mousedown', (e) => {
         updateBigMiniMovementHighlights();
       }
       // After clearSelection — it resets showSelectedDetails
-      showSelectedDetails = e.altKey || altKeyHeld;
+      showSelectedDetails = e.detail === 2;
       scheduleRender();
       return;
     }
@@ -4385,7 +4385,7 @@ canvas.addEventListener('mousedown', (e) => {
         updateMovementHighlights();
         updateLargeMiniMovementHighlights();
       }
-      showSelectedDetails = e.altKey || altKeyHeld;
+      showSelectedDetails = e.detail === 2;
       scheduleRender();
       return;
     }
@@ -4410,7 +4410,7 @@ canvas.addEventListener('mousedown', (e) => {
         updateMovementHighlights();
         updateHugeMiniMovementHighlights();
       }
-      showSelectedDetails = e.altKey || altKeyHeld;
+      showSelectedDetails = e.detail === 2;
       scheduleRender();
       return;
     }
