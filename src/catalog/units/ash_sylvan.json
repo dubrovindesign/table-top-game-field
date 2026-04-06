@@ -1,0 +1,126 @@
+{
+  "ash_legionnaire": {
+    "id": "ash_legionnaire",
+    "points": 40,
+    "card": {
+      "name": "Ash Legionnaire",
+      "size": "small",
+      "health": 6,
+      "maxHealth": 6,
+      "defense": { "white": 1 },
+      "walk": 4,
+      "run": 7,
+      "sprite": "/tern-unit-1.jpg",
+      "domains": ["creation"],
+      "concentration": {},
+      "defenseReaction": { "white": 1 },
+      "exploration": {},
+      "grabRange": 1,
+      "attacks": [
+        {
+          "name": "Strike",
+          "range": 1,
+          "attackRange": "melee",
+          "damageType": "physical",
+          "damage": 2,
+          "dice": { "red": 1 }
+        }
+      ],
+      "traits": [{ "name": "Line Trooper", "description": "Placeholder unit for roster testing." }],
+      "keywords": ["Chaos", "Melee", "Ash"]
+    }
+  },
+  "sylvan_warden": {
+    "id": "sylvan_warden",
+    "points": 42,
+    "card": {
+      "name": "Sylvan Warden",
+      "size": "small",
+      "health": 6,
+      "maxHealth": 6,
+      "defense": { "white": 1 },
+      "walk": 4,
+      "run": 7,
+      "sprite": "/Frame 144.png",
+      "domains": ["death"],
+      "concentration": {},
+      "defenseReaction": { "white": 1 },
+      "exploration": {},
+      "grabRange": 1,
+      "attacks": [
+        {
+          "name": "Strike",
+          "range": 1,
+          "attackRange": "melee",
+          "damageType": "physical",
+          "damage": 2,
+          "dice": { "red": 1 }
+        }
+      ],
+      "traits": [{ "name": "Line Trooper", "description": "Placeholder unit for roster testing." }],
+      "keywords": ["Nature", "Sylvan", "Spear"]
+    }
+  },
+  "leader_ash_warlord": {
+    "id": "leader_ash_warlord",
+    "points": 64,
+    "card": {
+      "name": "Warlord Krask",
+      "size": "small",
+      "health": 6,
+      "maxHealth": 6,
+      "defense": { "white": 1 },
+      "walk": 4,
+      "run": 7,
+      "sprite": "/tern-unit-1.jpg",
+      "domains": ["creation"],
+      "concentration": {},
+      "defenseReaction": { "white": 1 },
+      "exploration": {},
+      "grabRange": 1,
+      "attacks": [
+        {
+          "name": "Strike",
+          "range": 1,
+          "attackRange": "melee",
+          "damageType": "physical",
+          "damage": 2,
+          "dice": { "red": 1 }
+        }
+      ],
+      "traits": [{ "name": "Line Trooper", "description": "Placeholder unit for roster testing." }],
+      "keywords": ["Leader", "Ash", "Chaos"]
+    }
+  },
+  "leader_sylvan_heartwood": {
+    "id": "leader_sylvan_heartwood",
+    "points": 61,
+    "card": {
+      "name": "Heartwood Seer",
+      "size": "small",
+      "health": 6,
+      "maxHealth": 6,
+      "defense": { "white": 1 },
+      "walk": 4,
+      "run": 7,
+      "sprite": "/Frame 144.png",
+      "domains": ["death"],
+      "concentration": {},
+      "defenseReaction": { "white": 1 },
+      "exploration": {},
+      "grabRange": 1,
+      "attacks": [
+        {
+          "name": "Strike",
+          "range": 1,
+          "attackRange": "melee",
+          "damageType": "physical",
+          "damage": 2,
+          "dice": { "red": 1 }
+        }
+      ],
+      "traits": [{ "name": "Line Trooper", "description": "Placeholder unit for roster testing." }],
+      "keywords": ["Leader", "Sylvan", "Nature"]
+    }
+  }
+}

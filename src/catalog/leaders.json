@@ -1,0 +1,82 @@
+[
+  {
+    "id": "tern_captain",
+    "name": "Captain Aldric",
+    "factionId": "castilla",
+    "catalogUnitId": "leader_tern_captain",
+    "roster": [
+      { "unitId": "tern_vanguard", "maxCopies": 3 },
+      { "unitId": "tern_ranger", "maxCopies": 2 },
+      { "unitId": "iron_golem", "maxCopies": 1 }
+    ]
+  },
+  {
+    "id": "tern_warden",
+    "name": "Warden Mira",
+    "factionId": "castilla",
+    "catalogUnitId": "leader_tern_warden",
+    "roster": [
+      { "unitId": "tern_vanguard", "maxCopies": 2 },
+      { "unitId": "tern_ranger", "maxCopies": 3 },
+      { "unitId": "iron_golem", "maxCopies": 1 }
+    ]
+  },
+  {
+    "id": "ash_warlord",
+    "name": "Warlord Krask",
+    "factionId": "priory_of_hope",
+    "catalogUnitId": "leader_ash_warlord",
+    "roster": [
+      { "unitId": "ash_legionnaire", "maxCopies": 4 },
+      { "unitId": "iron_golem", "maxCopies": 1 }
+    ]
+  },
+  {
+    "id": "sylvan_heartwood",
+    "name": "Heartwood Seer",
+    "factionId": "engeln",
+    "catalogUnitId": "leader_sylvan_heartwood",
+    "roster": [{ "unitId": "sylvan_warden", "maxCopies": 4 }]
+  },
+  {
+    "id": "umbral_prince",
+    "name": "Prince of Veils",
+    "factionId": "keld",
+    "catalogUnitId": "leader_umbral_prince",
+    "roster": [
+      { "unitId": "umbral_stalker", "maxCopies": 3 },
+      { "unitId": "veil_revenant", "maxCopies": 2 }
+    ]
+  },
+  {
+    "id": "iron_highmarshal",
+    "name": "High Marshal",
+    "factionId": "blackthorn",
+    "catalogUnitId": "leader_iron_highmarshal",
+    "roster": [{ "unitId": "iron_oath_knight", "maxCopies": 4 }]
+  },
+  {
+    "id": "blood_matriarch",
+    "name": "Blood Matriarch",
+    "factionId": "krigmark",
+    "catalogUnitId": "leader_blood_matriarch",
+    "roster": [{ "unitId": "bloodbound_berzerker", "maxCopies": 5 }]
+  },
+  {
+    "id": "wild_alpha",
+    "name": "Pack Alpha",
+    "factionId": "broomgar_horde",
+    "catalogUnitId": "leader_wild_alpha",
+    "roster": [{ "unitId": "wildfang_runner", "maxCopies": 5 }]
+  },
+  {
+    "id": "veil_necromancer",
+    "name": "Necromancer of the Rift",
+    "factionId": "chasm",
+    "catalogUnitId": "leader_veil_necromancer",
+    "roster": [
+      { "unitId": "veil_revenant", "maxCopies": 6 },
+      { "unitId": "umbral_stalker", "maxCopies": 2 }
+    ]
+  }
+]

@@ -1,0 +1,188 @@
+{
+  "iron_oath_knight": {
+    "id": "iron_oath_knight",
+    "points": 52,
+    "card": {
+      "name": "Iron Oath Knight",
+      "size": "small",
+      "health": 6,
+      "maxHealth": 6,
+      "defense": { "white": 1 },
+      "walk": 4,
+      "run": 7,
+      "sprite": "/Frame 144.png",
+      "domains": ["destruction"],
+      "concentration": {},
+      "defenseReaction": { "white": 1 },
+      "exploration": {},
+      "grabRange": 1,
+      "attacks": [
+        {
+          "name": "Strike",
+          "range": 1,
+          "attackRange": "melee",
+          "damageType": "physical",
+          "damage": 2,
+          "dice": { "red": 1 }
+        }
+      ],
+      "traits": [{ "name": "Line Trooper", "description": "Placeholder unit for roster testing." }],
+      "keywords": ["Order", "Knight", "Shield"]
+    }
+  },
+  "bloodbound_berzerker": {
+    "id": "bloodbound_berzerker",
+    "points": 45,
+    "card": {
+      "name": "Bloodbound Berserker",
+      "size": "small",
+      "health": 6,
+      "maxHealth": 6,
+      "defense": { "white": 1 },
+      "walk": 4,
+      "run": 7,
+      "sprite": "/tern-unit-1.jpg",
+      "domains": ["creation"],
+      "concentration": {},
+      "defenseReaction": { "white": 1 },
+      "exploration": {},
+      "grabRange": 1,
+      "attacks": [
+        {
+          "name": "Strike",
+          "range": 1,
+          "attackRange": "melee",
+          "damageType": "physical",
+          "damage": 2,
+          "dice": { "red": 1 }
+        }
+      ],
+      "traits": [{ "name": "Line Trooper", "description": "Placeholder unit for roster testing." }],
+      "keywords": ["Chaos", "Berserker", "Axe"]
+    }
+  },
+  "wildfang_runner": {
+    "id": "wildfang_runner",
+    "points": 38,
+    "card": {
+      "name": "Wildfang Runner",
+      "size": "small",
+      "health": 6,
+      "maxHealth": 6,
+      "defense": { "white": 1 },
+      "walk": 4,
+      "run": 7,
+      "sprite": "/Frame 144.png",
+      "domains": ["death"],
+      "concentration": {},
+      "defenseReaction": { "white": 1 },
+      "exploration": {},
+      "grabRange": 1,
+      "attacks": [
+        {
+          "name": "Strike",
+          "range": 1,
+          "attackRange": "melee",
+          "damageType": "physical",
+          "damage": 2,
+          "dice": { "red": 1 }
+        }
+      ],
+      "traits": [{ "name": "Line Trooper", "description": "Placeholder unit for roster testing." }],
+      "keywords": ["Nature", "Beast", "Fast"]
+    }
+  },
+  "leader_iron_highmarshal": {
+    "id": "leader_iron_highmarshal",
+    "points": 68,
+    "card": {
+      "name": "High Marshal",
+      "size": "small",
+      "health": 6,
+      "maxHealth": 6,
+      "defense": { "white": 1 },
+      "walk": 4,
+      "run": 7,
+      "sprite": "/Frame 144.png",
+      "domains": ["destruction"],
+      "concentration": {},
+      "defenseReaction": { "white": 1 },
+      "exploration": {},
+      "grabRange": 1,
+      "attacks": [
+        {
+          "name": "Strike",
+          "range": 1,
+          "attackRange": "melee",
+          "damageType": "physical",
+          "damage": 2,
+          "dice": { "red": 1 }
+        }
+      ],
+      "traits": [{ "name": "Line Trooper", "description": "Placeholder unit for roster testing." }],
+      "keywords": ["Leader", "Iron", "Order"]
+    }
+  },
+  "leader_blood_matriarch": {
+    "id": "leader_blood_matriarch",
+    "points": 63,
+    "card": {
+      "name": "Blood Matriarch",
+      "size": "small",
+      "health": 6,
+      "maxHealth": 6,
+      "defense": { "white": 1 },
+      "walk": 4,
+      "run": 7,
+      "sprite": "/tern-unit-1.jpg",
+      "domains": ["creation"],
+      "concentration": {},
+      "defenseReaction": { "white": 1 },
+      "exploration": {},
+      "grabRange": 1,
+      "attacks": [
+        {
+          "name": "Strike",
+          "range": 1,
+          "attackRange": "melee",
+          "damageType": "physical",
+          "damage": 2,
+          "dice": { "red": 1 }
+        }
+      ],
+      "traits": [{ "name": "Line Trooper", "description": "Placeholder unit for roster testing." }],
+      "keywords": ["Leader", "Blood", "Chaos"]
+    }
+  },
+  "leader_wild_alpha": {
+    "id": "leader_wild_alpha",
+    "points": 58,
+    "card": {
+      "name": "Pack Alpha",
+      "size": "small",
+      "health": 6,
+      "maxHealth": 6,
+      "defense": { "white": 1 },
+      "walk": 4,
+      "run": 7,
+      "sprite": "/Frame 144.png",
+      "domains": ["death"],
+      "concentration": {},
+      "defenseReaction": { "white": 1 },
+      "exploration": {},
+      "grabRange": 1,
+      "attacks": [
+        {
+          "name": "Strike",
+          "range": 1,
+          "attackRange": "melee",
+          "damageType": "physical",
+          "damage": 2,
+          "dice": { "red": 1 }
+        }
+      ],
+      "traits": [{ "name": "Line Trooper", "description": "Placeholder unit for roster testing." }],
+      "keywords": ["Leader", "Wild", "Nature"]
+    }
+  }
+}

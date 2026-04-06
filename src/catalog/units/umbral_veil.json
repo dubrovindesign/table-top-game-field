@@ -1,0 +1,126 @@
+{
+  "umbral_stalker": {
+    "id": "umbral_stalker",
+    "points": 48,
+    "card": {
+      "name": "Umbral Stalker",
+      "size": "small",
+      "health": 6,
+      "maxHealth": 6,
+      "defense": { "white": 1 },
+      "walk": 4,
+      "run": 7,
+      "sprite": "/tern-unit-1.jpg",
+      "domains": ["life"],
+      "concentration": {},
+      "defenseReaction": { "white": 1 },
+      "exploration": {},
+      "grabRange": 1,
+      "attacks": [
+        {
+          "name": "Strike",
+          "range": 1,
+          "attackRange": "melee",
+          "damageType": "physical",
+          "damage": 2,
+          "dice": { "red": 1 }
+        }
+      ],
+      "traits": [{ "name": "Line Trooper", "description": "Placeholder unit for roster testing." }],
+      "keywords": ["Shadow", "Stealth", "Blade"]
+    }
+  },
+  "veil_revenant": {
+    "id": "veil_revenant",
+    "points": 44,
+    "card": {
+      "name": "Veil Revenant",
+      "size": "small",
+      "health": 6,
+      "maxHealth": 6,
+      "defense": { "white": 1 },
+      "walk": 4,
+      "run": 7,
+      "sprite": "/tern-unit-1.jpg",
+      "domains": ["life"],
+      "concentration": {},
+      "defenseReaction": { "white": 1 },
+      "exploration": {},
+      "grabRange": 1,
+      "attacks": [
+        {
+          "name": "Strike",
+          "range": 1,
+          "attackRange": "melee",
+          "damageType": "physical",
+          "damage": 2,
+          "dice": { "red": 1 }
+        }
+      ],
+      "traits": [{ "name": "Line Trooper", "description": "Placeholder unit for roster testing." }],
+      "keywords": ["Shadow", "Undead", "Zombie"]
+    }
+  },
+  "leader_umbral_prince": {
+    "id": "leader_umbral_prince",
+    "points": 66,
+    "card": {
+      "name": "Prince of Veils",
+      "size": "small",
+      "health": 6,
+      "maxHealth": 6,
+      "defense": { "white": 1 },
+      "walk": 4,
+      "run": 7,
+      "sprite": "/tern-unit-1.jpg",
+      "domains": ["life"],
+      "concentration": {},
+      "defenseReaction": { "white": 1 },
+      "exploration": {},
+      "grabRange": 1,
+      "attacks": [
+        {
+          "name": "Strike",
+          "range": 1,
+          "attackRange": "melee",
+          "damageType": "physical",
+          "damage": 2,
+          "dice": { "red": 1 }
+        }
+      ],
+      "traits": [{ "name": "Line Trooper", "description": "Placeholder unit for roster testing." }],
+      "keywords": ["Leader", "Umbral", "Shadow"]
+    }
+  },
+  "leader_veil_necromancer": {
+    "id": "leader_veil_necromancer",
+    "points": 65,
+    "card": {
+      "name": "Necromancer of the Rift",
+      "size": "small",
+      "health": 6,
+      "maxHealth": 6,
+      "defense": { "white": 1 },
+      "walk": 4,
+      "run": 7,
+      "sprite": "/tern-unit-1.jpg",
+      "domains": ["life"],
+      "concentration": {},
+      "defenseReaction": { "white": 1 },
+      "exploration": {},
+      "grabRange": 1,
+      "attacks": [
+        {
+          "name": "Strike",
+          "range": 1,
+          "attackRange": "melee",
+          "damageType": "physical",
+          "damage": 2,
+          "dice": { "red": 1 }
+        }
+      ],
+      "traits": [{ "name": "Line Trooper", "description": "Placeholder unit for roster testing." }],
+      "keywords": ["Leader", "Veil", "Shadow"]
+    }
+  }
+}

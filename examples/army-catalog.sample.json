@@ -1,5 +1,5 @@
 {
-  "_description": "Образец структуры для armyCatalog: factions + leaders + units. Домены: life|creation|death|destruction (те же id, что у эфирных вихрей). size: small|big|large|huge. damageType: physical|fire|mental|poison. attackRange: melee|ranged. В игре это пока не импортируется автоматически — ориентир для правок в armyCatalog.ts.",
+  "_description": "Образец структуры каталога: factions + leaders + units. Боевые данные в репозитории: src/catalog/factions.json, leaders.json, units/*.json (сборка в src/catalog/index.ts). Домены: life|creation|death|destruction. size: small|big|large|huge. damageType: physical|fire|mental|poison. attackRange: melee|ranged.",
   "factions": [
     {
       "id": "example_realm",

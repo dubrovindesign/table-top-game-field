@@ -18,7 +18,7 @@ export type GodCardDef = {
   /** Rule text — not shown on card art; for reference / future rules engine. */
   text: string;
   tags?: GodCardEffectTag[];
-  /** Factions that see this card in the army panel (e.g. `tern_concord` = Кастилия). */
+  /** Factions that see this card in the army panel (`faction.id` from `src/catalog/factions.json`). */
   factionIds: string[];
   sprite: GodCardSpriteCell;
   /** Future: faith crystal cost when playing the card (not deducted yet). */
@@ -36,14 +36,14 @@ export const GOD_CARD_SPRITE_GRID_ROWS = 5;
 
 const SHEET_CASTILIA_ABYSS = '/god-cards-castilia-abyss.jpg';
 
-const cast = 'tern_concord';
-const abyss = 'broken_veil';
+const castillaFaction = 'castilla';
+const chasmFaction = 'chasm';
 
 /** a = Бездна (Отрадье), c = Кастилия (Белая) — по подписям на листе. */
 type Fc = 'a' | 'c';
 
 function factionsFor(fc: Fc): string[] {
-  return fc === 'a' ? [abyss] : [cast];
+  return fc === 'a' ? [chasmFaction] : [castillaFaction];
 }
 
 /**
