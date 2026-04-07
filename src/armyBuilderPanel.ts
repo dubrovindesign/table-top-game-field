@@ -122,7 +122,6 @@ export class ArmyBuilderPanel {
     });
 
     this.overlay = el('div', 'army-panel-overlay');
-    this.overlay.addEventListener('click', () => this.setOpen(false));
 
     this.panel = el('aside', 'army-panel');
     const header = el('div', 'army-panel-header');

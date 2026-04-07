@@ -1238,17 +1238,7 @@ html, body {
 }
 
 .army-panel-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-}
-
-.army-panel-overlay-visible {
-  opacity: 1;
-  pointer-events: auto;
+  display: none;
 }
 
 .army-panel {

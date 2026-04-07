@@ -4331,6 +4331,8 @@ canvas.addEventListener('mousedown', (e) => {
       if (unitDragPendingIsNewSelection) {
         selectedUnitIndex = clickedUnitIndex;
         selectedBigMiniIndex = null;
+        selectedLargeMiniIndex = null;
+        selectedHugeMiniIndex = null;
         selectedTerrainIndex = null;
         selectedGodTablePieceIndex = null;
         updateBigMiniMovementHighlights();
