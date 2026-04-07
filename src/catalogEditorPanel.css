@@ -869,6 +869,13 @@
   font-size: 0.85rem;
 }
 
+.ce-catalog-maxcopies-input {
+  width: 48px;
+  max-width: 16vw;
+  padding: 6px 8px;
+  font-size: 0.85rem;
+}
+
 .ce-leader-attached-units .ce-catalog-army-row {
   flex-shrink: 0;
   width: 100%;

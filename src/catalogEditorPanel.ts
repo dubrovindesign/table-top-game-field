@@ -154,6 +154,25 @@ function commitCatalogLeaderPoints(
   else setRosterSlotPatch(leaderId, unitId, { points: v });
 }
 
+function commitCatalogLeaderMaxCopies(leaderId: string, unitId: string, raw: string): void {
+  const o = getCatalogOverrides();
+  const isNewLeader = o.newLeaders[leaderId] != null;
+  const trimmed = raw.trim();
+  if (trimmed === '') {
+    if (isNewLeader) setRosterSlotPatch(leaderId, unitId, { maxCopies: 1 });
+    else setRosterSlotPatch(leaderId, unitId, { maxCopies: undefined });
+    return;
+  }
+  const v = numOrU(raw);
+  if (v === undefined) {
+    if (isNewLeader) setRosterSlotPatch(leaderId, unitId, { maxCopies: 1 });
+    else setRosterSlotPatch(leaderId, unitId, { maxCopies: undefined });
+    return;
+  }
+  const mc = Math.max(1, Math.floor(v));
+  setRosterSlotPatch(leaderId, unitId, { maxCopies: mc });
+}
+
 /** Убрать legacy binding при редактировании; custom dice → поля. */
 function normalizeHotspotRegion(r: HotspotRegion): HotspotRegion {
   const out: HotspotRegion = { ...r };
@@ -1179,6 +1198,25 @@ export class CatalogEditorPanel {
       const editBtn = createPencilEditButton(() => {
         this.openUnitFormEdit(unitId);
       });
+      const actions: HTMLElement[] = [inp];
+      if (kind === 'slot') {
+        const maxInp = document.createElement('input');
+        maxInp.type = 'number';
+        maxInp.className = 'ce-catalog-maxcopies-input catalog-editor-input';
+        maxInp.value = String(slotMax);
+        maxInp.min = '1';
+        maxInp.step = '1';
+        maxInp.title = 'Максимум моделей этого юнита в армии под этим лидером';
+        maxInp.addEventListener('blur', () => {
+          commitCatalogLeaderMaxCopies(lid, unitId, maxInp.value);
+          this.refreshLeaderAttachedUnits();
+        });
+        maxInp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+        });
+        actions.push(maxInp);
+      }
+      actions.push(editBtn);
       const row = buildCatalogArmyStyleRow({
         sprite: def ? unitPanelThumbSrc(def.card) : undefined,
         name: title ? `${nm} — ${title}` : nm,
@@ -1186,7 +1224,7 @@ export class CatalogEditorPanel {
         onMainClick: () => {
           this.openUnitFormEdit(unitId);
         },
-        actions: [inp, editBtn],
+        actions,
       });
       this.leaderAttachedUnitsEl!.appendChild(row);
     };
@@ -1341,11 +1379,11 @@ export class CatalogEditorPanel {
     this.leaderRosterUnitSel = el('select', 'catalog-editor-select') as HTMLSelectElement;
     this.leaderRosterMaxCopies = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.leaderRosterMaxCopies.type = 'number';
-    this.leaderRosterMaxCopies.placeholder = 'maxCopies';
+    this.leaderRosterMaxCopies.placeholder = 'Макс.';
     this.leaderRosterMaxCopies.value = '1';
     this.leaderRosterPoints = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.leaderRosterPoints.type = 'number';
-    this.leaderRosterPoints.placeholder = 'points (опц.)';
+    this.leaderRosterPoints.placeholder = 'Очки (опц.)';
     this.leaderRosterRequiresUnitId = el('select', 'catalog-editor-select') as HTMLSelectElement;
     this.leaderRosterRequiresUnitId.appendChild(new Option('Требует юнита (requiresUnitId)', ''));
     const addRosterBtn = el(
@@ -1356,8 +1394,8 @@ export class CatalogEditorPanel {
     addRosterBtn.type = 'button';
     addRosterBtn.addEventListener('click', () => this.addRosterSlotForModalLeader());
     rosterAddRow.appendChild(this.leaderRosterUnitSel);
-    rosterAddRow.appendChild(this.leaderRosterMaxCopies);
     rosterAddRow.appendChild(this.leaderRosterPoints);
+    rosterAddRow.appendChild(this.leaderRosterMaxCopies);
     rosterAddRow.appendChild(this.leaderRosterRequiresUnitId);
     rosterAddRow.appendChild(addRosterBtn);
     this.lmPaneRoster.appendChild(rosterAddRow);
@@ -1740,6 +1778,26 @@ export class CatalogEditorPanel {
         inp.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
         });
+        const maxInp = document.createElement('input');
+        maxInp.type = 'number';
+        maxInp.className = 'ce-catalog-maxcopies-input catalog-editor-input';
+        maxInp.value = String(slot.maxCopies);
+        maxInp.min = '1';
+        maxInp.step = '1';
+        maxInp.title = 'Максимум моделей этого юнита в армии под этим лидером';
+        maxInp.addEventListener('blur', () => {
+          const v = numOrU(maxInp.value);
+          const idx = this.leaderModalPendingRoster.findIndex((s) => s.unitId === slot.unitId);
+          if (idx < 0) return;
+          const next = { ...this.leaderModalPendingRoster[idx] };
+          const mc = v === undefined || v < 1 ? 1 : Math.floor(v);
+          next.maxCopies = Math.max(1, mc);
+          this.leaderModalPendingRoster[idx] = next;
+          this.refreshLeaderRosterEditor();
+        });
+        maxInp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+        });
         const editBtn = createPencilEditButton(() => {
           this.openUnitFormEdit(slot.unitId);
         });
@@ -1760,7 +1818,7 @@ export class CatalogEditorPanel {
           onMainClick: () => {
             this.openUnitFormEdit(slot.unitId);
           },
-          actions: [inp, editBtn, rm],
+          actions: [inp, maxInp, editBtn, rm],
         });
         this.leaderRosterListEl.appendChild(row);
       }
@@ -1798,10 +1856,24 @@ export class CatalogEditorPanel {
       inp.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
       });
+      const maxInp = document.createElement('input');
+      maxInp.type = 'number';
+      maxInp.className = 'ce-catalog-maxcopies-input catalog-editor-input';
+      maxInp.value = String(slot.maxCopies);
+      maxInp.min = '1';
+      maxInp.step = '1';
+      maxInp.title = 'Максимум моделей этого юнита в армии под этим лидером';
+      maxInp.addEventListener('blur', () => {
+        commitCatalogLeaderMaxCopies(leader.id, slot.unitId, maxInp.value);
+        this.refreshLeaderRosterEditor();
+      });
+      maxInp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+      });
       const editBtn = createPencilEditButton(() => {
         this.openUnitFormEdit(slot.unitId);
       });
-      const actions: HTMLElement[] = [inp, editBtn];
+      const actions: HTMLElement[] = [inp, maxInp, editBtn];
       if (removable) {
         const rm = el('button', 'catalog-editor-icon-btn', '×') as HTMLButtonElement;
         rm.type = 'button';

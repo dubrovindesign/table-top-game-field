@@ -8,6 +8,10 @@
       {
         "unitId": "defender_seedlings",
         "maxCopies": 1
+      },
+      {
+        "unitId": "dryadint_archer",
+        "maxCopies": 1
       }
     ],
     "points": 70
