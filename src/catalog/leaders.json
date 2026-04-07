@@ -7,11 +7,18 @@
     "roster": [
       {
         "unitId": "defender_seedlings",
-        "maxCopies": 1
+        "maxCopies": 3,
+        "points": 16
       },
       {
-        "unitId": "dryadint_archer",
-        "maxCopies": 1
+        "unitId": "Dryadint-Archer",
+        "maxCopies": 3,
+        "points": 27
+      },
+      {
+        "unitId": "Dryadint-Warrior",
+        "maxCopies": 4,
+        "points": 20
       }
     ],
     "points": 70
