@@ -1,0 +1,91 @@
+---
+name: hex-board-deploy
+description: Migrates catalog editor export to static JSON, extracts inlined card images, verifies production build, pushes to main, and deploys the hex-board client to the VPS so new or edited units, leaders, and hotspot markup reach production. Use when the user asks to deploy, update production catalog, ship unit cards, sync hotspots, or run the catalog-to-repo pipeline before release.
+---
+
+# Деплой каталога юнитов и клиента (hex-board)
+
+## Контекст
+
+- **Редактор каталога** хранит черновики в `localStorage`. На прод для всех игроков нужны **файлы в репозитории** после миграции.
+- **Скрипты** в корне: `npm run catalog:apply`, `npm run catalog:extract-images` (см. `scripts/apply-catalog-export.mjs`, `scripts/extract-catalog-base64-images.mjs`).
+- **Сервер** пересобирает клиент при деплое; `roomServer` перезапускается только если менялись `package.json` / `package-lock.json` или `server/` (см. `deploy/deploy.sh`).
+
+## Обязательная цепочка (карточки, юниты, лидеры, хотспоты)
+
+Выполняй по порядку, пока не будет успешного `npm run build`.
+
+### 1. Экспорт из приложения
+
+- В UI редактора каталога: **экспорт** JSON (файл вида `hex-board-catalog-overrides.json`).
+- Сохрани файл доступным для команды (например в корне репо или передай абсолютный путь).
+
+### 2. Миграция в репозиторий
+
+```bash
+npm run catalog:apply -- path/to/hex-board-catalog-overrides.json
+```
+
+Опционально сначала: `npm run catalog:apply -- --dry-run path/to/...`
+
+Скрипт обновляет:
+
+- `src/catalog/units/<id>.json` — новые юниты и патчи к существующим (как в `getMergedCatalogUnit`);
+- `src/catalog/leaders.json` — лидеры, ростер, скрытия, слоты;
+- `src/catalog/hotspots/<unitId>.json` — разметка хотспотов из поля `hotspots` экспорта.
+
+Если в экспорте **нет** записей в `hotspots`, но разметка лежит отдельно в `public/card-hotspots/` — убедись, что эти файлы закоммичены и пути в карточках совпадают.
+
+### 3. Картинки карточек (не раздувать бандл)
+
+Если в JSON юнитов остались строки **`data:image/...;base64,...`**:
+
+```bash
+npm run catalog:extract-images
+```
+
+Они выносятся в `public/catalog-units/<unitId>/...` и заменяются на URL вида `/catalog-units/...`. После этого основной JS-чанк должен оставаться сотни килобайт, а не несколько мегабайт.
+
+Новые файлы под `public/` (не только из скрипта) — **добавить в git** вместе с JSON.
+
+### 4. Проверка сборки
+
+```bash
+npm run build
+```
+
+При ошибке Workbox / precache из‑за гигантского чанка — сначала добейся выноса base64 (шаг 3).
+
+### 5. Git и удалённый репозиторий
+
+- `git add` всех изменений каталога, `public/`, при необходимости `vite.config.ts` / скриптов.
+- Не коммитить `dist/` как замену прод-сборке, если в проекте принято собирать на сервере (см. README / `.gitignore`).
+- Commit с понятным сообщением, **push в `main`** (или в ветку, из которой деплой тянет код).
+
+### 6. Деплой на VPS
+
+На машине с настроенным SSH (в репозитории в примере хост `tornscape`, путь приложения из `deploy/deploy.sh`):
+
+```bash
+ssh tornscape 'bash /var/www/hex-board-game/deploy/deploy.sh'
+```
+
+При смене домена/пути WebSocket можно переопределить `VITE_MP_WS_URL` (см. комментарии в `deploy/deploy.sh`).
+
+### 7. После выката
+
+- Жёсткое обновление страницы (кэш / SW), чтобы подтянулась новая версия клиента.
+
+## Чеклист быстрой проверки
+
+- [ ] Экспорт редактора применён (`catalog:apply`).
+- [ ] Нет лишнего base64 в юнитах или выполнен `catalog:extract-images`.
+- [ ] `npm run build` без ошибок.
+- [ ] Изменения запушены на удалённый репозиторий.
+- [ ] Выполнен удалённый `deploy.sh`, в логе успешная сборка и при необходимости рестарт `hex-room-server`.
+
+## Связанные материалы в репо
+
+- `README.md` — варианты деплоя, `VITE_MP_WS_URL`, ограничения roomServer.
+- `deploy/deploy.sh` — точные шаги на сервере.
+- `.cursor/skills/hex-board-canon/` — канон данных каталога и терминология.
