@@ -1,15 +1,26 @@
 {
   "card": {
     "attacks": [],
-    "concentration": {},
+    "catalogUnitId": "kellantra-with-lindwurm",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
       "green": 1,
       "white": 1
     },
-    "defenseReaction": {},
+    "defenseReaction": {
+      "green": 0,
+      "white": 0
+    },
     "domains": [
       "life"
     ],
+    "explorationRange": 0,
+    "grabRange": 0,
     "health": 12,
     "keywords": [],
     "maxHealth": 12,

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Finds `data:image/...;base64,...` strings in `src/catalog/units/*.json`,
- * writes decoded bytes under `public/catalog-units/<unitId>/<fieldPath>.<ext>`,
- * replaces values with root-relative URLs (`/catalog-units/...`).
+ * Finds `data:image/...;base64,...` strings in `src/catalog/units/*.json` and
+ * `src/catalog/hotspots/*.json` (e.g. HotspotFile.image), writes decoded bytes under
+ * `public/catalog-units/<unitId>/<fieldPath>.<ext>`, replaces values with root-relative URLs.
  *
  * Usage:
  *   node scripts/extract-catalog-base64-images.mjs
@@ -15,6 +15,7 @@ import path from 'node:path';
 
 const repoRoot = process.cwd();
 const unitsDir = path.join(repoRoot, 'src', 'catalog', 'units');
+const hotspotsDir = path.join(repoRoot, 'src', 'catalog', 'hotspots');
 const publicDir = path.join(repoRoot, 'public');
 
 const DATA_URL_RE = /^data:image\/([^;]+);base64,(.+)$/s;
@@ -102,6 +103,35 @@ async function main() {
       console.log(`Updated ${filePath}`);
     }
   }
+  /** Hotspot JSON: base64 in `image` (and rarely elsewhere). */
+  let hotspotFiles = [];
+  try {
+    hotspotFiles = (await fs.readdir(hotspotsDir)).filter((f) => f.endsWith('.json'));
+  } catch (e) {
+    if (e && typeof e === 'object' && 'code' in e && e.code !== 'ENOENT') throw e;
+  }
+  for (const f of hotspotFiles.sort()) {
+    const unitId = f.replace(/\.json$/i, '');
+    const filePath = path.join(hotspotsDir, f);
+    const raw = await fs.readFile(filePath, 'utf8');
+    const data = JSON.parse(raw);
+    const writes = [];
+    walkReplaceSync(data, unitId, [], dryRun, writes);
+    if (writes.length === 0) {
+      console.log(`hotspots/${f}: no data:image base64 fields`);
+      continue;
+    }
+    for (const w of writes) {
+      console.log(`${dryRun ? '[dry-run] ' : ''}hotspot ${unitId} ${w.slug} -> ${w.url} (${(w.size / 1024).toFixed(1)} KiB)`);
+    }
+    allWrites.push(...writes);
+    if (!dryRun) {
+      const out = JSON.stringify(data, null, 2) + '\n';
+      await fs.writeFile(filePath, out, 'utf8');
+      console.log(`Updated ${filePath}`);
+    }
+  }
+
   const totalKb = allWrites.reduce((s, w) => s + w.size, 0) / 1024;
   console.log(
     dryRun

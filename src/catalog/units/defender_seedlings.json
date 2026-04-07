@@ -1,10 +1,11 @@
 {
   "card": {
     "attacks": [],
+    "catalogUnitId": "defender_seedlings",
     "concentration": {
       "black": 0,
       "green": 0,
-      "red": 0,
+      "red": 1,
       "white": 0
     },
     "defense": {
@@ -13,7 +14,7 @@
     },
     "defenseReaction": {
       "green": 0,
-      "white": 0
+      "white": 1
     },
     "domains": [
       "life"
