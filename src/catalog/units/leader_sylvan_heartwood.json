@@ -1,0 +1,48 @@
+{
+  "id": "leader_sylvan_heartwood",
+  "points": 61,
+  "card": {
+    "name": "Heartwood Seer",
+    "size": "small",
+    "health": 6,
+    "maxHealth": 6,
+    "defense": {
+      "white": 1
+    },
+    "walk": 4,
+    "run": 7,
+    "sprite": "/Frame 144.png",
+    "domains": [
+      "death"
+    ],
+    "concentration": {},
+    "defenseReaction": {
+      "white": 1
+    },
+    "exploration": {},
+    "grabRange": 1,
+    "attacks": [
+      {
+        "name": "Strike",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 2,
+        "dice": {
+          "red": 1
+        }
+      }
+    ],
+    "traits": [
+      {
+        "name": "Line Trooper",
+        "description": "Placeholder unit for roster testing."
+      }
+    ],
+    "keywords": [
+      "Лидер",
+      "Сильван",
+      "Природа"
+    ]
+  }
+}

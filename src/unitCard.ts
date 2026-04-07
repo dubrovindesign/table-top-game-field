@@ -10,10 +10,19 @@ import { ETHER_VORTEX_DOMAINS, type EtherVortexDomainId } from './etherVortex';
 
 export type UnitSize = 'small' | 'big' | 'large' | 'huge';
 
-export type DamageType = 'physical' | 'fire' | 'mental' | 'poison';
+export type DamageType = 'physical' | 'fire' | 'mental' | 'poison' | 'cold' | 'electric';
 export type AttackRange = 'melee' | 'ranged';
 /** Same ids as ether vortex domains (`life` | `creation` | `death` | `destruction`). */
 export type Domain = EtherVortexDomainId;
+
+/** Ether crystals (cost on action tiles) — red/green/yellow/black/blue. */
+export interface EtherCrystalPool {
+  red?: number;
+  green?: number;
+  yellow?: number;
+  black?: number;
+  blue?: number;
+}
 
 /** Dice pool: counts of each colour */
 export interface DicePool {
@@ -38,6 +47,14 @@ export interface AttackAbility {
   damage: number;
   dice: DicePool;
   modifiers?: AttackModifier[];
+  /** Paid in ether crystals to use this attack (when present). */
+  etherCost?: EtherCrystalPool;
+  /** Shown on the card separately from damage type (ethereal attacks). */
+  ethereal?: boolean;
+  /** Area / multi-target attack indicator. */
+  areaAttack?: boolean;
+  /** Override distance unit for this attack’s range (default follows miniature size). */
+  attackRangeUnit?: 'hex' | 'hexon';
 }
 
 export interface UnitTrait {
@@ -54,27 +71,50 @@ export interface UnitCardData {
   defense: { white?: number; green?: number };
   walk: number;
   run: number;
+  /**
+   * Explicit movement distance unit (hexes vs hexons). When omitted, walk/run labels follow `size`
+   * like before (small/large → hexes, big/huge → hexons).
+   */
+  movementDistanceUnit?: 'hex' | 'hexon';
+  /** Faction / location banner on the card (path under `public/`). */
+  flagSprite?: string;
+  /**
+   * Faith markers granted on «Получения Веры» (counts by marker colour on the card).
+   */
+  faithMarkers?: EtherCrystalPool;
   /** Sprite/image URL (optional) */
   sprite?: string;
   /** Domain affinities (1..4) */
   domains: Domain[];
   /** Concentration: extra dice added when concentrating */
   concentration: DicePool;
+  /** Optional ether cost on the concentration tile. */
+  concentrationEtherCost?: EtherCrystalPool;
   /** Defense reaction: extra dice added on reaction */
   defenseReaction: { white?: number; green?: number };
+  /** Optional ether cost on the defense reaction tile. */
+  defenseReactionEtherCost?: EtherCrystalPool;
   /** Exploration: dice pool for exploration checks (optional). */
   exploration?: DicePool;
+  /** Optional ether cost on the exploration tile. */
+  explorationEtherCost?: EtherCrystalPool;
+  /** Range shown on the exploration action (hexes/hexons per `movementDistanceUnit` / size rule). */
+  explorationRange?: number;
   /**
    * Max distance for “take / pick up” interactions.
    * Display uses hexes for small & large, hexons for big & huge (same as walk/run).
    */
   grabRange?: number;
+  /** Optional ether cost on the «взять» tile. */
+  grabEtherCost?: EtherCrystalPool;
   /** Attack abilities */
   attacks: AttackAbility[];
   /** Passive/special traits */
   traits?: UnitTrait[];
   /** Keywords/tags */
   keywords?: string[];
+  /** Machine-readable transform target (rules on the table may still use trait text). */
+  transformsIntoUnitId?: string;
 }
 
 export interface DiceRequest {
@@ -116,6 +156,8 @@ const DAMAGE_TYPE_ICONS: Record<DamageType, string> = {
   fire: '\uD83D\uDD25',
   mental: '\uD83E\uDDE0',
   poison: '\u2620',
+  cold: '\u2744',
+  electric: '\u26A1',
 };
 
 const DAMAGE_TYPE_LABELS: Record<DamageType, string> = {
@@ -123,6 +165,8 @@ const DAMAGE_TYPE_LABELS: Record<DamageType, string> = {
   fire: 'Fire',
   mental: 'Mental',
   poison: 'Poison',
+  cold: 'Cold',
+  electric: 'Electric',
 };
 
 const DICE_COLORS: Record<string, string> = {
@@ -130,10 +174,36 @@ const DICE_COLORS: Record<string, string> = {
   green: '#43a047',
   black: '#424242',
   white: '#e0e0e0',
+  yellow: '#fdd835',
+  blue: '#1e88e5',
 };
 
 function dicePoolTotal(pool: DicePool): number {
   return (pool.red ?? 0) + (pool.green ?? 0) + (pool.black ?? 0) + (pool.white ?? 0);
+}
+
+function etherCrystalTotal(pool: EtherCrystalPool): number {
+  return (
+    (pool.red ?? 0) +
+    (pool.green ?? 0) +
+    (pool.yellow ?? 0) +
+    (pool.black ?? 0) +
+    (pool.blue ?? 0)
+  );
+}
+
+function renderEtherCrystalPool(pool: EtherCrystalPool, container: HTMLElement): void {
+  const entries = Object.entries(pool).filter(([, v]) => v && v > 0) as [string, number][];
+  for (const [color, count] of entries) {
+    const group = el('span', 'uc-dice-group');
+    for (let i = 0; i < count; i++) {
+      const c = el('span', 'uc-ether-crystal');
+      c.style.background = DICE_COLORS[color] ?? '#666';
+      if (color === 'yellow') c.style.border = '1px solid rgba(0,0,0,0.25)';
+      group.appendChild(c);
+    }
+    container.appendChild(group);
+  }
 }
 
 function renderDicePool(pool: DicePool, container: HTMLElement): void {
@@ -152,6 +222,42 @@ function renderDicePool(pool: DicePool, container: HTMLElement): void {
 
 function renderDefenseDice(def: { white?: number; green?: number }, container: HTMLElement): void {
   renderDicePool({ white: def.white, green: def.green }, container);
+}
+
+const HEX_DISTANCE_ICON_SRC = '/hex-icon.svg';
+const HEXON_DISTANCE_ICON_SRC = '/hexon-icon.svg';
+
+function movementDistanceUnit(data: UnitCardData): 'hex' | 'hexon' {
+  if (data.movementDistanceUnit === 'hex') return 'hex';
+  if (data.movementDistanceUnit === 'hexon') return 'hexon';
+  return data.size === 'big' || data.size === 'huge' ? 'hexon' : 'hex';
+}
+
+function attackRangeDistanceUnit(data: UnitCardData, atk: AttackAbility): 'hex' | 'hexon' {
+  if (atk.attackRangeUnit === 'hex') return 'hex';
+  if (atk.attackRangeUnit === 'hexon') return 'hexon';
+  return movementDistanceUnit(data);
+}
+
+/** Range in hexes/hexons: outline icon with the number centered inside. */
+function appendDistanceBadge(parent: HTMLElement, value: number, unit: 'hex' | 'hexon'): void {
+  const wrap = el('span', `uc-distance-badge uc-distance-badge--${unit}`);
+  const img = document.createElement('img');
+  img.className = 'uc-distance-badge-icon';
+  img.src = unit === 'hex' ? HEX_DISTANCE_ICON_SRC : HEXON_DISTANCE_ICON_SRC;
+  img.alt = '';
+  img.setAttribute('aria-hidden', 'true');
+  wrap.appendChild(img);
+  wrap.appendChild(el('span', 'uc-distance-badge-value', String(value)));
+  parent.appendChild(wrap);
+}
+
+function appendOptionalEtherCostRow(info: HTMLElement, cost: EtherCrystalPool | undefined): void {
+  if (!cost || etherCrystalTotal(cost) === 0) return;
+  const row = el('div', 'uc-stat-ether');
+  row.appendChild(document.createTextNode('Эфир: '));
+  renderEtherCrystalPool(cost, row);
+  info.appendChild(row);
 }
 
 // ── UnitCard class ─────────────────────────────────────────────
@@ -188,8 +294,15 @@ export class UnitCard {
 
     const source = data;
 
-    // ── Header (sprite + name + size badge) ──
+    // ── Header (optional flag + sprite + name + size badge) ──
     const header = el('div', 'uc-header');
+
+    if (data.flagSprite) {
+      const flagImg = el('img', 'uc-flag-thumb');
+      flagImg.src = data.flagSprite;
+      flagImg.alt = '';
+      header.appendChild(flagImg);
+    }
 
     if (data.sprite) {
       const portrait = el('div', 'uc-portrait');
@@ -225,6 +338,13 @@ export class UnitCard {
       this.container.appendChild(domainRow);
     }
 
+    if (data.faithMarkers && etherCrystalTotal(data.faithMarkers) > 0) {
+      const faithRow = el('div', 'uc-faith-row');
+      faithRow.appendChild(document.createTextNode('Приверженность: '));
+      renderEtherCrystalPool(data.faithMarkers, faithRow);
+      this.container.appendChild(faithRow);
+    }
+
     // ── Health bar ──
     const healthSection = el('div', 'uc-health-section');
     const healthLabel = el('div', 'uc-health-label');
@@ -245,7 +365,7 @@ export class UnitCard {
     this.container.appendChild(healthSection);
 
     // ── Core stats grid ──
-    const movementLabel = (data.size === 'big' || data.size === 'huge') ? 'hexons' : 'hexes';
+    const moveUnit = movementDistanceUnit(data);
     const statsGrid = el('div', 'uc-stats-grid');
 
     // Defense (clickable)
@@ -266,7 +386,9 @@ export class UnitCard {
     walkStat.appendChild(el('span', 'uc-stat-icon', '\uD83D\uDEB6'));
     const walkInfo = el('div', 'uc-stat-info');
     walkInfo.appendChild(el('span', 'uc-stat-label', 'Walk'));
-    walkInfo.appendChild(el('span', 'uc-stat-value', `${data.walk} ${movementLabel}`));
+    const walkVal = el('span', 'uc-stat-value');
+    appendDistanceBadge(walkVal, data.walk, moveUnit);
+    walkInfo.appendChild(walkVal);
     walkStat.appendChild(walkInfo);
     statsGrid.appendChild(walkStat);
 
@@ -275,7 +397,9 @@ export class UnitCard {
     runStat.appendChild(el('span', 'uc-stat-icon', '\uD83C\uDFC3'));
     const runInfo = el('div', 'uc-stat-info');
     runInfo.appendChild(el('span', 'uc-stat-label', 'Run'));
-    runInfo.appendChild(el('span', 'uc-stat-value', `${data.run} ${movementLabel}`));
+    const runVal = el('span', 'uc-stat-value');
+    appendDistanceBadge(runVal, data.run, moveUnit);
+    runInfo.appendChild(runVal);
     runStat.appendChild(runInfo);
     statsGrid.appendChild(runStat);
 
@@ -289,6 +413,7 @@ export class UnitCard {
     const concValue = el('span', 'uc-stat-value uc-dice-inline');
     renderDicePool(data.concentration, concValue);
     concInfo.appendChild(concValue);
+    appendOptionalEtherCostRow(concInfo, data.concentrationEtherCost);
     concStat.appendChild(concInfo);
     statsGrid.appendChild(concStat);
 
@@ -302,6 +427,7 @@ export class UnitCard {
     const reactValue = el('span', 'uc-stat-value uc-dice-inline');
     renderDefenseDice(data.defenseReaction, reactValue);
     reactInfo.appendChild(reactValue);
+    appendOptionalEtherCostRow(reactInfo, data.defenseReactionEtherCost);
     reactStat.appendChild(reactInfo);
     statsGrid.appendChild(reactStat);
 
@@ -321,6 +447,13 @@ export class UnitCard {
     if (explorationTotal > 0) renderDicePool(explorationPool, exploreValue);
     else exploreValue.appendChild(document.createTextNode('—'));
     exploreInfo.appendChild(exploreValue);
+    if (data.explorationRange != null && data.explorationRange >= 0) {
+      const exploreRange = el('span', 'uc-stat-value uc-stat-explore-range');
+      exploreRange.appendChild(document.createTextNode(' · '));
+      appendDistanceBadge(exploreRange, data.explorationRange, moveUnit);
+      exploreInfo.appendChild(exploreRange);
+    }
+    appendOptionalEtherCostRow(exploreInfo, data.explorationEtherCost);
     exploreStat.appendChild(exploreInfo);
     statsGrid.appendChild(exploreStat);
 
@@ -329,11 +462,14 @@ export class UnitCard {
     takeStat.appendChild(el('span', 'uc-stat-icon', '\u270B'));
     const takeInfo = el('div', 'uc-stat-info');
     takeInfo.appendChild(el('span', 'uc-stat-label', 'Взять'));
-    const takeVal =
-      data.grabRange != null && data.grabRange >= 0
-        ? `${data.grabRange} ${movementLabel}`
-        : '—';
-    takeInfo.appendChild(el('span', 'uc-stat-value', takeVal));
+    const takeVal = el('span', 'uc-stat-value');
+    if (data.grabRange != null && data.grabRange >= 0) {
+      appendDistanceBadge(takeVal, data.grabRange, moveUnit);
+    } else {
+      takeVal.appendChild(document.createTextNode('—'));
+    }
+    takeInfo.appendChild(takeVal);
+    appendOptionalEtherCostRow(takeInfo, data.grabEtherCost);
     takeStat.appendChild(takeInfo);
     statsGrid.appendChild(takeStat);
 
@@ -362,6 +498,12 @@ export class UnitCard {
           `uc-attack-type uc-attack-type-${atk.attackRange}`,
           atk.attackRange === 'melee' ? 'Melee' : 'Ranged');
         atkHeader.appendChild(typeBadge);
+        if (atk.ethereal) {
+          atkHeader.appendChild(el('span', 'uc-attack-tag', 'Эфир'));
+        }
+        if (atk.areaAttack) {
+          atkHeader.appendChild(el('span', 'uc-attack-tag', 'Площадь'));
+        }
         atkEl.appendChild(atkHeader);
 
         // Attack stats row
@@ -377,10 +519,9 @@ export class UnitCard {
         dmgEl.appendChild(dmgLabel);
         atkStats.appendChild(dmgEl);
 
-        // Range
-        const rangeEl = el('span', 'uc-attack-stat');
-        rangeEl.appendChild(el('span', 'uc-attack-stat-icon', '\uD83C\uDFAF'));
-        rangeEl.appendChild(document.createTextNode(`${atk.range}`));
+        // Range (hex / hexon icon with value inside)
+        const rangeEl = el('span', 'uc-attack-stat uc-attack-stat-range');
+        appendDistanceBadge(rangeEl, atk.range, attackRangeDistanceUnit(data, atk));
         atkStats.appendChild(rangeEl);
 
         // Dice
@@ -389,6 +530,13 @@ export class UnitCard {
         atkStats.appendChild(diceEl);
 
         atkEl.appendChild(atkStats);
+
+        if (atk.etherCost && etherCrystalTotal(atk.etherCost) > 0) {
+          const etherRow = el('div', 'uc-attack-ether');
+          etherRow.appendChild(document.createTextNode('Эфир: '));
+          renderEtherCrystalPool(atk.etherCost, etherRow);
+          atkEl.appendChild(etherRow);
+        }
 
         // Modifiers
         if (atk.modifiers && atk.modifiers.length > 0) {

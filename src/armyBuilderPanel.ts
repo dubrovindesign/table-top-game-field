@@ -127,9 +127,7 @@ export class ArmyBuilderPanel {
     const header = el('div', 'army-panel-header');
     const headerMain = el('div', 'army-panel-header-text');
     const title = el('div', 'army-panel-title', 'Армия');
-    const subtitle = el('div', 'army-panel-subtitle', 'Субтитры создал DimaTorzok');
     headerMain.appendChild(title);
-    headerMain.appendChild(subtitle);
     const closeBtn = el('button', 'army-panel-close', '×');
     closeBtn.type = 'button';
     header.appendChild(headerMain);
@@ -531,7 +529,7 @@ export class ArmyBuilderPanel {
     const meta = el('div', 'army-unit-meta');
     const name = el('div', 'army-unit-name', l.name);
     const sub = el('div', 'army-unit-sub');
-    const pts = def?.points ?? 0;
+    const pts = l.points ?? def?.points ?? 0;
     sub.textContent =
       pts > 0 ? `${pts} pts · ${used}/${LEADER_MINI_MAX_COPIES}` : `Лидер · ${used}/${LEADER_MINI_MAX_COPIES}`;
 
@@ -622,8 +620,10 @@ export class ArmyBuilderPanel {
     const wrap = el('div', 'army-unit-row');
     wrap.dataset.unitId = row.unitId;
     const atMax = row.used >= row.maxCopies;
-    if (atMax) wrap.classList.add('army-unit-row-disabled');
-    wrap.draggable = !atMax;
+    const blocked = row.rosterBlocked === true;
+    if (atMax || blocked) wrap.classList.add('army-unit-row-disabled');
+    wrap.draggable = !atMax && !blocked;
+    if (blocked && row.rosterBlockedReason) wrap.title = row.rosterBlockedReason;
 
     const thumb = el('div', 'army-unit-thumb');
     if (row.card.sprite) {
@@ -644,7 +644,7 @@ export class ArmyBuilderPanel {
     wrap.appendChild(meta);
 
     wrap.addEventListener('dragstart', (e) => {
-      if (atMax) {
+      if (atMax || blocked) {
         e.preventDefault();
         return;
       }

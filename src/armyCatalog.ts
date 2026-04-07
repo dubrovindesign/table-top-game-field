@@ -38,6 +38,17 @@ export function getFaction(factionId: string): FactionDef | undefined {
   return FACTIONS.find((f) => f.id === factionId);
 }
 
+/** Points counted toward the army cap when this catalog unit is placed for the given leader. */
+export function rosterSpawnPoints(leaderId: string, catalogUnitId: string): number {
+  const def = getCatalogUnit(catalogUnitId);
+  if (!def) return 0;
+  const leader = getLeader(leaderId);
+  if (leader && leader.catalogUnitId === catalogUnitId && leader.points !== undefined) {
+    return leader.points;
+  }
+  return def.points;
+}
+
 export type RosterRowView = {
   unitId: string;
   name: string;
@@ -45,6 +56,9 @@ export type RosterRowView = {
   maxCopies: number;
   used: number;
   card: UnitCardData;
+  /** When true, the slot is listed but cannot be dragged (missing `requiresUnitId` model). */
+  rosterBlocked?: boolean;
+  rosterBlockedReason?: string;
 };
 
 export function listRosterRows(
@@ -62,6 +76,14 @@ export function listRosterRows(
     const kw = def.card.keywords?.join(' ') ?? '';
     const hay = `${def.card.name} ${kw}`.toLowerCase();
     if (q && !hay.includes(q)) continue;
+    let rosterBlocked = false;
+    let rosterBlockedReason: string | undefined;
+    if (slot.requiresUnitId) {
+      if (usedCount(leaderId, slot.requiresUnitId) < 1) {
+        rosterBlocked = true;
+        rosterBlockedReason = 'Сначала добавьте в армию миниатюру, от которой зависит этот слот';
+      }
+    }
     rows.push({
       unitId: slot.unitId,
       name: def.card.name,
@@ -69,6 +91,8 @@ export function listRosterRows(
       maxCopies: slot.maxCopies,
       used: usedCount(leaderId, slot.unitId),
       card: def.card,
+      rosterBlocked,
+      rosterBlockedReason,
     });
   }
   return rows;

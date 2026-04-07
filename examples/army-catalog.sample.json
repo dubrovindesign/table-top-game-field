@@ -1,5 +1,5 @@
 {
-  "_description": "Образец структуры каталога: factions + leaders + units. Боевые данные в репозитории: src/catalog/factions.json, leaders.json, units/*.json (сборка в src/catalog/index.ts). Домены: life|creation|death|destruction. size: small|big|large|huge. damageType: physical|fire|mental|poison. attackRange: melee|ranged.",
+  "_description": "Образец структуры каталога: factions + leaders + units. В репозитории: factions.json, leaders.json, по одному юниту на файл units/<id>.json (import.meta.glob в src/catalog/index.ts). Домены: life|creation|death|destruction. size: small|big|large|huge. damageType: physical|fire|mental|poison|cold|electric. attackRange: melee|ranged.",
   "factions": [
     {
       "id": "example_realm",

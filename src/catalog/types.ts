@@ -15,6 +15,11 @@ export type FactionDef = {
 export type RosterSlotDef = {
   unitId: string;
   maxCopies: number;
+  /**
+   * If set, this roster slot is available only while at least one model of `requiresUnitId`
+   * is already in the army for the same leader (spawned from the army panel).
+   */
+  requiresUnitId?: string;
 };
 
 export type LeaderDef = {
@@ -23,6 +28,11 @@ export type LeaderDef = {
   factionId: string;
   /** Placeable leader miniature in `CATALOG_UNITS` (same stats row as troops in the panel). */
   catalogUnitId: string;
+  /**
+   * Points charged for the leader miniature toward the army cap.
+   * If omitted, `CATALOG_UNITS[catalogUnitId].points` is used.
+   */
+  points?: number;
   roster: RosterSlotDef[];
 };
 

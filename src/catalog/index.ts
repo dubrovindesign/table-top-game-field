@@ -1,42 +1,38 @@
 /**
- * Loads army catalog from JSON under `src/catalog/`.
- * Add new unit files to `mergeUnitRecords` below (or split imports as the roster grows).
+ * Loads army catalog from JSON under `src/catalog/units/` (one unit per file).
+ * Add a new `units/<unitId>.json` — registration is automatic via `import.meta.glob`.
  */
 
 import type { CatalogUnitDef, FactionDef, LeaderDef } from './types';
 
 import factionsJson from './factions.json';
 import leadersJson from './leaders.json';
-import unitsAshSylvan from './units/ash_sylvan.json';
-import unitsIronBloodWild from './units/iron_blood_wild.json';
-import unitsTernLine from './units/tern_line.json';
-import unitsUmbralVeil from './units/umbral_veil.json';
 
-function mergeUnitRecords(
-  ...records: readonly Record<string, CatalogUnitDef>[]
+function mergeUnitRecordsFromGlob(
+  modules: Record<string, unknown>,
 ): Record<string, CatalogUnitDef> {
   const out: Record<string, CatalogUnitDef> = {};
-  for (const rec of records) {
-    for (const key of Object.keys(rec)) {
-      if (out[key] !== undefined) {
-        throw new Error(`[catalog] duplicate unit id: ${key}`);
-      }
-      const entry = rec[key];
-      if (entry.id !== key) {
-        throw new Error(`[catalog] unit object key "${key}" must match entry.id "${entry.id}"`);
-      }
-      out[key] = entry;
+  for (const path of Object.keys(modules)) {
+    const mod = modules[path] as { default?: CatalogUnitDef } | CatalogUnitDef;
+    const entry: CatalogUnitDef =
+      mod !== null && typeof mod === 'object' && 'default' in mod && mod.default !== undefined
+        ? (mod as { default: CatalogUnitDef }).default
+        : (mod as CatalogUnitDef);
+    if (!entry || typeof entry.id !== 'string') {
+      throw new Error(`[catalog] invalid unit module (missing id): ${path}`);
     }
+    const key = entry.id;
+    if (out[key] !== undefined) {
+      throw new Error(`[catalog] duplicate unit id: ${key} (${path})`);
+    }
+    out[key] = entry;
   }
   return out;
 }
 
+const unitModules = import.meta.glob('./units/*.json', { eager: true }) as Record<string, unknown>;
+
 export const FACTIONS = factionsJson as FactionDef[];
 export const LEADERS = leadersJson as LeaderDef[];
 
-export const CATALOG_UNITS: Record<string, CatalogUnitDef> = mergeUnitRecords(
-  unitsTernLine as Record<string, CatalogUnitDef>,
-  unitsAshSylvan as Record<string, CatalogUnitDef>,
-  unitsUmbralVeil as Record<string, CatalogUnitDef>,
-  unitsIronBloodWild as Record<string, CatalogUnitDef>,
-);
+export const CATALOG_UNITS: Record<string, CatalogUnitDef> = mergeUnitRecordsFromGlob(unitModules);

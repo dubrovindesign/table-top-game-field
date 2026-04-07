@@ -7,7 +7,8 @@
     "roster": [
       { "unitId": "tern_vanguard", "maxCopies": 3 },
       { "unitId": "tern_ranger", "maxCopies": 2 },
-      { "unitId": "iron_golem", "maxCopies": 1 }
+      { "unitId": "iron_golem", "maxCopies": 1 },
+      { "unitId": "kow_ct06_dragons_flame_flamethrower", "maxCopies": 2 }
     ]
   },
   {
@@ -18,7 +19,8 @@
     "roster": [
       { "unitId": "tern_vanguard", "maxCopies": 2 },
       { "unitId": "tern_ranger", "maxCopies": 3 },
-      { "unitId": "iron_golem", "maxCopies": 1 }
+      { "unitId": "iron_golem", "maxCopies": 1 },
+      { "unitId": "kow_ct06_dragons_flame_flamethrower", "maxCopies": 2 }
     ]
   },
   {
@@ -36,7 +38,15 @@
     "name": "Heartwood Seer",
     "factionId": "engeln",
     "catalogUnitId": "leader_sylvan_heartwood",
-    "roster": [{ "unitId": "sylvan_warden", "maxCopies": 4 }]
+    "roster": [
+      { "unitId": "sylvan_warden", "maxCopies": 4 },
+      { "unitId": "kow_kd12_kellantra_lindwurm", "maxCopies": 1 },
+      {
+        "unitId": "kow_kd12_kellantra_forest_fury",
+        "maxCopies": 1,
+        "requiresUnitId": "kow_kd12_kellantra_lindwurm"
+      }
+    ]
   },
   {
     "id": "umbral_prince",

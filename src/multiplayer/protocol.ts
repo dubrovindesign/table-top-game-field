@@ -33,13 +33,22 @@ export const EMPTY_TABLE_DRAG: TableDragState = {
   overR: null,
 };
 
+/** Max length for SDP or ICE candidate JSON in `webrtcSignal` (per field). */
+export const WEBRTC_SIGNAL_MAX_STRING_LEN = 64 * 1024;
+
+export type WebRtcSignalPayload =
+  | { phase: 'offer'; sdp: string }
+  | { phase: 'answer'; sdp: string }
+  | { phase: 'ice'; candidate: string };
+
 export type ClientToServerMessage =
   | { type: 'createRoom' }
   | { type: 'joinRoom'; roomId: string; role: 'player' | 'spectator' }
   | { type: 'pointer'; boardX: number; boardY: number }
   | { type: 'tableDrag'; drag: TableDragState }
   | { type: 'syncBoard'; payload: object }
-  | { type: 'ping'; t: number };
+  | { type: 'ping'; t: number }
+  | { type: 'webrtcSignal'; payload: WebRtcSignalPayload };
 
 export type ServerToClientMessage =
   | {
@@ -63,10 +72,16 @@ export type ServerToClientMessage =
       boardX: number;
       boardY: number;
     }
-  | { type: 'peerLeft'; id: string }
+  | {
+      type: 'peerLeft';
+      id: string;
+      role: 'player' | 'spectator';
+      playerSlot: PlayerSlot | null;
+    }
   | { type: 'peerJoined'; id: string; role: 'player' | 'spectator'; playerSlot: PlayerSlot | null }
   | { type: 'boardState'; payload: object }
   | { type: 'peerTableDrag'; fromId: string; drag: TableDragState }
+  | { type: 'webrtcSignal'; fromId: string; payload: WebRtcSignalPayload }
   | { type: 'pong'; t: number };
 
 export function parseClientMessage(raw: string): ClientToServerMessage | null {
@@ -102,6 +117,11 @@ export function parseClientMessage(raw: string): ClientToServerMessage | null {
       if (typeof tt !== 'number') return null;
       return { type: 'ping', t: tt };
     }
+    if (t === 'webrtcSignal') {
+      const payload = parseWebRtcSignalPayload((o as { payload?: unknown }).payload);
+      if (!payload) return null;
+      return { type: 'webrtcSignal', payload };
+    }
     return null;
   } catch {
     return null;
@@ -118,6 +138,29 @@ const TABLE_DRAG_KINDS = new Set<TableDragKind>([
   'ether',
   'godLoose',
 ]);
+
+function parseWebRtcSignalPayload(raw: unknown): WebRtcSignalPayload | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const p = raw as Record<string, unknown>;
+  const phase = p.phase;
+  if (phase === 'offer' || phase === 'answer') {
+    const sdp = p.sdp;
+    if (typeof sdp !== 'string' || sdp.length === 0 || sdp.length > WEBRTC_SIGNAL_MAX_STRING_LEN)
+      return null;
+    return phase === 'offer' ? { phase: 'offer', sdp } : { phase: 'answer', sdp };
+  }
+  if (phase === 'ice') {
+    const candidate = p.candidate;
+    if (
+      typeof candidate !== 'string' ||
+      candidate.length === 0 ||
+      candidate.length > WEBRTC_SIGNAL_MAX_STRING_LEN
+    )
+      return null;
+    return { phase: 'ice', candidate };
+  }
+  return null;
+}
 
 function parseTableDragState(raw: unknown): TableDragState | null {
   if (!raw || typeof raw !== 'object') return null;

@@ -48,6 +48,19 @@ function broadcastRoom(
   }
 }
 
+/** Voice/WebRTC signaling: players only (spectators do not participate). */
+function broadcastRoomPlayers(
+  roomId: string,
+  msg: ServerToClientMessage,
+  except?: WebSocket,
+): void {
+  const room = rooms.get(roomId);
+  if (!room) return;
+  for (const w of room.players) {
+    if (w && w !== except) send(w, msg);
+  }
+}
+
 function removeFromRoom(ws: WebSocket): void {
   const m = wsMeta.get(ws);
   if (!m?.roomId) return;
@@ -63,7 +76,18 @@ function removeFromRoom(ws: WebSocket): void {
   else if (m.role === 'spectator') room.spectators.delete(ws);
 
   const leftId = m.id;
-  broadcastRoom(m.roomId, { type: 'peerLeft', id: leftId }, ws);
+  const leftRole = m.role ?? 'spectator';
+  const leftSlot = m.playerSlot;
+  broadcastRoom(
+    m.roomId,
+    {
+      type: 'peerLeft',
+      id: leftId,
+      role: leftRole,
+      playerSlot: leftSlot,
+    },
+    ws,
+  );
 
   const empty =
     room.players[0] === null &&
@@ -237,6 +261,17 @@ wss.on('connection', (ws: WebSocket) => {
       broadcastRoom(
         meta.roomId,
         { type: 'peerTableDrag', fromId: meta.id, drag: msg.drag },
+        ws,
+      );
+      return;
+    }
+
+    if (msg.type === 'webrtcSignal') {
+      if (!meta.roomId) return;
+      if (meta.role !== 'player') return;
+      broadcastRoomPlayers(
+        meta.roomId,
+        { type: 'webrtcSignal', fromId: meta.id, payload: msg.payload },
         ws,
       );
       return;

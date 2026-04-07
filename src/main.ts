@@ -44,7 +44,13 @@ import {
   smallUnitHealthBadgeCenterWorldRad,
 } from './healthUi';
 import { CrystalWallet } from './crystalWallet';
-import { getCatalogUnit, getLeader, LEADER_MINI_MAX_COPIES, maxCopiesForSlot } from './armyCatalog';
+import {
+  getCatalogUnit,
+  getLeader,
+  LEADER_MINI_MAX_COPIES,
+  maxCopiesForSlot,
+  rosterSpawnPoints,
+} from './armyCatalog';
 import { ArmyBuilderPanel, DND_MIME, type ArmyDragPayload } from './armyBuilderPanel';
 import { EPHIRIUM_VORTEX_CARDS } from './ephiriumVortexCards';
 import { EphiriumVortexUi } from './ephiriumVortexUi';
@@ -2205,23 +2211,19 @@ function sumRosterPoints(): number {
   let s = 0;
   for (const u of units) {
     if (!u.spawnedFromArmyPanel || !u.catalogUnitId || !rosterPieceCountsForLocalArmiesPanel(u)) continue;
-    const d = getCatalogUnit(u.catalogUnitId);
-    if (d) s += d.points;
+    if (u.rosterLeaderId) s += rosterSpawnPoints(u.rosterLeaderId, u.catalogUnitId);
   }
   for (const m of bigMiniatures) {
     if (!m.spawnedFromArmyPanel || !m.catalogUnitId || !rosterPieceCountsForLocalArmiesPanel(m)) continue;
-    const d = getCatalogUnit(m.catalogUnitId);
-    if (d) s += d.points;
+    if (m.rosterLeaderId) s += rosterSpawnPoints(m.rosterLeaderId, m.catalogUnitId);
   }
   for (const m of largeMiniatures) {
     if (!m.spawnedFromArmyPanel || !m.catalogUnitId || !rosterPieceCountsForLocalArmiesPanel(m)) continue;
-    const d = getCatalogUnit(m.catalogUnitId);
-    if (d) s += d.points;
+    if (m.rosterLeaderId) s += rosterSpawnPoints(m.rosterLeaderId, m.catalogUnitId);
   }
   for (const m of hugeMiniatures) {
     if (!m.spawnedFromArmyPanel || !m.catalogUnitId || !rosterPieceCountsForLocalArmiesPanel(m)) continue;
-    const d = getCatalogUnit(m.catalogUnitId);
-    if (d) s += d.points;
+    if (m.rosterLeaderId) s += rosterSpawnPoints(m.rosterLeaderId, m.catalogUnitId);
   }
   return s;
 }

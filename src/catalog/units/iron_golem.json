@@ -1,0 +1,93 @@
+{
+  "id": "iron_golem",
+  "points": 95,
+  "card": {
+    "name": "Iron Golem",
+    "size": "big",
+    "health": 20,
+    "maxHealth": 20,
+    "defense": {
+      "white": 3,
+      "green": 2
+    },
+    "walk": 2,
+    "run": 4,
+    "sprite": "/Frame 118.png",
+    "domains": [
+      "destruction",
+      "creation"
+    ],
+    "concentration": {
+      "red": 2
+    },
+    "defenseReaction": {
+      "white": 2
+    },
+    "exploration": {
+      "white": 1,
+      "green": 1
+    },
+    "grabRange": 1,
+    "attacks": [
+      {
+        "name": "Stomp",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 5,
+        "dice": {
+          "red": 3,
+          "black": 1
+        },
+        "modifiers": [
+          {
+            "kind": "text",
+            "label": "AoE: all enemies in hexon"
+          },
+          {
+            "kind": "icon",
+            "label": "Stun",
+            "description": "Target skips next activation."
+          }
+        ]
+      },
+      {
+        "name": "Flame Breath",
+        "range": 3,
+        "attackRange": "ranged",
+        "damageType": "fire",
+        "damage": 4,
+        "dice": {
+          "red": 2,
+          "black": 1
+        },
+        "modifiers": [
+          {
+            "kind": "text",
+            "label": "Region AoE: cone 3 hexes"
+          }
+        ]
+      }
+    ],
+    "traits": [
+      {
+        "name": "Regenerate",
+        "description": "Heal 2 HP at the start of each turn."
+      },
+      {
+        "name": "Fortify",
+        "description": "If stationary, +2 white defense dice until next activation."
+      },
+      {
+        "name": "Last Stand",
+        "description": "When would die, roll 1 white die. On success: survive with 1 HP."
+      }
+    ],
+    "keywords": [
+      "Конструкт",
+      "Тяжёлый",
+      "Голем",
+      "Огонь"
+    ]
+  }
+}

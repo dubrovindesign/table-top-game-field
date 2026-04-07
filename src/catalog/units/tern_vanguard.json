@@ -1,0 +1,78 @@
+{
+  "id": "tern_vanguard",
+  "points": 55,
+  "card": {
+    "name": "Tern Vanguard",
+    "size": "small",
+    "health": 10,
+    "maxHealth": 10,
+    "defense": {
+      "white": 2,
+      "green": 1
+    },
+    "walk": 4,
+    "run": 7,
+    "sprite": "/tern-unit-1.jpg",
+    "domains": [
+      "destruction"
+    ],
+    "concentration": {
+      "red": 1
+    },
+    "defenseReaction": {
+      "white": 1
+    },
+    "exploration": {
+      "white": 1
+    },
+    "grabRange": 1,
+    "attacks": [
+      {
+        "name": "Sword Strike",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 3,
+        "dice": {
+          "red": 2
+        },
+        "modifiers": [
+          {
+            "kind": "icon",
+            "label": "Bleeding",
+            "description": "Target loses 1 HP at the start of each turn."
+          }
+        ]
+      },
+      {
+        "name": "Shield Bash",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 2,
+        "dice": {
+          "red": 1,
+          "green": 1
+        },
+        "modifiers": [
+          {
+            "kind": "text",
+            "label": "Pushback 1 hex"
+          }
+        ]
+      }
+    ],
+    "traits": [
+      {
+        "name": "Shield Wall",
+        "description": "+1 white defense die when adjacent to an ally."
+      }
+    ],
+    "keywords": [
+      "Человек",
+      "Воин",
+      "Меч",
+      "Порядок"
+    ]
+  }
+}

@@ -8,6 +8,7 @@ import {
 } from './boardSync.ts';
 import type { PlayerSlot, ServerToClientMessage, TableDragState } from './protocol.ts';
 import { RoomClient } from './roomClient.ts';
+import { createVoicePeer, type VoicePeer } from './voiceChat.ts';
 import {
   setTableDragOutboundActive,
   setTableDragOutboundTransport,
@@ -104,6 +105,26 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
         <input type="text" class="mp-invite-input-ingame" readonly />
         <button type="button" class="mp-btn mp-btn-primary" data-action="copy-again">Копировать ссылку</button>
       </div>
+      <div class="mp-voice-section mp-hidden">
+        <div class="mp-subtitle">Голос</div>
+        <p class="mp-hint mp-voice-insecure-hint mp-hidden" aria-live="polite"></p>
+        <p class="mp-hint mp-voice-status" aria-live="polite"></p>
+        <div class="mp-voice-device-row">
+          <label class="mp-voice-device-label"
+            >Микрофон
+            <select class="mp-voice-mic-device" data-action="voice-mic-device" aria-label="Выбор микрофона"></select>
+          </label>
+          <button type="button" class="mp-btn mp-btn-ghost mp-voice-refresh-mics" data-action="voice-refresh-mics">
+            Обновить список
+          </button>
+        </div>
+        <button type="button" class="mp-btn mp-btn-primary" data-action="voice-mic-on">Включить микрофон</button>
+        <button type="button" class="mp-btn mp-hidden" data-action="voice-mic-off">Выключить микрофон</button>
+        <button type="button" class="mp-btn mp-hidden" data-action="voice-unblock-play">
+          Включить воспроизведение собеседника
+        </button>
+        <label class="mp-voice-mute-label mp-hidden"><input type="checkbox" data-action="voice-mute" /> Заглушить мой голос</label>
+      </div>
       <button type="button" class="mp-btn mp-btn-danger" data-action="disconnect">Отключиться</button>
     </div>
   `;
@@ -132,6 +153,12 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
     document.body.appendChild(toolbarAnchor);
   }
   document.body.appendChild(joinGate);
+
+  const remoteVoiceAudio = document.createElement('audio');
+  remoteVoiceAudio.setAttribute('playsinline', '');
+  remoteVoiceAudio.autoplay = true;
+  remoteVoiceAudio.className = 'mp-voice-remote-audio';
+  document.body.appendChild(remoteVoiceAudio);
 
   toggleBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -182,6 +209,187 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
 
   let myId: string | null = null;
   let currentRoomId: string | null = null;
+  let myRole: 'player' | 'spectator' | null = null;
+  let myPlayerSlot: PlayerSlot | null = null;
+  /** Other seated players (by connection id), for voice host negotiation. */
+  const remoteSeatPlayerIds = new Set<string>();
+  /** Slot 1 never receives peerJoined for the host; cleared when host leaves (peerLeft). */
+  let hostPresentForSlot1Guest = false;
+  let voicePeer: VoicePeer | null = null;
+  let voiceUiError = '';
+  let remoteVoicePlayBlocked = false;
+
+  function syncVoiceInsecureHint(): void {
+    const el = root.querySelector('.mp-voice-insecure-hint') as HTMLElement;
+    if (!window.isSecureContext) {
+      el.classList.remove('mp-hidden');
+      el.textContent =
+        'С этой страницы (HTTP и не localhost) браузер обычно блокирует микрофон. Откройте игру по HTTPS или с этого компьютера через http://localhost. Для двух разных ПК в LAN поднимите HTTPS (например Caddy + mkcert) или задеплойте на хостинг с TLS.';
+    } else {
+      el.classList.add('mp-hidden');
+    }
+  }
+
+  async function refreshMicDeviceList(): Promise<void> {
+    if (!navigator.mediaDevices?.enumerateDevices) return;
+    try {
+      const list = await navigator.mediaDevices.enumerateDevices();
+      const inputs = list.filter((d) => d.kind === 'audioinput');
+      const sel = root.querySelector('.mp-voice-mic-device') as HTMLSelectElement;
+      const prev = sel.value;
+      sel.textContent = '';
+      const def = document.createElement('option');
+      def.value = '';
+      def.textContent = 'По умолчанию';
+      sel.appendChild(def);
+      for (const d of inputs) {
+        const o = document.createElement('option');
+        o.value = d.deviceId;
+        o.textContent =
+          d.label && d.label.length > 0
+            ? d.label
+            : `Микрофон (${d.deviceId.slice(0, 6)}…)`;
+        sel.appendChild(o);
+      }
+      if (prev && [...sel.options].some((opt) => opt.value === prev)) {
+        sel.value = prev;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function hasRemoteSeatPlayer(): boolean {
+    if (myPlayerSlot === 0) return remoteSeatPlayerIds.size > 0;
+    if (myPlayerSlot === 1) return hostPresentForSlot1Guest || remoteSeatPlayerIds.size > 0;
+    return false;
+  }
+
+  function syncVoiceSectionVisibility(): void {
+    const sec = root.querySelector('.mp-voice-section') as HTMLElement;
+    sec.classList.toggle('mp-hidden', myRole !== 'player');
+  }
+
+  function updateVoiceUi(): void {
+    syncVoiceSectionVisibility();
+    syncVoiceInsecureHint();
+    const statusEl = root.querySelector('.mp-voice-status') as HTMLElement;
+    const btnOn = root.querySelector('[data-action="voice-mic-on"]') as HTMLButtonElement;
+    const btnOff = root.querySelector('[data-action="voice-mic-off"]') as HTMLButtonElement;
+    const btnUnblock = root.querySelector(
+      '[data-action="voice-unblock-play"]',
+    ) as HTMLButtonElement;
+    const muteLabel = root.querySelector('.mp-voice-mute-label') as HTMLElement;
+    const muteInput = muteLabel.querySelector('input') as HTMLInputElement;
+    if (myRole !== 'player') return;
+
+    btnUnblock.classList.toggle('mp-hidden', !remoteVoicePlayBlocked);
+
+    if (!voicePeer || !voicePeer.hasLocalMic) {
+      statusEl.textContent =
+        voiceUiError ||
+        'Включите микрофон для разговора со вторым игроком (нужен доступ браузера).';
+      btnOn.classList.remove('mp-hidden');
+      btnOff.classList.add('mp-hidden');
+      muteLabel.classList.add('mp-hidden');
+      muteInput.checked = false;
+      return;
+    }
+
+    btnOn.classList.add('mp-hidden');
+    btnOff.classList.remove('mp-hidden');
+    muteLabel.classList.remove('mp-hidden');
+
+    if (voiceUiError) {
+      statusEl.textContent = voiceUiError;
+      return;
+    }
+
+    if (!hasRemoteSeatPlayer()) {
+      statusEl.textContent = 'Микрофон вкл. Ожидаем второго игрока за столом.';
+      return;
+    }
+
+    const cs = voicePeer.getConnectionState();
+    if (cs === 'connected') {
+      statusEl.textContent = remoteVoicePlayBlocked
+        ? 'Связь есть, но браузер заглушил звук. Нажмите «Включить воспроизведение собеседника».'
+        : 'Голосовая связь установлена.';
+    } else if (cs === 'connecting' || cs === 'new') {
+      statusEl.textContent = 'Подключение голоса…';
+    } else if (cs === 'failed' || cs === 'disconnected' || cs === 'closed') {
+      statusEl.textContent =
+        'Связь прервана. Выключите микрофон и включите снова или обновите страницу.';
+    } else {
+      statusEl.textContent = 'Микрофон вкл. Устанавливаем соединение…';
+    }
+  }
+
+  function getOrCreateVoicePeer(): VoicePeer | null {
+    if (myRole !== 'player' || myPlayerSlot === null || !myId) return null;
+    if (!voicePeer) {
+      voicePeer = createVoicePeer({
+        myId,
+        localPlayerSlot: myPlayerSlot,
+        send: (m) => {
+          client.send(m);
+        },
+        remoteAudio: remoteVoiceAudio,
+        hasRemotePlayer: hasRemoteSeatPlayer,
+        onRemotePlayBlocked: () => {
+          remoteVoicePlayBlocked = true;
+          updateVoiceUi();
+        },
+        onRemotePlaybackStarted: () => {
+          remoteVoicePlayBlocked = false;
+          updateVoiceUi();
+        },
+      });
+    }
+    return voicePeer;
+  }
+
+  function tearDownVoice(): void {
+    voicePeer?.dispose();
+    voicePeer = null;
+    voiceUiError = '';
+    remoteVoicePlayBlocked = false;
+    const muteInput = root.querySelector(
+      '.mp-voice-mute-label input',
+    ) as HTMLInputElement | null;
+    if (muteInput) muteInput.checked = false;
+    updateVoiceUi();
+  }
+
+  root.addEventListener('change', (e) => {
+    const t = e.target as HTMLElement;
+    if (t.matches('input[data-action="voice-mute"]')) {
+      voicePeer?.setMicMuted((t as HTMLInputElement).checked);
+      return;
+    }
+    if (t.matches('select[data-action="voice-mic-device"]')) {
+      const id = (t as HTMLSelectElement).value;
+      if (!voicePeer?.hasLocalMic) return;
+      void voicePeer.switchMicrophoneDevice(id || null).catch(() => {
+        voiceUiError = 'Не удалось переключить микрофон.';
+        updateVoiceUi();
+      });
+    }
+  });
+
+  let voiceStatePoll: ReturnType<typeof setInterval> | null = null;
+  function startVoiceStatePoll(): void {
+    if (voiceStatePoll !== null) return;
+    voiceStatePoll = window.setInterval(() => {
+      if (voicePeer?.hasLocalMic) updateVoiceUi();
+    }, 2000);
+  }
+  function stopVoiceStatePoll(): void {
+    if (voiceStatePoll !== null) {
+      clearInterval(voiceStatePoll);
+      voiceStatePoll = null;
+    }
+  }
   /** Set when user starts create/join; cleared on success or onClose. Used to explain silent WS failures. */
   let pendingWsIntent: 'create' | 'joinPlayer' | 'joinSpectator' | null = null;
   let roomResponseWatchdog: ReturnType<typeof setTimeout> | null = null;
@@ -292,6 +500,12 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
   }
 
   function stopTableSync(): void {
+    stopVoiceStatePoll();
+    tearDownVoice();
+    myRole = null;
+    myPlayerSlot = null;
+    remoteSeatPlayerIds.clear();
+    hostPresentForSlot1Guest = false;
     onViewPlayerSlot?.(null);
     setTableDragOutboundActive(false);
     setTableDragOutboundTransport(null);
@@ -326,6 +540,10 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       clearConnectStatus();
       myId = msg.yourId;
       currentRoomId = msg.roomId;
+      myRole = 'player';
+      myPlayerSlot = msg.playerSlot;
+      remoteSeatPlayerIds.clear();
+      hostPresentForSlot1Guest = false;
       setRoomInUrl(msg.roomId);
       show('ingame');
       root.querySelector('.mp-ingame-room')!.textContent =
@@ -334,6 +552,9 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       wireTableSync();
       onViewPlayerSlot?.(msg.playerSlot);
       pushBoardStateImmediate();
+      startVoiceStatePoll();
+      void refreshMicDeviceList().then(() => updateVoiceUi());
+      updateVoiceUi();
       return;
     }
     if (msg.type === 'joined') {
@@ -342,6 +563,11 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       clearConnectStatus();
       myId = msg.yourId;
       currentRoomId = msg.roomId;
+      myRole = msg.role;
+      myPlayerSlot = msg.playerSlot;
+      remoteSeatPlayerIds.clear();
+      hostPresentForSlot1Guest =
+        msg.role === 'player' && msg.playerSlot === 1;
       setRoomInUrl(msg.roomId);
       show('ingame');
       dismissJoinGate();
@@ -353,6 +579,13 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       fillIngameInvite();
       wireTableSync();
       onViewPlayerSlot?.(msg.role === 'spectator' ? null : msg.playerSlot);
+      if (msg.role === 'spectator') {
+        tearDownVoice();
+      } else {
+        startVoiceStatePoll();
+        void refreshMicDeviceList().then(() => updateVoiceUi());
+      }
+      updateVoiceUi();
       return;
     }
     if (msg.type === 'joinError') {
@@ -381,14 +614,34 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
     if (msg.type === 'peerLeft') {
       peerPointers.delete(msg.id);
       peerTableDragById.delete(msg.id);
+      if (msg.role === 'player') {
+        remoteSeatPlayerIds.delete(msg.id);
+      }
+      if (myPlayerSlot === 1 && msg.role === 'player' && msg.playerSlot === 0) {
+        hostPresentForSlot1Guest = false;
+      }
+      voicePeer?.resetSession();
+      updateVoiceUi();
       applyPointersToRenderer();
       applyPeerTableDragsToRenderer();
       return;
     }
     if (msg.type === 'peerJoined') {
       // Уже сидящие за столом повторно пушат снимок — подстраховка, если первый sync не дошёл.
+      if (msg.role === 'player' && msg.id !== myId) {
+        remoteSeatPlayerIds.add(msg.id);
+      }
+      if (
+        msg.role === 'player' &&
+        myRole === 'player' &&
+        myPlayerSlot === 0 &&
+        voicePeer?.hasLocalMic
+      ) {
+        void voicePeer.notifyHostShouldNegotiate().then(() => updateVoiceUi());
+      }
       pushBoardStateImmediate();
       scheduleRender();
+      updateVoiceUi();
       return;
     }
     if (msg.type === 'boardState') {
@@ -404,6 +657,16 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
         peerTableDragById.set(msg.fromId, msg.drag);
       }
       applyPeerTableDragsToRenderer();
+      return;
+    }
+    if (msg.type === 'webrtcSignal') {
+      if (myRole !== 'player') return;
+      const v = getOrCreateVoicePeer();
+      if (v) {
+        void v.onServerSignal(msg.fromId, msg.payload).catch((e) => {
+          console.warn('[mp] voice signal handler', e);
+        });
+      }
       return;
     }
     console.warn('[mp] неизвестный тип сообщения сервера', msg);
@@ -489,6 +752,61 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       history.replaceState(null, '', u.pathname + u.search + u.hash);
       dismissJoinGate();
       show('home');
+      return;
+    }
+    if (action === 'voice-mic-on') {
+      voiceUiError = '';
+      const v = getOrCreateVoicePeer();
+      if (!v) return;
+      const sel = root.querySelector('.mp-voice-mic-device') as HTMLSelectElement;
+      const deviceId = sel.value.length > 0 ? sel.value : undefined;
+      void v
+        .startMicrophone(deviceId)
+        .then(() => {
+          void refreshMicDeviceList().then(() => updateVoiceUi());
+          updateVoiceUi();
+        })
+        .catch((err: unknown) => {
+          const name =
+            err && typeof err === 'object' && 'name' in err
+              ? String((err as DOMException).name)
+              : '';
+          if (!window.isSecureContext) {
+            voiceUiError =
+              'Нужен HTTPS или localhost. По http://192.168… браузер не даст микрофон — задеплойте с TLS или поднимите локальный HTTPS.';
+          } else if (name === 'NotAllowedError') {
+            voiceUiError =
+              'Доступ к микрофону запрещён. Разрешите доступ в настройках сайта/браузера.';
+          } else if (name === 'NotFoundError') {
+            voiceUiError =
+              'Микрофон не найден. Обновите список устройств и выберите другой.';
+          } else {
+            voiceUiError = 'Не удалось включить микрофон.';
+          }
+          updateVoiceUi();
+        });
+      return;
+    }
+    if (action === 'voice-refresh-mics') {
+      void refreshMicDeviceList().then(() => updateVoiceUi());
+      return;
+    }
+    if (action === 'voice-unblock-play') {
+      void (async () => {
+        const v = getOrCreateVoicePeer();
+        const ok = v ? await v.tryPlayRemoteAudio() : await remoteVoiceAudio.play().then(() => true).catch(() => false);
+        if (ok) {
+          remoteVoicePlayBlocked = false;
+        } else {
+          voiceUiError = 'Браузер не разрешил воспроизведение. Попробуйте ещё раз.';
+        }
+        updateVoiceUi();
+      })();
+      return;
+    }
+    if (action === 'voice-mic-off') {
+      voiceUiError = '';
+      tearDownVoice();
       return;
     }
     if (action === 'copy-again') {

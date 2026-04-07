@@ -22,18 +22,17 @@ description: Maintains canonical army catalog data, domain vocabulary, and consi
 | Сущность | Канон в данных | Правило |
 |----------|----------------|---------|
 | Фракция | `src/catalog/factions.json` — поля `id`, `name` (как в UI вкладок), `domain`, `panelIconSrc` | `id` = каноничный ASCII-slug, совпадающий с basename `panelIconSrc` (напр. `/keld.webp` → `keld`). Не дублировать список фракций в TS. |
-| Лидер | `src/catalog/leaders.json` — `id`, `name`, `factionId`, `catalogUnitId`, `roster` | `name` лидера = то, что видит игрок; `catalogUnitId` указывает на запись в каталоге юнитов (миниатюра лидера). |
-| Юнит | `src/catalog/units/*.json` — верхний ключ = `unitId`, внутри `id` **должен совпадать** с ключом | `id`: `snake_case`, стабильный (сохранения/мультиплеер). `card.name`: отображаемое имя; править осознанно, без «двух правильных» вариантов. |
-| Ключевые слова | `card.keywords` | Английские теги для поиска в панели — не путать с каноном `name`/`faction name`. |
+| Лидер | `src/catalog/leaders.json` — `id`, `name`, `factionId`, `catalogUnitId`, опционально `points`, `roster` | `name` лидера = то, что видит игрок; `catalogUnitId` указывает на запись в каталоге юнитов (миниатюра лидера). `points` переопределяет стоимость лидера в лимите армии. |
+| Юнит | `src/catalog/units/<unit_id>.json` — **один юнит на файл**, корень = объект с полем `id` | `id`: `snake_case`, стабильный (сохранения/мультиплеер). Имя файла совпадает с `id`. `card.name`: отображаемое имя; править осознанно, без «двух правильных» вариантов. |
+| Ключевые слова | `card.keywords` | **Русские** теги (как на карточке); по ним же поиск в панели армии. |
 
 Перед мержем: **grep** по репозиторию на старое имя, если переименовываете юнита или фракцию.
 
 ## Добавление юнитов и способностей
 
-1. Новый или существующий файл под `src/catalog/units/`. Формат объекта: см. [reference.md](reference.md).
-2. Зарегистрировать импорт в **`src/catalog/index.ts`** в `mergeUnitRecords(...)`.
-3. Чтобы юнит был в панели армии — слот в **`leaders.json`**: `{ "unitId": "...", "maxCopies": N }`.
-4. Схема карточки (`UnitCardData` в `src/unitCard.ts`): `attacks[]` (имя, range, `attackRange`, `damageType`, `damage`, `dice`, опционально `modifiers`), `traits[]` (имя + описание). Новый **игровой эффект**, общий для нескольких юнитов: **одно и то же имя черты/модификатора** и по возможности то же описание — так проще искать и править правила массово.
+1. Новый файл **`src/catalog/units/<unit_id>.json`** (один юнит). Формат: см. [reference.md](reference.md). Регистрация автоматическая через `import.meta.glob` в **`src/catalog/index.ts`**.
+2. Чтобы юнит был в панели армии — слот в **`leaders.json`**: `{ "unitId": "...", "maxCopies": N }`, опционально `requiresUnitId`.
+3. Схема карточки (`UnitCardData` в `src/unitCard.ts`): `attacks[]` (в т.ч. опционально `etherCost`, `ethereal`, `areaAttack`, `attackRangeUnit`), поля плиток с эфиром (`concentrationEtherCost`, …), `traits[]`, опционально `flagSprite`, `faithMarkers`, `transformsIntoUnitId`. Новый **игровой эффект**, общий для нескольких юнитов: **одно и то же имя черты/модификатора** и по возможности то же описание — так проще искать и править правила массово.
 
 **Способности как «система»:** пока нет отдельного реестра ability-id в коде; каноничность = согласованные **строковые** `name` / `label` у атак и черт + данные в JSON. Если появится реестр эффектов — расширять его, а в каталоге ссылаться на id.
 
@@ -47,7 +46,7 @@ description: Maintains canonical army catalog data, domain vocabulary, and consi
 
 - [ ] Домены только `life` | `creation` | `death` | `destruction`.
 - [ ] Имена фракций/лидеров/юнитов сверены с JSON-каталогом, нет дубликата смысла под другим написанием.
-- [ ] Новый юнит: JSON + импорт в `catalog/index.ts` + при необходимости `leaders.json`.
+- [ ] Новый юнит: файл в `catalog/units/` + при необходимости `leaders.json` (без правки `import.meta.glob`).
 - [ ] Общее поведение — одна реализация по `size`/данным карточки, не форк по id.
 - [ ] После правок клиента для превью: `AGENTS.md` (build перед `vite preview`).
 
