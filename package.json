@@ -16,7 +16,8 @@
     "preview:mp": "npm run build && concurrently -n ws,preview -c blue,magenta \"tsx server/roomServer.ts\" \"vite preview --host\"",
     "preview:mp:open": "npm run build && concurrently -n ws,preview -c blue,magenta \"tsx server/roomServer.ts\" \"vite preview --host --open\"",
     "start:room": "tsx server/roomServer.ts",
-    "catalog:apply": "node scripts/apply-catalog-export.mjs"
+    "catalog:apply": "node scripts/apply-catalog-export.mjs",
+    "catalog:extract-images": "node scripts/extract-catalog-base64-images.mjs"
   },
   "dependencies": {
     "ws": "^8.18.3"
