@@ -159,6 +159,36 @@ export function createVoicePeer(opts: VoicePeerOptions) {
     sendPayload({ phase: 'answer', sdp: answer.sdp });
   }
 
+  /** Host (slot 0): guest sent a follow-up offer (mic after first answer, or ICE restart). */
+  async function onIncomingOfferAsHost(sdp: string): Promise<void> {
+    if (opts.localPlayerSlot !== 0) return;
+    const p = ensurePc();
+    await syncMicToSender();
+    await p.setRemoteDescription({ type: 'offer', sdp });
+    remoteDescSet = true;
+    flushIce();
+    const answer = await p.createAnswer();
+    await p.setLocalDescription(answer);
+    if (!answer.sdp) return;
+    sendPayload({ phase: 'answer', sdp: answer.sdp });
+  }
+
+  /**
+   * Guest (slot 1): after mic is enabled post-handshake, send a new offer so the host
+   * completes SDP/ICE (host previously ignored incoming offers; guest also ignored answers).
+   */
+  async function guestRenegotiateAfterMic(): Promise<void> {
+    if (opts.localPlayerSlot !== 1) return;
+    if (!localStream || !opts.hasRemotePlayer()) return;
+    const p = pc;
+    if (!p || p.signalingState !== 'stable') return;
+    await syncMicToSender();
+    const offer = await p.createOffer({ iceRestart: true });
+    await p.setLocalDescription(offer);
+    if (!offer.sdp) return;
+    sendPayload({ phase: 'offer', sdp: offer.sdp });
+  }
+
   async function replaceMicrophoneDevice(deviceId: string | null): Promise<void> {
     if (!localStream) return;
     const audioConstraints: MediaTrackConstraints | boolean =
@@ -176,6 +206,7 @@ export function createVoicePeer(opts: VoicePeerOptions) {
     applyMutedToLocalTracks();
     await syncMicToSender();
     if (opts.localPlayerSlot === 0) await hostNegotiate();
+    if (opts.localPlayerSlot === 1) await guestRenegotiateAfterMic();
   }
 
   return {
@@ -194,6 +225,7 @@ export function createVoicePeer(opts: VoicePeerOptions) {
         } else {
           await syncMicToSender();
           if (opts.localPlayerSlot === 0) await hostNegotiate();
+          if (opts.localPlayerSlot === 1) await guestRenegotiateAfterMic();
         }
         return;
       }
@@ -204,6 +236,7 @@ export function createVoicePeer(opts: VoicePeerOptions) {
       applyMutedToLocalTracks();
       await syncMicToSender();
       if (opts.localPlayerSlot === 0) await hostNegotiate();
+      if (opts.localPlayerSlot === 1) await guestRenegotiateAfterMic();
     },
 
     switchMicrophoneDevice(deviceId: string | null): Promise<void> {
@@ -236,14 +269,14 @@ export function createVoicePeer(opts: VoicePeerOptions) {
 
       if (payload.phase === 'offer') {
         if (opts.localPlayerSlot === 0) {
-          return;
+          await onIncomingOfferAsHost(payload.sdp);
+        } else {
+          await onOffer(payload.sdp);
         }
-        await onOffer(payload.sdp);
         return;
       }
 
       if (payload.phase === 'answer') {
-        if (opts.localPlayerSlot !== 0) return;
         if (!pc) return;
         await pc.setRemoteDescription({ type: 'answer', sdp: payload.sdp });
         remoteDescSet = true;
