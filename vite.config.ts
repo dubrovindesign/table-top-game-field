@@ -57,6 +57,8 @@ export default defineConfig({
         ],
       },
       workbox: {
+        /** Catalog JSON can inline card art (base64), inflating the main JS chunk past Workbox’s 2 MiB default. */
+        maximumFileSizeToCacheInBytes: 12 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,svg,woff2}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/__mp_ws/],

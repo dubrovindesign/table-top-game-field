@@ -4,6 +4,7 @@
  */
 
 import { CATALOG_UNITS, LEADERS } from './index';
+import { getStaticHotspotForUnit } from './staticHotspots';
 import type { CatalogUnitDef, LeaderDef, RosterSlotDef } from './types';
 import type { HotspotFile } from './hotspotTypes';
 import type { UnitCardData } from '../unitCard';
@@ -257,7 +258,8 @@ export function getMergedLeadersForFaction(factionId: string): LeaderDef[] {
 }
 
 export function getHotspotsForUnit(unitId: string): HotspotFile | undefined {
-  return getCatalogOverrides().hotspots[unitId];
+  const o = getCatalogOverrides();
+  return o.hotspots[unitId] ?? getStaticHotspotForUnit(unitId);
 }
 
 export function setHotspotsForUnit(unitId: string, file: HotspotFile | undefined): void {

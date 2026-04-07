@@ -4,8 +4,11 @@
  * - newUnits + unitPatches → src/catalog/units/<id>.json (same merge rules as catalogOverrides.getMergedCatalogUnit)
  * - newLeaders + rosterAdditions + rosterSlotPatches + leaderPatches + hiddenLeaderIds
  *   → src/catalog/leaders.json (same merge rules as catalogOverrides.getMergedLeader)
+ * - hotspots → src/catalog/hotspots/<unitId>.json (loaded at build time; localStorage overrides still win)
  *
- * Usage: npm run catalog:apply -- <overrides.json>
+ * Usage:
+ *   npm run catalog:apply -- <overrides.json>
+ *   npm run catalog:apply -- --dry-run <overrides.json>
  */
 
 import fs from 'node:fs/promises';
@@ -13,10 +16,39 @@ import path from 'node:path';
 
 const repoRoot = process.cwd();
 const unitsDir = path.join(repoRoot, 'src', 'catalog', 'units');
+const hotspotsDir = path.join(repoRoot, 'src', 'catalog', 'hotspots');
 const leadersPath = path.join(repoRoot, 'src', 'catalog', 'leaders.json');
 
-function usage() {
-  console.error('Usage: npm run catalog:apply -- <overrides.json>');
+function printHelp() {
+  console.log(`Apply catalog editor export into src/catalog (units, leaders, hotspots).
+
+Usage:
+  node scripts/apply-catalog-export.mjs <overrides.json>
+  node scripts/apply-catalog-export.mjs --dry-run <overrides.json>
+
+  npm run catalog:apply -- <overrides.json>
+  npm run catalog:apply -- --dry-run <overrides.json>
+
+Options:
+  --dry-run   Print actions without writing files
+  -h, --help  Show this message
+`);
+}
+
+function parseArgs(argv) {
+  let dryRun = false;
+  let help = false;
+  const positional = [];
+  for (const a of argv) {
+    if (a === '--dry-run') dryRun = true;
+    else if (a === '-h' || a === '--help') help = true;
+    else if (a.startsWith('-')) {
+      throw new Error(`Unknown option: ${a}`);
+    } else {
+      positional.push(a);
+    }
+  }
+  return { dryRun, help, inputPath: positional[0] };
 }
 
 async function readJson(filePath) {
@@ -84,13 +116,13 @@ function applySlotPatch(slot, patch) {
   return merged;
 }
 
-async function applyUnits(overrides) {
+async function applyUnits(overrides, dryRun) {
   const newUnits = overrides.newUnits ?? {};
   const unitPatches = overrides.unitPatches ?? {};
   const ids = new Set([...Object.keys(newUnits), ...Object.keys(unitPatches)]);
   if (ids.size === 0) return;
 
-  await fs.mkdir(unitsDir, { recursive: true });
+  if (!dryRun) await fs.mkdir(unitsDir, { recursive: true });
   for (const unitId of Array.from(ids).sort()) {
     let base = newUnits[unitId];
     if (base === undefined) {
@@ -107,12 +139,16 @@ async function applyUnits(overrides) {
     const merged = Object.keys(patch).length === 0 ? base : deepMerge(base, patch);
     const filePath = path.join(unitsDir, `${unitId}.json`);
     const payload = JSON.stringify(sortKeys(merged), null, 2) + '\n';
-    await fs.writeFile(filePath, payload, 'utf8');
-    console.log(`Wrote unit: src/catalog/units/${unitId}.json`);
+    if (dryRun) {
+      console.log(`[dry-run] would write src/catalog/units/${unitId}.json`);
+    } else {
+      await fs.writeFile(filePath, payload, 'utf8');
+      console.log(`Wrote unit: src/catalog/units/${unitId}.json`);
+    }
   }
 }
 
-async function applyLeaders(overrides) {
+async function applyLeaders(overrides, dryRun) {
   const hiddenLeaderIds = new Set(
     Array.isArray(overrides.hiddenLeaderIds) ? overrides.hiddenLeaderIds.filter((id) => typeof id === 'string') : [],
   );
@@ -164,34 +200,65 @@ async function applyLeaders(overrides) {
     mergedLeaders.push(out);
   }
 
-  await fs.writeFile(leadersPath, JSON.stringify(mergedLeaders, null, 2) + '\n', 'utf8');
-  console.log(`Wrote ${mergedLeaders.length} leaders to src/catalog/leaders.json`);
+  const payload = JSON.stringify(mergedLeaders, null, 2) + '\n';
+  if (dryRun) {
+    console.log(`[dry-run] would write ${mergedLeaders.length} leaders to src/catalog/leaders.json`);
+  } else {
+    await fs.writeFile(leadersPath, payload, 'utf8');
+    console.log(`Wrote ${mergedLeaders.length} leaders to src/catalog/leaders.json`);
+  }
+}
+
+async function applyHotspots(overrides, dryRun) {
+  const hotspots = overrides.hotspots && typeof overrides.hotspots === 'object' ? overrides.hotspots : {};
+  const ids = Object.keys(hotspots);
+  if (ids.length === 0) return;
+
+  if (!dryRun) await fs.mkdir(hotspotsDir, { recursive: true });
+  for (const unitId of ids.sort()) {
+    const file = hotspots[unitId];
+    if (!file || typeof file !== 'object') {
+      console.warn(`[catalog:apply] skip invalid hotspot for "${unitId}"`);
+      continue;
+    }
+    const rel = `src/catalog/hotspots/${unitId}.json`;
+    const payload = JSON.stringify(sortKeys(file), null, 2) + '\n';
+    const filePath = path.join(hotspotsDir, `${unitId}.json`);
+    if (dryRun) {
+      console.log(`[dry-run] would write ${rel}`);
+    } else {
+      await fs.writeFile(filePath, payload, 'utf8');
+      console.log(`Wrote hotspot: ${rel}`);
+    }
+  }
 }
 
 async function main() {
-  const inputPath = process.argv[2];
+  const { dryRun, help, inputPath } = parseArgs(process.argv.slice(2));
+  if (help) {
+    printHelp();
+    process.exit(0);
+  }
   if (!inputPath) {
-    usage();
+    printHelp();
     process.exit(1);
   }
+
   const absoluteInput = path.isAbsolute(inputPath) ? inputPath : path.join(repoRoot, inputPath);
   const overrides = await readJson(absoluteInput);
   if (!overrides || overrides.version !== 1) {
     throw new Error('Expected overrides JSON with "version": 1');
   }
 
-  await applyUnits(overrides);
-  await applyLeaders(overrides);
-
-  const hasHotspots =
-    overrides.hotspots && typeof overrides.hotspots === 'object' && Object.keys(overrides.hotspots).length > 0;
-  if (hasHotspots) {
-    console.warn(
-      '[catalog:apply] hotspots in export are not written to disk (app reads them from localStorage / future: public/card-hotspots/).',
-    );
+  if (dryRun) {
+    console.log('[dry-run] no files will be written.\n');
   }
 
-  console.log('Catalog export applied. Run npm run build before deploy.');
+  await applyUnits(overrides, dryRun);
+  await applyLeaders(overrides, dryRun);
+  await applyHotspots(overrides, dryRun);
+
+  console.log(dryRun ? 'Dry run finished. Remove --dry-run to apply.' : 'Catalog export applied. Run npm run build before deploy.');
 }
 
 main().catch((err) => {

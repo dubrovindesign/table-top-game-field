@@ -1,1 +1,15 @@
-[]
+[
+  {
+    "id": "kellantra-with-lindwurm",
+    "name": "Келлантра с Линдвурмом",
+    "factionId": "keld",
+    "catalogUnitId": "kellantra-with-lindwurm",
+    "roster": [
+      {
+        "unitId": "defender_seedlings",
+        "maxCopies": 1
+      }
+    ],
+    "points": 70
+  }
+]
