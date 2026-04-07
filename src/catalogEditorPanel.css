@@ -456,6 +456,78 @@
   color: #8a8a98;
 }
 
+.ce-hs-range-row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.ce-hs-range-row .catalog-editor-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.ce-hs-range-unit {
+  flex: 0 0 auto;
+  min-width: 6.5rem;
+}
+
+.ce-hs-field--dice-row {
+  grid-column: 1 / -1;
+}
+
+.ce-hs-dice-inputs {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.ce-hs-dice-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.ce-hs-dice-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.ce-hs-dice-num {
+  width: 3.25rem;
+  min-width: 0;
+}
+
+.ce-hs-preset-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.ce-hs-preset-select {
+  width: 100%;
+}
+
+.ce-hs-save-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: stretch;
+  margin-bottom: 10px;
+}
+
+.ce-hs-save-row .catalog-editor-btn:first-child {
+  flex: 1;
+  min-width: min(100%, 220px);
+}
+
 .catalog-editor-split {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -888,4 +960,33 @@
   padding: 12px 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
+}
+
+/* Сохранение пресета раскладки хот-спотов — поверх модалки юнита */
+.ce-hotspot-preset-save-backdrop {
+  z-index: 10070;
+}
+
+.ce-modal.ce-modal--preset-save {
+  width: min(400px, 100%);
+  max-height: min(60vh, 420px);
+}
+
+.ce-hotspot-preset-save-body {
+  gap: 12px;
+}
+
+.ce-hotspot-preset-save-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.ce-hotspot-preset-save-cb {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
 }

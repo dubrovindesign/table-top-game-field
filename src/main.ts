@@ -883,7 +883,8 @@ function computeSmallAttackHexes(from: Hex, attackRange: number): Hex[] {
   return out;
 }
 
-function computeBigMiniAttackHexonCenters(bigIndex: number, attackRange: number): Hex[] {
+/** BFS in hexon-center space (same steps as big-mini attack / movement). */
+function computeHexonReachFromCenter(start: Hex, attackRange: number): Hex[] {
   const r = Math.max(0, attackRange);
   if (r === 0) return [];
   const BIG_HEX_DIRECTIONS = [
@@ -894,9 +895,8 @@ function computeBigMiniAttackHexonCenters(bigIndex: number, attackRange: number)
     new Hex(-1, -2),
     new Hex(2, -3),
   ];
-  const selected = bigMiniatures[bigIndex];
-  const visited = new Map<string, number>([[selected.center.key, 0]]);
-  const queue: Hex[] = [selected.center];
+  const visited = new Map<string, number>([[start.key, 0]]);
+  const queue: Hex[] = [start];
   const hexonCenterKeys = new Set(allHexonCenters.map((center) => center.key));
 
   while (queue.length > 0) {
@@ -920,6 +920,14 @@ function computeBigMiniAttackHexonCenters(bigIndex: number, attackRange: number)
     if (distance <= r) out.push(center);
   }
   return out;
+}
+
+function computeBigMiniAttackHexonCenters(bigIndex: number, attackRange: number): Hex[] {
+  return computeHexonReachFromCenter(bigMiniatures[bigIndex].center, attackRange);
+}
+
+function attackHighlightUsesHexonDistance(attk: AttackAbility): boolean {
+  return attk.attackRangeUnit === 'hexon';
 }
 
 function computeHugeMiniAttackHexonCenters(hugeIndex: number, attackRange: number): Hex[] {
@@ -965,27 +973,57 @@ function updateAttackRangeHighlights(): void {
   }
   if (who.kind === 'small') {
     const from = units[who.index].position;
-    renderer.setAttackRangeOverlay(computeSmallAttackHexes(from, atk.range), []);
+    if (attackHighlightUsesHexonDistance(atk)) {
+      const start = hexonCenterOwningSmallHex(from);
+      if (!start) {
+        renderer.setAttackRangeOverlay([], []);
+        return;
+      }
+      renderer.setAttackRangeOverlay([], computeHexonReachFromCenter(start, atk.range));
+    } else {
+      renderer.setAttackRangeOverlay(computeSmallAttackHexes(from, atk.range), []);
+    }
   } else if (who.kind === 'big') {
     renderer.setAttackRangeOverlay([], computeBigMiniAttackHexonCenters(who.index, atk.range));
   } else if (who.kind === 'large') {
     const m = largeMiniatures[who.index];
     const cells = largeMiniFootprint(m);
-    const allHexes = new Set<string>();
-    for (const cell of cells) {
-      for (const h of computeSmallAttackHexes(cell, atk.range)) {
-        allHexes.add(h.key);
-      }
-    }
     const footprintKeys = new Set(cells.map((c) => c.key));
-    const result: Hex[] = [];
-    for (const key of allHexes) {
-      if (!footprintKeys.has(key)) {
-        const [q, r] = key.split(',').map(Number);
-        result.push(new Hex(q, r));
+    if (attackHighlightUsesHexonDistance(atk)) {
+      const startCenters = new Set<string>();
+      for (const cell of cells) {
+        const hc = hexonCenterOwningSmallHex(cell);
+        if (hc) startCenters.add(hc.key);
       }
+      const allHexonKeys = new Set<string>();
+      for (const key of startCenters) {
+        const [q, r] = key.split(',').map(Number);
+        for (const c of computeHexonReachFromCenter(new Hex(q, r), atk.range)) {
+          allHexonKeys.add(c.key);
+        }
+      }
+      const outHexons: Hex[] = [];
+      for (const k of allHexonKeys) {
+        const [q, r] = k.split(',').map(Number);
+        outHexons.push(new Hex(q, r));
+      }
+      renderer.setAttackRangeOverlay([], outHexons);
+    } else {
+      const allHexes = new Set<string>();
+      for (const cell of cells) {
+        for (const h of computeSmallAttackHexes(cell, atk.range)) {
+          allHexes.add(h.key);
+        }
+      }
+      const result: Hex[] = [];
+      for (const key of allHexes) {
+        if (!footprintKeys.has(key)) {
+          const [q, r] = key.split(',').map(Number);
+          result.push(new Hex(q, r));
+        }
+      }
+      renderer.setAttackRangeOverlay(result, []);
     }
-    renderer.setAttackRangeOverlay(result, []);
   } else if (who.kind === 'huge') {
     renderer.setAttackRangeOverlay([], computeHugeMiniAttackHexonCenters(who.index, atk.range));
   }

@@ -111,9 +111,11 @@ export interface UnitCardData {
   explorationRange?: number;
   /**
    * Max distance for “take / pick up” interactions.
-   * Display uses hexes for small & large, hexons for big & huge (same as walk/run).
+   * Display unit: `grabRangeUnit`, or by default hex for small/large, hexon for big/huge (same rule as walk/run without override).
    */
   grabRange?: number;
+  /** Явная единица для «взять»; без поля — гекс для малой/large, гексон для big/huge. */
+  grabRangeUnit?: 'hex' | 'hexon';
   /** Optional ether cost on the «взять» tile. */
   grabEtherCost?: EtherCrystalPool;
   /** Attack abilities */
@@ -277,6 +279,12 @@ function attackRangeDistanceUnit(data: UnitCardData, atk: AttackAbility): 'hex' 
   return movementDistanceUnit(data);
 }
 
+function grabRangeDistanceUnit(data: UnitCardData): 'hex' | 'hexon' {
+  if (data.grabRangeUnit === 'hex') return 'hex';
+  if (data.grabRangeUnit === 'hexon') return 'hexon';
+  return data.size === 'big' || data.size === 'huge' ? 'hexon' : 'hex';
+}
+
 /** Range in hexes/hexons: outline icon with the number centered inside. */
 function appendDistanceBadge(parent: HTMLElement, value: number, unit: 'hex' | 'hexon'): void {
   const wrap = el('span', `uc-distance-badge uc-distance-badge--${unit}`);
@@ -430,6 +438,7 @@ export class UnitCard {
       damageType: 'physical',
       damage: r.damage ?? 0,
       dice: pool,
+      ...(r.rangeUnit ? { attackRangeUnit: r.rangeUnit } : {}),
     };
   }
 
@@ -698,7 +707,7 @@ export class UnitCard {
     takeInfo.appendChild(el('span', 'uc-stat-label', 'Взять'));
     const takeVal = el('span', 'uc-stat-value');
     if (data.grabRange != null && data.grabRange >= 0) {
-      appendDistanceBadge(takeVal, data.grabRange, moveUnit);
+      appendDistanceBadge(takeVal, data.grabRange, grabRangeDistanceUnit(data));
     } else {
       takeVal.appendChild(document.createTextNode('—'));
     }

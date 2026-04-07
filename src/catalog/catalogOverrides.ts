@@ -6,7 +6,7 @@
 import { CATALOG_UNITS, LEADERS } from './index';
 import { getStaticHotspotForUnit } from './staticHotspots';
 import type { CatalogUnitDef, LeaderDef, RosterSlotDef } from './types';
-import type { HotspotFile } from './hotspotTypes';
+import type { HotspotFile, HotspotLayoutBox, HotspotLayoutPreset } from './hotspotTypes';
 import type { UnitCardData } from '../unitCard';
 
 export const CATALOG_OVERRIDES_STORAGE_KEY = 'hexBoard_catalogOverrides_v1';
@@ -25,12 +25,18 @@ export type CatalogOverridesV1 = {
   newUnits: Record<string, CatalogUnitDef>;
   newLeaders: Record<string, LeaderDef>;
   hiddenLeaderIds: string[];
+  /** Статические id из `CATALOG_UNITS`, скрытые через «удалить» в редакторе (как hiddenLeaderIds). */
+  hiddenUnitIds: string[];
   rosterAdditions: Record<string, RosterSlotDef[]>;
   /** Static leaders only: override `points` for the leader miniature. */
   leaderPatches: Record<string, LeaderPointsPatch>;
   /** Static leaders only: per-slot overrides merged after base roster + additions. */
   rosterSlotPatches: Record<string, Record<string, RosterSlotFieldPatch>>;
   hotspots: Record<string, HotspotFile>;
+  /** Именованные пресеты только раскладки зон (доли x,y,w,h). */
+  hotspotLayoutPresets: HotspotLayoutPreset[];
+  /** id из `hotspotLayoutPresets` — подставлять раскладку при создании нового юнита. */
+  defaultHotspotLayoutPresetId: string | null;
 };
 
 function emptyOverrides(): CatalogOverridesV1 {
@@ -40,10 +46,13 @@ function emptyOverrides(): CatalogOverridesV1 {
     newUnits: {},
     newLeaders: {},
     hiddenLeaderIds: [],
+    hiddenUnitIds: [],
     rosterAdditions: {},
     leaderPatches: {},
     rosterSlotPatches: {},
     hotspots: {},
+    hotspotLayoutPresets: [],
+    defaultHotspotLayoutPresetId: null,
   };
 }
 
@@ -65,6 +74,7 @@ export function loadCatalogOverridesFromStorage(): CatalogOverridesV1 {
     if (!raw) return emptyOverrides();
     const o = JSON.parse(raw) as Partial<CatalogOverridesV1>;
     if (o.version !== 1 || typeof o !== 'object' || o === null) return emptyOverrides();
+    const hotspotLayoutPresets = normalizeHotspotLayoutPresets(o.hotspotLayoutPresets);
     return {
       version: 1,
       unitPatches: (o.unitPatches && typeof o.unitPatches === 'object' ? o.unitPatches : {}) as Record<
@@ -82,6 +92,9 @@ export function loadCatalogOverridesFromStorage(): CatalogOverridesV1 {
       hiddenLeaderIds: Array.isArray(o.hiddenLeaderIds)
         ? o.hiddenLeaderIds.filter((id): id is string => typeof id === 'string')
         : [],
+      hiddenUnitIds: Array.isArray(o.hiddenUnitIds)
+        ? o.hiddenUnitIds.filter((id): id is string => typeof id === 'string')
+        : [],
       rosterAdditions: (o.rosterAdditions && typeof o.rosterAdditions === 'object'
         ? o.rosterAdditions
         : {}) as Record<string, RosterSlotDef[]>,
@@ -96,10 +109,48 @@ export function loadCatalogOverridesFromStorage(): CatalogOverridesV1 {
         string,
         HotspotFile
       >,
+      hotspotLayoutPresets,
+      defaultHotspotLayoutPresetId: normalizeDefaultHotspotLayoutPresetId(
+        o.defaultHotspotLayoutPresetId,
+        hotspotLayoutPresets,
+      ),
     };
   } catch {
     return emptyOverrides();
   }
+}
+
+function normalizeDefaultHotspotLayoutPresetId(
+  raw: unknown,
+  presets: HotspotLayoutPreset[],
+): string | null {
+  if (typeof raw !== 'string' || raw.length === 0) return null;
+  return presets.some((p) => p.id === raw) ? raw : null;
+}
+
+function normalizeHotspotLayoutPresets(raw: unknown): HotspotLayoutPreset[] {
+  if (!Array.isArray(raw)) return [];
+  const out: HotspotLayoutPreset[] = [];
+  for (const p of raw) {
+    if (!p || typeof p !== 'object') continue;
+    const id = (p as { id?: unknown }).id;
+    const name = (p as { name?: unknown }).name;
+    const regions = (p as { regions?: unknown }).regions;
+    if (typeof id !== 'string' || typeof name !== 'string' || !Array.isArray(regions)) continue;
+    const boxes: HotspotLayoutBox[] = [];
+    for (const r of regions) {
+      if (!r || typeof r !== 'object') continue;
+      const x = Number((r as { x?: unknown }).x);
+      const y = Number((r as { y?: unknown }).y);
+      const w = Number((r as { w?: unknown }).w);
+      const h = Number((r as { h?: unknown }).h);
+      if (![x, y, w, h].every((n) => Number.isFinite(n))) continue;
+      boxes.push({ x, y, w, h });
+    }
+    if (boxes.length === 0) continue;
+    out.push({ id, name, regions: boxes });
+  }
+  return out;
 }
 
 export function saveCatalogOverrides(overrides: CatalogOverridesV1): void {
@@ -130,6 +181,7 @@ export function importCatalogOverridesJson(text: string): { ok: true } | { ok: f
   try {
     const o = JSON.parse(text) as Partial<CatalogOverridesV1>;
     if (o.version !== 1) return { ok: false, error: 'Ожидается version: 1' };
+    const hotspotLayoutPresets = normalizeHotspotLayoutPresets(o.hotspotLayoutPresets);
     const merged: CatalogOverridesV1 = {
       version: 1,
       unitPatches: (o.unitPatches ?? {}) as Record<string, Partial<CatalogUnitDef>>,
@@ -138,16 +190,52 @@ export function importCatalogOverridesJson(text: string): { ok: true } | { ok: f
       hiddenLeaderIds: Array.isArray(o.hiddenLeaderIds)
         ? o.hiddenLeaderIds.filter((id): id is string => typeof id === 'string')
         : [],
+      hiddenUnitIds: Array.isArray(o.hiddenUnitIds)
+        ? o.hiddenUnitIds.filter((id): id is string => typeof id === 'string')
+        : [],
       rosterAdditions: (o.rosterAdditions ?? {}) as Record<string, RosterSlotDef[]>,
       leaderPatches: (o.leaderPatches ?? {}) as Record<string, LeaderPointsPatch>,
       rosterSlotPatches: (o.rosterSlotPatches ?? {}) as Record<string, Record<string, RosterSlotFieldPatch>>,
       hotspots: (o.hotspots ?? {}) as Record<string, HotspotFile>,
+      hotspotLayoutPresets,
+      defaultHotspotLayoutPresetId: normalizeDefaultHotspotLayoutPresetId(
+        o.defaultHotspotLayoutPresetId,
+        hotspotLayoutPresets,
+      ),
     };
     saveCatalogOverrides(merged);
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
+}
+
+function cloneOverrides(): CatalogOverridesV1 {
+  return JSON.parse(JSON.stringify(getCatalogOverrides())) as CatalogOverridesV1;
+}
+
+/** Сохранить или перезаписать пресет раскладки по имени (только x,y,w,h). */
+export function upsertHotspotLayoutPreset(name: string, regions: HotspotLayoutBox[]): HotspotLayoutPreset {
+  const trimmed = name.trim();
+  const o = cloneOverrides();
+  o.hotspotLayoutPresets = o.hotspotLayoutPresets ?? [];
+  const list = [...o.hotspotLayoutPresets];
+  const idx = list.findIndex((p) => p.name === trimmed);
+  const id = idx >= 0 ? list[idx]!.id : `hlp_${Date.now()}`;
+  const preset: HotspotLayoutPreset = { id, name: trimmed, regions };
+  if (idx >= 0) list[idx] = preset;
+  else list.push(preset);
+  o.hotspotLayoutPresets = list;
+  saveCatalogOverrides(o);
+  return preset;
+}
+
+/** Пресет по умолчанию для вкладки хот-спотов при создании нового юнита (`null` — нет). */
+export function setDefaultHotspotLayoutPresetId(id: string | null): void {
+  const o = cloneOverrides();
+  o.hotspotLayoutPresets = o.hotspotLayoutPresets ?? [];
+  o.defaultHotspotLayoutPresetId = normalizeDefaultHotspotLayoutPresetId(id, o.hotspotLayoutPresets);
+  saveCatalogOverrides(o);
 }
 
 /** Deep-merge plain objects; arrays and primitives from patch replace. */
@@ -182,16 +270,22 @@ function mergeCatalogUnitDef(base: CatalogUnitDef, patch: Partial<CatalogUnitDef
  */
 export function getMergedCatalogUnit(unitId: string): CatalogUnitDef | undefined {
   const o = getCatalogOverrides();
-  const staticU = CATALOG_UNITS[unitId];
   const nu = o.newUnits[unitId];
-  let def: CatalogUnitDef | undefined;
   if (nu) {
-    def = structuredClone(nu);
-  } else if (staticU) {
-    def = structuredClone(staticU);
-  } else {
+    let def = structuredClone(nu);
+    const patch = o.unitPatches[unitId];
+    if (patch && Object.keys(patch).length > 0) {
+      def = mergeCatalogUnitDef(def, patch);
+    }
+    def.card = { ...def.card, catalogUnitId: unitId };
+    return def;
+  }
+  if (o.hiddenUnitIds.includes(unitId)) {
     return undefined;
   }
+  const staticU = CATALOG_UNITS[unitId];
+  if (!staticU) return undefined;
+  let def = structuredClone(staticU);
   const patch = o.unitPatches[unitId];
   if (patch && Object.keys(patch).length > 0) {
     def = mergeCatalogUnitDef(def, patch);
@@ -231,6 +325,7 @@ export function getMergedLeader(leaderId: string): LeaderDef | undefined {
       return merged as RosterSlotDef;
     });
   }
+  roster = roster.filter((s) => getMergedCatalogUnit(s.unitId) != null);
   let out: LeaderDef = { ...base, roster };
   if (!o.newLeaders[leaderId]) {
     const lp = o.leaderPatches[leaderId];
@@ -258,6 +353,7 @@ export function getMergedLeadersForFaction(factionId: string): LeaderDef[] {
 }
 
 export function getHotspotsForUnit(unitId: string): HotspotFile | undefined {
+  if (!getMergedCatalogUnit(unitId)) return undefined;
   const o = getCatalogOverrides();
   return o.hotspots[unitId] ?? getStaticHotspotForUnit(unitId);
 }
@@ -288,6 +384,7 @@ export function setNewUnit(unitId: string, def: CatalogUnitDef | undefined): voi
     delete o.newUnits[unitId];
   } else {
     o.newUnits[unitId] = def;
+    o.hiddenUnitIds = o.hiddenUnitIds.filter((id) => id !== unitId);
   }
   saveCatalogOverrides(o);
 }
@@ -426,7 +523,8 @@ export function listNewUnitIds(): string[] {
 
 export function listAllUnitIds(): string[] {
   const o = getCatalogOverrides();
-  return Array.from(new Set([...Object.keys(CATALOG_UNITS), ...Object.keys(o.newUnits)])).sort();
+  const staticIds = Object.keys(CATALOG_UNITS).filter((id) => !o.hiddenUnitIds.includes(id));
+  return Array.from(new Set([...staticIds, ...Object.keys(o.newUnits)])).sort();
 }
 
 export function listNewLeaderIds(): string[] {
@@ -451,6 +549,11 @@ export function removeUnitEverywhere(unitId: string): void {
       delete o.rosterSlotPatches[lid][unitId];
       if (Object.keys(o.rosterSlotPatches[lid]).length === 0) delete o.rosterSlotPatches[lid];
     }
+  }
+  if (CATALOG_UNITS[unitId]) {
+    if (!o.hiddenUnitIds.includes(unitId)) o.hiddenUnitIds.push(unitId);
+  } else {
+    o.hiddenUnitIds = o.hiddenUnitIds.filter((id) => id !== unitId);
   }
   saveCatalogOverrides(o);
 }

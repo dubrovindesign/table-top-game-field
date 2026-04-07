@@ -4,7 +4,6 @@
 
 import './catalogEditorPanel.css';
 
-import { CATALOG_UNITS } from './catalog';
 import {
   addRosterSlot,
   CATALOG_OVERRIDES_CHANGED,
@@ -27,9 +26,16 @@ import {
   setNewUnit,
   setRosterSlotPatch,
   setUnitPatch,
+  setDefaultHotspotLayoutPresetId,
+  upsertHotspotLayoutPreset,
 } from './catalog/catalogOverrides';
 import { getStaticHotspotForUnit } from './catalog/staticHotspots';
-import type { HotspotFile, HotspotRegion } from './catalog/hotspotTypes';
+import {
+  applyHotspotLayoutBoxesToRegions,
+  DEFAULT_HOTSPOT_LAYOUT_PRESET_REGIONS,
+  type HotspotFile,
+  type HotspotRegion,
+} from './catalog/hotspotTypes';
 import type { CatalogUnitDef, FactionDef, LeaderDef, RosterSlotDef } from './catalog/types';
 import {
   FACTIONS,
@@ -292,6 +298,7 @@ export class CatalogEditorPanel {
   private cardExpW!: HTMLInputElement;
   private cardExplorationRange!: HTMLInputElement;
   private cardGrabRange!: HTMLInputElement;
+  private cardGrabRangeUnit!: HTMLSelectElement;
   private attacksContainer!: HTMLElement;
   private attackRows: AttackRowRefs[] = [];
 
@@ -299,12 +306,18 @@ export class CatalogEditorPanel {
   private hotspotStage!: HTMLElement;
   private hotspotImg!: HTMLImageElement;
   private hsRange!: HTMLInputElement;
+  private hsRangeUnit!: HTMLSelectElement;
   private hsDamage!: HTMLInputElement;
   private hsRed!: HTMLInputElement;
   private hsBlack!: HTMLInputElement;
   private hsGreen!: HTMLInputElement;
   private hsWhite!: HTMLInputElement;
+  private hsPresetSelect!: HTMLSelectElement;
+  private saveHotspotPresetBtn!: HTMLButtonElement;
   private hotspotHint!: HTMLElement;
+  private hotspotPresetSaveBackdrop!: HTMLElement;
+  private hotspotPresetNameInput!: HTMLInputElement;
+  private hotspotPresetDefaultCb!: HTMLInputElement;
 
   private hotspotRegions: HotspotRegion[] = [];
   private hotspotImageUrl = '';
@@ -399,6 +412,7 @@ export class CatalogEditorPanel {
       this.refreshLeaderAttachedUnits();
       this.refreshLeaderRosterEditor();
       this.refreshUnitSelectors();
+      this.refreshHotspotPresetSelect();
     });
   }
 
@@ -803,13 +817,20 @@ export class CatalogEditorPanel {
 
     this.cardGrabRange = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.cardGrabRange.type = 'number';
-    const mkDice = (label: string, inp: HTMLElement) => {
-      const row = el('div', 'catalog-editor-field');
-      row.appendChild(el('span', 'catalog-editor-field-label', label));
-      row.appendChild(inp);
-      this.unitFormDiceWrap.appendChild(row);
-    };
-    mkDice('Дальность «взять»', this.cardGrabRange);
+    this.cardGrabRange.min = '0';
+    this.cardGrabRange.step = '1';
+    this.cardGrabRangeUnit = el('select', 'catalog-editor-select ce-hs-range-unit') as HTMLSelectElement;
+    this.cardGrabRangeUnit.appendChild(new Option('по умолчанию', ''));
+    this.cardGrabRangeUnit.appendChild(new Option('гекс', 'hex'));
+    this.cardGrabRangeUnit.appendChild(new Option('гексон', 'hexon'));
+    this.cardGrabRangeUnit.title = 'Малая / large: по умолчанию гекс; big / huge: по умолчанию гексон';
+    const grabGrabRow = el('div', 'catalog-editor-field');
+    grabGrabRow.appendChild(el('span', 'catalog-editor-field-label', 'Дальность «взять»'));
+    const grabInner = el('div', 'ce-hs-range-row');
+    grabInner.appendChild(this.cardGrabRange);
+    grabInner.appendChild(this.cardGrabRangeUnit);
+    grabGrabRow.appendChild(grabInner);
+    this.unitFormDiceWrap.appendChild(grabGrabRow);
 
     this.unitFormAtkWrap.appendChild(el('label', '', 'Атаки'));
     this.attacksContainer = el('div', 'ce-attacks-wrap');
@@ -870,6 +891,7 @@ export class CatalogEditorPanel {
         w: 0.9,
         h: 0.04,
         range: 1,
+        rangeUnit: 'hex',
         damage: 0,
         red: 0,
         black: 0,
@@ -895,32 +917,75 @@ export class CatalogEditorPanel {
       d.appendChild(inp);
       hsGrid.appendChild(d);
     };
+    const rangeField = el('div', 'ce-hs-field');
+    rangeField.appendChild(el('span', 'ce-hs-field-lab', 'Дальность'));
+    const rangeRow = el('div', 'ce-hs-range-row');
     this.hsRange = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.hsRange.type = 'number';
-    h('Дальность', this.hsRange);
+    this.hsRange.min = '0';
+    this.hsRange.step = '1';
+    this.hsRangeUnit = el('select', 'catalog-editor-select ce-hs-range-unit') as HTMLSelectElement;
+    this.hsRangeUnit.appendChild(new Option('гекс', 'hex'));
+    this.hsRangeUnit.appendChild(new Option('гексон', 'hexon'));
+    this.hsRangeUnit.title = 'Единица дальности для подсветки на поле';
+    rangeRow.appendChild(this.hsRange);
+    rangeRow.appendChild(this.hsRangeUnit);
+    rangeField.appendChild(rangeRow);
+    hsGrid.appendChild(rangeField);
     this.hsDamage = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.hsDamage.type = 'number';
     h('Урон', this.hsDamage);
     this.hsRed = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.hsRed.type = 'number';
-    h('Красные', this.hsRed);
     this.hsBlack = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.hsBlack.type = 'number';
-    h('Чёрные', this.hsBlack);
     this.hsGreen = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.hsGreen.type = 'number';
-    h('Зелёные', this.hsGreen);
     this.hsWhite = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.hsWhite.type = 'number';
-    h('Белые', this.hsWhite);
+    const diceRow = el('div', 'ce-hs-field ce-hs-field--dice-row');
+    diceRow.appendChild(el('span', 'ce-hs-field-lab', 'Кубики'));
+    const diceIn = el('div', 'ce-hs-dice-inputs');
+    const mkDiceChip = (inp: HTMLInputElement, bg: string, border?: string) => {
+      const lab = el('label', 'ce-hs-dice-chip');
+      const sw = el('span', 'ce-hs-dice-swatch');
+      sw.style.background = bg;
+      if (border) sw.style.boxShadow = `inset 0 0 0 1px ${border}`;
+      lab.appendChild(sw);
+      inp.classList.add('ce-hs-dice-num');
+      inp.min = '0';
+      inp.step = '1';
+      lab.appendChild(inp);
+      diceIn.appendChild(lab);
+    };
+    mkDiceChip(this.hsRed, '#d14b4b');
+    mkDiceChip(this.hsBlack, '#1a1a22', 'rgba(255,255,255,0.2)');
+    mkDiceChip(this.hsGreen, '#46b969');
+    mkDiceChip(this.hsWhite, '#e8eaef', 'rgba(0,0,0,0.22)');
+    diceRow.appendChild(diceIn);
+    hsGrid.appendChild(diceRow);
     [this.hsRange, this.hsDamage, this.hsRed, this.hsBlack, this.hsGreen, this.hsWhite].forEach((inp) => {
       inp.addEventListener('change', () => this.applyHotspotFieldsToSelected());
       inp.addEventListener('input', () => this.applyHotspotFieldsToSelected());
     });
+    this.hsRangeUnit.addEventListener('change', () => this.applyHotspotFieldsToSelected());
 
     const saveHotBtn = el('button', 'catalog-editor-btn', 'Сохранить хотспоты');
     saveHotBtn.type = 'button';
     saveHotBtn.addEventListener('click', () => void this.saveHotspots());
+
+    this.saveHotspotPresetBtn = el(
+      'button',
+      'catalog-editor-btn catalog-editor-btn-secondary',
+      'Сохранить пресет',
+    ) as HTMLButtonElement;
+    this.saveHotspotPresetBtn.type = 'button';
+    this.saveHotspotPresetBtn.title = 'Сохранить только раскладку зон (x,y,w,h), без дальности и кубиков';
+    this.saveHotspotPresetBtn.addEventListener('click', () => this.saveHotspotLayoutPresetFromUi());
+
+    this.hsPresetSelect = el('select', 'catalog-editor-select ce-hs-preset-select') as HTMLSelectElement;
+    this.hsPresetSelect.setAttribute('aria-label', 'Пресет раскладки хот-спотов');
+    this.hsPresetSelect.addEventListener('change', () => this.applyHotspotLayoutPresetSelection());
 
     this.hotspotHint = el('div', 'catalog-editor-hint');
 
@@ -935,8 +1000,16 @@ export class CatalogEditorPanel {
     hotSection.appendChild(hotBar);
     hotSection.appendChild(el('label', '', 'Параметры выбранной зоны'));
     hotSection.appendChild(hsGrid);
-    hotSection.appendChild(saveHotBtn);
+    const presetRow = el('div', 'ce-hs-preset-row');
+    presetRow.appendChild(el('span', 'ce-hs-field-lab', 'Пресет раскладки'));
+    presetRow.appendChild(this.hsPresetSelect);
+    hotSection.appendChild(presetRow);
+    const saveHotRow = el('div', 'ce-hs-save-row');
+    saveHotRow.appendChild(saveHotBtn);
+    saveHotRow.appendChild(this.saveHotspotPresetBtn);
+    hotSection.appendChild(saveHotRow);
     hotSection.appendChild(this.hotspotHint);
+    this.refreshHotspotPresetSelect();
 
     unitEditorCol.appendChild(this.unitFormMainWrap);
     unitEditorCol.appendChild(this.unitFormDiceWrap);
@@ -1005,6 +1078,7 @@ export class CatalogEditorPanel {
 
     this.buildLeaderModal();
     this.buildUnitModal();
+    this.buildHotspotPresetSaveDialog();
     this.setupModalEscapeHandler();
     this.refreshLeaderSelect();
     this.refreshUnitLibraryList();
@@ -1074,6 +1148,7 @@ export class CatalogEditorPanel {
     this.unitFormTitleEl.textContent = 'Новый юнит';
     this.removeUnitBtn.hidden = true;
     this.activateUnitSubPane('main');
+    this.applyDefaultHotspotLayoutPresetForNewUnit();
   }
 
   private openUnitCreateFromLeader(): void {
@@ -1140,7 +1215,7 @@ export class CatalogEditorPanel {
         alert('Укажите id юнита');
         return;
       }
-      if (CATALOG_UNITS[id] || getCatalogOverrides().newUnits[id]) {
+      if (getCatalogUnit(id)) {
         alert('Такой id уже есть');
         return;
       }
@@ -1425,9 +1500,6 @@ export class CatalogEditorPanel {
 
   private buildUnitModal(): void {
     this.unitModalBackdrop = el('div', 'ce-modal-backdrop ce-unit-modal-backdrop');
-    this.unitModalBackdrop.addEventListener('click', (e) => {
-      if (e.target === this.unitModalBackdrop) this.finishUnitForm();
-    });
     const modal = el('div', 'ce-modal ce-modal--unit');
     modal.addEventListener('click', (e) => e.stopPropagation());
     const head = el('div', 'ce-modal__header');
@@ -1442,11 +1514,108 @@ export class CatalogEditorPanel {
     document.body.appendChild(this.unitModalBackdrop);
   }
 
+  private buildHotspotPresetSaveDialog(): void {
+    this.hotspotPresetSaveBackdrop = el('div', 'ce-modal-backdrop ce-hotspot-preset-save-backdrop');
+    this.hotspotPresetSaveBackdrop.addEventListener('click', (e) => {
+      if (e.target === this.hotspotPresetSaveBackdrop) this.closeHotspotPresetSaveDialog();
+    });
+    const modal = el('div', 'ce-modal ce-modal--preset-save');
+    modal.addEventListener('click', (e) => e.stopPropagation());
+    const head = el('div', 'ce-modal__header');
+    head.appendChild(el('div', 'ce-modal__title', 'Сохранить пресет раскладки'));
+    const closeBtn = el('button', 'catalog-editor-close', '×') as HTMLButtonElement;
+    closeBtn.type = 'button';
+    closeBtn.addEventListener('click', () => this.closeHotspotPresetSaveDialog());
+    head.appendChild(closeBtn);
+    const body = el('div', 'ce-modal-pane ce-hotspot-preset-save-body');
+    const nameLab = el('label', 'ce-hotspot-preset-save-label');
+    nameLab.appendChild(document.createTextNode('Имя пресета'));
+    this.hotspotPresetNameInput = el('input', 'catalog-editor-input') as HTMLInputElement;
+    this.hotspotPresetNameInput.type = 'text';
+    this.hotspotPresetNameInput.autocomplete = 'off';
+    this.hotspotPresetNameInput.placeholder = 'Например, присед';
+    nameLab.appendChild(this.hotspotPresetNameInput);
+    this.hotspotPresetDefaultCb = el('input', '') as HTMLInputElement;
+    this.hotspotPresetDefaultCb.type = 'checkbox';
+    const cbRow = el('label', 'ce-hotspot-preset-save-label ce-hotspot-preset-save-cb');
+    cbRow.appendChild(this.hotspotPresetDefaultCb);
+    cbRow.appendChild(
+      document.createTextNode(' Поставить пресет по умолчанию для новых юнитов'),
+    );
+    const foot = el('div', 'ce-modal__footer');
+    const cancelBtn = el(
+      'button',
+      'catalog-editor-btn catalog-editor-btn-secondary',
+      'Отмена',
+    ) as HTMLButtonElement;
+    cancelBtn.type = 'button';
+    cancelBtn.addEventListener('click', () => this.closeHotspotPresetSaveDialog());
+    const okBtn = el('button', 'catalog-editor-btn', 'Сохранить') as HTMLButtonElement;
+    okBtn.type = 'button';
+    okBtn.addEventListener('click', () => this.confirmHotspotPresetSave());
+    foot.appendChild(cancelBtn);
+    foot.appendChild(okBtn);
+    this.hotspotPresetNameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.confirmHotspotPresetSave();
+      }
+    });
+    modal.appendChild(head);
+    modal.appendChild(body);
+    body.appendChild(nameLab);
+    body.appendChild(cbRow);
+    modal.appendChild(foot);
+    this.hotspotPresetSaveBackdrop.appendChild(modal);
+    document.body.appendChild(this.hotspotPresetSaveBackdrop);
+  }
+
+  private openHotspotPresetSaveDialog(): void {
+    this.hotspotPresetNameInput.value = '';
+    this.hotspotPresetDefaultCb.checked = false;
+    this.hotspotPresetSaveBackdrop.classList.add('ce-modal-backdrop--open');
+    queueMicrotask(() => this.hotspotPresetNameInput.focus());
+  }
+
+  private closeHotspotPresetSaveDialog(): void {
+    this.hotspotPresetSaveBackdrop.classList.remove('ce-modal-backdrop--open');
+  }
+
+  private confirmHotspotPresetSave(): void {
+    if (this.hotspotRegions.length === 0) {
+      alert('Нет зон — нечего сохранять в пресет.');
+      return;
+    }
+    const trimmed = this.hotspotPresetNameInput.value.trim();
+    if (!trimmed) {
+      alert('Введите имя пресета');
+      return;
+    }
+    const existing = getCatalogOverrides().hotspotLayoutPresets?.find((p) => p.name === trimmed);
+    if (existing) {
+      if (!confirm(`Пресет «${trimmed}» уже есть. Перезаписать раскладку?`)) return;
+    }
+    this.applyHotspotFieldsToSelected();
+    const regions = this.hotspotRegions.map((r) => ({ x: r.x, y: r.y, w: r.w, h: r.h }));
+    const preset = upsertHotspotLayoutPreset(trimmed, regions);
+    if (this.hotspotPresetDefaultCb.checked) {
+      setDefaultHotspotLayoutPresetId(preset.id);
+    }
+    this.refreshHotspotPresetSelect();
+    this.hsPresetSelect.value = preset.id;
+    this.closeHotspotPresetSaveDialog();
+    this.hotspotHint.textContent = 'Пресет раскладки сохранён (в JSON оверрайдов и localStorage).';
+  }
+
   private setupModalEscapeHandler(): void {
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape') return;
+      if (this.hotspotPresetSaveBackdrop.classList.contains('ce-modal-backdrop--open')) {
+        e.preventDefault();
+        this.closeHotspotPresetSaveDialog();
+        return;
+      }
       if (this.unitModalBackdrop.classList.contains('ce-modal-backdrop--open')) {
-        this.finishUnitForm();
         return;
       }
       if (this.modalBackdrop.classList.contains('ce-modal-backdrop--open')) {
@@ -1554,6 +1723,7 @@ export class CatalogEditorPanel {
     this.cardExplorationRange.value =
       card.explorationRange != null ? String(card.explorationRange) : '';
     this.cardGrabRange.value = card.grabRange != null ? String(card.grabRange) : '';
+    this.cardGrabRangeUnit.value = card.grabRangeUnit === 'hexon' ? 'hexon' : card.grabRangeUnit === 'hex' ? 'hex' : '';
     this.attacksContainer.innerHTML = '';
     this.attackRows = [];
     for (const a of card.attacks) {
@@ -1599,6 +1769,7 @@ export class CatalogEditorPanel {
     }
 
     const mu = this.cardMoveUnit.value;
+    const gru = this.cardGrabRangeUnit.value;
     const exploration = {
       red: numOrU(this.cardExpR.value),
       green: numOrU(this.cardExpG.value),
@@ -1631,6 +1802,7 @@ export class CatalogEditorPanel {
       },
       explorationRange: numOrU(this.cardExplorationRange.value),
       grabRange: numOrU(this.cardGrabRange.value),
+      grabRangeUnit: gru === 'hex' || gru === 'hexon' ? gru : undefined,
       attacks,
       keywords: this.cardKeywords.value
         .split(/[,]/)
@@ -2186,12 +2358,14 @@ export class CatalogEditorPanel {
   }
 
   private deleteSelectedUnit(): void {
-    if (!this.selectedUnitId) {
+    const id =
+      (this.selectedUnitId ?? this.unitIdInput?.value?.trim() ?? '').trim() || null;
+    if (!id) {
       alert('Сначала выберите юнита');
       return;
     }
-    if (!confirm(`Удалить юнита ${this.selectedUnitId} и его привязки?`)) return;
-    removeUnitEverywhere(this.selectedUnitId);
+    if (!confirm(`Удалить юнита ${id} и его привязки?`)) return;
+    removeUnitEverywhere(id);
     this.finishUnitForm();
   }
 
@@ -2231,6 +2405,7 @@ export class CatalogEditorPanel {
     const r = this.hotspotRegions[this.selectedRegionIndex];
     if (!r) return;
     r.range = numOrU(this.hsRange.value);
+    r.rangeUnit = this.hsRangeUnit.value === 'hexon' ? 'hexon' : 'hex';
     r.damage = numOrU(this.hsDamage.value);
     r.red = numOrU(this.hsRed.value);
     r.black = numOrU(this.hsBlack.value);
@@ -2241,6 +2416,7 @@ export class CatalogEditorPanel {
   private syncHotspotFieldsFromRegion(): void {
     if (this.selectedRegionIndex === null) {
       this.hsRange.value = '';
+      this.hsRangeUnit.value = 'hex';
       this.hsDamage.value = '';
       this.hsRed.value = '';
       this.hsBlack.value = '';
@@ -2251,11 +2427,72 @@ export class CatalogEditorPanel {
     const r = this.hotspotRegions[this.selectedRegionIndex];
     if (!r) return;
     this.hsRange.value = r.range != null ? String(r.range) : '';
+    this.hsRangeUnit.value = r.rangeUnit === 'hexon' ? 'hexon' : 'hex';
     this.hsDamage.value = r.damage != null ? String(r.damage) : '';
     this.hsRed.value = r.red != null ? String(r.red) : '';
     this.hsBlack.value = r.black != null ? String(r.black) : '';
     this.hsGreen.value = r.green != null ? String(r.green) : '';
     this.hsWhite.value = r.white != null ? String(r.white) : '';
+  }
+
+  private refreshHotspotPresetSelect(): void {
+    if (!this.hsPresetSelect) return;
+    const prev = this.hsPresetSelect.value;
+    const defId = getCatalogOverrides().defaultHotspotLayoutPresetId;
+    this.hsPresetSelect.innerHTML = '';
+    this.hsPresetSelect.appendChild(new Option('— выберите пресет —', ''));
+    this.hsPresetSelect.appendChild(new Option('По умолчанию', '__default__'));
+    for (const p of getCatalogOverrides().hotspotLayoutPresets ?? []) {
+      const label = defId === p.id ? `${p.name} (по умолчанию)` : p.name;
+      this.hsPresetSelect.appendChild(new Option(label, p.id));
+    }
+    if ([...this.hsPresetSelect.options].some((o) => o.value === prev)) {
+      this.hsPresetSelect.value = prev;
+    }
+  }
+
+  private applyHotspotLayoutPresetSelection(): void {
+    const v = this.hsPresetSelect.value;
+    if (!v) return;
+    const layout =
+      v === '__default__'
+        ? DEFAULT_HOTSPOT_LAYOUT_PRESET_REGIONS
+        : getCatalogOverrides().hotspotLayoutPresets?.find((p) => p.id === v)?.regions;
+    if (!layout || layout.length === 0) {
+      this.hotspotHint.textContent = 'Пресет пуст или не найден.';
+      return;
+    }
+    this.applyHotspotFieldsToSelected();
+    this.hotspotRegions = applyHotspotLayoutBoxesToRegions(this.hotspotRegions, layout);
+    this.selectedRegionIndex = this.hotspotRegions.length > 0 ? 0 : null;
+    this.renderHotspotRects();
+    this.syncHotspotFieldsFromRegion();
+    this.hotspotHint.textContent =
+      'Применена только раскладка; дальность и кубики по зонам совпадают по порядку с прежними.';
+  }
+
+  private saveHotspotLayoutPresetFromUi(): void {
+    if (this.hotspotRegions.length === 0) {
+      alert('Нет зон — нечего сохранять в пресет.');
+      return;
+    }
+    this.openHotspotPresetSaveDialog();
+  }
+
+  /** Раскладка из сохранённого пресета по умолчанию при открытии формы «Новый юнит». */
+  private applyDefaultHotspotLayoutPresetForNewUnit(): void {
+    const o = getCatalogOverrides();
+    const pid = o.defaultHotspotLayoutPresetId;
+    const preset = pid ? o.hotspotLayoutPresets?.find((p) => p.id === pid) : undefined;
+    this.refreshHotspotPresetSelect();
+    if (!preset || preset.regions.length === 0) {
+      return;
+    }
+    this.hotspotRegions = applyHotspotLayoutBoxesToRegions([], preset.regions);
+    this.selectedRegionIndex = this.hotspotRegions.length > 0 ? 0 : null;
+    this.renderHotspotRects();
+    this.syncHotspotFieldsFromRegion();
+    this.hsPresetSelect.value = preset.id;
   }
 
   private async applyUnitPatch(): Promise<void> {
