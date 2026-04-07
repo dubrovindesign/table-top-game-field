@@ -361,6 +361,7 @@ export class CatalogEditorPanel {
   private removeUnitBtn!: HTMLButtonElement;
 
   private leaderAttachedUnitsEl!: HTMLElement;
+  private leaderAttachExistingUnitSel!: HTMLSelectElement;
   private unitStubFieldsWrap!: HTMLElement;
 
   constructor(toolbarMount: HTMLElement) {
@@ -551,10 +552,27 @@ export class CatalogEditorPanel {
     rosterSection.appendChild(el('label', '', 'Юниты ростера'));
     this.leaderAttachedUnitsEl = el('div', 'ce-leader-attached-units');
     rosterSection.appendChild(this.leaderAttachedUnitsEl);
-    const addUnitFromLeaderBtn = el('button', 'catalog-editor-btn', 'Добавить юнита') as HTMLButtonElement;
+    const addUnitFromLeaderBtn = el('button', 'catalog-editor-btn', 'Новый юнит') as HTMLButtonElement;
     addUnitFromLeaderBtn.type = 'button';
+    addUnitFromLeaderBtn.title = 'Создать нового юнита и сразу добавить в ростер';
     addUnitFromLeaderBtn.addEventListener('click', () => this.openUnitCreateFromLeader());
     rosterSection.appendChild(addUnitFromLeaderBtn);
+
+    const attachRow = el('div', 'ce-leader-attach-existing-row');
+    this.leaderAttachExistingUnitSel = el('select', 'catalog-editor-select') as HTMLSelectElement;
+    this.leaderAttachExistingUnitSel.id = 'ce-leader-attach-unit';
+    const attachExistingBtn = el(
+      'button',
+      'catalog-editor-btn catalog-editor-btn-secondary',
+      'Добавить из библиотеки',
+    ) as HTMLButtonElement;
+    attachExistingBtn.type = 'button';
+    attachExistingBtn.title = 'Добавить уже существующего юнита (из вкладки «Юниты») в ростер';
+    attachExistingBtn.addEventListener('click', () => this.attachExistingUnitToSelectedLeader());
+    attachRow.appendChild(this.leaderAttachExistingUnitSel);
+    attachRow.appendChild(attachExistingBtn);
+    rosterSection.appendChild(attachRow);
+
     leaderPane.appendChild(rosterSection);
 
     unitPane.appendChild(el('div', 'ce-pane-title', 'Библиотека юнитов'));
@@ -1149,6 +1167,36 @@ export class CatalogEditorPanel {
     const fac = getFaction(L.factionId);
     const domain = (fac?.domain ?? 'life') as Domain;
     this.openUnitFormCreate({ leaderId: L.id, factionId: L.factionId, domain });
+  }
+
+  private attachExistingUnitToSelectedLeader(): void {
+    if (!this.selectedLeaderId) {
+      alert('Выберите лидера');
+      return;
+    }
+    const unitId = this.leaderAttachExistingUnitSel.value.trim();
+    if (!unitId) {
+      alert('Выберите юнита в списке');
+      return;
+    }
+    if (!getCatalogUnit(unitId)) {
+      alert('Неизвестный юнит');
+      return;
+    }
+    const leader = getLeader(this.selectedLeaderId);
+    if (!leader) return;
+    if (leader.catalogUnitId === unitId) {
+      alert('Эта карточка уже миниатюра лидера; отдельный слот ростера не нужен');
+      return;
+    }
+    if (leader.roster.some((s) => s.unitId === unitId)) {
+      alert('Этот юнит уже в ростере');
+      return;
+    }
+    addRosterSlot(leader.id, { unitId, maxCopies: 1 });
+    this.leaderAttachExistingUnitSel.value = '';
+    this.refreshLeaderAttachedUnits();
+    this.refreshUnitLibraryList();
   }
 
   private openUnitFormEdit(unitId: string): void {
@@ -2097,6 +2145,7 @@ export class CatalogEditorPanel {
     refill(this.unitCloneSelect, '— без клона —');
     refill(this.leaderCatalogUnitSel, 'Шаблон карточки (опц.)');
     refill(this.leaderRosterUnitSel);
+    refill(this.leaderAttachExistingUnitSel, 'Юнит из библиотеки…');
     this.refreshRequiresUnitSelect();
   }
 

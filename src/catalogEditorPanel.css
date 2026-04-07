@@ -153,20 +153,15 @@
 .catalog-editor-input {
   flex: 1;
   min-width: 120px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(0, 0, 0, 0.35);
-  color: #e8e8f0;
   font-size: 0.88rem;
+}
+
+.catalog-editor-select {
+  padding: 7px 36px 7px 10px;
 }
 
 #ce-faction-select {
   border-radius: 12px;
-  display: flex;
-  flex-flow: row;
-  padding-right: 24px;
-  justify-content: flex-start;
 }
 
 .catalog-editor-textarea {
@@ -644,7 +639,49 @@
   border: 1px solid rgba(120, 100, 80, 0.22);
   background: rgba(36, 28, 22, 0.3);
   min-height: 0;
+  /* Скролл только у списка юнитов, а не у всей вкладки */
+  overflow: hidden;
+}
+
+.ce-pane--units > .ce-pane-title {
+  flex-shrink: 0;
+}
+
+.ce-pane--units > .ce-unit-list-view {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ce-pane--units > .catalog-editor-row {
+  flex-shrink: 0;
+}
+
+.ce-pane--units .ce-unit-lib-list {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
   overflow-y: auto;
+}
+
+.ce-pane--units .catalog-editor-unit-list {
+  max-height: none;
+}
+
+/* Поле поиска наследует у .catalog-editor-input flex:1 — в колонке оно съедает всю высоту */
+.ce-pane--units .ce-unit-list-view > .catalog-editor-input[type='search'] {
+  flex: 0 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ce-pane--units .ce-unit-list-view > .catalog-editor-btn {
+  flex: 0 0 auto;
+  align-self: flex-start;
+}
+
+.ce-pane--units .ce-unit-list-view > .ce-faction-filter-row {
+  flex: 0 0 auto;
 }
 
 .catalog-editor-panel.ce-panel--units-mode .ce-pane--units {
@@ -715,10 +752,10 @@
 }
 
 .ce-unit-lib-list {
-  max-height: min(48vh, 380px);
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-height: 0;
 }
 
 .ce-unit-lib-row {
@@ -768,6 +805,19 @@
 
 .ce-leader-roster-section > .catalog-editor-btn {
   flex-shrink: 0;
+}
+
+.ce-leader-attach-existing-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ce-leader-attach-existing-row .catalog-editor-select {
+  flex: 1;
+  min-width: 160px;
 }
 
 .ce-leader-attached-units {

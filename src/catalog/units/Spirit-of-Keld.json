@@ -1,7 +1,6 @@
 {
   "card": {
     "attacks": [],
-    "catalogUnitId": "Blade-Dancer",
     "concentration": {
       "black": 0,
       "green": 0,
@@ -9,7 +8,7 @@
       "white": 0
     },
     "defense": {
-      "green": 1,
+      "green": 2,
       "white": 1
     },
     "defenseReaction": {
@@ -22,7 +21,7 @@
     "exploration": {
       "black": 0,
       "green": 0,
-      "red": 1,
+      "red": 2,
       "white": 0
     },
     "explorationRange": 0,
@@ -30,13 +29,13 @@
     "health": 4,
     "keywords": [],
     "maxHealth": 4,
-    "miniatureSprite": "/catalog-units/Blade-Dancer/card_miniatureSprite.jpg",
-    "name": "Танцующая с Клинками",
+    "miniatureSprite": "/catalog-units/Spirit-of-Keld/card_miniatureSprite.jpg",
+    "name": "Дух Кельда",
     "run": 7,
     "size": "small",
-    "sprite": "/catalog-units/Blade-Dancer/card_sprite.jpg",
+    "sprite": "/catalog-units/Spirit-of-Keld/card_sprite.jpg",
     "walk": 4
   },
-  "id": "Blade-Dancer",
+  "id": "Spirit-of-Keld",
   "points": 0
 }

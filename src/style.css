@@ -46,6 +46,40 @@ html, body {
   background: transparent;
 }
 
+/* ── Global select dark-theme styling ─────────────────────── */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: rgba(0, 0, 0, 0.45);
+  color: #e8e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 7px 36px 7px 10px;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(180,180,200,0.75)' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  outline: none;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+select:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  background-color: rgba(0, 0, 0, 0.55);
+}
+
+select:focus {
+  border-color: rgba(74, 144, 217, 0.65);
+  box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.18);
+}
+
+select option {
+  background-color: #1e1e2a;
+  color: #e8e8f0;
+}
+
 #game-canvas {
   display: block;
   cursor: crosshair;
@@ -2858,11 +2892,6 @@ html, body {
 
 .mp-voice-mic-device {
   width: 100%;
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(0, 0, 0, 0.35);
-  color: #e5e7eb;
   font-size: 12px;
 }
 

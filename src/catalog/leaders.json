@@ -1,5 +1,44 @@
 [
   {
+    "id": "Kellantra",
+    "name": "Келлантра, Ярость Леса",
+    "factionId": "keld",
+    "catalogUnitId": "Kellantra",
+    "roster": [
+      {
+        "unitId": "Blade-Dancer",
+        "maxCopies": 3,
+        "points": 27
+      },
+      {
+        "unitId": "Dryadint-Archer",
+        "maxCopies": 4,
+        "points": 27
+      },
+      {
+        "unitId": "Dryadint-Warrior",
+        "maxCopies": 5,
+        "points": 20
+      },
+      {
+        "unitId": "Silent-Blade",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "Spirit-of-Keld",
+        "maxCopies": 3,
+        "points": 29
+      },
+      {
+        "unitId": "defender_seedlings",
+        "maxCopies": 1,
+        "points": 16
+      }
+    ],
+    "points": 28
+  },
+  {
     "id": "kellantra-with-lindwurm",
     "name": "Келлантра с Линдвурмом",
     "factionId": "keld",
@@ -24,6 +63,16 @@
         "unitId": "Blade-Dancer",
         "maxCopies": 2,
         "points": 27
+      },
+      {
+        "unitId": "Silent-Blade",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "Spirit-of-Keld",
+        "maxCopies": 2,
+        "points": 29
       }
     ],
     "points": 70
