@@ -1186,13 +1186,13 @@ export class Renderer {
         ctx.fillStyle = config.unitFillColor;
         ctx.fill();
         ctx.strokeStyle = config.unitStrokeColor;
-        ctx.lineWidth = 2 / this.camera.zoom;
+        ctx.lineWidth = 2;
         ctx.stroke();
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.lineTo(halfH * 0.95, 0);
         ctx.strokeStyle = config.unitStrokeColor;
-        ctx.lineWidth = 1.75 / this.camera.zoom;
+        ctx.lineWidth = 1.75;
         ctx.stroke();
         ctx.restore();
       });
@@ -1240,7 +1240,7 @@ export class Renderer {
         ctx.fillStyle = config.unitFillColor;
         ctx.fill();
         ctx.strokeStyle = config.unitStrokeColor;
-        ctx.lineWidth = 2 / this.camera.zoom;
+        ctx.lineWidth = 2;
         ctx.stroke();
         ctx.restore();
       });
@@ -1300,7 +1300,7 @@ export class Renderer {
         ctx.fillStyle = config.unitFillColor;
         ctx.fill();
         ctx.strokeStyle = config.unitStrokeColor;
-        ctx.lineWidth = 2 / this.camera.zoom;
+        ctx.lineWidth = 2;
         ctx.stroke();
         ctx.restore();
       });
@@ -1583,7 +1583,7 @@ export class Renderer {
     ctx.beginPath();
     this.roundHexPathLocal(ctx, offs, cornerR);
     ctx.strokeStyle = config.unitStrokeColor;
-    ctx.lineWidth = 2 / this.camera.zoom;
+    ctx.lineWidth = 2;
     ctx.stroke();
     ctx.restore();
   }
@@ -2338,7 +2338,7 @@ export class Renderer {
     const bounds = this.bigMiniHexonBoundsLocal(layout);
     const boxW = bounds.maxX - bounds.minX;
     const boxH = bounds.maxY - bounds.minY;
-    const lwOuter = 2 / this.camera.zoom;
+    const lwOuter = 2;
 
     ctx.save();
     ctx.translate(p.x, p.y);
@@ -2702,8 +2702,8 @@ export class Renderer {
     const { x: pcx, y: pcy } = this.localBoundsCenter(bounds);
     const boxW = bounds.maxX - bounds.minX;
     const boxH = bounds.maxY - bounds.minY;
-    const lwOuter = 2 / this.camera.zoom / BIG_MINI_VISUAL_SCALE;
-    const lwSymbol = 2 / this.camera.zoom / BIG_MINI_VISUAL_SCALE;
+    const lwOuter = 2 / BIG_MINI_VISUAL_SCALE;
+    const lwSymbol = 2 / BIG_MINI_VISUAL_SCALE;
 
     ctx.save();
     ctx.translate(point.x, point.y);
@@ -2794,7 +2794,7 @@ export class Renderer {
     const rotRad = (rotationDeg * Math.PI) / 180;
     const hb = this.bigMiniHexonBoundsLocal(layout);
     const { x: hcx, y: hcy } = this.localBoundsCenter(hb);
-    const lineW = width / this.camera.zoom / pathScale;
+    const lineW = width / pathScale;
     ctx.save();
     ctx.translate(point.x, point.y);
     ctx.rotate(rotRad);
@@ -3078,7 +3078,7 @@ export class Renderer {
   ): void {
     const { ctx, config, layout } = this;
     const rotRad = (rotationDeg * Math.PI) / 180;
-    const lw = 2 / this.camera.zoom / LARGE_MINI_VISUAL_SCALE;
+    const lw = 2 / LARGE_MINI_VISUAL_SCALE;
     const { x: pcx, y: pcy } = localOriginInCellSpace;
 
     ctx.save();
@@ -3286,7 +3286,7 @@ export class Renderer {
   ): void {
     const { ctx, config, layout } = this;
     const rotRad = (rotationDeg * Math.PI) / 180;
-    const lw = 2 / this.camera.zoom / HUGE_MINI_VISUAL_SCALE;
+    const lw = 2 / HUGE_MINI_VISUAL_SCALE;
     const { x: pcx, y: pcy } = this.localBoundsCenter(bounds);
 
     ctx.save();
