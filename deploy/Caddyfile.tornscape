@@ -9,7 +9,30 @@ tornscape.dubrovindesign.ru {
 		reverse_proxy 127.0.0.1:3333
 	}
 
+	# Hashed Vite bundles: 404 if missing (never SPA HTML); safe to cache forever.
 	handle /assets/* {
+		header Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	# Fixed-name / build-output paths: revalidate so deploys are visible without hard reload.
+	@entry path /sw.js /registerSW.js /manifest.webmanifest /generated/catalog-data.json
+	handle @entry {
+		header Cache-Control "no-cache, must-revalidate"
+		file_server
+	}
+
+	# HTML shells (direct URL)
+	@html path /index.html /card-hotspot-test.html
+	handle @html {
+		header Cache-Control "no-cache, must-revalidate"
+		file_server
+	}
+
+	# Workbox runtime script (hashed filename per build)
+	@workbox path_regexp ^/workbox-.+\.js$
+	handle @workbox {
+		header Cache-Control "public, max-age=31536000, immutable"
 		file_server
 	}
 
@@ -21,6 +44,7 @@ tornscape.dubrovindesign.ru {
 			file_server
 		}
 		handle {
+			header Cache-Control "no-cache, must-revalidate"
 			rewrite * /index.html
 			file_server
 		}

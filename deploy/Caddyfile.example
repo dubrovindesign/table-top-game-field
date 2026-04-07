@@ -5,6 +5,9 @@
 #   - `npm ci && VITE_MP_WS_URL=wss://game.example.com/__mp_ws npm run build`
 #   - roomServer running on 127.0.0.1:3333 (see systemd unit or docker-compose)
 #   - root points to the `dist` folder from the build
+#
+# Cache policy: long-lived cache only for hashed /assets/* and workbox-*.js; shell
+# (HTML, sw.js, manifest, catalog-data.json) must revalidate after deploy.
 
 game.example.com {
 	root * /var/www/hex-board-game/dist
@@ -18,10 +21,28 @@ game.example.com {
 	# Hashed Vite bundles: missing file must be 404, never index.html (otherwise the
 	# browser executes HTML as JS after a deploy — blank app / “site won’t load”).
 	handle /assets/* {
+		header Cache-Control "public, max-age=31536000, immutable"
 		file_server
 	}
 
-	# Existing files (images, sw.js, manifest, html, etc.) as-is; else SPA shell.
+	@entry path /sw.js /registerSW.js /manifest.webmanifest /generated/catalog-data.json
+	handle @entry {
+		header Cache-Control "no-cache, must-revalidate"
+		file_server
+	}
+
+	@html path /index.html /card-hotspot-test.html
+	handle @html {
+		header Cache-Control "no-cache, must-revalidate"
+		file_server
+	}
+
+	@workbox path_regexp ^/workbox-.+\.js$
+	handle @workbox {
+		header Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
 	handle {
 		@existing file {
 			try_files {path}
@@ -30,6 +51,7 @@ game.example.com {
 			file_server
 		}
 		handle {
+			header Cache-Control "no-cache, must-revalidate"
 			rewrite * /index.html
 			file_server
 		}

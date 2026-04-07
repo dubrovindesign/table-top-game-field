@@ -75,7 +75,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,svg,woff2}', '**/generated/catalog-data.json'],
+        // Omit `html` from precache so a stale index.html is not served from the SW
+        // after deploy; navigateFallback still works when offline.
+        globPatterns: ['**/*.{js,css,ico,svg,woff2}', '**/generated/catalog-data.json'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/__mp_ws/],
         runtimeCaching: [
