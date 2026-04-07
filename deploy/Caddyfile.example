@@ -15,9 +15,23 @@ game.example.com {
 		reverse_proxy 127.0.0.1:3333
 	}
 
-	# SPA: non-file routes → index.html
-	handle {
-		try_files {path} /index.html
+	# Hashed Vite bundles: missing file must be 404, never index.html (otherwise the
+	# browser executes HTML as JS after a deploy — blank app / “site won’t load”).
+	handle /assets/* {
 		file_server
+	}
+
+	# Existing files (images, sw.js, manifest, html, etc.) as-is; else SPA shell.
+	handle {
+		@existing file {
+			try_files {path}
+		}
+		handle @existing {
+			file_server
+		}
+		handle {
+			rewrite * /index.html
+			file_server
+		}
 	}
 }

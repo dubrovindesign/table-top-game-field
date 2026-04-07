@@ -1,0 +1,28 @@
+# Production Caddy site (tornscape). Keep in sync with Caddyfile.example patterns.
+# Install: sudo tee /etc/caddy/Caddyfile < deploy/Caddyfile.tornscape && sudo caddy validate --config /etc/caddy/Caddyfile && sudo systemctl reload caddy
+
+tornscape.dubrovindesign.ru {
+	root * /var/www/hex-board-game/dist
+	encode gzip
+
+	handle /__mp_ws* {
+		reverse_proxy 127.0.0.1:3333
+	}
+
+	handle /assets/* {
+		file_server
+	}
+
+	handle {
+		@existing file {
+			try_files {path}
+		}
+		handle @existing {
+			file_server
+		}
+		handle {
+			rewrite * /index.html
+			file_server
+		}
+	}
+}
