@@ -6,6 +6,9 @@
  *   → src/catalog/leaders.json (same merge rules as catalogOverrides.getMergedLeader)
  * - hotspots → src/catalog/hotspots/<unitId>.json (loaded at build time; localStorage overrides still win)
  *
+ * Before export in the app: save unit (points), roster slots (maxCopies / slot points), hotspots;
+ * then download a fresh JSON — stale Downloads files miss new units.
+ *
  * Usage:
  *   npm run catalog:apply -- <overrides.json>
  *   npm run catalog:apply -- --dry-run <overrides.json>
@@ -209,6 +212,64 @@ async function applyLeaders(overrides, dryRun) {
   }
 }
 
+function logExportSummary(overrides) {
+  const nu = Object.keys(overrides.newUnits ?? {}).length;
+  const hi = Object.keys(overrides.hotspots ?? {}).length;
+  const nl = Object.keys(overrides.newLeaders ?? {}).length;
+  const rsp = Object.keys(overrides.rosterSlotPatches ?? {}).length;
+  const ra = Object.keys(overrides.rosterAdditions ?? {}).length;
+  const up = Object.keys(overrides.unitPatches ?? {}).length;
+  console.log(
+    `[catalog:apply] Сводка экспорта: newUnits=${nu}, unitPatches=${up}, hotspots=${hi}, newLeaders=${nl}, rosterAdditions=${ra}, rosterSlotPatches(лидеров)=${rsp}`,
+  );
+  if (nu === 0 && up === 0 && hi === 0 && nl === 0 && ra === 0 && rsp === 0) {
+    console.warn(
+      '[catalog:apply] Экспорт почти пустой — возможно выбран старый файл. Сделайте новый экспорт в редакторе и проверьте дату/размер JSON.',
+    );
+  }
+}
+
+/** newUnits: require numeric points (editor stores price here). */
+function warnNewUnitsPoints(overrides) {
+  const newUnits = overrides.newUnits && typeof overrides.newUnits === 'object' ? overrides.newUnits : {};
+  for (const [unitId, def] of Object.entries(newUnits)) {
+    if (def == null || typeof def !== 'object') continue;
+    if (typeof def.points !== 'number' || Number.isNaN(def.points)) {
+      console.warn(
+        `[catalog:apply] newUnits["${unitId}"]: нет числового поля points — укажите цену юнита в форме и снова «Экспорт» (или проверьте, что это свежий JSON).`,
+      );
+    }
+  }
+}
+
+/** Roster slots must carry maxCopies ≥ 1 for new leaders and roster additions. */
+function warnRosterMaxCopies(overrides) {
+  const newLeaders = overrides.newLeaders && typeof overrides.newLeaders === 'object' ? overrides.newLeaders : {};
+  for (const [leaderId, L] of Object.entries(newLeaders)) {
+    const roster = Array.isArray(L.roster) ? L.roster : [];
+    for (const slot of roster) {
+      if (!slot || typeof slot.unitId !== 'string') continue;
+      if (typeof slot.maxCopies !== 'number' || slot.maxCopies < 1) {
+        console.warn(
+          `[catalog:apply] newLeaders["${leaderId}"].roster: слот "${slot.unitId}" без maxCopies ≥ 1 — задайте «макс. копий» у слота и экспортируйте снова.`,
+        );
+      }
+    }
+  }
+  const additions = overrides.rosterAdditions && typeof overrides.rosterAdditions === 'object' ? overrides.rosterAdditions : {};
+  for (const [leaderId, slots] of Object.entries(additions)) {
+    if (!Array.isArray(slots)) continue;
+    for (const slot of slots) {
+      if (!slot || typeof slot.unitId !== 'string') continue;
+      if (typeof slot.maxCopies !== 'number' || slot.maxCopies < 1) {
+        console.warn(
+          `[catalog:apply] rosterAdditions["${leaderId}"] слот "${slot.unitId}": нет maxCopies ≥ 1 — сохраните лимит в ростере и экспортируйте снова.`,
+        );
+      }
+    }
+  }
+}
+
 /**
  * newUnits without saved hotspots in export → no src/catalog/hotspots/<id>.json; game shows stat-card fallback.
  */
@@ -277,6 +338,9 @@ async function main() {
     console.log('[dry-run] no files will be written.\n');
   }
 
+  logExportSummary(overrides);
+  warnNewUnitsPoints(overrides);
+  warnRosterMaxCopies(overrides);
   warnNewUnitsWithoutHotspots(overrides);
 
   await applyUnits(overrides, dryRun);
