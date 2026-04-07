@@ -11,6 +11,8 @@ export type VoicePeerOptions = {
   /** Autoplay policy blocked remote audio — show “tap to play” in UI. */
   onRemotePlayBlocked?: () => void;
   onRemotePlaybackStarted?: () => void;
+  /** After remote MediaStream is bound (e.g. apply setSinkId before play()). */
+  onRemoteStreamAttached?: () => void | Promise<void>;
 };
 
 function parseIceServersFromEnv(): RTCIceServer[] | null {
@@ -27,7 +29,11 @@ function parseIceServersFromEnv(): RTCIceServer[] | null {
 
 export function defaultVoiceIceServers(): RTCIceServer[] {
   return (
-    parseIceServersFromEnv() ?? [{ urls: 'stun:stun.l.google.com:19302' }]
+    parseIceServersFromEnv() ?? [
+      {
+        urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'],
+      },
+    ]
   );
 }
 
@@ -44,6 +50,7 @@ export function createVoicePeer(opts: VoicePeerOptions) {
   let micMuted = false;
   let remoteDescSet = false;
   const pendingIce: RTCIceCandidateInit[] = [];
+  const remoteTrackUnmuteCleanups: Array<() => void> = [];
 
   function sendPayload(payload: WebRtcSignalPayload): void {
     opts.send({ type: 'webrtcSignal', payload });
@@ -65,6 +72,25 @@ export function createVoicePeer(opts: VoicePeerOptions) {
         opts.onRemotePlayBlocked?.();
       },
     );
+  }
+
+  function attachRemoteStream(stream: MediaStream, track: MediaStreamTrack): void {
+    for (const c of remoteTrackUnmuteCleanups.splice(0)) {
+      c();
+    }
+    opts.remoteAudio.srcObject = stream;
+    opts.remoteAudio.volume = 1;
+    opts.remoteAudio.muted = false;
+    const onUnmute = (): void => {
+      attemptPlayRemote();
+    };
+    track.addEventListener('unmute', onUnmute);
+    remoteTrackUnmuteCleanups.push(() => track.removeEventListener('unmute', onUnmute));
+    void Promise.resolve()
+      .then(() => opts.onRemoteStreamAttached?.())
+      .finally(() => {
+        attemptPlayRemote();
+      });
   }
 
   function flushIce(): void {
@@ -91,10 +117,12 @@ export function createVoicePeer(opts: VoicePeerOptions) {
       }
     };
     p.ontrack = (ev) => {
-      const stream = ev.streams[0];
-      if (!stream) return;
-      opts.remoteAudio.srcObject = stream;
-      attemptPlayRemote();
+      const track = ev.track;
+      if (track.kind !== 'audio') return;
+      const streamWithTrack =
+        ev.streams.find((s) => s.getTracks().includes(track)) ??
+        new MediaStream([track]);
+      attachRemoteStream(streamWithTrack, track);
     };
     pc = p;
     return p;
@@ -245,6 +273,9 @@ export function createVoicePeer(opts: VoicePeerOptions) {
 
     /** Close WebRTC session when the other player leaves; keep mic stream if any. */
     resetSession(): void {
+      for (const c of remoteTrackUnmuteCleanups.splice(0)) {
+        c();
+      }
       if (pc) {
         pc.onicecandidate = null;
         pc.ontrack = null;

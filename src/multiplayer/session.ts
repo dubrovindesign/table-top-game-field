@@ -16,6 +16,13 @@ import {
 } from './tableDragOutbound.ts';
 
 const POINTER_INTERVAL_MS = 1000 / 24;
+const VOICE_OUTPUT_STORAGE_KEY = 'mp-voice-output-device';
+
+type AudioWithSink = HTMLAudioElement & { setSinkId?: (id: string) => Promise<void> };
+
+function audioSupportsSetSinkId(el: HTMLAudioElement): boolean {
+  return typeof (el as AudioWithSink).setSinkId === 'function';
+}
 
 export type MultiplayerSessionOptions = {
   renderer: Renderer;
@@ -115,8 +122,19 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
             >Микрофон
             <select class="mp-voice-mic-device" data-action="voice-mic-device" aria-label="Выбор микрофона"></select>
           </label>
+          <label class="mp-voice-device-label mp-voice-output-row mp-hidden"
+            >Звук собеседника (куда выводить)
+            <select
+              class="mp-voice-output-device"
+              data-action="voice-output-device"
+              aria-label="Выход звука"
+            ></select>
+          </label>
+          <p class="mp-hint mp-voice-output-unsupported mp-hidden">
+            В этом браузере нельзя выбрать устройство вывода — используется системный выход по умолчанию.
+          </p>
           <button type="button" class="mp-btn mp-btn-ghost mp-voice-refresh-mics" data-action="voice-refresh-mics">
-            Обновить список
+            Обновить списки устройств
           </button>
         </div>
         <button type="button" class="mp-btn mp-btn-primary" data-action="voice-mic-on">Включить микрофон</button>
@@ -231,18 +249,57 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
     }
   }
 
-  async function refreshMicDeviceList(): Promise<void> {
+  function syncOutputDeviceRowVisibility(): void {
+    const row = root.querySelector('.mp-voice-output-row') as HTMLElement;
+    const unsup = root.querySelector('.mp-voice-output-unsupported') as HTMLElement;
+    const ok = audioSupportsSetSinkId(remoteVoiceAudio);
+    row.classList.toggle('mp-hidden', !ok);
+    unsup.classList.toggle('mp-hidden', ok);
+  }
+
+  async function applyRemoteOutputSinkFromSelect(): Promise<void> {
+    if (!audioSupportsSetSinkId(remoteVoiceAudio)) return;
+    const sel = root.querySelector('.mp-voice-output-device') as HTMLSelectElement;
+    const id = sel.value;
+    if (!id) {
+      try {
+        await (remoteVoiceAudio as AudioWithSink).setSinkId!('');
+      } catch {
+        /* Chromium: '' = системный выход по умолчанию; иначе пропускаем */
+      }
+      try {
+        sessionStorage.removeItem(VOICE_OUTPUT_STORAGE_KEY);
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
+    try {
+      await (remoteVoiceAudio as AudioWithSink).setSinkId!(id);
+      try {
+        sessionStorage.setItem(VOICE_OUTPUT_STORAGE_KEY, id);
+      } catch {
+        /* ignore */
+      }
+    } catch {
+      voiceUiError = 'Не удалось переключить выход звука. Выберите другой в списке.';
+      updateVoiceUi();
+    }
+  }
+
+  async function refreshVoiceDeviceLists(): Promise<void> {
     if (!navigator.mediaDevices?.enumerateDevices) return;
     try {
       const list = await navigator.mediaDevices.enumerateDevices();
       const inputs = list.filter((d) => d.kind === 'audioinput');
-      const sel = root.querySelector('.mp-voice-mic-device') as HTMLSelectElement;
-      const prev = sel.value;
-      sel.textContent = '';
-      const def = document.createElement('option');
-      def.value = '';
-      def.textContent = 'По умолчанию';
-      sel.appendChild(def);
+      const outputs = list.filter((d) => d.kind === 'audiooutput');
+      const selMic = root.querySelector('.mp-voice-mic-device') as HTMLSelectElement;
+      const prevMic = selMic.value;
+      selMic.textContent = '';
+      const defMic = document.createElement('option');
+      defMic.value = '';
+      defMic.textContent = 'По умолчанию';
+      selMic.appendChild(defMic);
       for (const d of inputs) {
         const o = document.createElement('option');
         o.value = d.deviceId;
@@ -250,10 +307,40 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
           d.label && d.label.length > 0
             ? d.label
             : `Микрофон (${d.deviceId.slice(0, 6)}…)`;
-        sel.appendChild(o);
+        selMic.appendChild(o);
       }
-      if (prev && [...sel.options].some((opt) => opt.value === prev)) {
-        sel.value = prev;
+      if (prevMic && [...selMic.options].some((opt) => opt.value === prevMic)) {
+        selMic.value = prevMic;
+      }
+
+      syncOutputDeviceRowVisibility();
+      const selOut = root.querySelector('.mp-voice-output-device') as HTMLSelectElement;
+      const prevOut = selOut.value;
+      let stored: string | null = null;
+      try {
+        stored = sessionStorage.getItem(VOICE_OUTPUT_STORAGE_KEY);
+      } catch {
+        stored = null;
+      }
+      selOut.textContent = '';
+      const defOut = document.createElement('option');
+      defOut.value = '';
+      defOut.textContent = 'По умолчанию';
+      selOut.appendChild(defOut);
+      for (const d of outputs) {
+        const o = document.createElement('option');
+        o.value = d.deviceId;
+        o.textContent =
+          d.label && d.label.length > 0
+            ? d.label
+            : `Выход (${d.deviceId.slice(0, 6)}…)`;
+        selOut.appendChild(o);
+      }
+      const restore = stored && [...selOut.options].some((opt) => opt.value === stored);
+      if (restore) {
+        selOut.value = stored!;
+      } else if (prevOut && [...selOut.options].some((opt) => opt.value === prevOut)) {
+        selOut.value = prevOut;
       }
     } catch {
       /* ignore */
@@ -345,6 +432,7 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
           remoteVoicePlayBlocked = false;
           updateVoiceUi();
         },
+        onRemoteStreamAttached: () => applyRemoteOutputSinkFromSelect(),
       });
     }
     return voicePeer;
@@ -373,6 +461,13 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       if (!voicePeer?.hasLocalMic) return;
       void voicePeer.switchMicrophoneDevice(id || null).catch(() => {
         voiceUiError = 'Не удалось переключить микрофон.';
+        updateVoiceUi();
+      });
+      return;
+    }
+    if (t.matches('select[data-action="voice-output-device"]')) {
+      void applyRemoteOutputSinkFromSelect().then(() => {
+        void getOrCreateVoicePeer()?.tryPlayRemoteAudio();
         updateVoiceUi();
       });
     }
@@ -558,7 +653,7 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       onViewPlayerSlot?.(msg.playerSlot);
       pushBoardStateImmediate();
       startVoiceStatePoll();
-      void refreshMicDeviceList().then(() => updateVoiceUi());
+      void refreshVoiceDeviceLists().then(() => updateVoiceUi());
       updateVoiceUi();
       return;
     }
@@ -588,7 +683,7 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
         tearDownVoice();
       } else {
         startVoiceStatePoll();
-        void refreshMicDeviceList().then(() => updateVoiceUi());
+        void refreshVoiceDeviceLists().then(() => updateVoiceUi());
       }
       updateVoiceUi();
       return;
@@ -768,7 +863,7 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       void v
         .startMicrophone(deviceId)
         .then(() => {
-          void refreshMicDeviceList().then(() => updateVoiceUi());
+          void refreshVoiceDeviceLists().then(() => updateVoiceUi());
           updateVoiceUi();
         })
         .catch((err: unknown) => {
@@ -793,11 +888,12 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       return;
     }
     if (action === 'voice-refresh-mics') {
-      void refreshMicDeviceList().then(() => updateVoiceUi());
+      void refreshVoiceDeviceLists().then(() => updateVoiceUi());
       return;
     }
     if (action === 'voice-unblock-play') {
       void (async () => {
+        await applyRemoteOutputSinkFromSelect();
         const v = getOrCreateVoicePeer();
         const ok = v ? await v.tryPlayRemoteAudio() : await remoteVoiceAudio.play().then(() => true).catch(() => false);
         if (ok) {
