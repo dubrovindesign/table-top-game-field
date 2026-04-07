@@ -34,7 +34,9 @@ npm run catalog:apply -- path/to/hex-board-catalog-overrides.json
 - `src/catalog/leaders.json` — лидеры, ростер, скрытия, слоты;
 - `src/catalog/hotspots/<unitId>.json` — разметка хотспотов из поля `hotspots` экспорта.
 
-Если в экспорте **нет** записей в `hotspots`, но разметка лежит отдельно в `public/card-hotspots/` — убедись, что эти файлы закоммичены и пути в карточках совпадают.
+**Хотспоты на проде:** `getHotspotsForUnit` берёт данные из оверрайдов в `localStorage` **или** из **`src/catalog/hotspots/<unitId>.json`** (имя файла = **id юнита** в каталоге). Файлы только в `public/card-hotspots/` с другим именем **не подхватываются** — их нужно скопировать/переименовать в `src/catalog/hotspots/<unitId>.json`, а поле `image` выровнять с путём к арту карты (например `/catalog-units/.../card_sprite.png`). После сохранения хотспотов в редакторе не забудь нажать сохранение зон и **экспорт**, чтобы поле `hotspots` попало в JSON.
+
+Если в экспорте **нет** записей в `hotspots`, но разметка лежит отдельно в `public/card-hotspots/` — перенеси её в `src/catalog/hotspots/<unitId>.json` вручную или добавь в экспорт и снова выполни `catalog:apply`.
 
 ### 3. Картинки карточек (не раздувать бандл)
 
