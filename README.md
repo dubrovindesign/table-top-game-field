@@ -52,6 +52,7 @@ npm run build
    npm ci
    MP_PORT=3333 npm run start:room
    ```
+   Опционально: `MP_ROOM_EMPTY_TTL_MS` — сколько миллисекунд сервер держит пустую комнату после отключения всех клиентов (по умолчанию 10 минут), чтобы перезагрузка по той же ссылке восстановила стол; по истечении срока комната удаляется.
    Или Docker: [docker-compose.yml](docker-compose.yml) (образ собирается из [deploy/Dockerfile.roomserver](deploy/Dockerfile.roomserver)). Снаружи обычно ставят TLS-прокси на `wss://`.
 
 На странице по **https** браузер требует **wss**, не `ws` (иначе смешанный контент).

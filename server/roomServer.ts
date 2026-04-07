@@ -10,6 +10,14 @@ import { parseClientMessage } from '../src/multiplayer/protocol.ts';
 
 const PORT = Number(process.env.MP_PORT ?? 3333);
 
+/** How long an empty room (no sockets) is kept so reconnect / reload can restore boardState. */
+const ROOM_EMPTY_TTL_MS = Math.max(
+  0,
+  Number(process.env.MP_ROOM_EMPTY_TTL_MS ?? 10 * 60 * 1000) || 10 * 60 * 1000,
+);
+
+const BOARD_HISTORY_MAX = 50;
+
 type Role = 'player' | 'spectator';
 
 type Attached = {
@@ -24,10 +32,71 @@ type Room = {
   spectators: Set<WebSocket>;
   /** Latest full-table JSON snapshot from clients. */
   boardState: object | null;
+  /** Older snapshots for global undo (most recent at end). */
+  boardHistory: object[];
+  /** When the room became empty (no sockets); null if anyone is connected. */
+  emptySince: number | null;
+  emptyExpireTimer: ReturnType<typeof setTimeout> | null;
 };
 
 const rooms = new Map<string, Room>();
 const wsMeta = new WeakMap<WebSocket, Attached>();
+
+function isRoomSocketEmpty(room: Room): boolean {
+  return (
+    room.players[0] === null &&
+    room.players[1] === null &&
+    room.spectators.size === 0
+  );
+}
+
+function clearRoomEmptySchedule(room: Room): void {
+  if (room.emptyExpireTimer !== null) {
+    clearTimeout(room.emptyExpireTimer);
+    room.emptyExpireTimer = null;
+  }
+  room.emptySince = null;
+}
+
+function scheduleRoomDeleteIfEmpty(roomId: string, room: Room): void {
+  if (!isRoomSocketEmpty(room)) return;
+  clearRoomEmptySchedule(room);
+  room.emptySince = Date.now();
+  if (ROOM_EMPTY_TTL_MS <= 0) {
+    rooms.delete(roomId);
+    return;
+  }
+  room.emptyExpireTimer = setTimeout(() => {
+    room.emptyExpireTimer = null;
+    const r = rooms.get(roomId);
+    if (!r) return;
+    if (!isRoomSocketEmpty(r)) return;
+    rooms.delete(roomId);
+  }, ROOM_EMPTY_TTL_MS);
+}
+
+function reviveRoomOnJoin(room: Room): void {
+  clearRoomEmptySchedule(room);
+}
+
+/** Wall-clock safety if timers are delayed (sleep, debugger). */
+function purgeExpiredEmptyRooms(): void {
+  if (ROOM_EMPTY_TTL_MS <= 0) return;
+  const now = Date.now();
+  for (const [id, room] of rooms) {
+    if (!isRoomSocketEmpty(room)) continue;
+    if (room.emptySince === null) continue;
+    if (now - room.emptySince < ROOM_EMPTY_TTL_MS) continue;
+    clearRoomEmptySchedule(room);
+    rooms.delete(id);
+  }
+}
+
+function isRoomExpiredTombstone(room: Room): boolean {
+  if (!isRoomSocketEmpty(room)) return false;
+  if (room.emptySince === null) return false;
+  return Date.now() - room.emptySince >= ROOM_EMPTY_TTL_MS;
+}
 
 function send(ws: WebSocket, msg: ServerToClientMessage): void {
   if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(msg));
@@ -78,8 +147,9 @@ function removeFromRoom(ws: WebSocket): void {
   const leftId = m.id;
   const leftRole = m.role ?? 'spectator';
   const leftSlot = m.playerSlot;
+  const roomId = m.roomId;
   broadcastRoom(
-    m.roomId,
+    roomId,
     {
       type: 'peerLeft',
       id: leftId,
@@ -89,11 +159,9 @@ function removeFromRoom(ws: WebSocket): void {
     ws,
   );
 
-  const empty =
-    room.players[0] === null &&
-    room.players[1] === null &&
-    room.spectators.size === 0;
-  if (empty) rooms.delete(m.roomId);
+  if (isRoomSocketEmpty(room)) {
+    scheduleRoomDeleteIfEmpty(roomId, room);
+  }
 
   m.roomId = null;
   m.role = null;
@@ -107,6 +175,18 @@ function genRoomId(): string {
     s += alphabet[Math.floor(Math.random() * alphabet.length)]!;
   }
   return s;
+}
+
+function newEmptyRoomFields(): Pick<
+  Room,
+  'boardState' | 'boardHistory' | 'emptySince' | 'emptyExpireTimer'
+> {
+  return {
+    boardState: null,
+    boardHistory: [],
+    emptySince: null,
+    emptyExpireTimer: null,
+  };
 }
 
 const wss = new WebSocketServer({ port: PORT, host: '0.0.0.0' });
@@ -144,12 +224,14 @@ wss.on('connection', (ws: WebSocket) => {
         send(ws, { type: 'joinError', message: 'Already in a room' });
         return;
       }
+      purgeExpiredEmptyRooms();
       let roomId = genRoomId();
       while (rooms.has(roomId)) roomId = genRoomId();
+      const emptyFields = newEmptyRoomFields();
       const room: Room = {
         players: [ws, null],
         spectators: new Set(),
-        boardState: null,
+        ...emptyFields,
       };
       rooms.set(roomId, room);
       meta.roomId = roomId;
@@ -171,8 +253,13 @@ wss.on('connection', (ws: WebSocket) => {
         send(ws, { type: 'joinError', message: 'Already in a room' });
         return;
       }
-      const room = rooms.get(msg.roomId);
-      if (!room) {
+      purgeExpiredEmptyRooms();
+      let room = rooms.get(msg.roomId);
+      if (!room || isRoomExpiredTombstone(room)) {
+        if (room && isRoomExpiredTombstone(room)) {
+          clearRoomEmptySchedule(room);
+          rooms.delete(msg.roomId);
+        }
         send(ws, { type: 'joinError', message: 'Room not found' });
         return;
       }
@@ -197,6 +284,7 @@ wss.on('connection', (ws: WebSocket) => {
         meta.role = 'spectator';
         meta.playerSlot = null;
       }
+      reviveRoomOnJoin(room);
       send(ws, {
         type: 'joined',
         roomId: msg.roomId,
@@ -232,12 +320,44 @@ wss.on('connection', (ws: WebSocket) => {
         return;
       }
       if (size > 4_000_000) return;
+
+      let prevJson = '';
+      try {
+        prevJson = room.boardState !== null ? JSON.stringify(room.boardState) : '';
+      } catch {
+        return;
+      }
+      let nextJson = '';
+      try {
+        nextJson = JSON.stringify(msg.payload);
+      } catch {
+        return;
+      }
+      if (prevJson === nextJson) return;
+
+      if (room.boardState !== null) {
+        room.boardHistory.push(room.boardState);
+        while (room.boardHistory.length > BOARD_HISTORY_MAX) {
+          room.boardHistory.shift();
+        }
+      }
       room.boardState = msg.payload;
       broadcastRoom(
         meta.roomId,
         { type: 'boardState', payload: room.boardState },
         ws,
       );
+      return;
+    }
+
+    if (msg.type === 'requestUndo') {
+      if (!meta.roomId) return;
+      const room = rooms.get(meta.roomId);
+      if (!room) return;
+      if (room.boardHistory.length === 0) return;
+      const next = room.boardHistory.pop()!;
+      room.boardState = next;
+      broadcastRoom(meta.roomId, { type: 'boardState', payload: room.boardState });
       return;
     }
 
@@ -283,4 +403,6 @@ wss.on('connection', (ws: WebSocket) => {
   });
 });
 
-console.log(`[mp] WebSocket room server on ws://0.0.0.0:${PORT} (LAN: ws://<your-ip>:${PORT})`);
+console.log(
+  `[mp] WebSocket room server on ws://0.0.0.0:${PORT} (LAN: ws://<your-ip>:${PORT}) emptyRoomTTL=${ROOM_EMPTY_TTL_MS}ms`,
+);

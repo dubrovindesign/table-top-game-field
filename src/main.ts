@@ -84,9 +84,11 @@ import type {
 } from './multiplayer/boardState.ts';
 import { isSerializedBoardStateV1, parseSharedDiceState } from './multiplayer/boardState.ts';
 import {
+  isApplyingRemoteBoardState,
   isBoardMultiplayerSyncActive,
   notifyBoardEditLocal,
   registerBoardSyncApi,
+  requestMultiplayerUndo,
 } from './multiplayer/boardSync.ts';
 import type { PlayerSlot, TableDragState } from './multiplayer/protocol.ts';
 import { EMPTY_TABLE_DRAG } from './multiplayer/protocol.ts';
@@ -1463,6 +1465,7 @@ const diceRoller = new DiceRoller(document.body);
 // Wire unit card → dice roller
 unitCard.onDiceRequest = (req: DiceRequest) => {
   diceRoller.addDice(req.pool, req.source);
+  commitBoardUndoCheckpoint();
 };
 
 /** Открытые карты эфирного вихря (индексы в `EPHIRIUM_VORTEX_CARDS`), синхронизируются в MP через снимок стола. */
@@ -1478,12 +1481,14 @@ const ephiriumVortexUi = new EphiriumVortexUi(document.body, {
     ];
     notifyBoardEditLocal();
     ephiriumVortexUi.applyOpenIndices(ephiriumOpenSpriteIndices);
+    commitBoardUndoCheckpoint();
   },
   requestCloseSlot: (slotIndex: number) => {
     if (slotIndex < 0 || slotIndex >= ephiriumOpenSpriteIndices.length) return;
     ephiriumOpenSpriteIndices = ephiriumOpenSpriteIndices.filter((_, i) => i !== slotIndex);
     notifyBoardEditLocal();
     ephiriumVortexUi.applyOpenIndices(ephiriumOpenSpriteIndices);
+    commitBoardUndoCheckpoint();
   },
 });
 
@@ -1616,6 +1621,7 @@ function moveBlindCardToTableFromZone(
   scheduleRender();
   refreshGodDock();
   armyBuilderPanel.refresh();
+  commitBoardUndoCheckpoint();
 }
 
 new CrystalWallet(document.body);
@@ -1624,7 +1630,10 @@ armyBuilderPanel = new ArmyBuilderPanel(document.body, {
   getAltKeyHeld: () => altKeyHeld,
   getUsedCount: (leaderId, unitId) => countRosterCopies(leaderId, unitId),
   getPointsSpent: () => sumRosterPoints(),
-  onDiceRequest: (req) => diceRoller.addDice(req.pool, req.source),
+  onDiceRequest: (req) => {
+    diceRoller.addDice(req.pool, req.source);
+    commitBoardUndoCheckpoint();
+  },
 });
 
 godHandBlindDock = new GodHandBlindDock(document.body, {
@@ -2461,6 +2470,7 @@ function trySpawnTroopFromArmyBuilder(
     selectedUnitIndex = units.length - 1;
     armyBuilderPanel.refresh();
     scheduleRender();
+    commitBoardUndoCheckpoint();
     return true;
   }
 
@@ -2479,6 +2489,7 @@ function trySpawnTroopFromArmyBuilder(
     selectedLargeMiniIndex = largeMiniatures.length - 1;
     armyBuilderPanel.refresh();
     scheduleRender();
+    commitBoardUndoCheckpoint();
     return true;
   }
 
@@ -2498,6 +2509,7 @@ function trySpawnTroopFromArmyBuilder(
     selectedHugeMiniIndex = hugeMiniatures.length - 1;
     armyBuilderPanel.refresh();
     scheduleRender();
+    commitBoardUndoCheckpoint();
     return true;
   }
 
@@ -2516,6 +2528,7 @@ function trySpawnTroopFromArmyBuilder(
   selectedBigMiniIndex = bigMiniatures.length - 1;
   armyBuilderPanel.refresh();
   scheduleRender();
+  commitBoardUndoCheckpoint();
   return true;
 }
 
@@ -2578,6 +2591,7 @@ function trySpawnLeaderMiniFromArmyBuilder(
   selectedUnitIndex = units.length - 1;
   armyBuilderPanel.refresh();
   scheduleRender();
+  commitBoardUndoCheckpoint();
   return true;
 }
 
@@ -2616,6 +2630,7 @@ function handleArmyBuilderDrop(clientX: number, clientY: number, raw: string): v
       godTablePieces.push(incoming);
     }
     scheduleRender();
+    commitBoardUndoCheckpoint();
     return;
   }
   if (p.kind === 'leader') {
@@ -2901,6 +2916,7 @@ function tryPromoteGodLooseDrag(e: MouseEvent): void {
   godDeckDragWholeStackAfterHold = false;
   godLooseDragPreviewWorld = previewW;
   scheduleRender();
+  commitBoardUndoCheckpoint();
 }
 
 // ── Collect all hexon centers from the grid build ──────────────
@@ -3068,6 +3084,7 @@ function pasteClipboard(): void {
     clearSelection();
     selectedUnitIndex = units.length - 1;
     armyBuilderPanel.refresh();
+    commitBoardUndoCheckpoint();
     return;
   }
   if (clipboardEntity.kind === 'big') {
@@ -3085,6 +3102,7 @@ function pasteClipboard(): void {
     clearSelection();
     selectedBigMiniIndex = bigMiniatures.length - 1;
     armyBuilderPanel.refresh();
+    commitBoardUndoCheckpoint();
     return;
   }
   if (clipboardEntity.kind === 'large') {
@@ -3115,6 +3133,7 @@ function pasteClipboard(): void {
     clearSelection();
     selectedLargeMiniIndex = largeMiniatures.length - 1;
     armyBuilderPanel.refresh();
+    commitBoardUndoCheckpoint();
     return;
   }
   if (clipboardEntity.kind === 'huge') {
@@ -3142,6 +3161,7 @@ function pasteClipboard(): void {
     clearSelection();
     selectedHugeMiniIndex = hugeMiniatures.length - 1;
     armyBuilderPanel.refresh();
+    commitBoardUndoCheckpoint();
     return;
   }
   if (clipboardEntity.kind === 'etherVortex') {
@@ -3158,6 +3178,7 @@ function pasteClipboard(): void {
     });
     clearSelection();
     selectedEtherVortexIndex = etherVortexes.length - 1;
+    commitBoardUndoCheckpoint();
     return;
   }
   const base = clipboardEntity.center;
@@ -3170,6 +3191,7 @@ function pasteClipboard(): void {
   terrainRotationDegs.push(clipboardEntity.rotationDeg);
   clearSelection();
   selectedTerrainIndex = terrains.length - 1;
+  commitBoardUndoCheckpoint();
 }
 
 function duplicateSelected(): void {
@@ -3183,6 +3205,7 @@ function deleteSelected(): void {
   if (sel.kind === 'godTable') {
     removeGodTablePieceAtIndex(sel.index);
     clearSelection();
+    commitBoardUndoCheckpoint();
     return;
   }
   if (sel.kind === 'small') {
@@ -3190,6 +3213,7 @@ function deleteSelected(): void {
     unitCardData.splice(sel.index, 1);
     clearSelection();
     armyBuilderPanel.refresh();
+    commitBoardUndoCheckpoint();
     return;
   }
   if (sel.kind === 'big') {
@@ -3197,6 +3221,7 @@ function deleteSelected(): void {
     bigMiniCardData.splice(sel.index, 1);
     clearSelection();
     armyBuilderPanel.refresh();
+    commitBoardUndoCheckpoint();
     return;
   }
   if (sel.kind === 'large') {
@@ -3204,6 +3229,7 @@ function deleteSelected(): void {
     largeMiniCardData.splice(sel.index, 1);
     clearSelection();
     armyBuilderPanel.refresh();
+    commitBoardUndoCheckpoint();
     return;
   }
   if (sel.kind === 'huge') {
@@ -3211,17 +3237,20 @@ function deleteSelected(): void {
     hugeMiniCardData.splice(sel.index, 1);
     clearSelection();
     armyBuilderPanel.refresh();
+    commitBoardUndoCheckpoint();
     return;
   }
   if (sel.kind === 'etherVortex') {
     etherVortexes.splice(sel.index, 1);
     clearSelection();
+    commitBoardUndoCheckpoint();
     return;
   }
   terrains.splice(sel.index, 1);
   terrainOffBoardWorlds.splice(sel.index, 1);
   terrainRotationDegs.splice(sel.index, 1);
   clearSelection();
+  commitBoardUndoCheckpoint();
 }
 
 function boardWorldToScreen(world: { x: number; y: number }): { x: number; y: number } {
@@ -3514,6 +3543,7 @@ function handleMiniatureActivationClick(screenX: number, screenY: number): boole
     const g = getUnitActivationToggleGeometry(i);
     if (isPointInCircle(screenX, screenY, g.center, g.radiusScreen)) {
       units[i]!.activated = units[i]!.activated === false;
+      commitBoardUndoCheckpoint();
       return true;
     }
   }
@@ -3524,6 +3554,7 @@ function handleMiniatureActivationClick(screenX: number, screenY: number): boole
     );
     if (isPointInCircle(screenX, screenY, g.center, g.radiusScreen)) {
       largeMiniatures[i]!.activated = largeMiniatures[i]!.activated === false;
+      commitBoardUndoCheckpoint();
       return true;
     }
   }
@@ -3534,6 +3565,7 @@ function handleMiniatureActivationClick(screenX: number, screenY: number): boole
     );
     if (isPointInCircle(screenX, screenY, g.center, g.radiusScreen)) {
       hugeMiniatures[i]!.activated = hugeMiniatures[i]!.activated === false;
+      commitBoardUndoCheckpoint();
       return true;
     }
   }
@@ -3544,6 +3576,7 @@ function handleMiniatureActivationClick(screenX: number, screenY: number): boole
     );
     if (isPointInCircle(screenX, screenY, g.center, g.radiusScreen)) {
       bigMiniatures[i]!.activated = bigMiniatures[i]!.activated === false;
+      commitBoardUndoCheckpoint();
       return true;
     }
   }
@@ -3576,6 +3609,7 @@ function tryEtherVortexCrystalBadgeOpen(screenX: number, screenY: number): boole
         onCrystalsDelta: (delta) => {
           v.etherCrystals = Math.max(0, v.etherCrystals + delta);
           scheduleRender();
+          commitBoardUndoCheckpoint();
         },
       });
       return true;
@@ -3592,10 +3626,12 @@ function handleMiniatureHealthClick(screenX: number, screenY: number): boolean {
         UNIT_HEALTH_MIN,
         units[openHealthControlsUnitIndex].health - 1,
       );
+      commitBoardUndoCheckpoint();
       return true;
     }
     if (isPointInCircle(screenX, screenY, openGeom.plusCenter, openGeom.buttonRadius)) {
       units[openHealthControlsUnitIndex].health += 1;
+      commitBoardUndoCheckpoint();
       return true;
     }
   }
@@ -3611,10 +3647,12 @@ function handleMiniatureHealthClick(screenX: number, screenY: number): boolean {
         UNIT_HEALTH_MIN,
         bigMiniatures[openHealthControlsBigMiniIndex].health - 1,
       );
+      commitBoardUndoCheckpoint();
       return true;
     }
     if (isPointInCircle(screenX, screenY, openGeom.plusCenter, openGeom.buttonRadius)) {
       bigMiniatures[openHealthControlsBigMiniIndex].health += 1;
+      commitBoardUndoCheckpoint();
       return true;
     }
   }
@@ -3627,10 +3665,12 @@ function handleMiniatureHealthClick(screenX: number, screenY: number): boolean {
     );
     if (isPointInCircle(screenX, screenY, openGeom.minusCenter, openGeom.buttonRadius)) {
       largeMiniatures[li].health = Math.max(UNIT_HEALTH_MIN, largeMiniatures[li].health - 1);
+      commitBoardUndoCheckpoint();
       return true;
     }
     if (isPointInCircle(screenX, screenY, openGeom.plusCenter, openGeom.buttonRadius)) {
       largeMiniatures[li].health += 1;
+      commitBoardUndoCheckpoint();
       return true;
     }
   }
@@ -3643,10 +3683,12 @@ function handleMiniatureHealthClick(screenX: number, screenY: number): boolean {
     );
     if (isPointInCircle(screenX, screenY, openGeom.minusCenter, openGeom.buttonRadius)) {
       hugeMiniatures[hi].health = Math.max(UNIT_HEALTH_MIN, hugeMiniatures[hi].health - 1);
+      commitBoardUndoCheckpoint();
       return true;
     }
     if (isPointInCircle(screenX, screenY, openGeom.plusCenter, openGeom.buttonRadius)) {
       hugeMiniatures[hi].health += 1;
+      commitBoardUndoCheckpoint();
       return true;
     }
   }
@@ -3924,6 +3966,7 @@ function finishGodLooseDragIfActive(e: MouseEvent | PointerEvent): void {
         godLooseDragPendingIndex = null;
         godDeckDragWholeStackAfterHold = false;
         scheduleRender();
+        commitBoardUndoCheckpoint();
         return;
       }
 
@@ -3959,6 +4002,7 @@ function finishGodLooseDragIfActive(e: MouseEvent | PointerEvent): void {
     godLooseDragPendingIndex = null;
     godDeckDragWholeStackAfterHold = false;
     scheduleRender();
+    commitBoardUndoCheckpoint();
   }
 }
 
@@ -4042,6 +4086,7 @@ canvas.addEventListener('dblclick', (e: MouseEvent) => {
     fromFaceUp,
   };
   scheduleRender();
+  commitBoardUndoCheckpoint();
 });
 
 canvas.addEventListener('pointerdown', (e: PointerEvent) => {
@@ -4537,6 +4582,7 @@ window.addEventListener('mouseup', (e) => {
     renderer.setDragState(null, null, null);
     updateMovementHighlights();
     scheduleRender();
+    commitBoardUndoCheckpoint();
   }
   if (e.button === 0 && draggingBigMiniIndex !== null) {
     const dropWorld = screenToBoardWorld(e.clientX, e.clientY);
@@ -4557,6 +4603,7 @@ window.addEventListener('mouseup', (e) => {
       bigMiniatures.map((m) => m.offBoardWorld));
     updateBigMiniMovementHighlights();
     scheduleRender();
+    commitBoardUndoCheckpoint();
   }
   if (e.button === 0 && draggingLargeMiniIndex !== null) {
     const dropHex = hexAtScreen(e.clientX, e.clientY);
@@ -4572,6 +4619,7 @@ window.addEventListener('mouseup', (e) => {
     unitCard.setPassthrough(false);
     updateLargeMiniMovementHighlights();
     scheduleRender();
+    commitBoardUndoCheckpoint();
   }
   if (e.button === 0 && draggingHugeMiniIndex !== null) {
     const idx = draggingHugeMiniIndex;
@@ -4594,6 +4642,7 @@ window.addEventListener('mouseup', (e) => {
     unitCard.setPassthrough(false);
     updateHugeMiniMovementHighlights();
     scheduleRender();
+    commitBoardUndoCheckpoint();
   }
   if (e.button === 0 && isDraggingTerrain) {
     const dropWorld = screenToBoardWorld(e.clientX, e.clientY);
@@ -4613,6 +4662,7 @@ window.addEventListener('mouseup', (e) => {
     terrainDragOverCenter = null;
     renderer.setTerrain(terrains, null, false, null, null, selectedTerrainIndex, terrainOffBoardWorlds);
     scheduleRender();
+    commitBoardUndoCheckpoint();
   }
   if (e.button === 0 && isDraggingEtherVortex) {
     const dropWorld = screenToBoardWorld(e.clientX, e.clientY);
@@ -4633,6 +4683,7 @@ window.addEventListener('mouseup', (e) => {
     renderer.setEtherVortexDrag(null, null, null);
     renderer.setEtherVortexes(etherVortexes, selectedEtherVortexIndex);
     scheduleRender();
+    commitBoardUndoCheckpoint();
   }
   isPanning = false;
 });
@@ -4659,6 +4710,18 @@ window.addEventListener('keydown', (e) => {
     scheduleRender();
     return;
   }
+  if (mod && !e.shiftKey && e.code === 'KeyZ') {
+    if (e.repeat) return;
+    if (isBoardMultiplayerSyncActive()) {
+      if (localViewPlayerSlot === null) return;
+      e.preventDefault();
+      requestMultiplayerUndo();
+    } else {
+      e.preventDefault();
+      performSoloUndo();
+    }
+    return;
+  }
   if (!mod && !e.repeat && e.code === 'KeyR') {
     if (
       isPointOverCanvas(pointerScreenX, pointerScreenY) &&
@@ -4673,6 +4736,7 @@ window.addEventListener('keydown', (e) => {
           notifyBoardEditLocal();
           e.preventDefault();
           scheduleRender();
+          commitBoardUndoCheckpoint();
           return;
         }
       }
@@ -4852,6 +4916,7 @@ window.addEventListener('keydown', (e) => {
       rotateElementUnderHex(hoveredHexUnderPointer, -elementRotStep)
     ) {
       scheduleRender();
+      commitBoardUndoCheckpoint();
       e.preventDefault();
     }
     return;
@@ -4866,6 +4931,7 @@ window.addEventListener('keydown', (e) => {
       rotateElementUnderHex(hoveredHexUnderPointer, elementRotStep)
     ) {
       scheduleRender();
+      commitBoardUndoCheckpoint();
       e.preventDefault();
     }
     return;
@@ -4949,6 +5015,7 @@ canvas.addEventListener('contextmenu', (e) => {
         onToggle: () => {
           syncEffectMarkersToRenderer();
           scheduleRender();
+          commitBoardUndoCheckpoint();
         },
       });
       return;
@@ -4961,6 +5028,7 @@ canvas.addEventListener('contextmenu', (e) => {
         onToggle: () => {
           syncEffectMarkersToRenderer();
           scheduleRender();
+          commitBoardUndoCheckpoint();
         },
       });
       return;
@@ -4972,6 +5040,7 @@ canvas.addEventListener('contextmenu', (e) => {
         onToggle: () => {
           syncEffectMarkersToRenderer();
           scheduleRender();
+          commitBoardUndoCheckpoint();
         },
       });
       return;
@@ -4983,6 +5052,7 @@ canvas.addEventListener('contextmenu', (e) => {
         onToggle: () => {
           syncEffectMarkersToRenderer();
           scheduleRender();
+          commitBoardUndoCheckpoint();
         },
       });
       return;
@@ -5000,6 +5070,7 @@ canvas.addEventListener('contextmenu', (e) => {
       onToggle: () => {
         syncEffectMarkersToRenderer();
         scheduleRender();
+        commitBoardUndoCheckpoint();
       },
     });
     return;
@@ -5013,6 +5084,7 @@ canvas.addEventListener('contextmenu', (e) => {
       onToggle: () => {
         syncEffectMarkersToRenderer();
         scheduleRender();
+        commitBoardUndoCheckpoint();
       },
     });
     return;
@@ -5025,6 +5097,7 @@ canvas.addEventListener('contextmenu', (e) => {
       onToggle: () => {
         syncEffectMarkersToRenderer();
         scheduleRender();
+        commitBoardUndoCheckpoint();
       },
     });
     return;
@@ -5037,6 +5110,7 @@ canvas.addEventListener('contextmenu', (e) => {
       onToggle: () => {
         syncEffectMarkersToRenderer();
         scheduleRender();
+        commitBoardUndoCheckpoint();
       },
     });
     return;
@@ -5051,10 +5125,12 @@ canvas.addEventListener('contextmenu', (e) => {
       onPickDomain: (domain) => {
         v.domain = domain;
         scheduleRender();
+        commitBoardUndoCheckpoint();
       },
       onClearDomain: () => {
         v.domain = null;
         scheduleRender();
+        commitBoardUndoCheckpoint();
       },
     });
     return;
@@ -5361,6 +5437,65 @@ registerBoardSyncApi({
   capture: captureBoardSnapshot,
   apply: applyBoardSnapshot,
 });
+
+const SOLO_UNDO_MAX = 50;
+
+const soloUndoStack: SerializedBoardStateV1[] = [];
+/** JSON of board state after the last committed solo action (for stacking previous states on the next change). */
+let soloUndoLastCommittedJson = '';
+let wasMpSyncActive = false;
+
+/** Call after each discrete local edit in solo mode so Ctrl+Z steps one user action back. */
+function commitBoardUndoCheckpoint(): void {
+  if (isBoardMultiplayerSyncActive()) return;
+  if (isApplyingRemoteBoardState()) return;
+  let j = '';
+  try {
+    j = JSON.stringify(captureBoardSnapshot());
+  } catch {
+    return;
+  }
+  if (j === soloUndoLastCommittedJson) return;
+  if (soloUndoLastCommittedJson !== '') {
+    try {
+      const parsed: unknown = JSON.parse(soloUndoLastCommittedJson);
+      if (isSerializedBoardStateV1(parsed)) {
+        soloUndoStack.push(structuredClone(parsed));
+        while (soloUndoStack.length > SOLO_UNDO_MAX) {
+          soloUndoStack.shift();
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  soloUndoLastCommittedJson = j;
+}
+
+function performSoloUndo(): void {
+  if (soloUndoStack.length === 0) return;
+  const prev = soloUndoStack.pop()!;
+  applyBoardSnapshot(prev);
+  try {
+    soloUndoLastCommittedJson = JSON.stringify(captureBoardSnapshot());
+  } catch {
+    soloUndoLastCommittedJson = '';
+  }
+  scheduleRender();
+}
+
+window.setInterval(() => {
+  const mp = isBoardMultiplayerSyncActive();
+  if (mp) {
+    wasMpSyncActive = true;
+    return;
+  }
+  if (wasMpSyncActive) {
+    wasMpSyncActive = false;
+    soloUndoStack.length = 0;
+    soloUndoLastCommittedJson = '';
+  }
+}, 500);
 
 const toolbarMountEl = armyBuilderPanel.getToolbarMount();
 initMultiplayerSession({

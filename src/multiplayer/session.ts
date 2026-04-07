@@ -5,6 +5,7 @@ import {
   receiveRemoteBoardState,
   setBoardSyncTransport,
   setMultiplayerBoardSyncActive,
+  setMultiplayerUndoSend,
 } from './boardSync.ts';
 import type { PlayerSlot, ServerToClientMessage, TableDragState } from './protocol.ts';
 import { RoomClient } from './roomClient.ts';
@@ -492,6 +493,9 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
     setBoardSyncTransport((m) => {
       client.send(m);
     });
+    setMultiplayerUndoSend(() => {
+      client.send({ type: 'requestUndo' });
+    });
     setMultiplayerBoardSyncActive(true);
     setTableDragOutboundTransport((m) => {
       client.send(m);
@@ -510,6 +514,7 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
     setTableDragOutboundActive(false);
     setTableDragOutboundTransport(null);
     setBoardSyncTransport(null);
+    setMultiplayerUndoSend(null);
     setMultiplayerBoardSyncActive(false);
     peerTableDragById.clear();
     renderer.setRemotePeerTableDrags([]);
