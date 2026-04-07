@@ -13,8 +13,11 @@ APP_DIR="${APP_DIR:-/var/www/hex-board-game}"
 APP_USER="${APP_USER:-www-data}"
 SERVICE="${SERVICE:-hex-room-server}"
 WS_URL="${VITE_MP_WS_URL:-wss://tornscape.dubrovindesign.ru/__mp_ws}"
+# Avoid ~/.npm or /var/www/.npm as root (EACCES when running npm as www-data).
+NPM_CACHE="${APP_DIR}/.npm-cache"
 
 cd "$APP_DIR"
+sudo -u "$APP_USER" mkdir -p "$NPM_CACHE"
 
 OLD_REV=$(sudo -u "$APP_USER" git rev-parse HEAD)
 sudo -u "$APP_USER" git fetch --quiet origin
@@ -48,12 +51,12 @@ fi
 if [ "$need_install" = 1 ]; then
     echo "=== npm install ==="
     sudo -u "$APP_USER" env NODE_OPTIONS="--max-old-space-size=768" \
-        npm install --no-audit --no-fund
+        NPM_CONFIG_CACHE="$NPM_CACHE" npm install --no-audit --no-fund
 fi
 
 echo "=== build (VITE_MP_WS_URL=$WS_URL) ==="
 sudo -u "$APP_USER" env NODE_OPTIONS="--max-old-space-size=768" \
-    VITE_MP_WS_URL="$WS_URL" npm run build
+    NPM_CONFIG_CACHE="$NPM_CACHE" VITE_MP_WS_URL="$WS_URL" npm run build
 
 if [ "$need_restart" = 1 ]; then
     echo "=== restart $SERVICE ==="

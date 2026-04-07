@@ -9,6 +9,9 @@ node_modules/
 # Build output — rebuild on the host or in CI (see README)
 dist/
 
+# Server deploy: npm cache as www-data (see deploy/deploy.sh)
+.npm-cache/
+
 # Logs / OS
 *.log
 .DS_Store
