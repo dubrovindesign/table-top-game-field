@@ -28,6 +28,7 @@ import {
   setRosterSlotPatch,
   setUnitPatch,
 } from './catalog/catalogOverrides';
+import { getStaticHotspotForUnit } from './catalog/staticHotspots';
 import type { HotspotFile, HotspotRegion } from './catalog/hotspotTypes';
 import type { CatalogUnitDef, FactionDef, LeaderDef, RosterSlotDef } from './catalog/types';
 import {
@@ -831,8 +832,9 @@ export class CatalogEditorPanel {
         });
     });
 
-    this.hotspotStage = el('div', 'ce-hotspot-stage');
+    this.hotspotStage = el('div', 'ce-hotspot-stage uc-image-card-inner');
     this.hotspotImg = document.createElement('img');
+    this.hotspotImg.className = 'uc-image-card-img';
     this.hotspotImg.alt = '';
     this.hotspotStage.appendChild(this.hotspotImg);
     this.hotspotStage.addEventListener('pointerdown', (e) => this.onStagePointerDown(e));
@@ -1100,6 +1102,13 @@ export class CatalogEditorPanel {
       this.hotspotImageUrl = def.card.sprite ?? '';
       this.hotspotImageInput.value = this.hotspotImageUrl;
       this.hotspotImg.src = this.hotspotImageUrl;
+    }
+    const o = getCatalogOverrides();
+    if (o.hotspots[unitId] !== undefined && getStaticHotspotForUnit(unitId) !== undefined) {
+      this.hotspotHint.textContent =
+        'В localStorage есть хотспоты для этого юнита — они перекрывают файлы из репозитория (как на проде). Сбросьте оверрайды каталога, чтобы увидеть только прод-версию.';
+    } else {
+      this.hotspotHint.textContent = '';
     }
     this.renderHotspotRects();
     this.syncHotspotFieldsFromRegion();

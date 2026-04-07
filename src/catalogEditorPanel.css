@@ -280,22 +280,25 @@
 }
 
 /* Hotspot preview */
+/**
+ * Same coordinate space as `.uc-image-card-inner` + `.uc-image-card-img` on the unit card
+ * (percent regions = fractions of the image box). Use outline, not border — border shifts
+ * the content box and misaligns hotspots vs production.
+ */
 .ce-hotspot-stage {
   position: relative;
+  display: block;
   width: 100%;
   border-radius: 8px;
   overflow: hidden;
   background: #0a0a0e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  outline: 1px solid rgba(255, 255, 255, 0.12);
+  outline-offset: -1px;
   user-select: none;
   touch-action: none;
 }
 
-.ce-hotspot-stage img {
-  display: block;
-  width: 100%;
-  height: auto;
-  vertical-align: top;
+.ce-hotspot-stage img.uc-image-card-img {
   pointer-events: none;
 }
 
