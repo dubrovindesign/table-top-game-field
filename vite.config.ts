@@ -1,5 +1,9 @@
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 const MP_PORT = Number(process.env.MP_PORT ?? 3333);
 
@@ -13,6 +17,14 @@ const mpWsProxy = {
 } as const;
 
 export default defineConfig({
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        cardHotspotTest: resolve(__dirname, 'card-hotspot-test.html'),
+      },
+    },
+  },
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',

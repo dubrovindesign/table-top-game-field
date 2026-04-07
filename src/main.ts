@@ -23,7 +23,14 @@ import {
   defaultRenderConfig,
 } from './renderer';
 import { DiceRoller } from './dice';
-import { UnitCard, type AttackAbility, type DiceRequest, type UnitCardData } from './unitCard';
+import {
+  UnitCard,
+  unitMiniatureImageSrc,
+  type AttackAbility,
+  type DiceRequest,
+  type UnitCardData,
+  type UnitCardShowOptions,
+} from './unitCard';
 import {
   BIG_MINI_VISUAL_SCALE,
   BIG_UNIT_HEALTH_UI_SCALE,
@@ -44,13 +51,17 @@ import {
   smallUnitHealthBadgeCenterWorldRad,
 } from './healthUi';
 import { CrystalWallet } from './crystalWallet';
+import { CATALOG_OVERRIDES_CHANGED } from './catalog/catalogOverrides';
+import { CatalogEditorPanel } from './catalogEditorPanel';
 import {
+  CATALOG_UNITS,
   getCatalogUnit,
   getLeader,
   LEADER_MINI_MAX_COPIES,
   maxCopiesForSlot,
   rosterSpawnPoints,
 } from './armyCatalog';
+import type { CatalogUnitDef } from './catalog/types';
 import { ArmyBuilderPanel, DND_MIME, type ArmyDragPayload } from './armyBuilderPanel';
 import { EPHIRIUM_VORTEX_CARDS } from './ephiriumVortexCards';
 import { EphiriumVortexUi } from './ephiriumVortexUi';
@@ -152,10 +163,6 @@ function healthBadgePlusMinusCentersWorld(
   };
 }
 
-const UNIT_WALK_RANGE = 4;
-const UNIT_RUN_RANGE = 7;
-const BIG_MINI_WALK_RANGE = 2;
-const BIG_MINI_RUN_RANGE = 4;
 const BG_CALIBRATION_STEP = 1;
 const BG_CALIBRATION_STEP_FAST = 4;
 const BG_CALIBRATION_SCALE_STEP = 0.001;
@@ -195,6 +202,77 @@ function resizeCanvas(): void {
   canvas.style.height = `${window.innerHeight}px`;
 }
 resizeCanvas();
+
+function mountTopTurnPanel(parent: HTMLElement): {
+  localWalletMount: HTMLElement;
+  opponentWalletMount: HTMLElement;
+} {
+  const panel = document.createElement('div');
+  panel.className = 'turn-top-panel';
+
+  const wingLeft = document.createElement('div');
+  wingLeft.className = 'turn-wing turn-wing--left';
+
+  const opponentWalletMount = document.createElement('div');
+  opponentWalletMount.className = 'turn-wallet-mount turn-wallet-mount-opponent';
+
+  const center = document.createElement('div');
+  center.className = 'turn-panel-center';
+
+  let turn = 1;
+  const maxTurn = 6;
+
+  const turnButton = document.createElement('button');
+  turnButton.type = 'button';
+  turnButton.className = 'turn-counter-btn';
+  turnButton.textContent = `Ход ${turn}`;
+  turnButton.setAttribute('aria-expanded', 'false');
+
+  const endTurnButton = document.createElement('button');
+  endTurnButton.type = 'button';
+  endTurnButton.className = 'turn-end-btn';
+  endTurnButton.textContent = 'Завершить ход';
+  endTurnButton.hidden = true;
+
+  const syncTurnUi = (): void => {
+    turnButton.textContent = `Ход ${turn}`;
+    endTurnButton.disabled = turn >= maxTurn;
+  };
+
+  turnButton.addEventListener('click', () => {
+    const nextHidden = !endTurnButton.hidden;
+    endTurnButton.hidden = nextHidden;
+    turnButton.setAttribute('aria-expanded', String(!nextHidden));
+  });
+
+  endTurnButton.addEventListener('click', () => {
+    if (turn >= maxTurn) return;
+    turn += 1;
+    syncTurnUi();
+    endTurnButton.hidden = true;
+    turnButton.setAttribute('aria-expanded', 'false');
+  });
+
+  center.appendChild(turnButton);
+  center.appendChild(endTurnButton);
+
+  const localWalletMount = document.createElement('div');
+  localWalletMount.className = 'turn-wallet-mount turn-wallet-mount-local';
+
+  const wingRight = document.createElement('div');
+  wingRight.className = 'turn-wing turn-wing--right';
+
+  wingLeft.appendChild(opponentWalletMount);
+  wingRight.appendChild(localWalletMount);
+
+  panel.appendChild(wingLeft);
+  panel.appendChild(center);
+  panel.appendChild(wingRight);
+  parent.appendChild(panel);
+
+  syncTurnUi();
+  return { localWalletMount, opponentWalletMount };
+}
 
 // ── Create grid & layout ───────────────────────────────────────
 
@@ -586,26 +664,8 @@ type Unit = {
   armyOwnerPlayerSlot?: PlayerSlot;
 };
 
-const units: Unit[] = [
-  {
-    position: new Hex(2, 0),
-    walk: UNIT_WALK_RANGE,
-    run: UNIT_RUN_RANGE,
-    rotationDeg: 0,
-    health: 10,
-    activated: true,
-    effectMarkers: new Set(),
-  },
-  {
-    position: new Hex(5, -1),
-    walk: UNIT_WALK_RANGE,
-    run: UNIT_RUN_RANGE,
-    rotationDeg: 0,
-    health: 10,
-    activated: true,
-    effectMarkers: new Set(),
-  },
-];
+/** Demo board minis — пусто при пустом каталоге; юниты ставятся из панели армии. */
+const units: Unit[] = [];
 let selectedUnitIndex: number | null = null;
 let openHealthControlsUnitIndex: number | null = null;
 let terrains: Hex[] = [new Hex(8, -2)];
@@ -664,17 +724,7 @@ type BigMini = {
   armyOwnerPlayerSlot?: PlayerSlot;
 };
 
-const bigMiniatures: BigMini[] = [
-  {
-    center: new Hex(5, -1),
-    walk: BIG_MINI_WALK_RANGE,
-    run: BIG_MINI_RUN_RANGE,
-    rotationDeg: 0,
-    health: 20,
-    activated: true,
-    effectMarkers: new Set(),
-  },
-];
+const bigMiniatures: BigMini[] = [];
 let selectedBigMiniIndex: number | null = null;
 let openHealthControlsBigMiniIndex: number | null = null;
 
@@ -710,17 +760,7 @@ function largeMiniRotationMatchingFootprint(anchor: Hex, footprintKeys: Set<stri
   return null;
 }
 
-const largeMiniatures: LargeMini[] = [
-  {
-    anchor: new Hex(3, 3),
-    walk: 3,
-    run: 5,
-    rotationDeg: 0,
-    health: 12,
-    activated: true,
-    effectMarkers: new Set(),
-  },
-];
+const largeMiniatures: LargeMini[] = [];
 let selectedLargeMiniIndex: number | null = null;
 let openHealthControlsLargeMiniIndex: number | null = null;
 
@@ -772,40 +812,12 @@ let pointerScreenX = 0;
 let pointerScreenY = 0;
 let lastHoverCardSig: string | null = null;
 
-// ── Unit card data (from army catalog; initial board minis are not roster-tagged) ──
+// ── Unit card data (parallel to units / big / large / huge; filled when placing from catalog) ──
 
-function cloneCatalogCard(unitId: string): UnitCardData {
-  const u = getCatalogUnit(unitId);
-  if (!u) throw new Error(`Unknown catalog unit: ${unitId}`);
-  return structuredClone(u.card);
-}
+const unitCardData: UnitCardData[] = [];
 
-const unitCardData: UnitCardData[] = [
-  cloneCatalogCard('tern_vanguard'),
-  cloneCatalogCard('tern_ranger'),
-];
-
-const bigMiniCardData: UnitCardData[] = [cloneCatalogCard('iron_golem')];
-const largeMiniCardData: UnitCardData[] = [
-  {
-    name: 'Каменный страж',
-    size: 'large',
-    sprite: LARGE_UNIT_SPRITE,
-    health: 12,
-    maxHealth: 12,
-    defense: { white: 2, green: 1 },
-    walk: 3,
-    run: 5,
-    domains: [],
-    concentration: {},
-    defenseReaction: { white: 1 },
-    exploration: { white: 1 },
-    grabRange: 1,
-    attacks: [
-      { name: 'Удар булавой', range: 1, attackRange: 'melee', damageType: 'physical', damage: 4, dice: { red: 3, black: 1 } },
-    ],
-  },
-];
+const bigMiniCardData: UnitCardData[] = [];
+const largeMiniCardData: UnitCardData[] = [];
 const hugeMiniCardData: UnitCardData[] = [];
 
 const unitCard = new UnitCard(document.body);
@@ -979,6 +991,21 @@ function updateAttackRangeHighlights(): void {
   }
 }
 
+function resolveCatalogUnitIdForCard(data: UnitCardData, pieceCatalogId?: string): string | undefined {
+  if (pieceCatalogId) return pieceCatalogId;
+  if (data.catalogUnitId) return data.catalogUnitId;
+  for (const [unitId, def] of Object.entries(CATALOG_UNITS)) {
+    if (def.card.name === data.name) return unitId;
+  }
+  return undefined;
+}
+
+function unitCardOpts(data: UnitCardData, pieceCatalogId?: string): UnitCardShowOptions | undefined {
+  const id = resolveCatalogUnitIdForCard(data, pieceCatalogId);
+  if (id && !data.catalogUnitId) data.catalogUnitId = id;
+  return id ? { catalogUnitId: id } : undefined;
+}
+
 function updateUnitCard(): void {
   if (!shiftKeyHeld) {
     lastHoverCardSig = null;
@@ -995,12 +1022,13 @@ function updateUnitCard(): void {
       const data = unitCardData[shiftHoverTarget.index];
       if (data) {
         data.health = u.health;
+        data.catalogUnitId = u.catalogUnitId ?? data.catalogUnitId;
         if (lastHoverCardSig === sig) {
           unitCard.repositionFloating(pointerScreenX, pointerScreenY);
           return;
         }
         lastHoverCardSig = sig;
-        unitCard.show(data, { x: pointerScreenX, y: pointerScreenY });
+        unitCard.show(data, { x: pointerScreenX, y: pointerScreenY }, unitCardOpts(data, u.catalogUnitId));
         return;
       }
     } else if (shiftHoverTarget.kind === 'big') {
@@ -1008,12 +1036,13 @@ function updateUnitCard(): void {
       const data = bigMiniCardData[shiftHoverTarget.index];
       if (data) {
         data.health = m.health;
+        data.catalogUnitId = m.catalogUnitId ?? data.catalogUnitId;
         if (lastHoverCardSig === sig) {
           unitCard.repositionFloating(pointerScreenX, pointerScreenY);
           return;
         }
         lastHoverCardSig = sig;
-        unitCard.show(data, { x: pointerScreenX, y: pointerScreenY });
+        unitCard.show(data, { x: pointerScreenX, y: pointerScreenY }, unitCardOpts(data, m.catalogUnitId));
         return;
       }
     } else if (shiftHoverTarget.kind === 'large') {
@@ -1021,12 +1050,13 @@ function updateUnitCard(): void {
       const data = largeMiniCardData[shiftHoverTarget.index];
       if (data) {
         data.health = m.health;
+        data.catalogUnitId = m.catalogUnitId ?? data.catalogUnitId;
         if (lastHoverCardSig === sig) {
           unitCard.repositionFloating(pointerScreenX, pointerScreenY);
           return;
         }
         lastHoverCardSig = sig;
-        unitCard.show(data, { x: pointerScreenX, y: pointerScreenY });
+        unitCard.show(data, { x: pointerScreenX, y: pointerScreenY }, unitCardOpts(data, m.catalogUnitId));
         return;
       }
     } else if (shiftHoverTarget.kind === 'huge') {
@@ -1034,12 +1064,13 @@ function updateUnitCard(): void {
       const data = hugeMiniCardData[shiftHoverTarget.index];
       if (data) {
         data.health = m.health;
+        data.catalogUnitId = m.catalogUnitId ?? data.catalogUnitId;
         if (lastHoverCardSig === sig) {
           unitCard.repositionFloating(pointerScreenX, pointerScreenY);
           return;
         }
         lastHoverCardSig = sig;
-        unitCard.show(data, { x: pointerScreenX, y: pointerScreenY });
+        unitCard.show(data, { x: pointerScreenX, y: pointerScreenY }, unitCardOpts(data, m.catalogUnitId));
         return;
       }
     }
@@ -1055,7 +1086,8 @@ function updateUnitCard(): void {
     if (data) {
       // Sync live stats
       data.health = u.health;
-      unitCard.show(data);
+      data.catalogUnitId = u.catalogUnitId ?? data.catalogUnitId;
+      unitCard.show(data, undefined, unitCardOpts(data, u.catalogUnitId));
       return;
     }
   }
@@ -1068,7 +1100,8 @@ function updateUnitCard(): void {
     const data = bigMiniCardData[selectedBigMiniIndex];
     if (data) {
       data.health = m.health;
-      unitCard.show(data);
+      data.catalogUnitId = m.catalogUnitId ?? data.catalogUnitId;
+      unitCard.show(data, undefined, unitCardOpts(data, m.catalogUnitId));
       return;
     }
   }
@@ -1081,7 +1114,8 @@ function updateUnitCard(): void {
     const data = largeMiniCardData[selectedLargeMiniIndex];
     if (data) {
       data.health = m.health;
-      unitCard.show(data);
+      data.catalogUnitId = m.catalogUnitId ?? data.catalogUnitId;
+      unitCard.show(data, undefined, unitCardOpts(data, m.catalogUnitId));
       return;
     }
   }
@@ -1094,7 +1128,8 @@ function updateUnitCard(): void {
     const data = hugeMiniCardData[selectedHugeMiniIndex];
     if (data) {
       data.health = m.health;
-      unitCard.show(data);
+      data.catalogUnitId = m.catalogUnitId ?? data.catalogUnitId;
+      unitCard.show(data, undefined, unitCardOpts(data, m.catalogUnitId));
       return;
     }
   }
@@ -1233,9 +1268,14 @@ function updateMovementHighlights(): void {
 
 function pushPieceRotationsToRenderer(): void {
   renderer.setUnitSpriteSources(
-    unitCardData.map((data, index) => data.sprite ?? SMALL_UNIT_SPRITES[index % SMALL_UNIT_SPRITES.length] ?? null),
+    unitCardData.map(
+      (data, index) =>
+        unitMiniatureImageSrc(data) ?? SMALL_UNIT_SPRITES[index % SMALL_UNIT_SPRITES.length] ?? null,
+    ),
   );
-  renderer.setBigMiniSpriteSource(BIG_UNIT_SPRITE);
+  renderer.setBigMiniSpriteSources(
+    bigMiniCardData.map((d) => unitMiniatureImageSrc(d) ?? BIG_UNIT_SPRITE),
+  );
   renderer.setUnitRotations(units.map((u) => u.rotationDeg));
   renderer.setUnitHealth(units.map((u) => u.health), openHealthControlsUnitIndex);
   renderer.setBigMiniHealth(bigMiniatures.map((m) => m.health), openHealthControlsBigMiniIndex);
@@ -1244,7 +1284,7 @@ function pushPieceRotationsToRenderer(): void {
   // Large minis
   renderer.setLargeMiniRotations(largeMiniatures.map((m) => m.rotationDeg));
   renderer.setLargeMiniHealth(largeMiniatures.map((m) => m.health), openHealthControlsLargeMiniIndex);
-  renderer.setLargeMiniSpriteSources(largeMiniCardData.map((d) => d.sprite ?? LARGE_UNIT_SPRITE));
+  renderer.setLargeMiniSpriteSources(largeMiniCardData.map((d) => unitMiniatureImageSrc(d) ?? LARGE_UNIT_SPRITE));
   // Huge minis
   renderer.setHugeMiniRotations(hugeMiniatures.map((m) => m.rotationDeg));
   renderer.setHugeMiniHealth(hugeMiniatures.map((m) => m.health), openHealthControlsHugeMiniIndex);
@@ -1622,7 +1662,9 @@ function moveBlindCardToTableFromZone(
   commitBoardUndoCheckpoint();
 }
 
-new CrystalWallet(document.body);
+const topTurnPanel = mountTopTurnPanel(document.body);
+new CrystalWallet(topTurnPanel.localWalletMount, { variant: 'local' });
+new CrystalWallet(topTurnPanel.opponentWalletMount, { variant: 'opponent' });
 
 armyBuilderPanel = new ArmyBuilderPanel(document.body, {
   getAltKeyHeld: () => altKeyHeld,
@@ -1633,6 +1675,14 @@ armyBuilderPanel = new ArmyBuilderPanel(document.body, {
     commitBoardUndoCheckpoint();
   },
 });
+
+const catalogEditorPanel = new CatalogEditorPanel(armyBuilderPanel.getToolbarMount());
+window.addEventListener(CATALOG_OVERRIDES_CHANGED, () => {
+  armyBuilderPanel.refresh();
+});
+if (new URLSearchParams(window.location.search).get('catalogEdit') === '1') {
+  catalogEditorPanel.setOpen(true);
+}
 
 godHandBlindDock = new GodHandBlindDock(document.body, {
   isInteractive: isGodDockInteractive,
@@ -2427,19 +2477,15 @@ function applyHugeMiniRotation(hugeIdx: number, deltaDeg: number): boolean {
   return false;
 }
 
-function trySpawnTroopFromArmyBuilder(
+/** Shared placement for army-panel spawns (troop + leader miniature) by `card.size`. */
+function placeArmyCatalogUnitOnBoard(
+  def: CatalogUnitDef,
+  card: UnitCardData,
   unitId: string,
   leaderId: string,
   screenX: number,
   screenY: number,
 ): boolean {
-  const def = getCatalogUnit(unitId);
-  if (!def) return false;
-  const maxC = maxCopiesForSlot(leaderId, unitId);
-  if (maxC === null) return false;
-  if (countRosterCopies(leaderId, unitId) >= maxC) return false;
-
-  const card = structuredClone(def.card);
   const rosterMeta =
     isBoardMultiplayerSyncActive() && localViewPlayerSlot !== null
       ? ({
@@ -2530,6 +2576,23 @@ function trySpawnTroopFromArmyBuilder(
   return true;
 }
 
+function trySpawnTroopFromArmyBuilder(
+  unitId: string,
+  leaderId: string,
+  screenX: number,
+  screenY: number,
+): boolean {
+  const def = getCatalogUnit(unitId);
+  if (!def) return false;
+  const maxC = maxCopiesForSlot(leaderId, unitId);
+  if (maxC === null) return false;
+  if (countRosterCopies(leaderId, unitId) >= maxC) return false;
+
+  const card = structuredClone(def.card);
+  card.catalogUnitId = unitId;
+  return placeArmyCatalogUnitOnBoard(def, card, unitId, leaderId, screenX, screenY);
+}
+
 function trySpawnLeaderMiniFromArmyBuilder(
   leaderId: string,
   unitId: string,
@@ -2539,58 +2602,12 @@ function trySpawnLeaderMiniFromArmyBuilder(
   const leader = getLeader(leaderId);
   if (!leader || leader.catalogUnitId !== unitId) return false;
   const def = getCatalogUnit(unitId);
-  if (!def || def.card.size !== 'small') return false;
+  if (!def) return false;
   if (countRosterCopies(leaderId, unitId) >= LEADER_MINI_MAX_COPIES) return false;
 
   const card = structuredClone(def.card);
-  const rosterMeta =
-    isBoardMultiplayerSyncActive() && localViewPlayerSlot !== null
-      ? ({
-          spawnedFromArmyPanel: true as const,
-          catalogUnitId: unitId,
-          rosterLeaderId: leaderId,
-          armyOwnerPlayerSlot: localViewPlayerSlot,
-        } as const)
-      : ({
-          spawnedFromArmyPanel: true as const,
-          catalogUnitId: unitId,
-          rosterLeaderId: leaderId,
-        } as const);
-
-  const world = screenToBoardWorld(screenX, screenY);
-  const hex = hexAtScreen(screenX, screenY);
-  if (hex) {
-    if (isHexBlockedForSmall(hex)) return false;
-    units.push({
-      position: hex,
-      walk: card.walk,
-      run: card.run,
-      rotationDeg: 0,
-      health: card.health,
-      activated: true,
-      effectMarkers: new Set(),
-      ...rosterMeta,
-    });
-  } else {
-    units.push({
-      position: layout.pixelToHex(world),
-      offBoardWorld: { ...world },
-      walk: card.walk,
-      run: card.run,
-      rotationDeg: 0,
-      health: card.health,
-      activated: true,
-      effectMarkers: new Set(),
-      ...rosterMeta,
-    });
-  }
-  unitCardData.push(card);
-  clearSelection();
-  selectedUnitIndex = units.length - 1;
-  armyBuilderPanel.refresh();
-  scheduleRender();
-  commitBoardUndoCheckpoint();
-  return true;
+  card.catalogUnitId = unitId;
+  return placeArmyCatalogUnitOnBoard(def, card, unitId, leaderId, screenX, screenY);
 }
 
 function parseArmyDragPayload(raw: string): ArmyDragPayload | null {
@@ -2599,12 +2616,21 @@ function parseArmyDragPayload(raw: string): ArmyDragPayload | null {
       unitId?: string;
       leaderId?: string;
       cardId?: string;
+      kind?: string;
     };
     if (o.kind === 'god' && typeof o.cardId === 'string') {
       return { kind: 'god', cardId: o.cardId };
     }
     if (typeof o.unitId !== 'string' || typeof o.leaderId !== 'string') return null;
     if (o.kind === 'leader') {
+      return { kind: 'leader', leaderId: o.leaderId, unitId: o.unitId };
+    }
+    if (o.kind === 'troop') {
+      return { kind: 'troop', leaderId: o.leaderId, unitId: o.unitId };
+    }
+    // `kind` missing / stripped — leader miniature is not on the roster, so troop spawn would fail.
+    const lg = getLeader(o.leaderId);
+    if (lg && lg.catalogUnitId === o.unitId) {
       return { kind: 'leader', leaderId: o.leaderId, unitId: o.unitId };
     }
     return { kind: 'troop', leaderId: o.leaderId, unitId: o.unitId };
@@ -4059,7 +4085,12 @@ document.addEventListener(
     if (!isPointOverCanvas(e.clientX, e.clientY)) return;
     e.preventDefault();
     e.stopPropagation();
-    const raw = e.dataTransfer?.getData(DND_MIME);
+    const dt = e.dataTransfer;
+    let raw = dt?.getData(DND_MIME) ?? '';
+    if (!raw && dt) {
+      const plain = dt.getData('text/plain');
+      if (plain.trimStart().startsWith('{')) raw = plain;
+    }
     if (!raw) return;
     handleArmyBuilderDrop(e.clientX, e.clientY, raw);
   },

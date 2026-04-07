@@ -12,6 +12,7 @@ import {
   type LeaderDef,
   type RosterRowView,
 } from './armyCatalog';
+import { CATALOG_OVERRIDES_CHANGED } from './catalog/catalogOverrides';
 
 const ARMY_CAP_OPTIONS = [200, 300, 400] as const;
 import {
@@ -20,7 +21,7 @@ import {
   godCardsForFaction,
   type GodCardDef,
 } from './godCards';
-import { DOMAIN_LABELS, UnitCard, type DiceRequest } from './unitCard';
+import { DOMAIN_LABELS, UnitCard, unitPanelThumbSrc, type DiceRequest } from './unitCard';
 
 const DND_MIME = 'application/x-army-unit';
 
@@ -267,10 +268,15 @@ export class ArmyBuilderPanel {
     window.addEventListener('keydown', this.boundKey);
     window.addEventListener('pointermove', this.boundMove, { passive: true });
     document.addEventListener('click', this.boundDocClick);
+    window.addEventListener(CATALOG_OVERRIDES_CHANGED, this.boundCatalogOverridesChanged);
   }
 
   private boundDocClick = (): void => {
     this.closePointsCapMenu();
+  };
+  private boundCatalogOverridesChanged = (): void => {
+    if (!this.open) return;
+    this.refresh();
   };
 
   private selectMainTab(tab: ArmyMainTab): void {
@@ -297,6 +303,7 @@ export class ArmyBuilderPanel {
     window.removeEventListener('keydown', this.boundKey);
     window.removeEventListener('pointermove', this.boundMove);
     document.removeEventListener('click', this.boundDocClick);
+    window.removeEventListener(CATALOG_OVERRIDES_CHANGED, this.boundCatalogOverridesChanged);
     this.root.remove();
   }
 
@@ -372,7 +379,7 @@ export class ArmyBuilderPanel {
       return;
     }
     this.hoverRowUnitId = unitId;
-    this.hoverCard.show(def.card, { x: e.clientX, y: e.clientY });
+    this.hoverCard.show(def.card, { x: e.clientX, y: e.clientY }, { catalogUnitId: unitId });
   }
 
   private hideHoverCard(): void {
@@ -519,9 +526,10 @@ export class ArmyBuilderPanel {
     });
 
     const thumb = el('div', 'army-unit-thumb');
-    if (def?.card.sprite) {
+    const leaderThumb = def?.card ? unitPanelThumbSrc(def.card) : undefined;
+    if (leaderThumb) {
       const img = el('img', 'army-unit-thumb-img');
-      img.src = def.card.sprite;
+      img.src = leaderThumb;
       img.alt = '';
       thumb.appendChild(img);
     }
@@ -548,8 +556,9 @@ export class ArmyBuilderPanel {
         leaderId: l.id,
         unitId: l.catalogUnitId,
       };
-      e.dataTransfer?.setData(DND_MIME, JSON.stringify(payload));
-      e.dataTransfer?.setData('text/plain', l.catalogUnitId);
+      const json = JSON.stringify(payload);
+      e.dataTransfer?.setData(DND_MIME, json);
+      e.dataTransfer?.setData('text/plain', json);
       e.dataTransfer!.effectAllowed = 'copy';
     });
 
@@ -626,9 +635,10 @@ export class ArmyBuilderPanel {
     if (blocked && row.rosterBlockedReason) wrap.title = row.rosterBlockedReason;
 
     const thumb = el('div', 'army-unit-thumb');
-    if (row.card.sprite) {
+    const troopThumb = unitPanelThumbSrc(row.card);
+    if (troopThumb) {
       const img = el('img', 'army-unit-thumb-img');
-      img.src = row.card.sprite;
+      img.src = troopThumb;
       img.alt = '';
       thumb.appendChild(img);
     }
@@ -653,8 +663,9 @@ export class ArmyBuilderPanel {
         leaderId: this.selectedLeaderId,
         unitId: row.unitId,
       };
-      e.dataTransfer?.setData(DND_MIME, JSON.stringify(payload));
-      e.dataTransfer?.setData('text/plain', row.unitId);
+      const json = JSON.stringify(payload);
+      e.dataTransfer?.setData(DND_MIME, json);
+      e.dataTransfer?.setData('text/plain', json);
       e.dataTransfer!.effectAllowed = 'copy';
     });
 
@@ -696,8 +707,9 @@ export class ArmyBuilderPanel {
 
     wrap.addEventListener('dragstart', (e) => {
       const payload: ArmyDragPayload = { kind: 'god', cardId: c.id };
-      e.dataTransfer?.setData(DND_MIME, JSON.stringify(payload));
-      e.dataTransfer?.setData('text/plain', c.id);
+      const json = JSON.stringify(payload);
+      e.dataTransfer?.setData(DND_MIME, json);
+      e.dataTransfer?.setData('text/plain', json);
       e.dataTransfer!.effectAllowed = 'copy';
     });
 

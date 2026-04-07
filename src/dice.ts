@@ -22,11 +22,14 @@ import type {
   SerializedSharedDiceStateV2,
 } from './multiplayer/boardState.ts';
 import type { PlayerSlot } from './multiplayer/protocol.ts';
-import { UnitCard, type UnitCardData } from './unitCard';
+import { UnitCard, unitMiniatureImageSrc, type UnitCardData } from './unitCard';
 
 // ── Types ──────────────────────────────────────────────────────
 
 export type DieColor = 'red' | 'green' | 'black' | 'white';
+
+/** Цвет кости в результате броска (боевые + кубики состояний). */
+type DieResultColor = DieColor | 'state';
 
 interface DieConfig {
   color: DieColor;
@@ -43,15 +46,29 @@ const DIE_CONFIGS: DieConfig[] = [
   { color: 'white', label: 'White', bg: '#f5f5f5', fg: '#212121', border: '#bdbdbd' },
 ];
 
+const STATE_DIE_CONFIG = {
+  color: 'state' as const,
+  label: 'State',
+  bg: 'rgba(90, 70, 120, 0.45)',
+  fg: '#f3e8ff',
+  border: 'rgba(180, 140, 220, 0.45)',
+};
+
+type DieResultConfig = DieConfig | typeof STATE_DIE_CONFIG;
+
+function dieConfigForResultColor(c: DieResultColor): DieResultConfig {
+  return c === 'state' ? STATE_DIE_CONFIG : DIE_CONFIGS.find((x) => x.color === c)!;
+}
+
 interface DieResult {
-  color: DieColor;
-  config: DieConfig;
+  color: DieResultColor;
+  config: DieResultConfig;
   value: number;
   rerolled: boolean;
 }
 
 interface RollLogEntry {
-  dice: { color: DieColor; value: number; rerolled: boolean }[];
+  dice: { color: DieResultColor; value: number; rerolled: boolean }[];
   rollIndex: number;
   source: UnitCardData | null;
 }
@@ -145,6 +162,24 @@ const GREEN_DIE_FACE_ASSET: Record<GreenDieFace, string> = {
   success: '/green-success.svg',
 };
 
+/** d6 грани кубика состояний: 1–6 → иконка (порядок зафиксирован). */
+const STATE_DIE_FACE_BY_VALUE: readonly { value: number; src: string; title: string }[] = [
+  { value: 1, src: '/aid.svg', title: '1 — Aid' },
+  { value: 2, src: '/bleed.svg', title: '2 — Bleed' },
+  { value: 3, src: '/fire.svg', title: '3 — Fire' },
+  { value: 4, src: '/panic.svg', title: '4 — Panic' },
+  { value: 5, src: '/slow.svg', title: '5 — Slow' },
+  { value: 6, src: '/stun.svg', title: '6 — Stun' },
+];
+
+function stateFaceSrcForValue(value: number): string {
+  const f = STATE_DIE_FACE_BY_VALUE.find((x) => x.value === value);
+  return f?.src ?? STATE_DIE_FACE_BY_VALUE[0].src;
+}
+
+/** Стартовое и значение после «Сбросить» / «Очистить всё». */
+const DEFAULT_STATE_DICE_COUNT = 1;
+
 function perSlotEqual(a: SerializedSharedDicePerSlotV1, b: SerializedSharedDicePerSlotV1): boolean {
   if (a.rollCounter !== b.rollCounter) return false;
   if (a.log.length !== b.log.length) return false;
@@ -218,6 +253,10 @@ function emptyBucket(): SlotBucket {
 
 export class DiceRoller {
   private container: HTMLElement;
+  /** Column: local crystal wallet mount + dice panel (selector + Roll Dice). */
+  private panelColumn: HTMLElement;
+  /** Mount for the local player's `CrystalWallet` (above `.dice-panel`, right-aligned). */
+  private walletMount: HTMLElement;
   private panel: HTMLElement;
   private selectorRow: HTMLElement;
   private sourceAvatarButton: HTMLButtonElement;
@@ -233,6 +272,15 @@ export class DiceRoller {
   };
   private counts: Map<DieColor, number> = new Map();
   private diceButtons: Map<DieColor, HTMLElement> = new Map();
+  private combatPanel: HTMLElement;
+  private statePanel: HTMLElement;
+  private combatTabBtn: HTMLButtonElement;
+  private stateTabBtn: HTMLButtonElement;
+  private stateDiceCount = DEFAULT_STATE_DICE_COUNT;
+  private stateCountEl: HTMLElement;
+  private stateDiceStrip: HTMLElement;
+  private stateRollButton: HTMLButtonElement;
+  private stateResetButton: HTMLButtonElement;
   private rollButton: HTMLButtonElement;
   /** True while the local player's roll / reroll animation runs (blocks selector). */
   private myRollAnimating = false;
@@ -288,10 +336,24 @@ export class DiceRoller {
     this.hoverCard = new UnitCard(document.body);
 
     this.panel = el('div', 'dice-panel');
-    this.container.appendChild(this.panel);
+
+    const tabBar = el('div', 'dice-panel-tabs');
+    this.combatTabBtn = el('button', 'dice-tab dice-tab-active', 'Боевые кубики');
+    this.combatTabBtn.type = 'button';
+    this.stateTabBtn = el('button', 'dice-tab', 'Кубики состояний');
+    this.stateTabBtn.type = 'button';
+    tabBar.appendChild(this.combatTabBtn);
+    tabBar.appendChild(this.stateTabBtn);
+    this.panel.appendChild(tabBar);
+
+    this.combatTabBtn.addEventListener('click', () => this.setDiceTab('combat'));
+    this.stateTabBtn.addEventListener('click', () => this.setDiceTab('state'));
+
+    this.combatPanel = el('div', 'dice-tab-panel');
+    this.statePanel = el('div', 'dice-tab-panel dice-hidden');
 
     this.selectorRow = el('div', 'dice-selector-row');
-    this.panel.appendChild(this.selectorRow);
+    this.combatPanel.appendChild(this.selectorRow);
 
     this.sourceAvatarButton = el('button', 'dice-source-avatar');
     this.sourceAvatarButton.type = 'button';
@@ -327,11 +389,50 @@ export class DiceRoller {
 
     this.rollButton = el('button', 'dice-roll-btn', 'Roll Dice');
     this.rollButton.addEventListener('click', () => this.roll());
-    this.panel.appendChild(this.rollButton);
+    this.combatPanel.appendChild(this.rollButton);
 
     this.resetButton = el('button', 'dice-reset-btn', 'Reset');
     this.resetButton.addEventListener('click', () => this.resetSelector());
-    this.panel.appendChild(this.resetButton);
+    this.combatPanel.appendChild(this.resetButton);
+
+    this.panel.appendChild(this.combatPanel);
+
+    const stateRow = el('div', 'dice-state-row');
+    const stateCountBtn = el('div', 'dice-cube dice-state-counter');
+    stateCountBtn.title = 'Количество кубиков — ЛКМ: +1, ПКМ: −1';
+    this.stateCountEl = el('span', 'dice-cube-count', String(DEFAULT_STATE_DICE_COUNT));
+    stateCountBtn.appendChild(this.stateCountEl);
+    stateCountBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.adjustStateDiceCount(1);
+    });
+    stateCountBtn.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      this.adjustStateDiceCount(-1);
+    });
+    this.stateDiceStrip = el('div', 'dice-state-dice-strip');
+    stateRow.appendChild(stateCountBtn);
+    stateRow.appendChild(this.stateDiceStrip);
+    this.statePanel.appendChild(stateRow);
+
+    this.stateRollButton = el('button', 'dice-roll-btn', 'Бросить кубики');
+    this.stateRollButton.addEventListener('click', () => this.rollStateDice());
+    this.statePanel.appendChild(this.stateRollButton);
+
+    this.stateResetButton = el('button', 'dice-reset-btn', 'Сбросить');
+    this.stateResetButton.addEventListener('click', () => this.resetStateSelector());
+    this.statePanel.appendChild(this.stateResetButton);
+
+    this.renderStateDiceStrip();
+    this.syncStateRollButton();
+
+    this.panel.appendChild(this.statePanel);
+
+    this.panelColumn = el('div', 'dice-panel-column');
+    this.walletMount = el('div', 'dice-local-wallet-mount');
+    this.panelColumn.appendChild(this.walletMount);
+    this.panelColumn.appendChild(this.panel);
+    this.container.appendChild(this.panelColumn);
 
     this.sourceAvatarButton.addEventListener('pointerenter', () => {
       if (!this.pendingSource) return;
@@ -363,6 +464,11 @@ export class DiceRoller {
       this.hoverSource = null;
       this.updateHoverCard();
     });
+  }
+
+  /** Parent element for the local crystal wallet (above the dice selector / Roll Dice panel). */
+  getLocalWalletMount(): HTMLElement {
+    return this.walletMount;
   }
 
   private createPlayerBlock(slot: PlayerSlot): SlotDom {
@@ -484,6 +590,7 @@ export class DiceRoller {
     this.rollButton.disabled = false;
     this.rollButton.textContent = 'Roll Dice';
     this.resetSelector();
+    this.resetStateSelector(true);
     this.hoverSource = null;
     for (const slot of [0, 1] as const) {
       this.bucket[slot] = emptyBucket();
@@ -540,6 +647,8 @@ export class DiceRoller {
     this.myRollAnimating = false;
     this.rollButton.disabled = false;
     this.rollButton.textContent = 'Roll Dice';
+    this.stateRollButton.textContent = 'Бросить кубики';
+    this.syncStateRollButton();
 
     for (const slot of [0, 1] as const) {
       const raw = parsed.bySlot[String(slot) as '0' | '1'];
@@ -662,7 +771,7 @@ export class DiceRoller {
 
   private rowToDieResults(row: SerializedSharedDiceRollRowV1): DieResult[] {
     return row.dice.map((d) => {
-      const config = DIE_CONFIGS.find((c) => c.color === d.color)!;
+      const config = dieConfigForResultColor(d.color);
       return {
         color: d.color,
         config,
@@ -670,6 +779,35 @@ export class DiceRoller {
         rerolled: d.rerolled,
       };
     });
+  }
+
+  private setDiceTab(tab: 'combat' | 'state'): void {
+    this.combatPanel.classList.toggle('dice-hidden', tab !== 'combat');
+    this.statePanel.classList.toggle('dice-hidden', tab !== 'state');
+    this.combatTabBtn.classList.toggle('dice-tab-active', tab === 'combat');
+    this.stateTabBtn.classList.toggle('dice-tab-active', tab === 'state');
+  }
+
+  private renderStateDiceStrip(): void {
+    this.stateDiceStrip.replaceChildren();
+    for (let i = 0; i < this.stateDiceCount; i++) {
+      const mini = el('div', 'dice-state-mini');
+      mini.title = `Кубик состояния ${i + 1}`;
+      this.stateDiceStrip.appendChild(mini);
+    }
+  }
+
+  private syncStateRollButton(): void {
+    this.stateRollButton.disabled = this.myRollAnimating || this.stateDiceCount === 0;
+  }
+
+  private adjustStateDiceCount(delta: number): void {
+    if (this.myRollAnimating) return;
+    const next = Math.max(0, Math.min(20, this.stateDiceCount + delta));
+    this.stateDiceCount = next;
+    this.stateCountEl.textContent = String(next);
+    this.renderStateDiceStrip();
+    this.syncStateRollButton();
   }
 
   private adjustCount(color: DieColor, delta: number): void {
@@ -682,19 +820,21 @@ export class DiceRoller {
   }
 
   private renderPendingSourceAvatar(): void {
-    if (!this.pendingSource || !this.pendingSource.sprite) {
+    const ps = this.pendingSource;
+    const av = ps ? unitMiniatureImageSrc(ps) : undefined;
+    if (!ps || !av) {
       this.sourceAvatarButton.classList.add('dice-source-avatar-hidden');
       return;
     }
-    this.sourceAvatarImg.src = this.pendingSource.sprite;
-    this.sourceAvatarImg.alt = this.pendingSource.name;
-    this.sourceAvatarButton.title = this.pendingSource.name;
+    this.sourceAvatarImg.src = av;
+    this.sourceAvatarImg.alt = ps.name;
+    this.sourceAvatarButton.title = ps.name;
     this.sourceAvatarButton.classList.remove('dice-source-avatar-hidden');
   }
 
   private isSameSource(a: UnitCardData | null, b: UnitCardData | null): boolean {
     if (!a || !b) return false;
-    return a.name === b.name && (a.sprite ?? '') === (b.sprite ?? '');
+    return a.name === b.name && (unitMiniatureImageSrc(a) ?? '') === (unitMiniatureImageSrc(b) ?? '');
   }
 
   private resetSelector(force = false): void {
@@ -710,12 +850,25 @@ export class DiceRoller {
     this.updateHoverCard();
   }
 
+  private resetStateSelector(force = false): void {
+    if (this.myRollAnimating && !force) return;
+    this.stateDiceCount = DEFAULT_STATE_DICE_COUNT;
+    this.stateCountEl.textContent = String(DEFAULT_STATE_DICE_COUNT);
+    this.renderStateDiceStrip();
+    this.stateRollButton.textContent = 'Бросить кубики';
+    this.syncStateRollButton();
+  }
+
   private updateHoverCard(): void {
     if (!this.altHeld || !this.hoverSource) {
       this.hoverCard.hide();
       return;
     }
-    this.hoverCard.show(this.hoverSource, { x: this.pointerX, y: this.pointerY });
+    this.hoverCard.show(
+      this.hoverSource,
+      { x: this.pointerX, y: this.pointerY },
+      this.hoverSource.catalogUnitId ? { catalogUnitId: this.hoverSource.catalogUnitId } : undefined,
+    );
   }
 
   addDice(pool: Partial<Record<DieColor, number>>, source?: UnitCardData): void {
@@ -757,6 +910,7 @@ export class DiceRoller {
 
     this.myRollAnimating = true;
     this.rollButton.disabled = true;
+    this.stateRollButton.disabled = true;
     this.rollButton.textContent = 'Rolling...';
     b.rollCounter++;
     b.currentResultSource = this.pendingSource;
@@ -776,6 +930,39 @@ export class DiceRoller {
 
     b.currentDice = dice;
     this.resetSelector(true);
+    this.showResults(slot, dice, { lockGlobalRollButton: true });
+    this.pushSharedDiceIfMp();
+  }
+
+  private rollStateDice(): void {
+    if (this.myRollAnimating) return;
+    if (this.stateDiceCount === 0) return;
+
+    const slot = this.myDiceSlot();
+    const b = this.bucket[slot];
+    if (b.currentDice.length > 0) {
+      this.pushCurrentToLog(slot);
+    }
+
+    this.myRollAnimating = true;
+    this.rollButton.disabled = true;
+    this.stateRollButton.disabled = true;
+    this.stateRollButton.textContent = 'Бросок…';
+    b.rollCounter++;
+    b.currentResultSource = null;
+
+    const dice: DieResult[] = [];
+    for (let i = 0; i < this.stateDiceCount; i++) {
+      dice.push({
+        color: 'state',
+        config: STATE_DIE_CONFIG,
+        value: Math.floor(Math.random() * 6) + 1,
+        rerolled: false,
+      });
+    }
+
+    b.currentDice = dice;
+    this.resetStateSelector(true);
     this.showResults(slot, dice, { lockGlobalRollButton: true });
     this.pushSharedDiceIfMp();
   }
@@ -804,16 +991,18 @@ export class DiceRoller {
   private renderLogEntry(entry: RollLogEntry, logContainer: HTMLElement): void {
     const row = el('div', 'dice-log-entry');
 
-    if (entry.source?.sprite) {
+    const logSrc = entry.source;
+    const logAv = logSrc ? unitMiniatureImageSrc(logSrc) : undefined;
+    if (logSrc && logAv) {
       const avatar = el('button', 'dice-log-source-avatar');
       avatar.type = 'button';
-      avatar.title = entry.source.name;
+      avatar.title = logSrc.name;
       const img = el('img', 'dice-log-source-avatar-img');
-      img.src = entry.source.sprite;
-      img.alt = entry.source.name;
+      img.src = logAv;
+      img.alt = logSrc.name;
       avatar.appendChild(img);
       avatar.addEventListener('pointerenter', () => {
-        this.hoverSource = entry.source;
+        this.hoverSource = logSrc;
         this.updateHoverCard();
       });
       avatar.addEventListener('pointerleave', () => {
@@ -828,7 +1017,7 @@ export class DiceRoller {
 
     const diceWrap = el('span', 'dice-log-dice');
     for (const d of entry.dice) {
-      const cfg = DIE_CONFIGS.find((c) => c.color === d.color)!;
+      const cfg = dieConfigForResultColor(d.color);
       const mini = el('span', 'dice-log-die');
       mini.style.backgroundColor = cfg.bg;
       mini.style.color = cfg.fg;
@@ -857,6 +1046,11 @@ export class DiceRoller {
         icon.src = WHITE_DIE_FACE_ASSET[faceType];
         icon.alt = faceType;
         mini.appendChild(icon);
+      } else if (d.color === 'state') {
+        const icon = el('img', 'dice-log-die-icon') as HTMLImageElement;
+        icon.src = stateFaceSrcForValue(d.value);
+        icon.alt = String(d.value);
+        mini.appendChild(icon);
       } else {
         mini.textContent = String(d.value);
       }
@@ -882,16 +1076,18 @@ export class DiceRoller {
 
     const interactive = this.canInteractWithSlot(slot);
 
-    if (b.currentResultSource?.sprite) {
+    const crs = b.currentResultSource;
+    const resultAv = crs ? unitMiniatureImageSrc(crs) : undefined;
+    if (crs && resultAv) {
       const sourceRow = el('div', 'dice-active-source');
       const sourceAvatar = el('button', 'dice-active-source-avatar');
       sourceAvatar.type = 'button';
-      sourceAvatar.title = b.currentResultSource.name;
+      sourceAvatar.title = crs.name;
       const sourceImg = el('img', 'dice-active-source-avatar-img');
-      sourceImg.src = b.currentResultSource.sprite;
-      sourceImg.alt = b.currentResultSource.name;
+      sourceImg.src = resultAv;
+      sourceImg.alt = crs.name;
       sourceAvatar.appendChild(sourceImg);
-      const srcRef = b.currentResultSource;
+      const srcRef = crs;
       sourceAvatar.addEventListener('pointerenter', () => {
         this.hoverSource = srcRef;
         this.updateHoverCard();
@@ -901,7 +1097,7 @@ export class DiceRoller {
         this.updateHoverCard();
       });
       sourceRow.appendChild(sourceAvatar);
-      sourceRow.appendChild(el('span', 'dice-active-source-name', b.currentResultSource.name));
+      sourceRow.appendChild(el('span', 'dice-active-source-name', crs.name));
       activeEl.appendChild(sourceRow);
     }
 
@@ -911,7 +1107,7 @@ export class DiceRoller {
     const slotsContainer = el('div', 'dice-slots');
     activeEl.appendChild(slotsContainer);
 
-    const slots: { column: HTMLElement; dieIndex: number; config: DieConfig }[] = [];
+    const slots: { column: HTMLElement; dieIndex: number; config: DieResultConfig }[] = [];
     b.slotColumns = [];
 
     for (let i = 0; i < dice.length; i++) {
@@ -966,6 +1162,8 @@ export class DiceRoller {
         this.myRollAnimating = false;
         this.rollButton.disabled = false;
         this.rollButton.textContent = 'Roll Dice';
+        this.stateRollButton.textContent = 'Бросить кубики';
+        this.syncStateRollButton();
       }
       if (interactive) {
         for (const sl of slots) {
@@ -1057,7 +1255,11 @@ export class DiceRoller {
 
     this.pendingRerollBySlot[slot] = setTimeout(() => {
       this.pendingRerollBySlot[slot] = null;
-      if (opts.lockMyRoll) this.myRollAnimating = false;
+      if (opts.lockMyRoll) {
+        this.myRollAnimating = false;
+        this.syncStateRollButton();
+        this.stateRollButton.textContent = 'Бросить кубики';
+      }
       column.classList.remove('dice-slot-rerolling');
       column.classList.add('dice-slot-was-rerolled');
 
@@ -1072,7 +1274,7 @@ export class DiceRoller {
     this.playColumnRerollAnimation(slot, column, die, { lockMyRoll: true, pushAfter: true });
   }
 
-  private createDieFace(value: number, config: DieConfig): HTMLElement {
+  private createDieFace(value: number, config: DieResultConfig): HTMLElement {
     const face = el('div', 'dice-face');
     face.style.backgroundColor = config.bg;
 
@@ -1105,6 +1307,13 @@ export class DiceRoller {
       const icon = el('img', 'dice-face-icon') as HTMLImageElement;
       icon.src = GREEN_DIE_FACE_ASSET[faceType];
       icon.alt = faceType;
+      face.appendChild(icon);
+      return face;
+    }
+    if (config.color === 'state') {
+      const icon = el('img', 'dice-face-icon') as HTMLImageElement;
+      icon.src = stateFaceSrcForValue(value);
+      icon.alt = String(value);
       face.appendChild(icon);
       return face;
     }

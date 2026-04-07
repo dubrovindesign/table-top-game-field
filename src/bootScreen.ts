@@ -35,6 +35,12 @@ const DICE_FACE_URLS: readonly string[] = [
   '/black-success.svg',
   '/green-miss.svg',
   '/green-success.svg',
+  '/aid.svg',
+  '/bleed.svg',
+  '/fire.svg',
+  '/panic.svg',
+  '/slow.svg',
+  '/stun.svg',
 ];
 
 function collectBootImageUrls(): string[] {

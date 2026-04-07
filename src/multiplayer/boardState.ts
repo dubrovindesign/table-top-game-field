@@ -81,7 +81,7 @@ export type SerializedEtherVortex = {
 
 /** Одна кость в общей зоне броска (синхронизация между игроками). */
 export type SerializedSharedDiceDieV1 = {
-  color: 'red' | 'green' | 'black' | 'white';
+  color: 'red' | 'green' | 'black' | 'white' | 'state';
   value: number;
   rerolled: boolean;
 };
@@ -230,7 +230,7 @@ function validSerializedGodSlotV1(o: unknown): boolean {
 }
 
 function isSharedDiceColor(x: unknown): x is SerializedSharedDiceDieV1['color'] {
-  return x === 'red' || x === 'green' || x === 'black' || x === 'white';
+  return x === 'red' || x === 'green' || x === 'black' || x === 'white' || x === 'state';
 }
 
 function validSharedDiceDieV1(o: unknown): boolean {

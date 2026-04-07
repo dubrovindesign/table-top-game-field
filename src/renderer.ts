@@ -121,7 +121,8 @@ export class Renderer {
   private bigMiniHealthValues: number[] = [];
   private openHealthControlsBigMiniIndex: number | null = null;
   private unitSpriteSrcs: (string | null)[] = [];
-  private bigMiniSpriteSrc: string | null = null;
+  /** Per big-miniature image (aligned with `bigMiniCenters` indices). */
+  private bigMiniSpriteSrcs: (string | null)[] = [];
   private terrainRotationDegs: number[] = [];
   private terrainOffBoardWorlds: (Point | undefined)[] = [];
   private etherVortexEntries: Array<{
@@ -451,8 +452,8 @@ export class Renderer {
     this.unitSpriteSrcs = [...srcs];
   }
 
-  setBigMiniSpriteSource(src: string | null): void {
-    this.bigMiniSpriteSrc = src;
+  setBigMiniSpriteSources(srcs: (string | null)[]): void {
+    this.bigMiniSpriteSrcs = [...srcs];
   }
 
   /** Per-terrain hexon rotation (degrees), same order as `setTerrain` centers. */
@@ -2502,7 +2503,13 @@ export class Renderer {
       const rotRadVisual = (rotDegVisual * Math.PI) / 180;
 
       if (offBoard) {
-        this.drawBigMiniHexonAtPoint(offBoard, baseRadius, config.bigMiniFillColor, rotDegModel);
+        this.drawBigMiniHexonAtPoint(
+          offBoard,
+          baseRadius,
+          config.bigMiniFillColor,
+          rotDegModel,
+          this.bigMiniSpriteSrcs[index] ?? null,
+        );
         if (this.selectedBigMiniIndex === index) {
           this.drawBigMiniRingAtPoint(offBoard, ringSel, '#4caf50', 3, rotDegModel);
         }
@@ -2525,7 +2532,13 @@ export class Renderer {
           this.drawEffectMarkers(offBoard, bmMarkers, badgeRadius, 'bigHexon', rotRadVisual);
         }
       } else {
-        this.drawBigMiniHexon(center, baseRadius, config.bigMiniFillColor, rotDegModel);
+        this.drawBigMiniHexon(
+          center,
+          baseRadius,
+          config.bigMiniFillColor,
+          rotDegModel,
+          this.bigMiniSpriteSrcs[index] ?? null,
+        );
         if (this.selectedBigMiniIndex === index) {
           this.drawBigMiniRing(center, ringSel, '#4caf50', 3, rotDegModel);
         }
@@ -2564,6 +2577,9 @@ export class Renderer {
         baseRadius,
         config.bigMiniPreviewColor,
         previewRotModel,
+        this.draggingBigMiniIndex !== null
+          ? (this.bigMiniSpriteSrcs[this.draggingBigMiniIndex] ?? null)
+          : null,
       );
       ctx.globalAlpha = 0.6;
       this.drawBigMiniRingAtPoint(
@@ -2616,7 +2632,13 @@ export class Renderer {
       const p = { x: d.worldX, y: d.worldY };
       ctx.save();
       ctx.globalAlpha = 0.72;
-      this.drawBigMiniHexonAtPoint(p, baseRadius, config.bigMiniPreviewColor, previewRotModel);
+      this.drawBigMiniHexonAtPoint(
+        p,
+        baseRadius,
+        config.bigMiniPreviewColor,
+        previewRotModel,
+        this.bigMiniSpriteSrcs[d.index] ?? null,
+      );
       ctx.globalAlpha = 0.55;
       this.drawBigMiniRingAtPoint(
         p,
@@ -2659,10 +2681,11 @@ export class Renderer {
     radius: number,
     fillColor: string,
     rotationDeg: number,
+    spriteSrc: string | null,
   ): void {
     const { layout } = this;
     const p = layout.hexToPixel(center);
-    this.drawBigMiniHexonAtPoint(p, radius, fillColor, rotationDeg);
+    this.drawBigMiniHexonAtPoint(p, radius, fillColor, rotationDeg, spriteSrc);
   }
 
   /** Big unit miniature: hexon shape (7 hexes) with image clipped like terrain; `radius` is legacy size hint for fallback art. */
@@ -2671,6 +2694,7 @@ export class Renderer {
     radius: number,
     fillColor: string,
     rotationDeg = 0,
+    spriteSrc: string | null = null,
   ): void {
     const { ctx, config, layout } = this;
     const rotRad = (rotationDeg * Math.PI) / 180;
@@ -2686,7 +2710,7 @@ export class Renderer {
     ctx.rotate(rotRad);
     ctx.scale(BIG_MINI_VISUAL_SCALE, BIG_MINI_VISUAL_SCALE);
     ctx.translate(-pcx, -pcy);
-    const sprite = this.getSpriteImage(this.bigMiniSpriteSrc);
+    const sprite = this.getSpriteImage(spriteSrc);
     if (sprite && sprite.naturalWidth > 0 && sprite.naturalHeight > 0) {
       const iw = sprite.naturalWidth;
       const ih = sprite.naturalHeight;

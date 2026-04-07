@@ -49,7 +49,10 @@ function el<K extends keyof HTMLElementTagNameMap>(
 
 // ── CrystalWallet class ───────────────────────────────────────
 
+export type CrystalWalletVariant = 'local' | 'opponent';
+
 export class CrystalWallet {
+  private variant: CrystalWalletVariant;
   private container: HTMLElement;
   private crystalsRow: HTMLElement;
   private pickerOverlay: HTMLElement | null = null;
@@ -59,8 +62,16 @@ export class CrystalWallet {
   /** id → DOM chip element */
   private chips: Map<string, HTMLElement> = new Map();
 
-  constructor(parent: HTMLElement) {
+  constructor(
+    parent: HTMLElement,
+    options?: { variant?: CrystalWalletVariant },
+  ) {
+    const variant: CrystalWalletVariant = options?.variant ?? 'local';
+    this.variant = variant;
     this.container = el('div', 'crystal-wallet');
+    this.container.classList.add(
+      variant === 'opponent' ? 'crystal-wallet--opponent' : 'crystal-wallet--local',
+    );
     parent.appendChild(this.container);
 
     // Crystals row (where active chips go)
@@ -74,7 +85,11 @@ export class CrystalWallet {
       e.stopPropagation();
       this.togglePicker();
     });
-    this.crystalsRow.appendChild(addBtn);
+    if (this.variant === 'local') {
+      this.crystalsRow.insertBefore(addBtn, this.crystalsRow.firstChild);
+    } else {
+      this.crystalsRow.appendChild(addBtn);
+    }
   }
 
   // ── Picker (dropdown to choose crystal type) ─────────────────
@@ -189,9 +204,14 @@ export class CrystalWallet {
       }
     });
 
-    // Insert before the [+] button (which is always last)
+    // Local wallet: [+] is left, new crystals extend to the right.
+    // Opponent wallet: [+] is right, new crystals extend to the left.
     const addBtn = this.crystalsRow.querySelector('.cw-add-btn');
-    this.crystalsRow.insertBefore(chip, addBtn);
+    if (this.variant === 'local' || !addBtn) {
+      this.crystalsRow.appendChild(chip);
+    } else {
+      this.crystalsRow.insertBefore(chip, addBtn);
+    }
     this.chips.set(cfg.id, chip);
 
     // Entrance animation

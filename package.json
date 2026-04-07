@@ -15,7 +15,8 @@
     "preview:open": "vite preview --host --open",
     "preview:mp": "npm run build && concurrently -n ws,preview -c blue,magenta \"tsx server/roomServer.ts\" \"vite preview --host\"",
     "preview:mp:open": "npm run build && concurrently -n ws,preview -c blue,magenta \"tsx server/roomServer.ts\" \"vite preview --host --open\"",
-    "start:room": "tsx server/roomServer.ts"
+    "start:room": "tsx server/roomServer.ts",
+    "catalog:apply": "node scripts/apply-catalog-export.mjs"
   },
   "dependencies": {
     "ws": "^8.18.3"

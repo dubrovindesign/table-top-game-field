@@ -5,6 +5,8 @@
  */
 
 import { ETHER_VORTEX_DOMAINS, type EtherVortexDomainId } from './etherVortex';
+import { getHotspotsForUnit } from './catalog/catalogOverrides';
+import type { HotspotFile, HotspotRegion, LegacyHotspotBinding } from './catalog/hotspotTypes';
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -82,8 +84,15 @@ export interface UnitCardData {
    * Faith markers granted on «Получения Веры» (counts by marker colour on the card).
    */
   faithMarkers?: EtherCrystalPool;
-  /** Sprite/image URL (optional) */
+  /**
+   * Full card art (портрет на боковой карточке, хотспоты по умолчанию).
+   * См. `miniatureSprite` — отдельное изображение токена на столе.
+   */
   sprite?: string;
+  /**
+   * Миниатюра на поле / в полосе армии / в кубиках. Если не задано — используется `sprite`.
+   */
+  miniatureSprite?: string;
   /** Domain affinities (1..4) */
   domains: Domain[];
   /** Concentration: extra dice added when concentrating */
@@ -115,12 +124,41 @@ export interface UnitCardData {
   keywords?: string[];
   /** Machine-readable transform target (rules on the table may still use trait text). */
   transformsIntoUnitId?: string;
+  /** Army catalog id — used for image-card hotspots overlay. */
+  catalogUnitId?: string;
+}
+
+/**
+ * Board / dice token: `miniatureSprite` → `sprite` → hotspot `image` (если в карточке нет своего art).
+ * Не подставляем «чужой» запасной спрайт из-за совпадения sprite с хотспотом — на столе должен
+ * быть тот же источник, что и в каталоге/превью.
+ */
+export function unitMiniatureImageSrc(card: UnitCardData): string | undefined {
+  const mini = card.miniatureSprite?.trim();
+  if (mini) return mini;
+  const sp = card.sprite?.trim();
+  if (sp) return sp;
+  const cid = card.catalogUnitId;
+  if (cid) {
+    const hf = getHotspotsForUnit(cid);
+    if (hf?.image?.trim()) return hf.image.trim();
+  }
+  return undefined;
+}
+
+/** Army list / editor rows: same resolution order as the table token (incl. hotspot-only units). */
+export function unitPanelThumbSrc(card: UnitCardData): string | undefined {
+  return unitMiniatureImageSrc(card);
 }
 
 export interface DiceRequest {
   pool: DicePool;
   source: UnitCardData;
 }
+
+export type UnitCardShowOptions = {
+  catalogUnitId?: string;
+};
 
 // ── Helpers ────────────────────────────────────────────────────
 
@@ -265,6 +303,9 @@ function appendOptionalEtherCostRow(info: HTMLElement, cost: EtherCrystalPool | 
 export class UnitCard {
   private container: HTMLElement;
   private visible = false;
+  private dockedImageLayoutCleanup: (() => void) | null = null;
+  /** Avoids full DOM rebuild every frame when docked card is unchanged (preserves image scroll). */
+  private lastDockedShowKey: string | null = null;
   /** Called when a dice-bearing element is clicked on the card. */
   onDiceRequest: ((req: DiceRequest) => void) | null = null;
   /** Called when pointer enters/leaves an attack row (for board range preview). */
@@ -275,14 +316,194 @@ export class UnitCard {
     parent.appendChild(this.container);
   }
 
+  private clearDockedImageLayout(): void {
+    if (this.dockedImageLayoutCleanup) {
+      this.dockedImageLayoutCleanup();
+      this.dockedImageLayoutCleanup = null;
+    }
+    this.container.style.top = '';
+    this.container.style.bottom = '';
+  }
+
+  /** Dock image-mode card between top safe margin and the dice UI (right column). */
+  private attachDockedImageLayout(): void {
+    this.clearDockedImageLayout();
+    const gap = 12;
+    const topMargin = 20;
+    const update = (): void => {
+      const dice = document.querySelector('.dice-container');
+      if (!dice) return;
+      const r = dice.getBoundingClientRect();
+      const bottomPx = Math.max(0, window.innerHeight - (r.top - gap));
+      this.container.style.top = `${topMargin}px`;
+      this.container.style.bottom = `${bottomPx}px`;
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    const dice = document.querySelector('.dice-container');
+    if (dice) ro.observe(dice);
+    window.addEventListener('resize', update);
+    this.dockedImageLayoutCleanup = () => {
+      ro.disconnect();
+      window.removeEventListener('resize', update);
+    };
+  }
+
   private emitDice(pool: DicePool, source: UnitCardData): void {
     if (this.onDiceRequest) this.onDiceRequest({ pool, source });
   }
 
-  show(data: UnitCardData, anchorScreen?: { x: number; y: number }): void {
+  private numericDicePool(r: HotspotRegion): DicePool {
+    const pool: DicePool = {};
+    if (r.red != null && r.red > 0) pool.red = r.red;
+    if (r.black != null && r.black > 0) pool.black = r.black;
+    if (r.green != null && r.green > 0) pool.green = r.green;
+    if (r.white != null && r.white > 0) pool.white = r.white;
+    return pool;
+  }
+
+  private resolveLegacyHotspotBinding(
+    binding: LegacyHotspotBinding,
+    source: UnitCardData,
+  ): { pool: DicePool; attack: AttackAbility | null } | null {
+    switch (binding.kind) {
+      case 'attack': {
+        const atk = source.attacks[binding.index];
+        if (!atk) return null;
+        return { pool: atk.dice, attack: atk };
+      }
+      case 'defense':
+        return {
+          pool: { white: source.defense.white, green: source.defense.green },
+          attack: null,
+        };
+      case 'concentration':
+        return { pool: source.concentration, attack: null };
+      case 'defenseReaction':
+        return {
+          pool: { white: source.defenseReaction.white, green: source.defenseReaction.green },
+          attack: null,
+        };
+      case 'exploration':
+        return { pool: source.exploration ?? {}, attack: null };
+      case 'custom':
+        return { pool: binding.dice, attack: null };
+      default:
+        return null;
+    }
+  }
+
+  /** Dice + optional synthetic attack for range highlight (numeric fields or legacy binding). */
+  private hotspotAction(
+    r: HotspotRegion,
+    source: UnitCardData,
+  ): { pool: DicePool; attackForHover: AttackAbility | null } | null {
+    const numeric = this.numericDicePool(r);
+    if (dicePoolTotal(numeric) > 0) {
+      return {
+        pool: numeric,
+        attackForHover: this.syntheticHotspotAttack(r, numeric),
+      };
+    }
+    if (r.range != null || r.damage != null) {
+      return {
+        pool: {},
+        attackForHover: this.syntheticHotspotAttack(r, numeric),
+      };
+    }
+    if (r.binding) {
+      const leg = this.resolveLegacyHotspotBinding(r.binding, source);
+      if (!leg) return null;
+      return {
+        pool: leg.pool,
+        attackForHover: leg.attack,
+      };
+    }
+    return null;
+  }
+
+  private syntheticHotspotAttack(r: HotspotRegion, pool: DicePool): AttackAbility {
+    return {
+      name: r.label,
+      range: r.range ?? 1,
+      attackRange: 'melee',
+      damageType: 'physical',
+      damage: r.damage ?? 0,
+      dice: pool,
+    };
+  }
+
+  private renderImageCard(data: UnitCardData, hf: HotspotFile, _anchorScreen?: { x: number; y: number }): void {
+    const source = data;
+    const wrap = el('div', 'uc-image-card');
+    const inner = el('div', 'uc-image-card-inner');
+    const img = document.createElement('img');
+    img.className = 'uc-image-card-img';
+    img.src = hf.image;
+    img.alt = data.name;
+    img.draggable = false;
+    inner.appendChild(img);
+
+    for (const r of hf.regions) {
+      const btn = el('button', 'uc-image-hotspot');
+      btn.type = 'button';
+      btn.style.setProperty('--x', String(r.x));
+      btn.style.setProperty('--y', String(r.y));
+      btn.style.setProperty('--w', String(r.w));
+      btn.style.setProperty('--h', String(r.h));
+      btn.setAttribute('aria-label', r.label);
+      btn.title = r.label;
+      const action = this.hotspotAction(r, source);
+      const hasDice = action && dicePoolTotal(action.pool) > 0;
+      const hasHover = action?.attackForHover != null;
+      if (hasDice) {
+        btn.addEventListener('click', () => {
+          if (action) this.emitDice(action.pool, source);
+        });
+      }
+      if (hasHover) {
+        btn.addEventListener('pointerenter', () => {
+          if (this.onAttackHover && action?.attackForHover) this.onAttackHover(action.attackForHover);
+        });
+        btn.addEventListener('pointerleave', () => {
+          if (this.onAttackHover) this.onAttackHover(null);
+        });
+      }
+      if (!hasDice && !hasHover) {
+        btn.classList.add('uc-image-hotspot--inactive');
+      }
+      inner.appendChild(btn);
+    }
+
+    wrap.appendChild(inner);
+    this.container.appendChild(wrap);
+  }
+
+  show(
+    data: UnitCardData,
+    anchorScreen?: { x: number; y: number },
+    options?: UnitCardShowOptions,
+  ): void {
+    const catalogUnitId = options?.catalogUnitId ?? data.catalogUnitId;
+    const hf = catalogUnitId ? getHotspotsForUnit(catalogUnitId) : undefined;
+    const willImageMode = !!(hf?.image && hf.regions.length > 0);
+    const dockedKey = !anchorScreen
+      ? `${willImageMode ? 'img' : 'stat'}-${catalogUnitId ?? 'noid'}-${data.name}-${data.size}`
+      : null;
+
+    if (!anchorScreen && this.visible && dockedKey && dockedKey === this.lastDockedShowKey) {
+      if (willImageMode) {
+        return;
+      }
+      this.patchDockedStatsHealth(data);
+      return;
+    }
+
+    this.clearDockedImageLayout();
     this.visible = true;
     this.container.innerHTML = '';
     this.container.classList.add('unit-card-visible');
+    this.container.classList.remove('unit-card-image-mode');
 
     if (anchorScreen) {
       this.container.classList.add('unit-card-floating');
@@ -290,6 +511,19 @@ export class UnitCard {
     } else {
       this.container.classList.remove('unit-card-floating');
       this.clearFloatingPosition();
+    }
+
+    if (catalogUnitId) {
+      const hf2 = getHotspotsForUnit(catalogUnitId);
+      if (hf2?.image && hf2.regions.length > 0) {
+        this.container.classList.add('unit-card-image-mode');
+        this.renderImageCard(data, hf2, anchorScreen);
+        if (!anchorScreen) {
+          this.attachDockedImageLayout();
+        }
+        this.lastDockedShowKey = dockedKey;
+        return;
+      }
     }
 
     const source = data;
@@ -578,6 +812,30 @@ export class UnitCard {
       }
       this.container.appendChild(kwSection);
     }
+
+    if (!anchorScreen && dockedKey) {
+      this.lastDockedShowKey = dockedKey;
+    }
+  }
+
+  private patchDockedStatsHealth(data: UnitCardData): void {
+    const label = this.container.querySelector('.uc-health-label');
+    if (label) {
+      const heart = label.querySelector('.uc-heart');
+      label.replaceChildren();
+      if (heart) label.appendChild(heart);
+      else label.appendChild(el('span', 'uc-heart', '\u2764'));
+      label.appendChild(document.createTextNode(` ${data.health} / ${data.maxHealth}`));
+    }
+    const inner = this.container.querySelector('.uc-health-bar-inner') as HTMLElement | null;
+    if (inner && data.maxHealth > 0) {
+      const pct = Math.max(0, Math.min(100, (data.health / data.maxHealth) * 100));
+      inner.style.width = `${pct}%`;
+      inner.classList.remove('uc-health-high', 'uc-health-mid', 'uc-health-low');
+      if (pct > 50) inner.classList.add('uc-health-high');
+      else if (pct > 25) inner.classList.add('uc-health-mid');
+      else inner.classList.add('uc-health-low');
+    }
   }
 
   private clearFloatingPosition(): void {
@@ -613,6 +871,8 @@ export class UnitCard {
   hide(): void {
     if (!this.visible) return;
     if (this.onAttackHover) this.onAttackHover(null);
+    this.clearDockedImageLayout();
+    this.lastDockedShowKey = null;
     this.visible = false;
     const wasFloating = this.container.classList.contains('unit-card-floating');
     if (wasFloating) {

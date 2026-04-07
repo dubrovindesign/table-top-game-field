@@ -4,6 +4,7 @@
  */
 
 import { CATALOG_UNITS, FACTIONS, LEADERS } from './catalog';
+import { getMergedCatalogUnit, getMergedLeader, getMergedLeadersForFaction } from './catalog/catalogOverrides';
 import type {
   CatalogUnitDef,
   FactionDef,
@@ -23,15 +24,15 @@ export const LEADER_MINI_MAX_COPIES = 1;
 export { CATALOG_UNITS, FACTIONS, LEADERS };
 
 export function getCatalogUnit(unitId: string): CatalogUnitDef | undefined {
-  return CATALOG_UNITS[unitId];
+  return getMergedCatalogUnit(unitId);
 }
 
 export function leadersForFaction(factionId: string): LeaderDef[] {
-  return LEADERS.filter((l) => l.factionId === factionId);
+  return getMergedLeadersForFaction(factionId);
 }
 
 export function getLeader(leaderId: string): LeaderDef | undefined {
-  return LEADERS.find((l) => l.id === leaderId);
+  return getMergedLeader(leaderId);
 }
 
 export function getFaction(factionId: string): FactionDef | undefined {
@@ -77,7 +78,7 @@ export function listRosterRows(
   const q = searchQuery.trim().toLowerCase();
   const rows: RosterRowView[] = [];
   for (const slot of leader.roster) {
-    const def = CATALOG_UNITS[slot.unitId];
+    const def = getCatalogUnit(slot.unitId);
     if (!def) continue;
     const kw = def.card.keywords?.join(' ') ?? '';
     const hay = `${def.card.name} ${kw}`.toLowerCase();

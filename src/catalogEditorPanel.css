@@ -1,0 +1,881 @@
+/* Catalog editor — slide panel (dev / power-user) */
+
+.catalog-editor-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+}
+
+.catalog-editor-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.catalog-editor-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 9998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.catalog-editor-overlay-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.catalog-editor-panel {
+  --ce-domain-life: #5a9e7a;
+  --ce-domain-creation: #c9a45c;
+  --ce-domain-death: #7a8aa8;
+  --ce-domain-destruction: #c45c5c;
+  --ce-border: rgba(255, 255, 255, 0.1);
+  --ce-muted: #8a8a98;
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(520px, 100vw);
+  height: 100vh;
+  background: #14141a;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);
+}
+
+.catalog-editor-panel-open {
+  transform: translateX(0);
+}
+
+.catalog-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.catalog-editor-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #eee;
+}
+
+.catalog-editor-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #aaa;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.catalog-editor-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.catalog-editor-body {
+  flex: 1;
+  overflow: auto;
+  padding: 12px 14px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* [hidden] must win over author `display: flex` (same specificity as UA [hidden]). */
+.ce-root-pane[hidden],
+.ce-leader-subpane[hidden],
+.ce-unit-subpane[hidden],
+.catalog-editor-hot-section[hidden],
+.ce-modal-pane[hidden] {
+  display: none !important;
+}
+
+.ce-root-pane,
+.ce-leader-subpane {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ce-root-pane.ce-pane--leaders {
+  gap: 24px;
+}
+
+.catalog-editor-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.catalog-editor-row label {
+  font-size: 0.78rem;
+  color: rgba(154, 154, 168, 1);
+  width: 100%;
+}
+
+.catalog-editor-select,
+.catalog-editor-input {
+  flex: 1;
+  min-width: 120px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  color: #e8e8f0;
+  font-size: 0.88rem;
+}
+
+#ce-faction-select {
+  border-radius: 12px;
+  display: flex;
+  flex-flow: row;
+  padding-right: 24px;
+  justify-content: flex-start;
+}
+
+.catalog-editor-textarea {
+  width: 100%;
+  min-height: 220px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.45);
+  color: #d0d0dc;
+  font-family: ui-monospace, 'Cascadia Code', monospace;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  resize: vertical;
+}
+
+.catalog-editor-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(80, 120, 255, 0.25);
+  color: #e0e8ff;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.catalog-editor-btn:hover {
+  background: rgba(80, 120, 255, 0.4);
+}
+
+.catalog-editor-btn-danger {
+  background: rgba(200, 60, 60, 0.25);
+  color: #ffc8c8;
+}
+
+.catalog-editor-btn-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ccc;
+}
+
+.catalog-editor-icon-btn {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 120, 120, 0.35);
+  background: rgba(190, 60, 60, 0.16);
+  color: #ffb9b9;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.catalog-editor-icon-btn:hover:not(:disabled) {
+  background: rgba(190, 60, 60, 0.3);
+  color: #ffe0e0;
+}
+
+.catalog-editor-icon-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.catalog-editor-unit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.catalog-editor-unit-btn {
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.04);
+  color: #ddd;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.catalog-editor-unit-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.catalog-editor-unit-btn--active {
+  border-color: rgba(100, 180, 255, 0.45);
+  background: rgba(60, 100, 180, 0.2);
+}
+
+.catalog-editor-hint {
+  font-size: 0.75rem;
+  color: #7a7a8a;
+  line-height: 1.4;
+}
+
+.catalog-editor-error {
+  font-size: 0.82rem;
+  color: #ff8a8a;
+}
+
+.catalog-editor-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.catalog-editor-tab {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: #aaa;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.catalog-editor-tab--active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Hotspot preview */
+.ce-hotspot-stage {
+  position: relative;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0a0a0e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  user-select: none;
+  touch-action: none;
+}
+
+.ce-hotspot-stage img {
+  display: block;
+  width: 100%;
+  height: auto;
+  vertical-align: top;
+  pointer-events: none;
+}
+
+.ce-hs-rect {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid rgba(120, 220, 255, 0.85);
+  background: rgba(64, 180, 255, 0.12);
+  cursor: grab;
+}
+
+.ce-hs-rect--selected {
+  border-color: rgba(255, 220, 120, 0.95);
+  z-index: 3;
+}
+
+.ce-hs-handle {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 12px;
+  height: 12px;
+  background: rgba(255, 220, 120, 0.95);
+  border-radius: 2px;
+  cursor: nwse-resize;
+}
+
+.ce-hs-close {
+  position: absolute;
+  right: 2px;
+  top: 2px;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: rgba(20, 20, 28, 0.85);
+  color: #f0a0a0;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 4;
+  pointer-events: auto;
+}
+
+.ce-hs-close:hover {
+  background: rgba(180, 40, 40, 0.95);
+  color: #fff;
+}
+
+.catalog-editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.catalog-editor-field-label {
+  font-size: 0.75rem;
+  color: #8a8a98;
+}
+
+.ce-dice-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.ce-dice-title {
+  font-size: 0.78rem;
+  color: #b8c5df;
+  font-weight: 600;
+}
+
+.ce-dice-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ce-dice-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ce-dice-cell-label {
+  font-size: 0.7rem;
+  color: #8a8a98;
+}
+
+.ce-dice-cell-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35) inset;
+}
+
+.ce-dice-cell .catalog-editor-input {
+  min-width: 0;
+}
+
+.ce-attacks-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ce-attack-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.ce-attack-row .catalog-editor-input {
+  min-width: 0;
+  flex: 1 1 80px;
+}
+
+.ce-atk-melee-lab,
+.ce-atk-dice-lab {
+  font-size: 0.7rem;
+  color: #888;
+  flex: 0 0 auto;
+}
+
+.ce-hs-fields {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.ce-hs-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ce-hs-field-lab {
+  font-size: 0.72rem;
+  color: #8a8a98;
+}
+
+.catalog-editor-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .catalog-editor-split {
+    grid-template-columns: 1fr;
+  }
+
+  .ce-dice-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ——— IA: domains, breadcrumbs, panes ——— */
+
+.ce-breadcrumbs {
+  font-size: 0.78rem;
+  color: var(--ce-muted);
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--ce-border);
+  background: rgba(0, 0, 0, 0.2);
+  line-height: 1.35;
+}
+
+.ce-domain-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.ce-domain-chips-label {
+  font-size: 12.5px;
+  color: var(--ce-muted);
+  width: 100%;
+}
+
+.ce-domain-chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--ce-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: #c8c8d4;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.ce-domain-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ce-domain-chip--active {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.ce-domain-chip--life.ce-domain-chip--active {
+  box-shadow: 0 0 0 1px var(--ce-domain-life);
+}
+.ce-domain-chip--creation.ce-domain-chip--active {
+  box-shadow: 0 0 0 1px var(--ce-domain-creation);
+}
+.ce-domain-chip--death.ce-domain-chip--active {
+  box-shadow: 0 0 0 1px var(--ce-domain-death);
+}
+.ce-domain-chip--destruction.ce-domain-chip--active {
+  box-shadow: 0 0 0 1px var(--ce-domain-destruction);
+}
+
+.ce-pane-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #e4e4ee;
+  margin-bottom: 4px;
+}
+
+.ce-pane--leaders {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(100, 140, 200, 0.2);
+  background: rgba(20, 28, 44, 0.35);
+  min-height: 120px;
+}
+
+.ce-pane--leaders > label {
+  font-size: 12.5px;
+}
+
+.ce-pane--units {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(120, 100, 80, 0.22);
+  background: rgba(36, 28, 22, 0.3);
+  min-height: 200px;
+}
+
+.catalog-editor-panel.ce-panel--units-mode .ce-pane--units {
+  border-color: rgba(200, 160, 100, 0.35);
+}
+
+.catalog-editor-panel.ce-panel--leaders-mode .ce-pane--leaders {
+  border-color: rgba(120, 160, 220, 0.35);
+}
+
+.ce-root-tabs {
+  margin-bottom: 4px;
+}
+
+.ce-unit-list-view {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ce-unit-form-view {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.ce-img-url-row .ce-img-url-row-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ce-img-url-row .ce-img-url-row-controls > .catalog-editor-input[type='text'] {
+  flex: 1;
+  min-width: 120px;
+}
+
+.ce-img-url-row .catalog-editor-input[type='file'] {
+  max-width: 160px;
+  font-size: 0.75rem;
+}
+
+.ce-unit-form-footer {
+  justify-content: flex-end;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ce-faction-filter-row label {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.ce-faction-filter-row .catalog-editor-select {
+  flex: 1;
+  min-width: 140px;
+}
+
+.ce-unit-lib-list {
+  max-height: min(48vh, 380px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ce-unit-lib-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.ce-unit-lib-row-main {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.ce-unit-lib-edit {
+  flex: 0 0 auto;
+  align-self: center;
+  white-space: nowrap;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+}
+
+.ce-unit-editor-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 120px;
+}
+
+.ce-unit-subtabs {
+  margin-top: 4px;
+}
+
+.ce-unit-subpane {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ce-leader-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 36px;
+}
+
+.ce-leader-pill {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.25);
+  color: #ddd;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.ce-leader-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ce-leader-pill--active {
+  border-color: rgba(120, 180, 255, 0.45);
+  background: rgba(60, 100, 160, 0.25);
+  color: #fff;
+}
+
+.ce-leader-attached-units {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: min(36vh, 280px);
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.ce-attached-unit-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.ce-attached-unit-info {
+  font-size: 0.8rem;
+  color: #c4c4d0;
+  line-height: 1.35;
+  flex: 1;
+  min-width: 0;
+}
+
+.ce-attached-unit-row .catalog-editor-btn-secondary {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+}
+
+.ce-unit-preset-hint {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(120, 160, 220, 0.25);
+  background: rgba(40, 60, 100, 0.2);
+}
+
+/* ——— Leader modal ——— */
+
+.ce-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.ce-modal-backdrop--open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Unit editor modal stacks above leader modal when both are used */
+.ce-unit-modal-backdrop {
+  z-index: 10060;
+}
+
+.ce-unit-form-modal-body {
+  min-height: 0;
+}
+
+.ce-modal {
+  width: min(480px, 100%);
+  max-height: min(88vh, 720px);
+  display: flex;
+  flex-direction: column;
+  background: #16161c;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+.ce-modal.ce-modal--unit {
+  width: min(640px, 100%);
+  max-height: min(92vh, 900px);
+}
+
+.ce-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.ce-modal__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #eee;
+}
+
+.ce-modal-tabs {
+  padding: 8px 12px 0;
+  flex-shrink: 0;
+}
+
+.ce-modal-pane {
+  flex: 1;
+  overflow: auto;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ce-modal-roster-list {
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Army roster-style rows (classes from style.css .army-unit-row) */
+.catalog-editor-panel .ce-catalog-army-row.army-unit-row {
+  cursor: default;
+}
+
+.ce-catalog-army-row .ce-army-row-main--btn {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ce-catalog-army-row .ce-army-row-main:not(.ce-army-row-main--btn) {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ce-army-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.ce-catalog-edit-icon-btn {
+  padding: 8px 10px;
+  min-width: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ce-catalog-edit-icon-btn svg {
+  display: block;
+}
+
+.ce-catalog-points-input {
+  width: 64px;
+  max-width: 22vw;
+  padding: 6px 8px;
+  font-size: 0.85rem;
+}
+
+.ce-leader-attached-units .ce-catalog-army-row {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.ce-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
