@@ -2239,6 +2239,7 @@ export class Renderer {
   private drawEtherVortexes(): void {
     const { layout } = this;
     const drag = this.draggingEtherVortexIndex !== null;
+    const etherImgSrc = this.config.etherVortexImageSrc ?? this.config.terrainImageSrc;
     this.etherVortexEntries.forEach((v, index) => {
       if (drag && this.draggingEtherVortexIndex === index) return;
       if (this.isPeerDraggingEntity('ether', index)) return;
@@ -2247,6 +2248,7 @@ export class Renderer {
       const rotRad = (v.rotationDeg * Math.PI) / 180;
       this.drawTerrainStyleHexonAtWorldPivot(pivot, rotRad, {
         domainBlendColor: blend,
+        imageSrc: etherImgSrc,
       });
     });
     if (drag && this.etherVortexPreviewWorld) {
@@ -2256,6 +2258,7 @@ export class Renderer {
       const rotRad = (previewRotDeg * Math.PI) / 180;
       this.drawTerrainStyleHexonAtWorldPivot(this.etherVortexPreviewWorld, rotRad, {
         domainBlendColor: blend,
+        imageSrc: etherImgSrc,
       });
     }
     for (const rp of this.remotePeerTableDrags) {
@@ -2271,6 +2274,7 @@ export class Renderer {
       const blend = getEtherVortexBlendColor(entry.domain);
       this.drawTerrainStyleHexonAtWorldPivot({ x: d.worldX, y: d.worldY }, rotRad, {
         domainBlendColor: blend,
+        imageSrc: etherImgSrc,
       });
       ctx.restore();
     }
@@ -2331,7 +2335,7 @@ export class Renderer {
   private drawTerrainStyleHexonAtWorldPivot(
     worldPivot: Point,
     rotRad: number,
-    opts: { domainBlendColor: string | null },
+    opts: { domainBlendColor: string | null; imageSrc?: string | null },
   ): void {
     const { ctx, layout, config } = this;
     const p = worldPivot;
@@ -2344,7 +2348,8 @@ export class Renderer {
     ctx.translate(p.x, p.y);
     ctx.rotate(rotRad);
 
-    const sprite = this.getSpriteImage(config.terrainImageSrc);
+    const imageSrc = 'imageSrc' in opts ? opts.imageSrc : config.terrainImageSrc;
+    const sprite = this.getSpriteImage(imageSrc ?? null);
     if (sprite && sprite.naturalWidth > 0 && sprite.naturalHeight > 0) {
       const iw = sprite.naturalWidth;
       const ih = sprite.naturalHeight;

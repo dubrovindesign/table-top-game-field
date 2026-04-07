@@ -156,6 +156,83 @@
   font-size: 0.88rem;
 }
 
+/* Текстовые поля — в одной линии с глобальным select и .catalog-editor-textarea */
+.catalog-editor-input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range']) {
+  box-sizing: border-box;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background-color: rgba(0, 0, 0, 0.45);
+  color: #e8e8f0;
+  font-family: inherit;
+  outline: none;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.catalog-editor-input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range']):hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  background-color: rgba(0, 0, 0, 0.55);
+}
+
+.catalog-editor-input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range']):focus {
+  border-color: rgba(74, 144, 217, 0.65);
+  box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.18);
+}
+
+.catalog-editor-input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range']):disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.catalog-editor-input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range'])::placeholder {
+  color: rgba(180, 180, 200, 0.48);
+}
+
+.catalog-editor-input[type='file'] {
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background-color: rgba(0, 0, 0, 0.45);
+  color: #c8c8d8;
+  font-family: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+  outline: none;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+}
+
+.catalog-editor-input[type='file']:hover {
+  border-color: rgba(255, 255, 255, 0.26);
+  background-color: rgba(0, 0, 0, 0.52);
+}
+
+.catalog-editor-input[type='file']:focus {
+  border-color: rgba(74, 144, 217, 0.65);
+  box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.18);
+}
+
+.catalog-editor-input[type='file']::file-selector-button {
+  margin-right: 10px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(80, 120, 255, 0.22);
+  color: #e0e8ff;
+  font-size: 0.72rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.catalog-editor-input[type='file']::file-selector-button:hover {
+  background: rgba(80, 120, 255, 0.35);
+}
+
 .catalog-editor-select {
   padding: 7px 36px 7px 10px;
 }

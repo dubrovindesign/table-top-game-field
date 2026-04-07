@@ -1990,10 +1990,30 @@ select option {
   box-sizing: border-box;
   padding: 0 24px;
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.1);
-  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.38);
+  color: #f0f0f8;
   font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.army-search-input::placeholder {
+  color: rgba(180, 180, 200, 0.45);
+}
+
+.army-search-input:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.48);
+}
+
+.army-search-input:focus {
+  border-color: rgba(74, 144, 217, 0.55);
+  box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.16);
 }
 
 .army-unit-list {
@@ -2850,10 +2870,20 @@ select option {
   min-width: 0;
   padding: 8px 10px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(0, 0, 0, 0.35);
-  color: #e5e7eb;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.45);
+  color: #e8e8f0;
   font-size: 11px;
+  font-family: inherit;
+  outline: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.mp-invite-input-ingame:focus {
+  border-color: rgba(74, 144, 217, 0.55);
+  box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.15);
 }
 
 .mp-subtitle {

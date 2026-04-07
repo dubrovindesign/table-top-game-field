@@ -52,7 +52,6 @@ import {
 } from './healthUi';
 import { CrystalWallet } from './crystalWallet';
 import { CATALOG_OVERRIDES_CHANGED } from './catalog/catalogOverrides';
-import { CatalogEditorPanel } from './catalogEditorPanel';
 import {
   CATALOG_UNITS,
   getCatalogUnit,
@@ -108,6 +107,9 @@ import { initMultiplayerSession } from './multiplayer/session.ts';
 import { getWheelBehavior, mountAppSettingsToolbar } from './appSettings.ts';
 import { mountPwaInstallToolbar } from './pwaInstallUi.ts';
 import './style.css';
+import { loadCatalogBundle } from './catalog/index.ts';
+
+await loadCatalogBundle();
 
 // ── Config ─────────────────────────────────────────────────────
 
@@ -623,7 +625,7 @@ const renderConfig = {
   showCoordinates: false,
   showGrid: false,
   defaultHexFillColor: 'rgba(0, 0, 0, 0)',
-  backgroundImageSrc: '/fieldwithtrees.png',
+  backgroundImageSrc: '/fieldwithtrees.webp',
   backgroundImageOpacity: 1,
   backgroundImageFit: 'cover' as const,
   backgroundImageOffsetX: FIELD_BG_PRESET.backgroundImageOffsetX,
@@ -1720,6 +1722,7 @@ armyBuilderPanel = new ArmyBuilderPanel(document.body, {
   },
 });
 
+const { CatalogEditorPanel } = await import('./catalogEditorPanel.ts');
 const catalogEditorPanel = new CatalogEditorPanel(armyBuilderPanel.getToolbarMount());
 window.addEventListener(CATALOG_OVERRIDES_CHANGED, () => {
   armyBuilderPanel.refresh();

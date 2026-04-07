@@ -1,9 +1,9 @@
 /**
- * Lightweight entry: boot overlay + preload, then the full app (main).
+ * Lightweight entry: boot overlay + preload (parallel with main chunk), then the full app (main).
  */
 
 import './bootScreen.css';
 import { runInitialBootScreen } from './bootScreen.ts';
 
-await runInitialBootScreen();
-await import('./main.ts');
+const mainModulePromise = import('./main.ts');
+await runInitialBootScreen({ mainModulePromise });

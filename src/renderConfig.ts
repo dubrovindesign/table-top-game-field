@@ -39,6 +39,8 @@ export interface RenderConfig {
   terrainFillColor: string;
   /** PNG for placed terrain hexon; clipped to outer contour, no per-cell borders. */
   terrainImageSrc: string | null;
+  /** PNG for ether vortex hexon (defaults to terrain image if null). */
+  etherVortexImageSrc: string | null;
   /** Clockwise rotation (°) of the terrain bitmap only; scale stays the same as unrotated cover. */
   terrainTextureRotationDeg: number;
   terrainPreviewValidColor: string;
@@ -83,7 +85,8 @@ export const defaultRenderConfig: RenderConfig = {
   dragHoverFillColor: 'rgba(33, 150, 243, 0.5)',
   dragHoverStrokeColor: 'rgba(33, 150, 243, 0.5)',
   terrainFillColor: 'rgba(121, 85, 72, 0.35)',
-  terrainImageSrc: '/terrain2.png',
+  terrainImageSrc: '/terrain3.jpg',
+  etherVortexImageSrc: '/terrain2.png',
   terrainTextureRotationDeg: 30,
   terrainPreviewValidColor: 'rgba(76, 175, 80, 0.35)',
   terrainPreviewInvalidColor: 'rgba(244, 67, 54, 0.35)',

@@ -1,38 +1,43 @@
 /**
- * Loads army catalog from JSON under `src/catalog/units/` (one unit per file).
- * Add a new `units/<unitId>.json` — registration is automatic via `import.meta.glob`.
+ * Army catalog loaded at runtime from `public/generated/catalog-data.json`
+ * (see `scripts/build-catalog-bundle.mjs`, run from Vite `buildStart` / dev server).
  */
 
 import type { CatalogUnitDef, FactionDef, LeaderDef } from './types';
+import type { HotspotFile } from './hotspotTypes';
+import { setStaticHotspots } from './staticHotspots';
 
-import factionsJson from './factions.json';
-import leadersJson from './leaders.json';
+export let FACTIONS: FactionDef[] = [];
+export let LEADERS: LeaderDef[] = [];
+export let CATALOG_UNITS: Record<string, CatalogUnitDef> = {};
 
-function mergeUnitRecordsFromGlob(
-  modules: Record<string, unknown>,
-): Record<string, CatalogUnitDef> {
-  const out: Record<string, CatalogUnitDef> = {};
-  for (const path of Object.keys(modules)) {
-    const mod = modules[path] as { default?: CatalogUnitDef } | CatalogUnitDef;
-    const entry: CatalogUnitDef =
-      mod !== null && typeof mod === 'object' && 'default' in mod && mod.default !== undefined
-        ? (mod as { default: CatalogUnitDef }).default
-        : (mod as CatalogUnitDef);
-    if (!entry || typeof entry.id !== 'string') {
-      throw new Error(`[catalog] invalid unit module (missing id): ${path}`);
+let loadPromise: Promise<void> | null = null;
+
+type CatalogBundleV1 = {
+  schemaVersion: 1;
+  factions: FactionDef[];
+  leaders: LeaderDef[];
+  units: Record<string, CatalogUnitDef>;
+  hotspots: Record<string, HotspotFile>;
+};
+
+export function loadCatalogBundle(): Promise<void> {
+  if (loadPromise) return loadPromise;
+  loadPromise = (async () => {
+    const base = import.meta.env.BASE_URL;
+    const url = `${base}generated/catalog-data.json`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`[catalog] failed to load bundle (${res.status}): ${url}`);
     }
-    const key = entry.id;
-    if (out[key] !== undefined) {
-      throw new Error(`[catalog] duplicate unit id: ${key} (${path})`);
+    const data = (await res.json()) as CatalogBundleV1;
+    if (data.schemaVersion !== 1) {
+      throw new Error(`[catalog] unsupported bundle schema: ${String((data as { schemaVersion?: unknown }).schemaVersion)}`);
     }
-    out[key] = entry;
-  }
-  return out;
+    FACTIONS = data.factions;
+    LEADERS = data.leaders;
+    CATALOG_UNITS = data.units;
+    setStaticHotspots(data.hotspots ?? {});
+  })();
+  return loadPromise;
 }
-
-const unitModules = import.meta.glob('./units/*.json', { eager: true }) as Record<string, unknown>;
-
-export const FACTIONS = factionsJson as FactionDef[];
-export const LEADERS = leadersJson as LeaderDef[];
-
-export const CATALOG_UNITS: Record<string, CatalogUnitDef> = mergeUnitRecordsFromGlob(unitModules);

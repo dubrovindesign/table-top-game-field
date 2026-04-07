@@ -1,10 +1,10 @@
 /**
- * Sprite sheet `public/ephyr-cards.png` — 6×3 grid (3300×2301).
+ * Sprite sheet `public/ephyr-cards.webp` — 6×3 grid (3300×2301).
  * Face cards: indices 0–15 row-major (rows 0–1 full, row 2 cols 0–3).
  * Card back: row 2, col 5.
  */
 
-export const EPHYR_CARD_SPRITE_SRC = '/ephyr-cards.png';
+export const EPHYR_CARD_SPRITE_SRC = '/ephyr-cards.webp';
 
 /** Background-size width multiplier for CSS (6 columns). */
 export const EPHYR_SPRITE_BG_SIZE_X = '600%';

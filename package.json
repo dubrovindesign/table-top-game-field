@@ -17,7 +17,9 @@
     "preview:mp:open": "npm run build && concurrently -n ws,preview -c blue,magenta \"tsx server/roomServer.ts\" \"vite preview --host --open\"",
     "start:room": "tsx server/roomServer.ts",
     "catalog:apply": "node scripts/apply-catalog-export.mjs",
-    "catalog:extract-images": "node scripts/extract-catalog-base64-images.mjs"
+    "catalog:bundle": "node scripts/build-catalog-bundle.mjs",
+    "catalog:extract-images": "node scripts/extract-catalog-base64-images.mjs",
+    "optimize:webp": "node scripts/optimize-public-webp.mjs"
   },
   "dependencies": {
     "ws": "^8.18.3"
@@ -25,6 +27,7 @@
   "devDependencies": {
     "@types/ws": "^8.18.1",
     "concurrently": "^9.2.1",
+    "sharp": "^0.34.5",
     "tsx": "^4.20.5",
     "typescript": "~5.9.3",
     "vite": "^8.0.1",

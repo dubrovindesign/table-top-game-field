@@ -1,5 +1,6 @@
 /**
- * Full-screen boot overlay: logo + animated progress while critical images and fonts load.
+ * Full-screen boot overlay: logo + progress while critical assets load and `main` chunk runs.
+ * Heavy art (dice, markers, god sheets, Ephyr sprite, frame PNGs) loads after overlay via idle callback.
  */
 
 import factionsJson from './catalog/factions.json';
@@ -14,13 +15,10 @@ const FACTIONS = factionsJson as FactionDef[];
 
 const LOGO_SRC = '/mobile-logo.webp';
 
-/** Matches `main.ts` field + default unit sprites (huge uses null). */
-const BOARD_AND_UNIT_URLS: readonly string[] = [
-  '/fieldwithtrees.png',
+/** Field + default small mini — needed before first paint of the board. */
+const CRITICAL_IMAGE_URLS: readonly string[] = [
+  '/fieldwithtrees.webp',
   '/tern-unit-1.jpg',
-  '/Frame 144.png',
-  '/Frame 118.png',
-  '/Frame 193.png',
 ];
 
 /** Dice result icons (small SVGs). */
@@ -43,16 +41,21 @@ const DICE_FACE_URLS: readonly string[] = [
   '/stun.svg',
 ];
 
-function collectBootImageUrls(): string[] {
+/** Matches `main.ts` alternate unit / big / large frames (deferred). */
+const DEFERRED_FRAME_AND_FIELD_URLS: readonly string[] = [
+  '/Frame 144.png',
+  '/Frame 118.png',
+  '/Frame 193.png',
+];
+
+function collectDeferredImageUrls(): string[] {
   const set = new Set<string>();
-  for (const u of BOARD_AND_UNIT_URLS) set.add(u);
-  if (defaultRenderConfig.terrainImageSrc) set.add(defaultRenderConfig.terrainImageSrc);
+  for (const u of DEFERRED_FRAME_AND_FIELD_URLS) set.add(u);
   set.add(EPHYR_CARD_SPRITE_SRC);
   for (const d of ETHER_VORTEX_DOMAINS) set.add(d.imageSrc);
   for (const f of FACTIONS) set.add(f.panelIconSrc);
   for (const m of EFFECT_MARKERS) set.add(m.iconSrc);
   for (const u of DICE_FACE_URLS) set.add(u);
-  set.add(LOGO_SRC);
   return [...set];
 }
 
@@ -140,51 +143,59 @@ function mountBootScreen(): {
   };
 }
 
-/**
- * Blocks until heavy images, god card sheets, and Langar are ready; shows branded overlay.
- */
-export async function runInitialBootScreen(): Promise<void> {
-  const ui = mountBootScreen();
-  const urls = collectBootImageUrls();
-  const totalSteps = urls.length + 2;
-  let doneSteps = 0;
+function scheduleDeferredBootLoads(): void {
+  const urls = collectDeferredImageUrls();
+  const run = (): void => {
+    void preloadGodCardSpriteSheets().catch((e) => {
+      console.warn(e);
+    });
+    for (const u of urls) {
+      const img = new Image();
+      img.src = u;
+    }
+  };
+  window.setTimeout(run, 0);
+}
 
-  const syncBar = (): void => {
-    ui.setProgress(doneSteps, totalSteps);
+export type BootScreenOptions = {
+  /** Resolves when `main.ts` has finished evaluating (including catalog fetch). */
+  mainModulePromise: Promise<unknown>;
+};
+
+/**
+ * Preloads minimal textures in parallel with the main module; defers god sheets and secondary art.
+ */
+export async function runInitialBootScreen(options: BootScreenOptions): Promise<void> {
+  const ui = mountBootScreen();
+  const critical: string[] = [LOGO_SRC, ...CRITICAL_IMAGE_URLS];
+  if (defaultRenderConfig.terrainImageSrc) critical.push(defaultRenderConfig.terrainImageSrc);
+
+  const totalTrack = critical.length + 1;
+  let imagesLoaded = 0;
+  let mainLoaded = false;
+
+  const bumpProgress = (): void => {
+    const done = imagesLoaded + (mainLoaded ? 1 : 0);
+    ui.setProgress(done, totalTrack);
   };
 
-  ui.setCaption('Загрузка текстур и арта…');
-  syncBar();
+  ui.setCaption('Загрузка…');
+  bumpProgress();
 
-  await preloadImagesWithProgress(urls, (d, t) => {
-    doneSteps = d;
-    syncBar();
-    ui.setCaption(`Загрузка… ${d} / ${t}`);
-  });
+  await Promise.all([
+    options.mainModulePromise.then(() => {
+      mainLoaded = true;
+      bumpProgress();
+    }),
+    preloadImagesWithProgress(critical, (d, t) => {
+      imagesLoaded = d;
+      ui.setCaption(`Текстуры… ${d} / ${t}`);
+      bumpProgress();
+    }),
+  ]);
 
-  doneSteps = urls.length;
-  syncBar();
-  ui.setCaption('Карты богов…');
-
-  try {
-    await preloadGodCardSpriteSheets();
-  } catch (e) {
-    console.warn(e);
-  }
-  doneSteps = urls.length + 1;
-  syncBar();
-
-  ui.setCaption('Шрифты…');
-  if (document.fonts) {
-    try {
-      await document.fonts.load('16px Langar');
-    } catch {
-      /* ignore */
-    }
-  }
-  doneSteps = urls.length + 2;
-  syncBar();
   ui.setCaption('Готово');
-
+  bumpProgress();
   await ui.remove();
+  scheduleDeferredBootLoads();
 }

@@ -1,9 +1,26 @@
+import { execSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { Plugin } from 'vite';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
+
+function catalogBundlePlugin(): Plugin {
+  const runBundle = (): void => {
+    execSync('node scripts/build-catalog-bundle.mjs', { cwd: __dirname, stdio: 'inherit' });
+  };
+  return {
+    name: 'catalog-bundle',
+    buildStart() {
+      runBundle();
+    },
+    configureServer() {
+      runBundle();
+    },
+  };
+}
 
 const MP_PORT = Number(process.env.MP_PORT ?? 3333);
 
@@ -26,6 +43,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    catalogBundlePlugin(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['mobile-logo.webp'],
@@ -57,7 +75,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,svg,woff2}', '**/generated/catalog-data.json'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/__mp_ws/],
         runtimeCaching: [
