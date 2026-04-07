@@ -209,6 +209,29 @@ async function applyLeaders(overrides, dryRun) {
   }
 }
 
+/**
+ * newUnits without saved hotspots in export → no src/catalog/hotspots/<id>.json; game shows stat-card fallback.
+ */
+function warnNewUnitsWithoutHotspots(overrides) {
+  const newUnits = overrides.newUnits && typeof overrides.newUnits === 'object' ? overrides.newUnits : {};
+  const hotspots = overrides.hotspots && typeof overrides.hotspots === 'object' ? overrides.hotspots : {};
+  for (const unitId of Object.keys(newUnits)) {
+    const hf = hotspots[unitId];
+    const hasRegions =
+      hf &&
+      typeof hf === 'object' &&
+      Array.isArray(hf.regions) &&
+      hf.regions.length > 0 &&
+      typeof hf.image === 'string' &&
+      hf.image.trim().length > 0;
+    if (!hasRegions) {
+      console.warn(
+        `[catalog:apply] Юнит "${unitId}" в newUnits, но в экспорте нет сохранённых хотспотов (в редакторе: зоны → «Сохранить хотспоты» → экспорт JSON).`,
+      );
+    }
+  }
+}
+
 async function applyHotspots(overrides, dryRun) {
   const hotspots = overrides.hotspots && typeof overrides.hotspots === 'object' ? overrides.hotspots : {};
   const ids = Object.keys(hotspots);
@@ -253,6 +276,8 @@ async function main() {
   if (dryRun) {
     console.log('[dry-run] no files will be written.\n');
   }
+
+  warnNewUnitsWithoutHotspots(overrides);
 
   await applyUnits(overrides, dryRun);
   await applyLeaders(overrides, dryRun);
