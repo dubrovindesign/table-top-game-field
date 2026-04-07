@@ -19,6 +19,11 @@
         "unitId": "Dryadint-Warrior",
         "maxCopies": 4,
         "points": 20
+      },
+      {
+        "unitId": "Blade-Dancer",
+        "maxCopies": 2,
+        "points": 27
       }
     ],
     "points": 70

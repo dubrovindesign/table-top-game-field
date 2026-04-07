@@ -156,6 +156,13 @@ export function unitPanelThumbSrc(card: UnitCardData): string | undefined {
 export interface DiceRequest {
   pool: DicePool;
   source: UnitCardData;
+  /**
+   * Уникальный ключ действия на карточке (атака, защита, хотспот…).
+   * Повторный клик с тем же ключом не добавляет кубики в набор повторно.
+   */
+  actionKey?: string;
+  /** Не накапливать в селекторе — сразу бросок (двойной клик по хотспоту). */
+  rollImmediately?: boolean;
 }
 
 export type UnitCardShowOptions = {
@@ -333,23 +340,25 @@ export class UnitCard {
     this.container.style.bottom = '';
   }
 
-  /** Dock image-mode card between top safe margin and the dice UI (right column). */
+  /** Dock image-mode card between top safe margin and the dice selector column (wallet + panel). */
   private attachDockedImageLayout(): void {
     this.clearDockedImageLayout();
     const gap = 12;
     const topMargin = 20;
+    const dockAnchor = (): HTMLElement | null =>
+      document.querySelector('.dice-panel-column') ?? document.querySelector('.dice-container');
     const update = (): void => {
-      const dice = document.querySelector('.dice-container');
-      if (!dice) return;
-      const r = dice.getBoundingClientRect();
+      const anchor = dockAnchor();
+      if (!anchor) return;
+      const r = anchor.getBoundingClientRect();
       const bottomPx = Math.max(0, window.innerHeight - (r.top - gap));
       this.container.style.top = `${topMargin}px`;
       this.container.style.bottom = `${bottomPx}px`;
     };
     update();
     const ro = new ResizeObserver(update);
-    const dice = document.querySelector('.dice-container');
-    if (dice) ro.observe(dice);
+    const anchor = dockAnchor();
+    if (anchor) ro.observe(anchor);
     window.addEventListener('resize', update);
     this.dockedImageLayoutCleanup = () => {
       ro.disconnect();
@@ -357,8 +366,18 @@ export class UnitCard {
     };
   }
 
-  private emitDice(pool: DicePool, source: UnitCardData): void {
-    if (this.onDiceRequest) this.onDiceRequest({ pool, source });
+  private emitDice(
+    pool: DicePool,
+    source: UnitCardData,
+    opts?: { actionKey?: string; rollImmediately?: boolean },
+  ): void {
+    if (!this.onDiceRequest) return;
+    this.onDiceRequest({
+      pool,
+      source,
+      ...(opts?.actionKey !== undefined ? { actionKey: opts.actionKey } : {}),
+      ...(opts?.rollImmediately === true ? { rollImmediately: true } : {}),
+    });
   }
 
   private numericDicePool(r: HotspotRegion): DicePool {
@@ -453,7 +472,7 @@ export class UnitCard {
     img.draggable = false;
     inner.appendChild(img);
 
-    for (const r of hf.regions) {
+    hf.regions.forEach((r, regionIndex) => {
       const btn = el('button', 'uc-image-hotspot');
       btn.type = 'button';
       btn.style.setProperty('--x', String(r.x));
@@ -461,14 +480,37 @@ export class UnitCard {
       btn.style.setProperty('--w', String(r.w));
       btn.style.setProperty('--h', String(r.h));
       btn.setAttribute('aria-label', r.label);
-      btn.title = r.label;
       const action = this.hotspotAction(r, source);
       const hasDice = action && dicePoolTotal(action.pool) > 0;
       const hasHover = action?.attackForHover != null;
+      const hotspotActionKey = `hotspot:${r.id || String(regionIndex)}`;
       if (hasDice) {
+        btn.title = `${r.label} — щелчок: в набор кубиков; двойной щелчок: сразу бросок`;
+        let singleClickTimer: ReturnType<typeof setTimeout> | null = null;
+        const HOTSPOT_CLICK_DELAY_MS = 280;
         btn.addEventListener('click', () => {
-          if (action) this.emitDice(action.pool, source);
+          if (!action || dicePoolTotal(action.pool) <= 0) return;
+          if (singleClickTimer) clearTimeout(singleClickTimer);
+          singleClickTimer = setTimeout(() => {
+            singleClickTimer = null;
+            this.emitDice(action.pool, source, { actionKey: hotspotActionKey });
+          }, HOTSPOT_CLICK_DELAY_MS);
         });
+        btn.addEventListener('dblclick', (e) => {
+          e.preventDefault();
+          if (singleClickTimer) {
+            clearTimeout(singleClickTimer);
+            singleClickTimer = null;
+          }
+          if (action && dicePoolTotal(action.pool) > 0) {
+            this.emitDice(action.pool, source, {
+              actionKey: hotspotActionKey,
+              rollImmediately: true,
+            });
+          }
+        });
+      } else {
+        btn.title = r.label;
       }
       if (hasHover) {
         btn.addEventListener('pointerenter', () => {
@@ -482,7 +524,7 @@ export class UnitCard {
         btn.classList.add('uc-image-hotspot--inactive');
       }
       inner.appendChild(btn);
-    }
+    });
 
     wrap.appendChild(inner);
     this.container.appendChild(wrap);
@@ -614,7 +656,11 @@ export class UnitCard {
     // Defense (clickable)
     const defStat = el('div', 'uc-stat uc-stat-clickable');
     defStat.title = 'Click to add defense dice';
-    defStat.addEventListener('click', () => this.emitDice({ white: data.defense.white, green: data.defense.green }, source));
+    defStat.addEventListener('click', () =>
+      this.emitDice({ white: data.defense.white, green: data.defense.green }, source, {
+        actionKey: 'defense',
+      }),
+    );
     defStat.appendChild(el('span', 'uc-stat-icon', '\uD83D\uDEE1'));
     const defInfo = el('div', 'uc-stat-info');
     defInfo.appendChild(el('span', 'uc-stat-label', 'Defense'));
@@ -649,7 +695,9 @@ export class UnitCard {
     // Concentration (clickable)
     const concStat = el('div', 'uc-stat uc-stat-clickable');
     concStat.title = 'Click to add concentration dice';
-    concStat.addEventListener('click', () => this.emitDice(data.concentration, source));
+    concStat.addEventListener('click', () =>
+      this.emitDice(data.concentration, source, { actionKey: 'concentration' }),
+    );
     concStat.appendChild(el('span', 'uc-stat-icon', '\uD83C\uDFAF'));
     const concInfo = el('div', 'uc-stat-info');
     concInfo.appendChild(el('span', 'uc-stat-label', 'Concentration'));
@@ -663,7 +711,11 @@ export class UnitCard {
     // Defense Reaction (clickable)
     const reactStat = el('div', 'uc-stat uc-stat-clickable');
     reactStat.title = 'Click to add defense reaction dice';
-    reactStat.addEventListener('click', () => this.emitDice({ white: data.defenseReaction.white, green: data.defenseReaction.green }, source));
+    reactStat.addEventListener('click', () =>
+      this.emitDice({ white: data.defenseReaction.white, green: data.defenseReaction.green }, source, {
+        actionKey: 'defenseReaction',
+      }),
+    );
     reactStat.appendChild(el('span', 'uc-stat-icon', '\u21BA'));
     const reactInfo = el('div', 'uc-stat-info');
     reactInfo.appendChild(el('span', 'uc-stat-label', 'Def. Reaction'));
@@ -681,7 +733,9 @@ export class UnitCard {
     if (explorationTotal > 0) {
       exploreStat.classList.add('uc-stat-clickable');
       exploreStat.title = 'Click to add exploration dice';
-      exploreStat.addEventListener('click', () => this.emitDice(explorationPool, source));
+      exploreStat.addEventListener('click', () =>
+        this.emitDice(explorationPool, source, { actionKey: 'exploration' }),
+      );
     }
     exploreStat.appendChild(el('span', 'uc-stat-icon', '\uD83D\uDD0D'));
     const exploreInfo = el('div', 'uc-stat-info');
@@ -723,10 +777,13 @@ export class UnitCard {
       const attacksSection = el('div', 'uc-attacks');
       attacksSection.appendChild(el('div', 'uc-section-title', 'Attacks'));
 
-      for (const atk of data.attacks) {
+      for (let attackIndex = 0; attackIndex < data.attacks.length; attackIndex++) {
+        const atk = data.attacks[attackIndex];
         const atkEl = el('div', 'uc-attack uc-attack-clickable');
         atkEl.title = `Click to add ${atk.name} dice`;
-        atkEl.addEventListener('click', () => this.emitDice(atk.dice, source));
+        atkEl.addEventListener('click', () =>
+          this.emitDice(atk.dice, source, { actionKey: `attack:${attackIndex}` }),
+        );
         atkEl.addEventListener('pointerenter', () => {
           if (this.onAttackHover) this.onAttackHover(atk);
         });

@@ -223,7 +223,6 @@ export class CatalogEditorPanel {
   private selectedUnitId: string | null = null;
 
   private crumbsEl!: HTMLElement;
-  private leaderListEl!: HTMLElement;
   private unitSearchInput!: HTMLInputElement;
   private unitFormMainWrap!: HTMLElement;
   private unitFormDiceWrap!: HTMLElement;
@@ -318,6 +317,14 @@ export class CatalogEditorPanel {
   private hotspotPresetSaveBackdrop!: HTMLElement;
   private hotspotPresetNameInput!: HTMLInputElement;
   private hotspotPresetDefaultCb!: HTMLInputElement;
+  private hotspotQuickEditWrap!: HTMLElement;
+  private hsQeRange!: HTMLInputElement;
+  private hsQeRangeUnit!: HTMLSelectElement;
+  private hsQeDamage!: HTMLInputElement;
+  private hsQeRed!: HTMLInputElement;
+  private hsQeBlack!: HTMLInputElement;
+  private hsQeGreen!: HTMLInputElement;
+  private hsQeWhite!: HTMLInputElement;
 
   private hotspotRegions: HotspotRegion[] = [];
   private hotspotImageUrl = '';
@@ -392,22 +399,14 @@ export class CatalogEditorPanel {
     this.panel.appendChild(this.body);
     document.body.appendChild(this.panel);
 
-    this.panel.addEventListener('keydown', (e) => {
-      if (e.key !== 'Delete' && e.key !== 'Backspace') return;
-      const t = e.target as HTMLElement;
-      if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT') return;
-      if (this.selectedRegionIndex === null) return;
-      e.preventDefault();
-      this.deleteSelectedHotspot();
-    });
-
     this.buildBody();
+
+    document.addEventListener('keydown', this.onDocumentHotspotShortcutsCapture, true);
 
     window.addEventListener(CATALOG_OVERRIDES_CHANGED, () => {
       if (!this.open) return;
       this.refreshLeaderSelect();
       this.refreshUnitLibraryList();
-      this.refreshLeaderListUI();
       this.updateBreadcrumbs();
       this.refreshLeaderAttachedUnits();
       this.refreshLeaderRosterEditor();
@@ -488,7 +487,6 @@ export class CatalogEditorPanel {
         this.selectedLeaderId = ls[0]?.id ?? '';
         this.selectedUnitId = null;
         this.refreshLeaderSelect();
-        this.refreshLeaderListUI();
         this.updateBreadcrumbs();
         this.clearEditor();
       });
@@ -516,7 +514,6 @@ export class CatalogEditorPanel {
       this.selectedLeaderId = ls[0]?.id ?? '';
       this.selectedUnitId = null;
       this.refreshLeaderSelect();
-      this.refreshLeaderListUI();
       this.updateBreadcrumbs();
       this.clearEditor();
     });
@@ -550,17 +547,15 @@ export class CatalogEditorPanel {
     row2.appendChild(editLeaderBtn);
     leaderPane.appendChild(row2);
 
-    this.leaderListEl = el('div', 'ce-leader-list');
-    leaderPane.appendChild(el('label', '', 'Лидеры фракции'));
-    leaderPane.appendChild(this.leaderListEl);
-
-    leaderPane.appendChild(el('label', '', 'Юниты ростера'));
+    const rosterSection = el('div', 'ce-leader-roster-section');
+    rosterSection.appendChild(el('label', '', 'Юниты ростера'));
     this.leaderAttachedUnitsEl = el('div', 'ce-leader-attached-units');
-    leaderPane.appendChild(this.leaderAttachedUnitsEl);
+    rosterSection.appendChild(this.leaderAttachedUnitsEl);
     const addUnitFromLeaderBtn = el('button', 'catalog-editor-btn', 'Добавить юнита') as HTMLButtonElement;
     addUnitFromLeaderBtn.type = 'button';
     addUnitFromLeaderBtn.addEventListener('click', () => this.openUnitCreateFromLeader());
-    leaderPane.appendChild(addUnitFromLeaderBtn);
+    rosterSection.appendChild(addUnitFromLeaderBtn);
+    leaderPane.appendChild(rosterSection);
 
     unitPane.appendChild(el('div', 'ce-pane-title', 'Библиотека юнитов'));
 
@@ -873,6 +868,7 @@ export class CatalogEditorPanel {
     });
 
     this.hotspotStage = el('div', 'ce-hotspot-stage uc-image-card-inner');
+    this.hotspotStage.tabIndex = 0;
     this.hotspotImg = document.createElement('img');
     this.hotspotImg.className = 'uc-image-card-img';
     this.hotspotImg.alt = '';
@@ -890,25 +886,18 @@ export class CatalogEditorPanel {
         y: 0.1 + n * 0.05,
         w: 0.9,
         h: 0.04,
-        range: 1,
         rangeUnit: 'hex',
-        damage: 0,
-        red: 0,
-        black: 0,
-        green: 0,
-        white: 0,
       });
       this.selectedRegionIndex = this.hotspotRegions.length - 1;
       this.renderHotspotRects();
       this.syncHotspotFieldsFromRegion();
     });
 
-    const copyHot = el('button', 'catalog-editor-btn catalog-editor-btn-secondary', 'Копировать зону');
-    copyHot.type = 'button';
-    copyHot.addEventListener('click', () => this.copyHotspot());
-    const pasteHot = el('button', 'catalog-editor-btn catalog-editor-btn-secondary', 'Вставить зону');
-    pasteHot.type = 'button';
-    pasteHot.addEventListener('click', () => this.pasteHotspot());
+    const hotKeysHint = el(
+      'div',
+      'ce-hs-keys-hint',
+      'Двойной щелчок по зоне — дальность, урон и кубики. Ctrl+C / Ctrl+V — копировать и вставить зону, Delete — удалить выбранную.',
+    );
 
     const hsGrid = el('div', 'ce-hs-fields');
     const h = (lab: string, inp: HTMLInputElement) => {
@@ -994,10 +983,7 @@ export class CatalogEditorPanel {
     hotSection.appendChild(fileIn);
     hotSection.appendChild(this.hotspotStage);
     hotSection.appendChild(addReg);
-    const hotBar = el('div', 'catalog-editor-row');
-    hotBar.appendChild(copyHot);
-    hotBar.appendChild(pasteHot);
-    hotSection.appendChild(hotBar);
+    hotSection.appendChild(hotKeysHint);
     hotSection.appendChild(el('label', '', 'Параметры выбранной зоны'));
     hotSection.appendChild(hsGrid);
     const presetRow = el('div', 'ce-hs-preset-row');
@@ -1079,10 +1065,10 @@ export class CatalogEditorPanel {
     this.buildLeaderModal();
     this.buildUnitModal();
     this.buildHotspotPresetSaveDialog();
+    this.buildHotspotQuickEdit();
     this.setupModalEscapeHandler();
     this.refreshLeaderSelect();
     this.refreshUnitLibraryList();
-    this.refreshLeaderListUI();
     this.updateBreadcrumbs();
     this.refreshLeaderAttachedUnits();
     this.refreshRequiresUnitSelect();
@@ -1104,6 +1090,7 @@ export class CatalogEditorPanel {
   }
 
   private finishUnitForm(): void {
+    this.closeHotspotQuickEditDiscard();
     this.unitModalBackdrop.classList.remove('ce-modal-backdrop--open');
     this.unitFormIsNew = false;
     this.unitCreatePresetLeaderId = null;
@@ -1126,6 +1113,7 @@ export class CatalogEditorPanel {
 
   private openUnitFormCreate(preset?: { leaderId: string; factionId: string; domain: Domain }): void {
     this.unitFormIsNew = true;
+    this.selectedUnitId = null;
     this.unitModalBackdrop.classList.add('ce-modal-backdrop--open');
     this.unitCreatePresetLeaderId = preset?.leaderId ?? null;
     this.unitIdInput.value = '';
@@ -1227,10 +1215,12 @@ export class CatalogEditorPanel {
       if (!rawCard) return;
       const card = await resolveCardImageUrlsForStorage(rawCard);
       setNewUnit(id, { id, points: 0, card });
+      this.selectedUnitId = id;
       if (this.unitCreatePresetLeaderId) {
         addRosterSlot(this.unitCreatePresetLeaderId, { unitId: id, maxCopies: 1 });
         this.unitCreatePresetLeaderId = null;
       }
+      await this.saveHotspotsAsync({ softIfNoImage: true });
       this.finishUnitForm();
       return;
     }
@@ -1514,6 +1504,56 @@ export class CatalogEditorPanel {
     document.body.appendChild(this.unitModalBackdrop);
   }
 
+  /**
+   * Горячие клавиши хот-спотов: фаза capture на `document`, чтобы срабатывало при фокусе на канвасе
+   * игры или `body`, а не только внутри модалки (bubbling до backdrop не происходит).
+   */
+  private onDocumentHotspotShortcutsCapture = (e: KeyboardEvent): void => {
+    if (!this.unitModalBackdrop.classList.contains('ce-modal-backdrop--open')) return;
+    if (this.unitHotSectionWrap.hidden) return;
+
+    const raw = e.target;
+    if (raw instanceof HTMLElement) {
+      const t = raw;
+      if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT') return;
+      if (t.isContentEditable) return;
+      if (
+        this.hotspotQuickEditWrap.classList.contains('ce-hs-quick-edit--open') &&
+        this.hotspotQuickEditWrap.contains(t)
+      ) {
+        return;
+      }
+      if (
+        this.hotspotPresetSaveBackdrop.classList.contains('ce-modal-backdrop--open') &&
+        this.hotspotPresetSaveBackdrop.contains(t)
+      ) {
+        return;
+      }
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (t.closest('button, a, [role="button"]')) return;
+      }
+    }
+
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
+      if (this.selectedRegionIndex === null) return;
+      e.preventDefault();
+      e.stopPropagation();
+      this.copyHotspot();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
+      e.preventDefault();
+      e.stopPropagation();
+      this.pasteHotspot();
+      return;
+    }
+    if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+    if (this.selectedRegionIndex === null) return;
+    e.preventDefault();
+    e.stopPropagation();
+    this.deleteSelectedHotspot();
+  };
+
   private buildHotspotPresetSaveDialog(): void {
     this.hotspotPresetSaveBackdrop = el('div', 'ce-modal-backdrop ce-hotspot-preset-save-backdrop');
     this.hotspotPresetSaveBackdrop.addEventListener('click', (e) => {
@@ -1570,6 +1610,168 @@ export class CatalogEditorPanel {
     document.body.appendChild(this.hotspotPresetSaveBackdrop);
   }
 
+  private hotspotQuickEditOutsideBound = (e: PointerEvent): void => {
+    if (!this.hotspotQuickEditWrap.classList.contains('ce-hs-quick-edit--open')) return;
+    if (this.hotspotQuickEditWrap.contains(e.target as Node)) return;
+    this.closeHotspotQuickEditDiscard();
+  };
+
+  private buildHotspotQuickEdit(): void {
+    this.hotspotQuickEditWrap = el('div', 'ce-hs-quick-edit');
+    this.hotspotQuickEditWrap.style.display = 'none';
+    this.hotspotQuickEditWrap.setAttribute('role', 'dialog');
+    this.hotspotQuickEditWrap.setAttribute('aria-label', 'Параметры зоны');
+    const inner = el('div', 'ce-hs-quick-edit-inner');
+    inner.appendChild(el('div', 'ce-hs-quick-edit-title', 'Параметры зоны'));
+
+    const mkDiceChip = (inp: HTMLInputElement, bg: string, border?: string) => {
+      const lab = el('label', 'ce-hs-dice-chip');
+      const sw = el('span', 'ce-hs-dice-swatch');
+      sw.style.background = bg;
+      if (border) sw.style.boxShadow = `inset 0 0 0 1px ${border}`;
+      lab.appendChild(sw);
+      inp.classList.add('ce-hs-dice-num');
+      inp.min = '0';
+      inp.step = '1';
+      lab.appendChild(inp);
+      return lab;
+    };
+
+    const rangeLabRow = el('div', 'ce-hs-quick-edit-row');
+    rangeLabRow.appendChild(el('span', 'ce-hs-quick-edit-lab', 'Дальность'));
+    const rangeRow = el('div', 'ce-hs-quick-edit-range-row');
+    this.hsQeRange = el('input', 'catalog-editor-input') as HTMLInputElement;
+    this.hsQeRange.type = 'number';
+    this.hsQeRange.min = '0';
+    this.hsQeRange.step = '1';
+    this.hsQeRangeUnit = el('select', 'catalog-editor-select ce-hs-range-unit') as HTMLSelectElement;
+    this.hsQeRangeUnit.appendChild(new Option('гекс', 'hex'));
+    this.hsQeRangeUnit.appendChild(new Option('гексон', 'hexon'));
+    rangeRow.appendChild(this.hsQeRange);
+    rangeRow.appendChild(this.hsQeRangeUnit);
+    rangeLabRow.appendChild(rangeRow);
+    inner.appendChild(rangeLabRow);
+
+    const dmgRow = el('div', 'ce-hs-quick-edit-row');
+    dmgRow.appendChild(el('span', 'ce-hs-quick-edit-lab', 'Урон'));
+    this.hsQeDamage = el('input', 'catalog-editor-input') as HTMLInputElement;
+    this.hsQeDamage.type = 'number';
+    dmgRow.appendChild(this.hsQeDamage);
+    inner.appendChild(dmgRow);
+
+    const diceRow = el('div', 'ce-hs-quick-edit-row ce-hs-quick-edit-row--dice');
+    diceRow.appendChild(el('span', 'ce-hs-quick-edit-lab', 'Кубики'));
+    const diceIn = el('div', 'ce-hs-dice-inputs');
+    this.hsQeRed = el('input', 'catalog-editor-input') as HTMLInputElement;
+    this.hsQeRed.type = 'number';
+    this.hsQeBlack = el('input', 'catalog-editor-input') as HTMLInputElement;
+    this.hsQeBlack.type = 'number';
+    this.hsQeGreen = el('input', 'catalog-editor-input') as HTMLInputElement;
+    this.hsQeGreen.type = 'number';
+    this.hsQeWhite = el('input', 'catalog-editor-input') as HTMLInputElement;
+    this.hsQeWhite.type = 'number';
+    diceIn.appendChild(mkDiceChip(this.hsQeRed, '#d14b4b'));
+    diceIn.appendChild(mkDiceChip(this.hsQeBlack, '#1a1a22', 'rgba(255,255,255,0.2)'));
+    diceIn.appendChild(mkDiceChip(this.hsQeGreen, '#46b969'));
+    diceIn.appendChild(mkDiceChip(this.hsQeWhite, '#e8eaef', 'rgba(0,0,0,0.22)'));
+    diceRow.appendChild(diceIn);
+    inner.appendChild(diceRow);
+
+    const ok = el('button', 'catalog-editor-btn ce-hs-quick-edit-ok', 'Готово') as HTMLButtonElement;
+    ok.type = 'button';
+    ok.addEventListener('click', () => this.commitHotspotQuickEdit());
+    inner.appendChild(ok);
+
+    this.hotspotQuickEditWrap.appendChild(inner);
+    document.body.appendChild(this.hotspotQuickEditWrap);
+
+    const qeLive = () => this.applyHotspotQuickEditToRegion();
+    for (const inp of [
+      this.hsQeRange,
+      this.hsQeDamage,
+      this.hsQeRed,
+      this.hsQeBlack,
+      this.hsQeGreen,
+      this.hsQeWhite,
+    ]) {
+      inp.addEventListener('input', qeLive);
+      inp.addEventListener('change', qeLive);
+    }
+    this.hsQeRangeUnit.addEventListener('change', qeLive);
+
+    ok.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.commitHotspotQuickEdit();
+      }
+    });
+  }
+
+  /** Записывает поля поп-апа в выбранную зону и синхронизирует боковую панель (вызывается при каждом вводе). */
+  private applyHotspotQuickEditToRegion(): void {
+    if (!this.hotspotQuickEditWrap.classList.contains('ce-hs-quick-edit--open')) return;
+    if (this.selectedRegionIndex === null) return;
+    const r = this.hotspotRegions[this.selectedRegionIndex];
+    if (!r) return;
+    r.range = numOrU(this.hsQeRange.value);
+    r.rangeUnit = this.hsQeRangeUnit.value === 'hexon' ? 'hexon' : 'hex';
+    r.damage = numOrU(this.hsQeDamage.value);
+    r.red = numOrU(this.hsQeRed.value);
+    r.black = numOrU(this.hsQeBlack.value);
+    r.green = numOrU(this.hsQeGreen.value);
+    r.white = numOrU(this.hsQeWhite.value);
+    this.syncHotspotFieldsFromRegion();
+  }
+
+  private loadHotspotQuickEditFromRegion(): void {
+    const r =
+      this.selectedRegionIndex !== null ? this.hotspotRegions[this.selectedRegionIndex] : undefined;
+    if (!r) return;
+    this.hsQeRange.value = r.range != null ? String(r.range) : '';
+    this.hsQeRangeUnit.value = r.rangeUnit === 'hexon' ? 'hexon' : 'hex';
+    this.hsQeDamage.value = r.damage != null ? String(r.damage) : '';
+    this.hsQeRed.value = r.red != null ? String(r.red) : '';
+    this.hsQeBlack.value = r.black != null ? String(r.black) : '';
+    this.hsQeGreen.value = r.green != null ? String(r.green) : '';
+    this.hsQeWhite.value = r.white != null ? String(r.white) : '';
+  }
+
+  private openHotspotQuickEdit(clientX: number, clientY: number): void {
+    if (this.selectedRegionIndex === null) return;
+    this.loadHotspotQuickEditFromRegion();
+    this.hotspotQuickEditWrap.classList.add('ce-hs-quick-edit--open');
+    this.hotspotQuickEditWrap.style.display = 'block';
+    const pad = 8;
+    let left = clientX + pad;
+    let top = clientY + pad;
+    this.hotspotQuickEditWrap.style.left = `${left}px`;
+    this.hotspotQuickEditWrap.style.top = `${top}px`;
+    document.addEventListener('pointerdown', this.hotspotQuickEditOutsideBound, true);
+    requestAnimationFrame(() => {
+      const rect = this.hotspotQuickEditWrap.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      if (rect.right > vw) left = Math.max(pad, vw - rect.width - pad);
+      if (rect.bottom > vh) top = Math.max(pad, vh - rect.height - pad);
+      if (rect.left < 0) left = pad;
+      if (rect.top < 0) top = pad;
+      this.hotspotQuickEditWrap.style.left = `${left}px`;
+      this.hotspotQuickEditWrap.style.top = `${top}px`;
+    });
+    queueMicrotask(() => this.hsQeRange.focus());
+  }
+
+  private commitHotspotQuickEdit(): void {
+    this.applyHotspotQuickEditToRegion();
+    this.closeHotspotQuickEditDiscard();
+  }
+
+  private closeHotspotQuickEditDiscard(): void {
+    document.removeEventListener('pointerdown', this.hotspotQuickEditOutsideBound, true);
+    this.hotspotQuickEditWrap.classList.remove('ce-hs-quick-edit--open');
+    this.hotspotQuickEditWrap.style.display = 'none';
+  }
+
   private openHotspotPresetSaveDialog(): void {
     this.hotspotPresetNameInput.value = '';
     this.hotspotPresetDefaultCb.checked = false;
@@ -1610,6 +1812,11 @@ export class CatalogEditorPanel {
   private setupModalEscapeHandler(): void {
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape') return;
+      if (this.hotspotQuickEditWrap.classList.contains('ce-hs-quick-edit--open')) {
+        e.preventDefault();
+        this.closeHotspotQuickEditDiscard();
+        return;
+      }
       if (this.hotspotPresetSaveBackdrop.classList.contains('ce-modal-backdrop--open')) {
         e.preventDefault();
         this.closeHotspotPresetSaveDialog();
@@ -1832,13 +2039,11 @@ export class CatalogEditorPanel {
     leadSel.onchange = () => {
       this.selectedLeaderId = leadSel.value;
       this.selectedUnitId = null;
-      this.refreshLeaderListUI();
       this.updateBreadcrumbs();
       this.refreshUnitLibraryList();
       this.refreshLeaderAttachedUnits();
       this.clearEditor();
     };
-    this.refreshLeaderListUI();
     this.updateBreadcrumbs();
     this.refreshLeaderAttachedUnits();
   }
@@ -2320,7 +2525,6 @@ export class CatalogEditorPanel {
     }
     this.closeLeaderModal();
     this.refreshLeaderSelect();
-    this.refreshLeaderListUI();
     this.updateBreadcrumbs();
     this.refreshUnitLibraryList();
     this.refreshUnitSelectors();
@@ -2332,29 +2536,6 @@ export class CatalogEditorPanel {
     const fac = FACTIONS.find((f) => f.id === this.selectedFactionId);
     const leader = this.selectedLeaderId ? getLeader(this.selectedLeaderId) : undefined;
     this.crumbsEl.textContent = `${domain} › ${fac?.name ?? '—'} › ${leader?.name ?? '—'}`;
-  }
-
-  private refreshLeaderListUI(): void {
-    if (!this.leaderListEl) return;
-    this.leaderListEl.innerHTML = '';
-    const leaders = leadersForFaction(this.selectedFactionId);
-    if (leaders.length === 0) {
-      this.leaderListEl.appendChild(el('div', 'catalog-editor-hint', 'Нет лидеров в этой фракции.'));
-      return;
-    }
-    for (const l of leaders) {
-      const btn = el('button', 'ce-leader-pill', l.name) as HTMLButtonElement;
-      btn.type = 'button';
-      if (l.id === this.selectedLeaderId) btn.classList.add('ce-leader-pill--active');
-      btn.addEventListener('click', () => {
-        const leadSel = this.body.querySelector('#ce-leader-select') as HTMLSelectElement | null;
-        if (leadSel) {
-          leadSel.value = l.id;
-          leadSel.dispatchEvent(new Event('change'));
-        }
-      });
-      this.leaderListEl.appendChild(btn);
-    }
   }
 
   private deleteSelectedUnit(): void {
@@ -2387,7 +2568,6 @@ export class CatalogEditorPanel {
     this.selectedLeaderId = next[0]?.id ?? '';
     this.selectedUnitId = null;
     this.refreshLeaderSelect();
-    this.refreshLeaderListUI();
     this.updateBreadcrumbs();
     this.refreshUnitLibraryList();
   }
@@ -2519,24 +2699,60 @@ export class CatalogEditorPanel {
     void this.saveHotspotsAsync();
   }
 
-  private async saveHotspotsAsync(): Promise<void> {
-    if (!this.selectedUnitId) return;
-    const raw = this.hotspotImageInput.value.trim() || this.hotspotImageUrl;
-    const image = (await resolveImageUrlForStorage(raw)) ?? '';
-    if (!image) {
-      alert('Укажите URL картинки (путь под public/) или выберите файл — старые blob: ссылки не работают после перезагрузки.');
+  /** Для нового юнита id берётся из поля «Идентификатор», пока юнит ещё не в `selectedUnitId`. */
+  private resolveHotspotUnitIdForSave(): string | null {
+    if (this.selectedUnitId) return this.selectedUnitId;
+    if (this.unitFormIsNew) {
+      const id = this.unitIdInput.value.trim();
+      return id ? id : null;
+    }
+    return null;
+  }
+
+  /**
+   * @param softIfNoImage — при сохранении вместе с новым юнитом: без alert, только подсказка
+   * (чтобы не блокировать создание юнита, если забыли картинку для хотспотов).
+   */
+  private async saveHotspotsAsync(opts?: { softIfNoImage?: boolean }): Promise<void> {
+    const unitId = this.resolveHotspotUnitIdForSave();
+    if (!unitId) {
+      alert(
+        'Укажите id юнита в поле «Идентификатор» в начале формы. Без id хотспоты не сохраняются в каталоге.',
+      );
       return;
     }
     this.applyHotspotFieldsToSelected();
+    const raw = this.hotspotImageInput.value.trim() || this.hotspotImageUrl;
+    const image = (await resolveImageUrlForStorage(raw)) ?? '';
+    if (!image) {
+      if (this.hotspotRegions.length === 0) {
+        if (opts?.softIfNoImage) return;
+        this.hotspotHint.textContent =
+          'Нечего сохранять в хотспотах: нет картинки и нет зон. Добавьте зоны и URL картинки.';
+        return;
+      }
+      if (opts?.softIfNoImage) {
+        this.hotspotHint.textContent =
+          'Юнит сохранён. Хотспоты не записаны: укажите URL картинки в хотспотах и нажмите «Сохранить хотспоты».';
+        return;
+      }
+      alert(
+        'Укажите URL картинки (путь под public/) или выберите файл — старые blob: ссылки не работают после перезагрузки.',
+      );
+      return;
+    }
     const file: HotspotFile = {
       image,
-      title: getCatalogUnit(this.selectedUnitId)?.card.name,
+      title: getCatalogUnit(unitId)?.card.name,
       regions: this.hotspotRegions.map((r) => stripRegionForSave(structuredClone(r))),
     };
-    setHotspotsForUnit(this.selectedUnitId, file);
+    setHotspotsForUnit(unitId, file);
     this.hotspotImageInput.value = image;
     this.hotspotImageUrl = image;
-    this.hotspotHint.textContent = 'Сохранено в оверрайды.';
+    if (this.unitFormIsNew) this.selectedUnitId = unitId;
+    this.hotspotHint.textContent = opts?.softIfNoImage
+      ? 'Юнит и хотспоты сохранены в оверрайды.'
+      : 'Сохранено в оверрайды.';
   }
 
   private copyHotspot(): void {
@@ -2571,6 +2787,40 @@ export class CatalogEditorPanel {
     this.syncHotspotFieldsFromRegion();
   }
 
+  /** Класс выбранной зоны и кнопка «×» без полной пересборки DOM (пересборка на pointerdown ломает dblclick / click×2). */
+  private updateHotspotRectSelectionUi(): void {
+    const nodes = this.hotspotStage.querySelectorAll('.ce-hs-rect');
+    if (nodes.length !== this.hotspotRegions.length) {
+      this.renderHotspotRects();
+      return;
+    }
+    nodes.forEach((node) => {
+      const div = node as HTMLElement;
+      const idx = Number(div.dataset.index);
+      if (!Number.isFinite(idx)) return;
+      const sel = this.selectedRegionIndex === idx;
+      div.classList.toggle('ce-hs-rect--selected', sel);
+      const existingClose = div.querySelector('.ce-hs-close');
+      if (sel && !existingClose) {
+        const close = el('button', 'ce-hs-close');
+        close.type = 'button';
+        close.setAttribute('aria-label', 'Удалить зону');
+        close.innerHTML = '×';
+        close.addEventListener('pointerdown', (ev) => {
+          ev.stopPropagation();
+          ev.preventDefault();
+          this.selectedRegionIndex = idx;
+          this.deleteSelectedHotspot();
+        });
+        const handle = div.querySelector('.ce-hs-handle');
+        if (handle) div.insertBefore(close, handle);
+        else div.appendChild(close);
+      } else if (!sel && existingClose) {
+        existingClose.remove();
+      }
+    });
+  }
+
   private renderHotspotRects(): void {
     this.hotspotStage.querySelectorAll('.ce-hs-rect').forEach((n) => n.remove());
     this.hotspotRegions.forEach((r, index) => {
@@ -2585,11 +2835,26 @@ export class CatalogEditorPanel {
         if ((e.target as HTMLElement).classList.contains('ce-hs-handle')) return;
         if ((e.target as HTMLElement).classList.contains('ce-hs-close')) return;
         e.stopPropagation();
+        this.selectedRegionIndex = index;
+        this.updateHotspotRectSelectionUi();
+        this.syncHotspotFieldsFromRegion();
+        if (e.detail === 2) {
+          this.hotspotStage.focus({ preventScroll: true });
+          return;
+        }
+        this.startMove(index, e);
+        this.hotspotStage.focus({ preventScroll: true });
+      });
+      div.addEventListener('click', (e) => {
+        if (e.detail !== 2) return;
+        const t = e.target as HTMLElement;
+        if (t.closest('.ce-hs-handle') || t.closest('.ce-hs-close')) return;
+        e.stopPropagation();
         e.preventDefault();
         this.selectedRegionIndex = index;
-        this.renderHotspotRects();
+        this.updateHotspotRectSelectionUi();
         this.syncHotspotFieldsFromRegion();
-        this.startMove(index, e);
+        this.openHotspotQuickEdit(e.clientX, e.clientY);
       });
       if (this.selectedRegionIndex === index) {
         const close = el('button', 'ce-hs-close');
@@ -2679,13 +2944,13 @@ export class CatalogEditorPanel {
 
   setOpen(v: boolean): void {
     this.open = v;
+    if (!v) this.closeHotspotQuickEditDiscard();
     this.overlay.classList.toggle('catalog-editor-overlay-visible', v);
     this.panel.classList.toggle('catalog-editor-panel-open', v);
     if (v) {
       this.refreshUnitSelectors();
       this.refreshLeaderSelect();
       this.refreshUnitLibraryList();
-      this.refreshLeaderListUI();
       this.updateBreadcrumbs();
       this.refreshLeaderAttachedUnits();
       this.panel.focus();

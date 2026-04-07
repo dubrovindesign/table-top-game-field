@@ -302,6 +302,8 @@ export class DiceRoller {
   private columnRerollAbort = new WeakMap<HTMLElement, AbortController>();
   /** Multiplayer seat for this client; `null` = solo or spectator. */
   private localViewSlot: PlayerSlot | null = null;
+  /** Ключи действий карточки, уже добавивших кубики в селектор (сброс при пустом наборе / броске). */
+  private usedDiceActionKeys = new Set<string>();
 
   constructor(parent: HTMLElement) {
     for (const dc of DIE_CONFIGS) {
@@ -817,6 +819,9 @@ export class DiceRoller {
     this.counts.set(color, next);
     const label = this.diceButtons.get(color);
     if (label) label.textContent = String(next);
+    if (this.getTotalDice() === 0) {
+      this.clearUsedDiceActionKeys();
+    }
   }
 
   private renderPendingSourceAvatar(): void {
@@ -837,6 +842,17 @@ export class DiceRoller {
     return a.name === b.name && (unitMiniatureImageSrc(a) ?? '') === (unitMiniatureImageSrc(b) ?? '');
   }
 
+  private makeActionDedupeKey(source: UnitCardData | undefined, actionKey: string): string {
+    const sid = source
+      ? `${source.catalogUnitId ?? ''}\u200c${source.name}\u200c${unitMiniatureImageSrc(source) ?? ''}`
+      : 'anon';
+    return `${sid}::${actionKey}`;
+  }
+
+  private clearUsedDiceActionKeys(): void {
+    this.usedDiceActionKeys.clear();
+  }
+
   private resetSelector(force = false): void {
     if (this.myRollAnimating && !force) return;
     for (const dc of DIE_CONFIGS) {
@@ -846,6 +862,7 @@ export class DiceRoller {
     }
     this.pendingSource = null;
     this.hoverSource = null;
+    this.clearUsedDiceActionKeys();
     this.renderPendingSourceAvatar();
     this.updateHoverCard();
   }
@@ -871,8 +888,18 @@ export class DiceRoller {
     );
   }
 
-  addDice(pool: Partial<Record<DieColor, number>>, source?: UnitCardData): void {
+  /**
+   * Бросок только с переданным пулом (без слияния с текущим селектором).
+   * Используется при двойном клике по хотспоту карточки.
+   */
+  private rollPoolImmediate(pool: Partial<Record<DieColor, number>>, source?: UnitCardData): void {
     if (this.myRollAnimating) return;
+    let total = 0;
+    for (const v of Object.values(pool)) {
+      if (typeof v === 'number' && v > 0) total += v;
+    }
+    if (total === 0) return;
+
     if (source) {
       if (!this.pendingSource) {
         this.pendingSource = source;
@@ -882,6 +909,49 @@ export class DiceRoller {
         this.pendingSource = source;
         this.renderPendingSourceAvatar();
       }
+    }
+
+    for (const dc of DIE_CONFIGS) {
+      this.counts.set(dc.color, 0);
+      const lbl = this.diceButtons.get(dc.color);
+      if (lbl) lbl.textContent = '0';
+    }
+    for (const [color, count] of Object.entries(pool) as [DieColor, number][]) {
+      if (!count || count <= 0) continue;
+      this.adjustCount(color, count);
+    }
+    this.roll();
+  }
+
+  addDice(
+    pool: Partial<Record<DieColor, number>>,
+    source?: UnitCardData,
+    opts?: { actionKey?: string; rollImmediately?: boolean },
+  ): void {
+    if (this.myRollAnimating) return;
+    if (opts?.rollImmediately) {
+      this.rollPoolImmediate(pool, source);
+      this.panel.classList.add('dice-panel-pulse');
+      setTimeout(() => this.panel.classList.remove('dice-panel-pulse'), 400);
+      return;
+    }
+
+    if (source) {
+      if (!this.pendingSource) {
+        this.pendingSource = source;
+        this.renderPendingSourceAvatar();
+      } else if (!this.isSameSource(this.pendingSource, source)) {
+        this.resetSelector(true);
+        this.pendingSource = source;
+        this.renderPendingSourceAvatar();
+      }
+    }
+
+    const ak = opts?.actionKey;
+    if (ak) {
+      const dedupe = this.makeActionDedupeKey(source, ak);
+      if (this.usedDiceActionKeys.has(dedupe)) return;
+      this.usedDiceActionKeys.add(dedupe);
     }
     for (const [color, count] of Object.entries(pool) as [DieColor, number][]) {
       if (!count || count <= 0) continue;

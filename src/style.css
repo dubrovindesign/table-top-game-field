@@ -980,7 +980,7 @@ html, body {
   pointer-events: none;
 }
 
-/* Hotspot full-art card: docked = fill space from top to dice stack; inner scroll if art is tall */
+/* Hotspot full-art card: docked = fill to top of dice selector column (not roll/log strip); inner scroll if art is tall */
 .unit-card.unit-card-image-mode:not(.unit-card-floating) {
   top: max(20px, env(safe-area-inset-top, 0px));
   bottom: 240px;

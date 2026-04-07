@@ -85,13 +85,7 @@ export function applyHotspotLayoutBoxesToRegions(
         y: box.y,
         w: box.w,
         h: box.h,
-        range: 1,
         rangeUnit: 'hex',
-        damage: 0,
-        red: 0,
-        black: 0,
-        green: 0,
-        white: 0,
       });
     }
   }

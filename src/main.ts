@@ -1540,7 +1540,10 @@ const diceRoller = new DiceRoller(document.body);
 
 // Wire unit card → dice roller
 unitCard.onDiceRequest = (req: DiceRequest) => {
-  diceRoller.addDice(req.pool, req.source);
+  diceRoller.addDice(req.pool, req.source, {
+    actionKey: req.actionKey,
+    rollImmediately: req.rollImmediately,
+  });
   commitBoardUndoCheckpoint();
 };
 
@@ -1709,7 +1712,10 @@ armyBuilderPanel = new ArmyBuilderPanel(document.body, {
   getUsedCount: (leaderId, unitId) => countRosterCopies(leaderId, unitId),
   getPointsSpent: () => sumRosterPoints(),
   onDiceRequest: (req) => {
-    diceRoller.addDice(req.pool, req.source);
+    diceRoller.addDice(req.pool, req.source, {
+      actionKey: req.actionKey,
+      rollImmediately: req.rollImmediately,
+    });
     commitBoardUndoCheckpoint();
   },
 });
