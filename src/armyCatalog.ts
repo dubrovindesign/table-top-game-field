@@ -46,6 +46,12 @@ export function rosterSpawnPoints(leaderId: string, catalogUnitId: string): numb
   if (leader && leader.catalogUnitId === catalogUnitId && leader.points !== undefined) {
     return leader.points;
   }
+  if (leader) {
+    const slot = leader.roster.find((s) => s.unitId === catalogUnitId);
+    if (slot && slot.points !== undefined) {
+      return slot.points;
+    }
+  }
   return def.points;
 }
 
@@ -87,7 +93,7 @@ export function listRosterRows(
     rows.push({
       unitId: slot.unitId,
       name: def.card.name,
-      points: def.points,
+      points: rosterSpawnPoints(leaderId, slot.unitId),
       maxCopies: slot.maxCopies,
       used: usedCount(leaderId, slot.unitId),
       card: def.card,

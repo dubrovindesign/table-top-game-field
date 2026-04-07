@@ -16,6 +16,11 @@ export type RosterSlotDef = {
   unitId: string;
   maxCopies: number;
   /**
+   * Points for this unit toward the army cap when taken under this leader's roster slot.
+   * If omitted, `CATALOG_UNITS[unitId].points` is used.
+   */
+  points?: number;
+  /**
    * If set, this roster slot is available only while at least one model of `requiresUnitId`
    * is already in the army for the same leader (spawned from the army panel).
    */

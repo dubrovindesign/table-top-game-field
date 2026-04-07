@@ -2,12 +2,15 @@
  * Full-screen boot overlay: logo + animated progress while critical images and fonts load.
  */
 
-import { FACTIONS } from './armyCatalog.ts';
-import { uniqueGodCardSpriteSheetUrls, preloadGodCardSpriteSheets } from './godCards.ts';
+import factionsJson from './catalog/factions.json';
+import type { FactionDef } from './catalog/types.ts';
+import { preloadGodCardSpriteSheets } from './godCards.ts';
 import { EFFECT_MARKERS } from './effectMarkerMenu.ts';
 import { ETHER_VORTEX_DOMAINS } from './etherVortex.ts';
 import { EPHYR_CARD_SPRITE_SRC } from './ephiriumVortexSprite.ts';
-import { defaultRenderConfig } from './renderer.ts';
+import { defaultRenderConfig } from './renderConfig.ts';
+
+const FACTIONS = factionsJson as FactionDef[];
 
 const LOGO_SRC = '/mobile-logo.webp';
 
@@ -39,7 +42,6 @@ function collectBootImageUrls(): string[] {
   for (const u of BOARD_AND_UNIT_URLS) set.add(u);
   if (defaultRenderConfig.terrainImageSrc) set.add(defaultRenderConfig.terrainImageSrc);
   set.add(EPHYR_CARD_SPRITE_SRC);
-  for (const u of uniqueGodCardSpriteSheetUrls()) set.add(u);
   for (const d of ETHER_VORTEX_DOMAINS) set.add(d.imageSrc);
   for (const f of FACTIONS) set.add(f.panelIconSrc);
   for (const m of EFFECT_MARKERS) set.add(m.iconSrc);

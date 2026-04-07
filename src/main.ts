@@ -95,7 +95,7 @@ import { EMPTY_TABLE_DRAG } from './multiplayer/protocol.ts';
 import { tickTableDragOutbound } from './multiplayer/tableDragOutbound.ts';
 import { initMultiplayerSession } from './multiplayer/session.ts';
 import { getWheelBehavior, mountAppSettingsToolbar } from './appSettings.ts';
-import { runInitialBootScreen } from './bootScreen.ts';
+import { mountPwaInstallToolbar } from './pwaInstallUi.ts';
 import './style.css';
 
 // ── Config ─────────────────────────────────────────────────────
@@ -563,8 +563,6 @@ const renderer = new Renderer(
   camera,
   renderConfig,
 );
-
-await runInitialBootScreen();
 
 // ── Highlighted hexon + unit ───────────────────────────────────
 
@@ -5505,4 +5503,5 @@ initMultiplayerSession({
   onViewPlayerSlot: applyMultiplayerViewSeat,
   toolbarMount: toolbarMountEl,
 });
+mountPwaInstallToolbar(toolbarMountEl);
 mountAppSettingsToolbar(toolbarMountEl);

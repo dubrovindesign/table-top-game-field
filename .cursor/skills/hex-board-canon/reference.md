@@ -30,12 +30,13 @@
   "points": 70,
   "roster": [
     { "unitId": "troop_id", "maxCopies": 3 },
-    { "unitId": "elite_id", "maxCopies": 1, "requiresUnitId": "controller_unit_id" }
+    { "unitId": "elite_id", "maxCopies": 1, "points": 50, "requiresUnitId": "controller_unit_id" }
   ]
 }
 ```
 
-- **`points`** (опционально): очки лидера в лимит армии; если нет — берётся `points` записи `catalogUnitId` из каталога юнитов.
+- **`points`** на лидере (опционально): очки миниатюры лидера в лимит армии; если нет — берётся `points` записи `catalogUnitId` из каталога юнитов.
+- **`points`** на слоте `roster` (опционально): очки этого отрядного юнита для данного лидера; если нет — `points` из `units/<unitId>.json`. Один и тот же `unitId` у разных лидеров может иметь разную стоимость. Не дублировать один `unitId` в `roster` одного лидера с разными `points` — используется первый найденный слот.
 - **`requiresUnitId`** (опционально): слот доступен для добавления только если у этого лидера на поле уже есть хотя бы одна модель указанного `unitId` (счётчик армии).
 
 ## `units/<unit_id>.json` — один файл на юнит
