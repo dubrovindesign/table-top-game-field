@@ -23,6 +23,8 @@ OLD_REV=$(sudo -u "$APP_USER" git rev-parse HEAD)
 sudo -u "$APP_USER" git fetch --quiet origin
 # `dist/` is rebuilt below; local edits there (e.g. index.html) block `git pull`.
 sudo -u "$APP_USER" git checkout -- dist/ 2>/dev/null || true
+# Same: `npm run build` rewrites this file; it must not block the next pull.
+sudo -u "$APP_USER" git checkout -- public/generated/catalog-data.json 2>/dev/null || true
 sudo -u "$APP_USER" git pull --ff-only
 NEW_REV=$(sudo -u "$APP_USER" git rev-parse HEAD)
 
