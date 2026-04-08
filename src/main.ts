@@ -167,7 +167,6 @@ function healthBadgePlusMinusCentersWorld(
 const BG_CALIBRATION_STEP = 1;
 const BG_CALIBRATION_STEP_FAST = 4;
 const BG_CALIBRATION_SCALE_STEP = 0.001;
-const BG_CALIBRATION_ROT_STEP = 0.05;
 const ELEMENT_ROT_STEP = 5;
 const ELEMENT_ROT_STEP_FAST = 15;
 /** Huge mini: nudge card art inside the footprint (layout units). Alt+arrows; Shift = larger step. */
@@ -220,17 +219,14 @@ const canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
 if (!canvas) throw new Error('#game-canvas not found');
 
 /**
- * `cells.svg`: доп. поворот сетки зафиксирован (`GRID_OVERLAY_EXTRA_ROTATION_DEG`), крутить нельзя.
- * Alt+стрелки — смещение сетки; Alt+P — в консоль смещения/размеры (угол сетки в константе).
- * `public/greenfield.png` — текстура поля в рендере (и скрытый DOM-подложка при необходимости).
- * Alt+[ / Alt+] — поворот пустыни (Shift — крупный шаг), Alt+0 — сброс угла пустыни.
+ * `cells.svg`: поворот сетки только из констант (`GRID_OVERLAY_EXTRA_ROTATION_DEG`); горячих клавиш поворота нет.
+ * Alt+стрелки — смещение сетки; Alt+P — в консоль смещения/размеры.
+ * `public/greenfield.png` — текстура поля; угол поля задаётся в коде (`FIELD_BG_PRESET` / `desertUnderlayExtraRotationDeg`), не клавишами.
  */
 const GRID_OVERLAY_EXTRA_ROTATION_DEG = BOARD_FIELD_ART_EXTRA_ROTATION_DEG;
 const GRID_OVERLAY_MOVE_STEP = 2;
 const GRID_OVERLAY_MOVE_STEP_FAST = 8;
 
-const DESERT_UNDERLAY_ROT_STEP = 0.5;
-const DESERT_UNDERLAY_ROT_STEP_FAST = 2;
 let desertUnderlayExtraRotationDeg = 0;
 
 let gridOverlayOffsetScreenX = 0;
@@ -5226,7 +5222,6 @@ window.addEventListener('resize', () => {
 window.addEventListener('keydown', (e) => {
   if (isEditableTarget(e.target)) return;
   const moveStep = e.shiftKey ? BG_CALIBRATION_STEP_FAST : BG_CALIBRATION_STEP;
-  const rotStep = e.shiftKey ? BG_CALIBRATION_ROT_STEP * 2 : BG_CALIBRATION_ROT_STEP;
   const scaleStep = e.shiftKey ? BG_CALIBRATION_SCALE_STEP * 2 : BG_CALIBRATION_SCALE_STEP;
   const elementRotStep = e.shiftKey ? ELEMENT_ROT_STEP_FAST : ELEMENT_ROT_STEP;
   let changed = false;
@@ -5289,27 +5284,6 @@ window.addEventListener('keydown', (e) => {
   }
 
   if (e.altKey && !e.ctrlKey && !e.metaKey) {
-    const desertRotStep = e.shiftKey ? DESERT_UNDERLAY_ROT_STEP_FAST : DESERT_UNDERLAY_ROT_STEP;
-    if (e.code === 'BracketLeft') {
-      desertUnderlayExtraRotationDeg =
-        ((desertUnderlayExtraRotationDeg - desertRotStep) % 360 + 360) % 360;
-      e.preventDefault();
-      scheduleRender();
-      return;
-    }
-    if (e.code === 'BracketRight') {
-      desertUnderlayExtraRotationDeg =
-        ((desertUnderlayExtraRotationDeg + desertRotStep) % 360 + 360) % 360;
-      e.preventDefault();
-      scheduleRender();
-      return;
-    }
-    if (e.code === 'Digit0') {
-      desertUnderlayExtraRotationDeg = 0;
-      e.preventDefault();
-      scheduleRender();
-      return;
-    }
     if (e.code === 'KeyP') {
       console.log('[board overlays] values for hardcode:', {
         GRID_OVERLAY_EXTRA_ROTATION_DEG,
@@ -5397,15 +5371,8 @@ window.addEventListener('keydown', (e) => {
       renderConfig.backgroundImageScale = Math.min(4, renderConfig.backgroundImageScale + scaleStep);
       changed = true;
       break;
-    case ',':
-      renderConfig.backgroundImageRotationDeg -= rotStep;
-      changed = true;
-      break;
-    case '.':
-      renderConfig.backgroundImageRotationDeg += rotStep;
-      changed = true;
-      break;
     case '0':
+      if (e.altKey) break;
       renderConfig.backgroundImageOffsetX = FIELD_BG_PRESET.backgroundImageOffsetX;
       renderConfig.backgroundImageOffsetY = FIELD_BG_PRESET.backgroundImageOffsetY;
       renderConfig.backgroundImageScale = FIELD_BG_PRESET.backgroundImageScale;
@@ -5426,7 +5393,6 @@ window.addEventListener('keydown', (e) => {
         backgroundImageOffsetX: ox,
         backgroundImageOffsetY: oy,
         backgroundImageScale: sc,
-        // базовый угол (запятая/точка); к рендеру добавляется desertUnderlayExtraRotationDeg (Alt+[)
         backgroundImageRotationDeg: baseRot,
         desertUnderlayExtraRotationDeg: desert,
         // итог для Renderer.updateConfig (base + desert)

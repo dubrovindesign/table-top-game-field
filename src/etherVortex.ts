@@ -45,10 +45,10 @@ export function etherVortexFootprint(center: Hex): Hex[] {
 
 /** Half-edge of the crystal rhombus in board/world space (scales with camera zoom). */
 export function etherVortexCrystalBadgeHalfWorld(layout: { size: { y: number } }): number {
-  return layout.size.y * 0.23;
+  return layout.size.y * (0.46 / 1.5);
 }
 
 /** Hit-test radius in board space around the chip center. */
 export function etherVortexCrystalBadgeHitRadiusWorld(layout: { size: { y: number } }): number {
-  return layout.size.y * 0.38;
+  return layout.size.y * (0.76 / 1.5);
 }
