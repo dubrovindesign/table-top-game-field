@@ -273,6 +273,16 @@ export function getMergedCatalogUnit(unitId: string): CatalogUnitDef | undefined
   const nu = o.newUnits[unitId];
   if (nu) {
     let def = structuredClone(nu);
+    // If a unit with the same id also exists in static catalog, keep huge-art defaults
+    // from static card when local override/newUnit was created before these fields existed.
+    const staticU = CATALOG_UNITS[unitId];
+    if (
+      staticU &&
+      def.card?.size === 'huge' &&
+      (def.card.hugeSpriteOffsetLocal === undefined || def.card.hugeSpriteRotationDeg === undefined)
+    ) {
+      def = mergeCatalogUnitDef(staticU, def);
+    }
     const patch = o.unitPatches[unitId];
     if (patch && Object.keys(patch).length > 0) {
       def = mergeCatalogUnitDef(def, patch);
@@ -374,6 +384,7 @@ export function finalizeCardForUnitSave(
   card: UnitCardData,
   storage: 'newUnit' | 'patch',
 ): UnitCardData {
+  if (!card || typeof card !== 'object') return card;
   if (!getHotspotOverrideImage(unitId)) return card;
   if (storage === 'newUnit') {
     const { sprite: _omit, ...rest } = card;
@@ -384,7 +395,13 @@ export function finalizeCardForUnitSave(
 
 /** После сохранения хотспотов с картинкой — убрать дубликат art из карточки в оверрайдах. */
 export function clearCardSpriteFromUnitOverrides(unitId: string): void {
-  const o = structuredClone(getCatalogOverrides());
+  let o: CatalogOverridesV1;
+  try {
+    o = structuredClone(getCatalogOverrides());
+  } catch (e) {
+    console.warn('[catalogOverrides] structuredClone(overrides) failed; skip clearCardSprite', e);
+    return;
+  }
   if (!o.hotspots[unitId]?.image?.trim()) return;
   let changed = false;
 

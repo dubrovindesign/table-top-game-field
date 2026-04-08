@@ -243,9 +243,7 @@ export class CatalogEditorPanel {
   private lmLeaderId!: HTMLInputElement;
   private lmLeaderName!: HTMLInputElement;
   private lmLeaderPoints!: HTMLInputElement;
-  private lmUnitId!: HTMLInputElement;
   private lmTemplateSel!: HTMLSelectElement;
-  private lmUnitName!: HTMLInputElement;
   private lmSize!: HTMLSelectElement;
   private lmHealth!: HTMLInputElement;
   private lmMaxHealth!: HTMLInputElement;
@@ -1407,16 +1405,9 @@ export class CatalogEditorPanel {
     this.lmLeaderPoints.type = 'number';
     this.lmLeaderPoints.placeholder = 'Очки лидера (опц.)';
     lmMk('Очки лидера', this.lmLeaderPoints);
-    this.lmUnitId = el('input', 'catalog-editor-input') as HTMLInputElement;
-    this.lmUnitId.type = 'text';
-    this.lmUnitId.placeholder = 'unit id миниатюры';
-    lmMk('Unit id миниатюры', this.lmUnitId);
     this.lmTemplateSel = el('select', 'catalog-editor-select') as HTMLSelectElement;
     this.lmTemplateSel.appendChild(new Option('Шаблон карточки (опц.)', ''));
     lmMk('Шаблон', this.lmTemplateSel);
-    this.lmUnitName = el('input', 'catalog-editor-input') as HTMLInputElement;
-    this.lmUnitName.type = 'text';
-    lmMk('Имя на карточке', this.lmUnitName);
     this.lmSize = el('select', 'catalog-editor-select') as HTMLSelectElement;
     for (const s of ['small', 'big', 'large', 'huge'] as const) {
       this.lmSize.appendChild(new Option(s, s));
@@ -2375,11 +2366,7 @@ export class CatalogEditorPanel {
       .split(/[,\s]+/)
       .map((s) => s.trim() as Domain)
       .filter((d) => DOMAIN_IDS.includes(d));
-    const name =
-      this.lmUnitName.value.trim() ||
-      this.lmLeaderName.value.trim() ||
-      this.lmLeaderId.value.trim() ||
-      this.lmUnitId.value.trim();
+    const name = this.lmLeaderName.value.trim() || this.lmLeaderId.value.trim();
     if (!name) return null;
     if (template) {
       return {
@@ -2434,10 +2421,7 @@ export class CatalogEditorPanel {
       this.lmLeaderName.value = '';
       this.lmLeaderName.disabled = false;
       this.lmLeaderPoints.value = '';
-      this.lmUnitId.value = '';
-      this.lmUnitId.disabled = false;
       this.lmTemplateSel.value = '';
-      this.lmUnitName.value = '';
       this.lmSize.value = 'small';
       this.lmHealth.value = '10';
       this.lmMaxHealth.value = '10';
@@ -2460,12 +2444,9 @@ export class CatalogEditorPanel {
       this.lmLeaderName.value = L.name;
       this.lmLeaderName.disabled = !isCustom;
       this.lmLeaderPoints.value = L.points != null ? String(L.points) : '';
-      this.lmUnitId.value = L.catalogUnitId;
-      this.lmUnitId.disabled = true;
       const u = getCatalogUnit(L.catalogUnitId);
       if (u) {
         const c = u.card;
-        this.lmUnitName.value = c.name;
         this.lmSize.value = c.size;
         this.lmHealth.value = String(c.health);
         this.lmMaxHealth.value = String(c.maxHealth);
@@ -2505,19 +2486,15 @@ export class CatalogEditorPanel {
         alert('Такой лидер уже есть');
         return;
       }
-      const catalogUnitId = this.lmUnitId.value.trim();
-      if (!catalogUnitId) {
-        alert('Укажите unit id миниатюры');
-        return;
-      }
+      const catalogUnitId = id;
       if (getCatalogUnit(catalogUnitId) || getCatalogOverrides().newUnits[catalogUnitId]) {
-        alert('Такой unit id миниатюры уже существует');
+        alert('Невозможно создать лидера: id лидера совпадает с существующим unit id');
         return;
       }
       const template = this.lmTemplateSel.value ? getCatalogUnit(this.lmTemplateSel.value) : undefined;
       const rawCard = this.readLeaderMiniCardFromModal(template);
       if (!rawCard) {
-        alert('Укажите имя на карточке или имя лидера');
+        alert('Укажите имя лидера');
         return;
       }
       const cardResolved = await resolveCardImageUrlsForStorage(rawCard);
@@ -2802,10 +2779,14 @@ export class CatalogEditorPanel {
       regions: this.hotspotRegions.map((r) => stripRegionForSave(structuredClone(r))),
     };
     setHotspotsForUnit(unitId, file);
-    clearCardSpriteFromUnitOverrides(unitId);
-    const defAfter = getCatalogUnit(unitId);
-    const thumb = defAfter ? unitPanelThumbSrc(defAfter.card) : undefined;
-    if (thumb) this.cardSprite.value = thumb;
+    try {
+      clearCardSpriteFromUnitOverrides(unitId);
+      const defAfter = getCatalogUnit(unitId);
+      const thumb = defAfter ? unitPanelThumbSrc(defAfter.card) : undefined;
+      if (thumb) this.cardSprite.value = thumb;
+    } catch (e) {
+      console.warn('[catalogEditor] post-hotspot sprite dedupe failed', e);
+    }
     this.hotspotImageInput.value = image;
     this.hotspotImageUrl = image;
     if (this.unitFormIsNew) this.selectedUnitId = unitId;

@@ -83,6 +83,14 @@
     "points": 28
   },
   {
+    "id": "Na'atly-Wild-Huntress",
+    "name": "На'атли Дикая Охотница",
+    "factionId": "keld",
+    "catalogUnitId": "Na'atly-Wild-Huntress",
+    "roster": [],
+    "points": 40
+  },
+  {
     "id": "kellantra-with-lindwurm",
     "name": "Келлантра с Линдвурмом",
     "factionId": "keld",

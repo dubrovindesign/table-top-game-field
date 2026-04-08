@@ -29,4 +29,20 @@ if (import.meta.env.PROD) {
 }
 
 const mainModulePromise = import('./main.ts');
-await runInitialBootScreen({ mainModulePromise });
+
+function showBootFatalError(err: unknown): void {
+  if (document.querySelector('[data-hex-boot-error]')) return;
+  const pre = document.createElement('pre');
+  pre.dataset.hexBootError = '1';
+  pre.style.cssText =
+    'margin:24px;font:14px/1.4 system-ui;white-space:pre-wrap;word-break:break-word;color:#c00;background:#fff;padding:16px;border:1px solid #ccc;';
+  pre.textContent = `[Hex Board] Ошибка загрузки приложения.\n\n${err instanceof Error ? err.stack ?? err.message : String(err)}\n\nПроверьте консоль (F12). Частые причины: не подгрузился generated/catalog-data.json, блокировка чанков, устаревший service worker — жёсткое обновление (Ctrl+F5) или отключение SW.`;
+  document.body.appendChild(pre);
+}
+
+try {
+  await runInitialBootScreen({ mainModulePromise });
+} catch (err) {
+  console.error('[boot] runInitialBootScreen failed', err);
+  showBootFatalError(err);
+}

@@ -1,0 +1,41 @@
+{
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "Na'atly-Wild-Huntress",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 1,
+      "white": 0
+    },
+    "defense": {
+      "green": 2,
+      "white": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "life"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 2,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 4,
+    "keywords": [],
+    "maxHealth": 4,
+    "miniatureSprite": "/catalog-units/Na'atly-Wild-Huntress/card_miniatureSprite.jpg",
+    "name": "На'атли Дикая Охотница",
+    "run": 7,
+    "size": "small",
+    "walk": 4
+  },
+  "id": "Na'atly-Wild-Huntress",
+  "points": 0
+}

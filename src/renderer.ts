@@ -3438,15 +3438,15 @@ export class Renderer {
 
     const sprite = this.getSpriteImage(spriteSrc);
     /**
-     * После translate(-C) начало координат в центре bbox; drawImage от центра; fH — поворот вокруг того же центра.
+     * После translate(-C) начало координат в центре bbox; drawImage от центра.
+     * Без `oppositeSeatMiniatureRadFix` внутри клипа: иначе один и тот же `spriteOffsetLocal` / `spriteRotationDeg`
+     * визуально согласован у одного игрока и «уезжает» у другого (разные места).
      */
     if (sprite && sprite.naturalWidth > 0 && sprite.naturalHeight > 0) {
       ctx.save();
       ctx.beginPath();
       this.addHugeMiniTripleHexonOuterPath(ctx, layout, 1);
       ctx.clip();
-      const fH = this.oppositeSeatMiniatureRadFix;
-      if (fH !== 0) ctx.rotate(fH);
       if (spriteRotationLocalDeg !== 0) {
         ctx.rotate((spriteRotationLocalDeg * Math.PI) / 180);
       }
