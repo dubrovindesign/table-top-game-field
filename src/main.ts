@@ -1575,6 +1575,78 @@ function rotateElementUnderHex(hex: Hex | null, deltaDeg: number): boolean {
   return false;
 }
 
+/** Поворот выделенной фишки / ландшафта / вихря (для тач-панели; клавиши Q/E крутят по гексу под курсором). */
+function rotateSelectedBoardPiece(deltaDeg: number): boolean {
+  if (
+    draggingUnitIndex !== null ||
+    draggingBigMiniIndex !== null ||
+    draggingLargeMiniIndex !== null ||
+    draggingHugeMiniIndex !== null ||
+    isDraggingTerrain ||
+    isDraggingEtherVortex
+  ) {
+    return false;
+  }
+  const sel = getSelectedEntity();
+  if (!sel || sel.kind === 'godTable') return false;
+
+  switch (sel.kind) {
+    case 'small': {
+      const u = units[sel.index];
+      if (!u) return false;
+      u.rotationDeg += deltaDeg;
+      return true;
+    }
+    case 'big': {
+      const m = bigMiniatures[sel.index];
+      if (!m) return false;
+      m.rotationDeg += deltaDeg;
+      return true;
+    }
+    case 'large': {
+      const largeIdx = sel.index;
+      const m = largeMiniatures[largeIdx];
+      if (!m) return false;
+      const hex = m.anchor;
+      const step =
+        Math.abs(deltaDeg) >= ELEMENT_ROT_STEP_FAST - 1
+          ? LARGE_MINI_ROT_STEP_FAST
+          : LARGE_MINI_ROT_STEP;
+      const signed = deltaDeg > 0 ? step : -step;
+      const prevAnchor = m.anchor;
+      const prevRot = m.rotationDeg;
+      const footprintKeys = new Set(largeMiniFootprint(m).map((c) => c.key));
+      const pivotRot = largeMiniRotationMatchingFootprint(hex, footprintKeys);
+      if (pivotRot === null) return false;
+      m.anchor = hex;
+      m.rotationDeg = pivotRot;
+      m.rotationDeg = ((m.rotationDeg + signed) % 360 + 360) % 360;
+      if (!canPlaceLargeMiniAt(m.anchor, largeIdx)) {
+        m.anchor = prevAnchor;
+        m.rotationDeg = prevRot;
+        return false;
+      }
+      return true;
+    }
+    case 'huge':
+      return applyHugeMiniRotation(sel.index, deltaDeg);
+    case 'etherVortex': {
+      const v = etherVortexes[sel.index];
+      if (!v) return false;
+      v.rotationDeg += deltaDeg;
+      return true;
+    }
+    case 'terrain': {
+      const ti = sel.index;
+      if (ti < 0 || ti >= terrainRotationDegs.length) return false;
+      terrainRotationDegs[ti] = (terrainRotationDegs[ti] ?? 0) + deltaDeg;
+      return true;
+    }
+    default:
+      return false;
+  }
+}
+
 function updateBigMiniMovementHighlights(): void {
   /** Keep selection ring on selected big mini; walk/run can preview another one (Alt-hover). */
   const ringIndex = selectedBigMiniIndex;
@@ -6467,6 +6539,14 @@ function mountTouchBoardActionsBar(): void {
   add('Дубль', 'Дублировать (Ctrl+D)', () => {
     duplicateSelected();
     scheduleRender();
+  });
+  add('↺', 'Поворот против часовой (как Q). В настройках — закрепить Shift для крупного шага.', () => {
+    const step = shiftModActive() ? ELEMENT_ROT_STEP_FAST : ELEMENT_ROT_STEP;
+    if (rotateSelectedBoardPiece(-step)) scheduleRender();
+  });
+  add('↻', 'Поворот по часовой (как E). В настройках — закрепить Shift для крупного шага.', () => {
+    const step = shiftModActive() ? ELEMENT_ROT_STEP_FAST : ELEMENT_ROT_STEP;
+    if (rotateSelectedBoardPiece(step)) scheduleRender();
   });
   document.body.appendChild(bar);
 }

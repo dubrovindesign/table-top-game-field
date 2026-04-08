@@ -25,6 +25,13 @@ select {
   user-select: text;
 }
 
+/* Масштаб страницы в браузере не используем (зум поля — только из логики приложения). */
+*,
+*::before,
+*::after {
+  touch-action: manipulation;
+}
+
 /* Scrollbars — match dark glass / accent palette (Firefox + Chromium/WebKit) */
 * {
   scrollbar-width: thin;
