@@ -1,7 +1,7 @@
 {
   "card": {
     "attacks": [],
-    "catalogUnitId": "Bram'mn-the-Wise",
+    "catalogUnitId": "Blackthorn-Predator-with-bow",
     "concentration": {
       "black": 0,
       "green": 0,
@@ -10,26 +10,27 @@
     },
     "defense": {
       "green": 0,
-      "white": 2
+      "white": 0
     },
     "defenseReaction": {
       "green": 0,
       "white": 0
     },
     "domains": [
+      "death",
       "life"
     ],
     "explorationRange": 0,
     "grabRange": 0,
-    "health": 8,
+    "health": 7,
     "keywords": [],
-    "maxHealth": 8,
-    "miniatureSprite": "/catalog-units/Bram'mn-the-Wise/card_miniatureSprite.jpg",
-    "name": "Брам'мн Мудрый",
-    "run": 5,
+    "maxHealth": 7,
+    "miniatureSprite": "/catalog-units/Blackthorn-Predator-with-bow/card_miniatureSprite.jpg",
+    "name": "Охотник Терновника с Луком",
+    "run": 7,
     "size": "small",
-    "walk": 3
+    "walk": 4
   },
-  "id": "Bram'mn-the-Wise",
+  "id": "Blackthorn-Predator-with-bow",
   "points": 0
 }

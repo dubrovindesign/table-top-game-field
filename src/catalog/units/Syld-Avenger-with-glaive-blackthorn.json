@@ -1,7 +1,6 @@
 {
   "card": {
     "attacks": [],
-    "catalogUnitId": "Bram'mn-the-Wise",
     "concentration": {
       "black": 0,
       "green": 0,
@@ -10,26 +9,27 @@
     },
     "defense": {
       "green": 0,
-      "white": 2
+      "white": 0
     },
     "defenseReaction": {
       "green": 0,
       "white": 0
     },
     "domains": [
+      "death",
       "life"
     ],
     "explorationRange": 0,
     "grabRange": 0,
-    "health": 8,
+    "health": 9,
     "keywords": [],
-    "maxHealth": 8,
-    "miniatureSprite": "/catalog-units/Bram'mn-the-Wise/card_miniatureSprite.jpg",
-    "name": "Брам'мн Мудрый",
+    "maxHealth": 9,
+    "miniatureSprite": "/catalog-units/Syld-Avenger-with-glaive-blackthorn/card_miniatureSprite.jpg",
+    "name": "Сильд Мститель с Глефой",
     "run": 5,
     "size": "small",
-    "walk": 3
+    "walk": 2
   },
-  "id": "Bram'mn-the-Wise",
+  "id": "Syld-Avenger-with-glaive-blackthorn",
   "points": 0
 }

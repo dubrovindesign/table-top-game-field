@@ -70,6 +70,67 @@
     "points": 40
   },
   {
+    "id": "Drago-Mort-DeaMor",
+    "name": "Драго-Морт Дэа'Мор",
+    "factionId": "blackthorn",
+    "catalogUnitId": "Drago-Mort-DeaMor",
+    "roster": [
+      {
+        "unitId": "Alraune-Blackthorn-seed",
+        "maxCopies": 1
+      },
+      {
+        "unitId": "Blackthorn-Predator",
+        "maxCopies": 1
+      },
+      {
+        "unitId": "Blackthorn-Predator-with-bow",
+        "maxCopies": 1
+      },
+      {
+        "unitId": "Blackthorn-Predator-with-glave",
+        "maxCopies": 1
+      },
+      {
+        "unitId": "DalHiar-Blackthorn-Hermit",
+        "maxCopies": 1
+      },
+      {
+        "unitId": "Silent-Blade-blackthorn-card",
+        "maxCopies": 1
+      },
+      {
+        "unitId": "Dryadint-centaur",
+        "maxCopies": 1
+      },
+      {
+        "unitId": "Undergrowth-Barkbeast",
+        "maxCopies": 1
+      },
+      {
+        "unitId": "Syld-Seeder-Blackthorn",
+        "maxCopies": 1
+      },
+      {
+        "unitId": "Syld-Protector-blackthorn",
+        "maxCopies": 1
+      },
+      {
+        "unitId": "Syld-Avenger-with-glaive-blackthorn",
+        "maxCopies": 1
+      },
+      {
+        "unitId": "Syld-Voice-of-Blackthorn",
+        "maxCopies": 1
+      },
+      {
+        "unitId": "Defender-of-Seedlings-blackthorn",
+        "maxCopies": 1
+      }
+    ],
+    "points": 55
+  },
+  {
     "id": "Kellantra",
     "name": "Келлантра, Ярость Леса",
     "factionId": "keld",

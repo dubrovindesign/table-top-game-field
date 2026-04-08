@@ -1,7 +1,7 @@
 {
   "card": {
     "attacks": [],
-    "catalogUnitId": "Bram'mn-the-Wise",
+    "catalogUnitId": "Drago-Mort-DeaMor",
     "concentration": {
       "black": 0,
       "green": 0,
@@ -10,26 +10,27 @@
     },
     "defense": {
       "green": 0,
-      "white": 2
+      "white": 0
     },
     "defenseReaction": {
       "green": 0,
       "white": 0
     },
     "domains": [
-      "life"
+      "life",
+      "death"
     ],
     "explorationRange": 0,
     "grabRange": 0,
-    "health": 8,
+    "health": 13,
     "keywords": [],
-    "maxHealth": 8,
-    "miniatureSprite": "/catalog-units/Bram'mn-the-Wise/card_miniatureSprite.jpg",
-    "name": "Брам'мн Мудрый",
+    "maxHealth": 13,
+    "miniatureSprite": "/catalog-units/Drago-Mort-DeaMor/card_miniatureSprite.jpg",
+    "name": "Драго-Морт Дэа'Мор",
     "run": 5,
-    "size": "small",
-    "walk": 3
+    "size": "large",
+    "walk": 4
   },
-  "id": "Bram'mn-the-Wise",
+  "id": "Drago-Mort-DeaMor",
   "points": 0
 }
