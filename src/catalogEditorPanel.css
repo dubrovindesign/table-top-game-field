@@ -143,12 +143,6 @@
   align-items: center;
 }
 
-.catalog-editor-row label {
-  font-size: 0.78rem;
-  color: rgba(154, 154, 168, 1);
-  width: 100%;
-}
-
 .catalog-editor-select,
 .catalog-editor-input {
   flex: 1;
@@ -651,9 +645,11 @@
   gap: 8px;
 }
 
-.ce-domain-chips-label {
-  font-size: 12.5px;
-  color: var(--ce-muted);
+.ce-domain-chips-label,
+.catalog-editor-row label,
+.ce-field-label {
+  font-size: 0.78rem;
+  color: rgba(154, 154, 168, 1);
   width: 100%;
 }
 
@@ -704,10 +700,6 @@
   background: rgba(20, 28, 44, 0.35);
   min-height: 0;
   overflow: hidden;
-}
-
-.ce-pane--leaders > label {
-  font-size: 12.5px;
 }
 
 .ce-pane--units {
@@ -878,6 +870,10 @@
   flex: 1;
   min-height: 0;
   gap: 8px;
+}
+
+.ce-leader-roster-section > .ce-field-label {
+  flex-shrink: 0;
 }
 
 .ce-leader-roster-section > .catalog-editor-btn {

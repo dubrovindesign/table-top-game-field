@@ -549,7 +549,7 @@ export class CatalogEditorPanel {
     leaderPane.appendChild(row2);
 
     const rosterSection = el('div', 'ce-leader-roster-section');
-    rosterSection.appendChild(el('label', '', 'Юниты ростера'));
+    rosterSection.appendChild(el('div', 'ce-field-label', 'Юниты ростера'));
     this.leaderAttachedUnitsEl = el('div', 'ce-leader-attached-units');
     rosterSection.appendChild(this.leaderAttachedUnitsEl);
     const addUnitFromLeaderBtn = el('button', 'catalog-editor-btn', 'Новый юнит') as HTMLButtonElement;
@@ -1355,11 +1355,7 @@ export class CatalogEditorPanel {
 
   private buildLeaderModal(): void {
     this.modalBackdrop = el('div', 'ce-modal-backdrop');
-    this.modalBackdrop.addEventListener('click', (e) => {
-      if (e.target === this.modalBackdrop) this.closeLeaderModal();
-    });
     const modal = el('div', 'ce-modal');
-    modal.addEventListener('click', (e) => e.stopPropagation());
     const head = el('div', 'ce-modal__header');
     this.lmModalTitleEl = el('div', 'ce-modal__title', 'Лидер');
     const closeM = el('button', 'catalog-editor-close', '×') as HTMLButtonElement;

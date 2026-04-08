@@ -1,0 +1,23 @@
+{
+  "id": "Great-Aent-Sentry",
+  "points": 0,
+  "card": {
+    "name": "Великий Аэнт-Страж",
+    "catalogUnitId": "Great-Aent-Sentry",
+    "size": "huge",
+    "health": 10,
+    "maxHealth": 10,
+    "defense": { "white": 1, "green": 1 },
+    "walk": 3,
+    "run": 5,
+    "domains": ["life"],
+    "concentration": { "red": 0, "green": 0, "white": 0, "black": 0 },
+    "defenseReaction": { "white": 0, "green": 0 },
+    "attacks": [],
+    "keywords": [],
+    "sprite": "/catalog-units/Great-Aent-Sentry/card_sprite.jpg",
+    "miniatureSprite": "/catalog-units/Great-Aent-Sentry/card_miniatureSprite.jpg",
+    "hugeSpriteOffsetLocal": { "x": 67.2, "y": -29.4 },
+    "hugeSpriteRotationDeg": 58
+  }
+}

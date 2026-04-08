@@ -69,6 +69,10 @@ export type SerializedHugeMini = {
   catalogUnitId?: string;
   rosterLeaderId?: string;
   armyOwnerPlayerSlot?: PlayerSlot;
+  /** Nudge of card art inside the huge footprint (layout units, after bbox-centering). */
+  spriteOffsetLocal?: SerializedPoint;
+  /** Rotation of card art inside the clip (degrees). */
+  spriteRotationDeg?: number;
 };
 
 export type SerializedEtherVortex = {

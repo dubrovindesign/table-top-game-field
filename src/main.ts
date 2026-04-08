@@ -171,6 +171,12 @@ const BG_CALIBRATION_SCALE_STEP = 0.001;
 const BG_CALIBRATION_ROT_STEP = 0.1;
 const ELEMENT_ROT_STEP = 5;
 const ELEMENT_ROT_STEP_FAST = 15;
+/** Huge mini: nudge card art inside the footprint (layout units). Alt+arrows; Shift = larger step. */
+const HUGE_SPRITE_NUDGE_STEP = HEX_SIZE * 0.05;
+const HUGE_SPRITE_NUDGE_STEP_FAST = HEX_SIZE * 0.15;
+/** Rotation of art inside huge clip (degrees per keypress). */
+const HUGE_SPRITE_ROT_STEP = 2;
+const HUGE_SPRITE_ROT_STEP_FAST = 5;
 /** Large mini (3-hex): rotate around anchor hex, 60° steps (Shift = 120°). */
 const LARGE_MINI_ROT_STEP = 60;
 const LARGE_MINI_ROT_STEP_FAST = 120;
@@ -189,7 +195,6 @@ const FIELD_BG_PRESET = {
 const SMALL_UNIT_SPRITES = ['/tern-unit-1.jpg', '/Frame 144.png'] as const;
 const BIG_UNIT_SPRITE = '/Frame 118.png';
 const LARGE_UNIT_SPRITE = '/Frame 193.png';
-const HUGE_UNIT_SPRITE: string | null = null;
 
 // ── Bootstrap ──────────────────────────────────────────────────
 
@@ -781,6 +786,10 @@ type HugeMini = {
   catalogUnitId?: string;
   rosterLeaderId?: string;
   armyOwnerPlayerSlot?: PlayerSlot;
+  /** Nudge of miniature art inside the clip (layout units, same frame as path after centering on bbox). */
+  spriteOffsetLocal?: { x: number; y: number };
+  /** Rotation of art inside the clip (degrees), around bbox center after seat fix. */
+  spriteRotationDeg?: number;
 };
 
 function hugeMiniFootprintCenters(m: Pick<HugeMini, 'anchor' | 'rotationDeg'>): Hex[] {
@@ -789,6 +798,28 @@ function hugeMiniFootprintCenters(m: Pick<HugeMini, 'anchor' | 'rotationDeg'>): 
 
 function hugeMiniAllCells(m: Pick<HugeMini, 'anchor' | 'rotationDeg'>): Hex[] {
   return hugeTriangleAllCellsOriented(m.anchor, m.rotationDeg);
+}
+
+/** Defaults from catalog `card` when placing a huge miniature. */
+function hugeSpriteAlignFromCard(card: UnitCardData): {
+  spriteOffsetLocal?: { x: number; y: number };
+  spriteRotationDeg?: number;
+} {
+  if (card.size !== 'huge') return {};
+  const out: {
+    spriteOffsetLocal?: { x: number; y: number };
+    spriteRotationDeg?: number;
+  } = {};
+  if (card.hugeSpriteOffsetLocal) {
+    const { x, y } = card.hugeSpriteOffsetLocal;
+    if (typeof x === 'number' && typeof y === 'number' && Number.isFinite(x) && Number.isFinite(y)) {
+      out.spriteOffsetLocal = { x, y };
+    }
+  }
+  if (typeof card.hugeSpriteRotationDeg === 'number' && Number.isFinite(card.hugeSpriteRotationDeg)) {
+    out.spriteRotationDeg = card.hugeSpriteRotationDeg;
+  }
+  return out;
 }
 
 const hugeMiniatures: HugeMini[] = [];
@@ -823,6 +854,7 @@ const largeMiniCardData: UnitCardData[] = [];
 const hugeMiniCardData: UnitCardData[] = [];
 
 const unitCard = new UnitCard(document.body);
+const diceRoller = new DiceRoller(document.body);
 
 unitCard.onAttackHover = (attack: AttackAbility | null) => {
   hoveredAttack = attack;
@@ -837,6 +869,7 @@ document.addEventListener('mousedown', (e: MouseEvent) => {
   if (!(e.target instanceof Node)) return;
   if (canvas.contains(e.target)) return;
   if (unitCard.containsEventTarget(e.target)) return;
+  if (diceRoller.containsEventTarget(e.target)) return;
   unitDragPendingIndex = null;
   bigMiniDragPendingIndex = null;
   largeMiniDragPendingIndex = null;
@@ -1328,7 +1361,15 @@ function pushPieceRotationsToRenderer(): void {
   // Huge minis
   renderer.setHugeMiniRotations(hugeMiniatures.map((m) => m.rotationDeg));
   renderer.setHugeMiniHealth(hugeMiniatures.map((m) => m.health), openHealthControlsHugeMiniIndex);
-  renderer.setHugeMiniSpriteSource(HUGE_UNIT_SPRITE);
+  renderer.setHugeMiniSpriteSources(
+    hugeMiniCardData.map((d) => unitMiniatureImageSrc(d) ?? LARGE_UNIT_SPRITE),
+  );
+  renderer.setHugeMiniSpriteOffsets(
+    hugeMiniatures.map((m) => m.spriteOffsetLocal ?? { x: 0, y: 0 }),
+  );
+  renderer.setHugeMiniSpriteLocalRotations(
+    hugeMiniatures.map((m) => m.spriteRotationDeg ?? 0),
+  );
   renderer.setUnitActivated(units.map((u) => u.activated !== false));
   renderer.setBigMiniActivated(bigMiniatures.map((m) => m.activated !== false));
   renderer.setLargeMiniActivated(largeMiniatures.map((m) => m.activated !== false));
@@ -1537,8 +1578,6 @@ function updateHugeMiniMovementHighlights(): void {
 }
 
 // ── Dice roller UI ─────────────────────────────────────────────
-
-const diceRoller = new DiceRoller(document.body);
 
 // Wire unit card → dice roller
 unitCard.onDiceRequest = (req: DiceRequest) => {
@@ -2590,10 +2629,31 @@ function placeArmyCatalogUnitOnBoard(
     if (hex) {
       const anchor = bestHugeMiniAnchorForPointer(hex, world, -1);
       if (!anchor) return false;
-      hugeMiniatures.push({ anchor, walk: card.walk, run: card.run, rotationDeg: 0, health: card.health, activated: true, effectMarkers: new Set(), ...rosterMeta });
+      hugeMiniatures.push({
+        anchor,
+        walk: card.walk,
+        run: card.run,
+        rotationDeg: 0,
+        health: card.health,
+        activated: true,
+        effectMarkers: new Set(),
+        ...hugeSpriteAlignFromCard(card),
+        ...rosterMeta,
+      });
     } else {
       const anchor = nearestHexonCenterFromWorld(world);
-      hugeMiniatures.push({ anchor, offBoardWorld: { ...world }, walk: card.walk, run: card.run, rotationDeg: 0, health: card.health, activated: true, effectMarkers: new Set(), ...rosterMeta });
+      hugeMiniatures.push({
+        anchor,
+        offBoardWorld: { ...world },
+        walk: card.walk,
+        run: card.run,
+        rotationDeg: 0,
+        health: card.health,
+        activated: true,
+        effectMarkers: new Set(),
+        ...hugeSpriteAlignFromCard(card),
+        ...rosterMeta,
+      });
     }
     hugeMiniCardData.push(card);
     clearSelection();
@@ -4044,10 +4104,7 @@ function finishGodLooseDragIfActive(e: MouseEvent | PointerEvent): void {
       const mergeI = godPieceHitIndexFromWorld(w, idx);
       if (mergeI !== null) {
         const target = godTablePieces[mergeI]!;
-        const merged = withGodPieceWorld(
-          normalizeGodTablePiece(mergeGodTablePieces(entry, target)),
-          w,
-        );
+        const merged = normalizeGodTablePiece(mergeGodTablePieces(entry, target));
         const hi = Math.max(idx, mergeI);
         const lo = Math.min(idx, mergeI);
         const sel = selectedGodTablePieceIndex;
@@ -4888,34 +4945,82 @@ window.addEventListener('blur', () => {
 const WHEEL_ZOOM_LINEAR = 0.00052;
 const WHEEL_ZOOM_TOUCHPAD_MULT = 3;
 
-function wheelDeltasInCssPixels(e: WheelEvent): { dx: number; dy: number } {
-  const rawToPixels = (ev: WheelEvent): { dx: number; dy: number } => {
-    let x = ev.deltaX;
-    let y = ev.deltaY;
-    const mode = ev.deltaMode;
-    if (mode === WheelEvent.DOM_DELTA_LINE) {
-      x *= 16;
-      y *= 16;
-    } else if (mode === WheelEvent.DOM_DELTA_PAGE) {
-      x *= window.innerWidth;
-      y *= window.innerHeight;
-    }
-    return { dx: x, dy: y };
-  };
+function rawWheelDeltaToPixels(ev: WheelEvent): { dx: number; dy: number } {
+  let x = ev.deltaX;
+  let y = ev.deltaY;
+  const mode = ev.deltaMode;
+  if (mode === WheelEvent.DOM_DELTA_LINE) {
+    x *= 16;
+    y *= 16;
+  } else if (mode === WheelEvent.DOM_DELTA_PAGE) {
+    x *= window.innerWidth;
+    y *= window.innerHeight;
+  }
+  return { dx: x, dy: y };
+}
 
+function wheelDeltasInCssPixels(e: WheelEvent): { dx: number; dy: number } {
   const coalesce = (e as WheelEvent & { getCoalescedEvents?: () => WheelEvent[] }).getCoalescedEvents;
   const parts = typeof coalesce === 'function' ? coalesce.call(e) : [];
   if (parts.length > 0) {
     let dx = 0;
     let dy = 0;
     for (const ev of parts) {
-      const p = rawToPixels(ev);
+      const p = rawWheelDeltaToPixels(ev);
       dx += p.dx;
       dy += p.dy;
     }
     return { dx, dy };
   }
-  return rawToPixels(e);
+  return rawWheelDeltaToPixels(e);
+}
+
+/** Шаги зума из одного WheelEvent: у coalesced — по под-событиям со своим deltaMode (иначе k зума не совпадает с суммой dy). */
+type BoardWheelZoomStep = { dy: number; deltaMode: number };
+
+function wheelZoomStepsFromEvent(e: WheelEvent): BoardWheelZoomStep[] {
+  const coalesce = (e as WheelEvent & { getCoalescedEvents?: () => WheelEvent[] }).getCoalescedEvents;
+  const parts = typeof coalesce === 'function' ? coalesce.call(e) : [];
+  if (parts.length > 0) {
+    return parts.map((ev) => {
+      const p = rawWheelDeltaToPixels(ev);
+      return { dy: p.dy, deltaMode: ev.deltaMode };
+    });
+  }
+  const p = rawWheelDeltaToPixels(e);
+  return [{ dy: p.dy, deltaMode: e.deltaMode }];
+}
+
+let boardWheelZoomQueue: BoardWheelZoomStep[] = [];
+let boardWheelZoomRaf = 0;
+let boardWheelZoomClientX = 0;
+let boardWheelZoomClientY = 0;
+
+function flushBoardWheelZoomQueue(): void {
+  boardWheelZoomRaf = 0;
+  if (boardWheelZoomQueue.length === 0) return;
+  const steps = boardWheelZoomQueue;
+  boardWheelZoomQueue = [];
+  const mx = boardWheelZoomClientX;
+  const my = boardWheelZoomClientY;
+  for (const step of steps) {
+    const oldZoom = camera.zoom;
+    const zoomK =
+      step.deltaMode === WheelEvent.DOM_DELTA_PIXEL
+        ? WHEEL_ZOOM_LINEAR * WHEEL_ZOOM_TOUCHPAD_MULT
+        : WHEEL_ZOOM_LINEAR;
+    let newZoom = oldZoom * (1 - step.dy * zoomK);
+    newZoom = Math.max(0.2, Math.min(5, newZoom));
+    camera.zoom = newZoom;
+    camera.offsetX = mx - (mx - camera.offsetX) * (camera.zoom / oldZoom);
+    camera.offsetY = my - (my - camera.offsetY) * (camera.zoom / oldZoom);
+  }
+  scheduleRender();
+}
+
+function scheduleBoardWheelZoomFlush(): void {
+  if (boardWheelZoomRaf !== 0) return;
+  boardWheelZoomRaf = requestAnimationFrame(flushBoardWheelZoomQueue);
 }
 
 /** Колесо над канвасом или слепой зоной богов (оверлей поверх канваса — target не canvas). */
@@ -4945,22 +5050,10 @@ window.addEventListener(
       return;
     }
 
-    const oldZoom = camera.zoom;
-    const { dy } = wheelDeltasInCssPixels(e);
-    const zoomK =
-      e.deltaMode === WheelEvent.DOM_DELTA_PIXEL
-        ? WHEEL_ZOOM_LINEAR * WHEEL_ZOOM_TOUCHPAD_MULT
-        : WHEEL_ZOOM_LINEAR;
-    let newZoom = oldZoom * (1 - dy * zoomK);
-    newZoom = Math.max(0.2, Math.min(5, newZoom));
-    camera.zoom = newZoom;
-
-    const mouseX = e.clientX;
-    const mouseY = e.clientY;
-    camera.offsetX = mouseX - (mouseX - camera.offsetX) * (camera.zoom / oldZoom);
-    camera.offsetY = mouseY - (mouseY - camera.offsetY) * (camera.zoom / oldZoom);
-
-    scheduleRender();
+    boardWheelZoomClientX = e.clientX;
+    boardWheelZoomClientY = e.clientY;
+    boardWheelZoomQueue.push(...wheelZoomStepsFromEvent(e));
+    scheduleBoardWheelZoomFlush();
   },
   { passive: false, capture: true },
 );
@@ -4980,6 +5073,63 @@ window.addEventListener('keydown', (e) => {
   const scaleStep = e.shiftKey ? BG_CALIBRATION_SCALE_STEP * 2 : BG_CALIBRATION_SCALE_STEP;
   const elementRotStep = e.shiftKey ? ELEMENT_ROT_STEP_FAST : ELEMENT_ROT_STEP;
   let changed = false;
+
+  if (
+    selectedHugeMiniIndex !== null &&
+    e.altKey &&
+    !e.ctrlKey &&
+    !e.metaKey &&
+    (e.code === 'ArrowLeft' ||
+      e.code === 'ArrowRight' ||
+      e.code === 'ArrowUp' ||
+      e.code === 'ArrowDown')
+  ) {
+    const step = e.shiftKey ? HUGE_SPRITE_NUDGE_STEP_FAST : HUGE_SPRITE_NUDGE_STEP;
+    const m = hugeMiniatures[selectedHugeMiniIndex];
+    if (m) {
+      if (!m.spriteOffsetLocal) m.spriteOffsetLocal = { x: 0, y: 0 };
+      if (e.code === 'ArrowLeft') m.spriteOffsetLocal.x -= step;
+      else if (e.code === 'ArrowRight') m.spriteOffsetLocal.x += step;
+      else if (e.code === 'ArrowUp') m.spriteOffsetLocal.y -= step;
+      else m.spriteOffsetLocal.y += step;
+      e.preventDefault();
+      scheduleRender();
+      commitBoardUndoCheckpoint();
+      return;
+    }
+  }
+  if (selectedHugeMiniIndex !== null && e.altKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyR') {
+    const m = hugeMiniatures[selectedHugeMiniIndex];
+    if (m) {
+      m.spriteOffsetLocal = { x: 0, y: 0 };
+      m.spriteRotationDeg = 0;
+      e.preventDefault();
+      scheduleRender();
+      commitBoardUndoCheckpoint();
+      return;
+    }
+  }
+
+  if (
+    selectedHugeMiniIndex !== null &&
+    e.altKey &&
+    !e.ctrlKey &&
+    !e.metaKey &&
+    (e.code === 'KeyQ' || e.code === 'KeyE')
+  ) {
+    const step = e.shiftKey ? HUGE_SPRITE_ROT_STEP_FAST : HUGE_SPRITE_ROT_STEP;
+    const m = hugeMiniatures[selectedHugeMiniIndex];
+    if (m) {
+      let r = m.spriteRotationDeg ?? 0;
+      r += e.code === 'KeyQ' ? -step : step;
+      r = ((r % 360) + 360) % 360;
+      m.spriteRotationDeg = r;
+      e.preventDefault();
+      scheduleRender();
+      commitBoardUndoCheckpoint();
+      return;
+    }
+  }
 
   // Physical keys (e.code) so Q/E work with non-Latin layouts (e.g. Russian).
   if (e.code === 'KeyQ') {
@@ -5295,6 +5445,8 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
       catalogUnitId: m.catalogUnitId,
       rosterLeaderId: m.rosterLeaderId,
       armyOwnerPlayerSlot: m.armyOwnerPlayerSlot,
+      spriteOffsetLocal: m.spriteOffsetLocal,
+      spriteRotationDeg: m.spriteRotationDeg,
     })),
     hugeMiniCardData: structuredClone(hugeMiniCardData),
     terrains: terrains.map((h) => ({ q: h.q, r: h.r })),
@@ -5451,6 +5603,8 @@ function applyBoardSnapshot(raw: unknown): void {
       catalogUnitId: m.catalogUnitId,
       rosterLeaderId: m.rosterLeaderId,
       armyOwnerPlayerSlot: m.armyOwnerPlayerSlot,
+      spriteOffsetLocal: m.spriteOffsetLocal,
+      spriteRotationDeg: m.spriteRotationDeg,
     });
   }
   hugeMiniCardData.length = 0;
@@ -5583,3 +5737,37 @@ initMultiplayerSession({
 });
 mountPwaInstallToolbar(toolbarMountEl);
 mountAppSettingsToolbar(toolbarMountEl);
+
+/**
+ * Console helper: выровняйте арт (Alt+стрелки / Alt+Q,E), выберите huge-модель, затем в консоли:
+ * `hexBoardDumpHugeArtAlign()` — скопируйте вывод и отправьте агенту для записи в `src/catalog/units/<id>.json`.
+ */
+function hexBoardDumpHugeArtAlign(): string {
+  if (selectedHugeMiniIndex === null) {
+    const msg = '[hexBoard] Выберите огромную миниатюру на столе.';
+    console.warn(msg);
+    return msg;
+  }
+  const i = selectedHugeMiniIndex;
+  const m = hugeMiniatures[i]!;
+  const card = hugeMiniCardData[i]!;
+  const snippetForCard = {
+    hugeSpriteOffsetLocal: m.spriteOffsetLocal ?? { x: 0, y: 0 },
+    hugeSpriteRotationDeg: m.spriteRotationDeg ?? 0,
+  };
+  const block = {
+    catalogUnitId: card.catalogUnitId ?? null,
+    cardName: card.name,
+    hint: 'Вставьте поля из snippetForCard в объект card в src/catalog/units/<catalogUnitId>.json',
+    snippetForCard,
+  };
+  const json = JSON.stringify(block, null, 2);
+  console.log('[hexBoard] Данные для каталога (отправьте агенту или вставьте в JSON вручную):\n');
+  console.log(json);
+  return json;
+}
+
+if (typeof window !== 'undefined') {
+  (window as unknown as { hexBoardDumpHugeArtAlign: () => string }).hexBoardDumpHugeArtAlign =
+    hexBoardDumpHugeArtAlign;
+}

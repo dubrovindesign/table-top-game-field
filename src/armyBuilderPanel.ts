@@ -25,6 +25,9 @@ import { DOMAIN_LABELS, UnitCard, unitPanelThumbSrc, type DiceRequest } from './
 
 const DND_MIME = 'application/x-army-unit';
 
+/** Масштаб превью карты бога в панели армии (inline style — не зависит от кэша старого CSS). */
+const GOD_CARD_ARMY_PREVIEW_SCALE = 2.05;
+
 type ArmyMainTab = 'roster' | 'gods' | 'inventory';
 
 export type ArmyDragPayload =
@@ -87,10 +90,21 @@ export class ArmyBuilderPanel {
   private boundMove = (e: PointerEvent) => this.onGlobalPointerMove(e);
   private boundPreviewScroll = (): void => this.syncGodPreviewPosition();
   private boundPreviewResize = (): void => this.syncGodPreviewPosition();
+  /** Экранный прямоугольник увеличенной карты (учитывает `transform: scale` у флоатера). */
+  private pointerInGodPreviewFloater(clientX: number, clientY: number): boolean {
+    if (this.godPreviewFloater.hidden) return false;
+    const r = this.godPreviewFloater.getBoundingClientRect();
+    return clientX >= r.left && clientX < r.right && clientY >= r.top && clientY < r.bottom;
+  }
+
+  /**
+   * Закрытие по нажатию вне визуала превью (включая пустое место в списке карт богов).
+   * Проверка по координатам + getBoundingClientRect флоатера: у него `pointer-events: none`,
+   * иначе scale раздувал бы hit-box и мешал кликать по соседним карточкам.
+   */
   private boundPreviewOutside = (e: PointerEvent): void => {
     if (this.godPreviewFloater.hidden) return;
-    const t = e.target as Node | null;
-    if (t && this.godPreviewFloater.contains(t)) return;
+    if (this.pointerInGodPreviewFloater(e.clientX, e.clientY)) return;
     this.closeGodCardPreview();
   };
 
@@ -415,7 +429,7 @@ export class ArmyBuilderPanel {
   }
 
   private syncGodPreviewPosition(): void {
-    if (!this.godPreviewAnchorEl || this.godPreviewFloater.hidden) return;
+    if (!this.godPreviewAnchorEl) return;
     const r = this.godPreviewAnchorEl.getBoundingClientRect();
     const el = this.godPreviewFloater;
     el.style.left = `${r.left}px`;
@@ -428,14 +442,11 @@ export class ArmyBuilderPanel {
     this.godPreviewAnchorEl = anchor;
     applyGodCardSpriteCss(this.godPreviewFloater, c);
     this.godPreviewFloater.setAttribute('aria-label', godCardAriaLabel(c));
-    this.syncGodPreviewPosition();
     this.godPreviewFloater.hidden = false;
     this.godPreviewFloater.setAttribute('aria-hidden', 'false');
-    this.godPreviewFloater.classList.remove('army-god-preview-floater--open');
-    void this.godPreviewFloater.offsetWidth;
-    requestAnimationFrame(() => {
-      this.godPreviewFloater.classList.add('army-god-preview-floater--open');
-    });
+    this.godPreviewFloater.style.transformOrigin = 'center center';
+    this.godPreviewFloater.style.transform = `scale(${GOD_CARD_ARMY_PREVIEW_SCALE})`;
+    this.syncGodPreviewPosition();
     this.attachGodPreviewListeners();
   }
 
@@ -445,11 +456,12 @@ export class ArmyBuilderPanel {
     if (this.godPreviewFloater.hidden) return;
     this.godPreviewFloater.hidden = true;
     this.godPreviewFloater.setAttribute('aria-hidden', 'true');
-    this.godPreviewFloater.classList.remove('army-god-preview-floater--open');
     this.godPreviewFloater.style.left = '';
     this.godPreviewFloater.style.top = '';
     this.godPreviewFloater.style.width = '';
     this.godPreviewFloater.style.height = '';
+    this.godPreviewFloater.style.transform = '';
+    this.godPreviewFloater.style.transformOrigin = '';
   }
 
   private buildFactionTabs(): void {
@@ -685,16 +697,63 @@ export class ArmyBuilderPanel {
     wrap.tabIndex = 0;
     wrap.setAttribute('role', 'button');
     wrap.dataset.godCardId = c.id;
-    wrap.draggable = true;
     wrap.setAttribute('aria-label', godCardAriaLabel(c));
+    wrap.title = 'Нажмите — превью · перетащите на стол';
 
     const thumb = el('div', 'army-god-thumb');
     applyGodCardSpriteCss(thumb, c);
+    /** DnD только на миниатюре: при `draggable` на всём ряду браузер часто не шлёт `click` после одного нажатия. */
+    thumb.draggable = true;
 
     wrap.appendChild(thumb);
 
+    let dragStartedForThisRow = false;
+    let tapDownX = 0;
+    let tapDownY = 0;
+    /** После открытия по pointerup подавляем следующий click (дубль от той же «мышиной» активации). */
+    let suppressNextClickForRow = false;
+
+    const TAP_MOVE_THRESHOLD_PX = 10;
+
+    wrap.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      dragStartedForThisRow = false;
+      suppressNextClickForRow = false;
+      tapDownX = e.clientX;
+      tapDownY = e.clientY;
+    });
+
+    wrap.addEventListener('pointercancel', () => {
+      dragStartedForThisRow = false;
+    });
+
+    thumb.addEventListener('dragstart', (e) => {
+      dragStartedForThisRow = true;
+      const payload: ArmyDragPayload = { kind: 'god', cardId: c.id };
+      const json = JSON.stringify(payload);
+      e.dataTransfer?.setData(DND_MIME, json);
+      e.dataTransfer?.setData('text/plain', json);
+      e.dataTransfer!.effectAllowed = 'copy';
+    });
+
+    wrap.addEventListener('pointerup', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (dragStartedForThisRow) return;
+      const dx = e.clientX - tapDownX;
+      const dy = e.clientY - tapDownY;
+      if (dx * dx + dy * dy > TAP_MOVE_THRESHOLD_PX * TAP_MOVE_THRESHOLD_PX) return;
+      suppressNextClickForRow = true;
+      e.stopPropagation();
+      this.openGodCardPreview(c, wrap);
+    });
+
     wrap.addEventListener('click', (e) => {
       e.stopPropagation();
+      if (suppressNextClickForRow) {
+        suppressNextClickForRow = false;
+        return;
+      }
+      if (dragStartedForThisRow) return;
       this.openGodCardPreview(c, wrap);
     });
 
@@ -703,14 +762,6 @@ export class ArmyBuilderPanel {
         e.preventDefault();
         this.openGodCardPreview(c, wrap);
       }
-    });
-
-    wrap.addEventListener('dragstart', (e) => {
-      const payload: ArmyDragPayload = { kind: 'god', cardId: c.id };
-      const json = JSON.stringify(payload);
-      e.dataTransfer?.setData(DND_MIME, json);
-      e.dataTransfer?.setData('text/plain', json);
-      e.dataTransfer!.effectAllowed = 'copy';
     });
 
     return wrap;

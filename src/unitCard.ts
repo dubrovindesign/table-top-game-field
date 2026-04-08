@@ -128,6 +128,13 @@ export interface UnitCardData {
   transformsIntoUnitId?: string;
   /** Army catalog id — used for image-card hotspots overlay. */
   catalogUnitId?: string;
+  /**
+   * Default alignment of table art inside the huge (3-hexon) footprint clip.
+   * Layout units (same frame as on-board Alt+arrows / Alt+Q,E tweaks).
+   */
+  hugeSpriteOffsetLocal?: { x: number; y: number };
+  /** Default rotation of art inside huge clip (degrees). */
+  hugeSpriteRotationDeg?: number;
 }
 
 /**

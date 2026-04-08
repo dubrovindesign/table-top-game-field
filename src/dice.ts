@@ -473,6 +473,12 @@ export class DiceRoller {
     return this.walletMount;
   }
 
+  /** True if `target` is inside the dice UI (selector, roll, results) — used to avoid clearing board selection. */
+  containsEventTarget(target: EventTarget | null): boolean {
+    if (!(target instanceof Node)) return false;
+    return this.container.contains(target);
+  }
+
   private createPlayerBlock(slot: PlayerSlot): SlotDom {
     const block = el('div', 'dice-player-block');
     block.dataset.playerSlot = String(slot);

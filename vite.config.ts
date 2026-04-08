@@ -34,6 +34,10 @@ const mpWsProxy = {
 } as const;
 
 export default defineConfig({
+  define: {
+    /** Метка в консоли: убедиться, что превью подхватило свежий `dist/` после сборки. */
+    __APP_BUILD_STAMP__: JSON.stringify(new Date().toISOString()),
+  },
   build: {
     rollupOptions: {
       input: {
@@ -45,6 +49,8 @@ export default defineConfig({
   plugins: [
     catalogBundlePlugin(),
     VitePWA({
+      /** Регистрация вручную в `boot.ts`: на `vite preview` (порт 4173) SW отключаем, иначе старый precache часто маскирует свежий `dist/`. */
+      injectRegister: false,
       registerType: 'autoUpdate',
       includeAssets: ['mobile-logo.webp'],
       manifest: {

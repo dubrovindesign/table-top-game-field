@@ -86,10 +86,14 @@
     ],
     "traits": [{ "name": "Trait", "description": "..." }],
     "keywords": ["Тег на русском"],
-    "transformsIntoUnitId": "other_unit_id"
+    "transformsIntoUnitId": "other_unit_id",
+    "hugeSpriteOffsetLocal": { "x": 0, "y": 0 },
+    "hugeSpriteRotationDeg": 0
   }
 }
 ```
+
+Для **`size": "huge"`** (опционально): выравнивание арта в клипе трёх гексонов — те же единицы, что и на столе (Alt+стрелки / Alt+Q,E). После настройки в игре можно выгрузить через консоль `hexBoardDumpHugeArtAlign()` и перенести поля в `card`.
 
 Литералы:
 

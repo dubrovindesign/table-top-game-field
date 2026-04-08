@@ -1,5 +1,7 @@
 /// <reference types="vite/client" />
 
+declare const __APP_BUILD_STAMP__: string;
+
 /** Chromium: сохраняем prompt() для кастомной кнопки установки PWA. */
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
