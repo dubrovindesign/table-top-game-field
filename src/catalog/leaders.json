@@ -77,55 +77,68 @@
     "roster": [
       {
         "unitId": "Alraune-Blackthorn-seed",
-        "maxCopies": 1
+        "maxCopies": 3,
+        "points": 3
       },
       {
         "unitId": "Blackthorn-Predator",
-        "maxCopies": 1
+        "maxCopies": 2,
+        "points": 27
       },
       {
         "unitId": "Blackthorn-Predator-with-bow",
-        "maxCopies": 1
+        "maxCopies": 2,
+        "points": 33
       },
       {
         "unitId": "Blackthorn-Predator-with-glave",
-        "maxCopies": 1
+        "maxCopies": 2,
+        "points": 31
       },
       {
         "unitId": "DalHiar-Blackthorn-Hermit",
-        "maxCopies": 1
+        "maxCopies": 1,
+        "points": 50
       },
       {
         "unitId": "Silent-Blade-blackthorn-card",
-        "maxCopies": 1
+        "maxCopies": 2,
+        "points": 26
       },
       {
         "unitId": "Dryadint-centaur",
-        "maxCopies": 1
+        "maxCopies": 1,
+        "points": 32
       },
       {
         "unitId": "Undergrowth-Barkbeast",
-        "maxCopies": 1
+        "maxCopies": 2,
+        "points": 31
       },
       {
         "unitId": "Syld-Seeder-Blackthorn",
-        "maxCopies": 1
+        "maxCopies": 3,
+        "points": 32
       },
       {
         "unitId": "Syld-Protector-blackthorn",
-        "maxCopies": 1
+        "maxCopies": 3,
+        "points": 33
       },
       {
         "unitId": "Syld-Avenger-with-glaive-blackthorn",
-        "maxCopies": 1
+        "maxCopies": 2,
+        "points": 34
       },
       {
         "unitId": "Syld-Voice-of-Blackthorn",
-        "maxCopies": 1
+        "maxCopies": 2,
+        "points": 45
       },
       {
         "unitId": "Defender-of-Seedlings-blackthorn",
-        "maxCopies": 1
+        "maxCopies": 4,
+        "points": 15
       }
     ],
     "points": 55
