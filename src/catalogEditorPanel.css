@@ -982,6 +982,42 @@
   max-height: min(92vh, 900px);
 }
 
+/* Leader modal: «Ростер» tab — wider/taller, roster list fills pane height */
+.ce-modal.ce-modal--leader-roster {
+  width: min(720px, 96vw);
+  height: min(92vh, 900px);
+  max-height: min(92vh, 900px);
+}
+
+.ce-modal-pane.ce-modal-pane--leader-roster {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  gap: 10px;
+}
+
+.ce-modal-pane--leader-roster > .catalog-editor-hint,
+.ce-modal-pane--leader-roster > .ce-roster-slots-label {
+  flex-shrink: 0;
+}
+
+.ce-modal-pane--leader-roster > .ce-roster-slots-label {
+  font-size: 0.78rem;
+  color: rgba(154, 154, 168, 1);
+  width: 100%;
+}
+
+.ce-modal-pane--leader-roster .ce-modal-roster-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+}
+
+.ce-modal-pane--leader-roster .ce-modal-roster-add-row {
+  flex-shrink: 0;
+}
+
 .ce-modal__header {
   display: flex;
   align-items: center;

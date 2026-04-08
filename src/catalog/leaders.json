@@ -39,6 +39,16 @@
         "unitId": "defender_seedlings",
         "maxCopies": 5,
         "points": 16
+      },
+      {
+        "unitId": "Na'atly-Wild-Huntress",
+        "maxCopies": 1
+      },
+      {
+        "unitId": "virmgling",
+        "maxCopies": 4,
+        "points": 12,
+        "requiresUnitId": "Na'atly-Wild-Huntress"
       }
     ],
     "points": 40
@@ -87,7 +97,13 @@
     "name": "На'атли Дикая Охотница",
     "factionId": "keld",
     "catalogUnitId": "Na'atly-Wild-Huntress",
-    "roster": [],
+    "roster": [
+      {
+        "unitId": "virmgling",
+        "maxCopies": 4,
+        "points": 12
+      }
+    ],
     "points": 40
   },
   {

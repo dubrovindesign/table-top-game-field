@@ -260,6 +260,8 @@ export class CatalogEditorPanel {
   private lmPaneRoster!: HTMLElement;
   private lmRosterHint!: HTMLElement;
   private lmModalTitleEl!: HTMLElement;
+  /** Root `.ce-modal` for leader create/edit — used for roster-tab sizing. */
+  private leaderModalEl!: HTMLDivElement;
 
   private applyError!: HTMLElement;
   private unitListEl!: HTMLElement;
@@ -1356,7 +1358,8 @@ export class CatalogEditorPanel {
 
   private buildLeaderModal(): void {
     this.modalBackdrop = el('div', 'ce-modal-backdrop');
-    const modal = el('div', 'ce-modal');
+    const modal = el('div', 'ce-modal') as HTMLDivElement;
+    this.leaderModalEl = modal;
     const head = el('div', 'ce-modal__header');
     this.lmModalTitleEl = el('div', 'ce-modal__title', 'Лидер');
     const closeM = el('button', 'catalog-editor-close', '×') as HTMLButtonElement;
@@ -1371,19 +1374,21 @@ export class CatalogEditorPanel {
     this.lmTabCard.type = 'button';
     this.lmTabRoster.type = 'button';
     this.lmPaneCard = el('div', 'ce-modal-pane');
-    this.lmPaneRoster = el('div', 'ce-modal-pane');
+    this.lmPaneRoster = el('div', 'ce-modal-pane ce-modal-pane--leader-roster');
     this.lmPaneRoster.hidden = true;
     this.lmTabCard.addEventListener('click', () => {
       this.lmTabCard.classList.add('catalog-editor-tab--active');
       this.lmTabRoster.classList.remove('catalog-editor-tab--active');
       this.lmPaneCard.hidden = false;
       this.lmPaneRoster.hidden = true;
+      this.leaderModalEl.classList.remove('ce-modal--leader-roster');
     });
     this.lmTabRoster.addEventListener('click', () => {
       this.lmTabRoster.classList.add('catalog-editor-tab--active');
       this.lmTabCard.classList.remove('catalog-editor-tab--active');
       this.lmPaneRoster.hidden = false;
       this.lmPaneCard.hidden = true;
+      this.leaderModalEl.classList.add('ce-modal--leader-roster');
     });
     lmTabs.appendChild(this.lmTabCard);
     lmTabs.appendChild(this.lmTabRoster);
@@ -1476,9 +1481,9 @@ export class CatalogEditorPanel {
       'Юниты выбираются из глобальной библиотеки. «Требует юнита в армии» — id другого слота ростера (командир / приспешник).';
     this.lmPaneRoster.appendChild(this.lmRosterHint);
     this.leaderRosterListEl = el('div', 'catalog-editor-unit-list ce-modal-roster-list');
-    this.lmPaneRoster.appendChild(el('label', '', 'Слоты ростера'));
+    this.lmPaneRoster.appendChild(el('label', 'ce-roster-slots-label', 'Слоты ростера'));
     this.lmPaneRoster.appendChild(this.leaderRosterListEl);
-    const rosterAddRow = el('div', 'catalog-editor-row');
+    const rosterAddRow = el('div', 'catalog-editor-row ce-modal-roster-add-row');
     this.leaderRosterUnitSel = el('select', 'catalog-editor-select') as HTMLSelectElement;
     this.leaderRosterMaxCopies = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.leaderRosterMaxCopies.type = 'number';
@@ -2413,6 +2418,7 @@ export class CatalogEditorPanel {
     this.lmTabRoster.classList.remove('catalog-editor-tab--active');
     this.lmPaneCard.hidden = false;
     this.lmPaneRoster.hidden = true;
+    this.leaderModalEl.classList.remove('ce-modal--leader-roster');
     this.refreshUnitSelectors();
     if (mode === 'new') {
       this.lmModalTitleEl.textContent = 'Новый лидер';
@@ -2465,6 +2471,7 @@ export class CatalogEditorPanel {
 
   private closeLeaderModal(): void {
     this.modalBackdrop.classList.remove('ce-modal-backdrop--open');
+    this.leaderModalEl.classList.remove('ce-modal--leader-roster');
     this.leaderModalOpen = false;
     this.leaderModalLeaderId = null;
     this.leaderModalPendingRoster = [];

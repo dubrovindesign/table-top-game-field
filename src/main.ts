@@ -177,6 +177,20 @@ const HUGE_SPRITE_NUDGE_STEP_FAST = HEX_SIZE * 0.15;
 /** Rotation of art inside huge clip (degrees per keypress). */
 const HUGE_SPRITE_ROT_STEP = 2;
 const HUGE_SPRITE_ROT_STEP_FAST = 5;
+/**
+ * Фиксированное выравнивание арта внутри huge-клипа по `catalogUnitId`, если каталог/оверрайды
+ * по какой-то причине не дают стабильные `hugeSprite*` на карточке при спавне.
+ * Добавляй сюда юнитов с «залипшим» выравниванием — один источник правды для стола.
+ */
+const HUGE_SPRITE_ALIGN_OVERRIDES: Record<
+  string,
+  { spriteOffsetLocal: { x: number; y: number }; spriteRotationDeg: number }
+> = {
+  'Great-Aent-Sentry': {
+    spriteOffsetLocal: { x: 68.6, y: -33.6 },
+    spriteRotationDeg: 60,
+  },
+};
 /** Large mini (3-hex): rotate around anchor hex, 60° steps (Shift = 120°). */
 const LARGE_MINI_ROT_STEP = 60;
 const LARGE_MINI_ROT_STEP_FAST = 120;
@@ -801,23 +815,43 @@ function hugeMiniAllCells(m: Pick<HugeMini, 'anchor' | 'rotationDeg'>): Hex[] {
 }
 
 /** Defaults from catalog `card` when placing a huge miniature. */
-function hugeSpriteAlignFromCard(card: UnitCardData): {
+function hugeSpriteAlignFromCard(card: UnitCardData, unitId?: string): {
   spriteOffsetLocal?: { x: number; y: number };
   spriteRotationDeg?: number;
 } {
   if (card.size !== 'huge') return {};
+  if (typeof unitId === 'string' && unitId.length > 0 && HUGE_SPRITE_ALIGN_OVERRIDES[unitId]) {
+    const o = HUGE_SPRITE_ALIGN_OVERRIDES[unitId]!;
+    return {
+      spriteOffsetLocal: { x: o.spriteOffsetLocal.x, y: o.spriteOffsetLocal.y },
+      spriteRotationDeg: o.spriteRotationDeg,
+    };
+  }
+  const mergedCatalogCard =
+    typeof unitId === 'string' && unitId.length > 0 ? getCatalogUnit(unitId)?.card : undefined;
+  const staticCatalogCard =
+    typeof unitId === 'string' && unitId.length > 0 ? CATALOG_UNITS[unitId]?.card : undefined;
+  const candidates: UnitCardData[] = [card];
+  if (mergedCatalogCard) candidates.push(mergedCatalogCard);
+  if (staticCatalogCard) candidates.push(staticCatalogCard);
   const out: {
     spriteOffsetLocal?: { x: number; y: number };
     spriteRotationDeg?: number;
   } = {};
-  if (card.hugeSpriteOffsetLocal) {
-    const { x, y } = card.hugeSpriteOffsetLocal;
-    if (typeof x === 'number' && typeof y === 'number' && Number.isFinite(x) && Number.isFinite(y)) {
-      out.spriteOffsetLocal = { x, y };
+  for (const c of candidates) {
+    if (c.hugeSpriteOffsetLocal) {
+      const { x, y } = c.hugeSpriteOffsetLocal;
+      if (typeof x === 'number' && typeof y === 'number' && Number.isFinite(x) && Number.isFinite(y)) {
+        out.spriteOffsetLocal = { x, y };
+        break;
+      }
     }
   }
-  if (typeof card.hugeSpriteRotationDeg === 'number' && Number.isFinite(card.hugeSpriteRotationDeg)) {
-    out.spriteRotationDeg = card.hugeSpriteRotationDeg;
+  for (const c of candidates) {
+    if (typeof c.hugeSpriteRotationDeg === 'number' && Number.isFinite(c.hugeSpriteRotationDeg)) {
+      out.spriteRotationDeg = c.hugeSpriteRotationDeg;
+      break;
+    }
   }
   return out;
 }
@@ -2637,7 +2671,7 @@ function placeArmyCatalogUnitOnBoard(
         health: card.health,
         activated: true,
         effectMarkers: new Set(),
-        ...hugeSpriteAlignFromCard(card),
+        ...hugeSpriteAlignFromCard(card, unitId),
         ...rosterMeta,
       });
     } else {
@@ -2651,7 +2685,7 @@ function placeArmyCatalogUnitOnBoard(
         health: card.health,
         activated: true,
         effectMarkers: new Set(),
-        ...hugeSpriteAlignFromCard(card),
+        ...hugeSpriteAlignFromCard(card, unitId),
         ...rosterMeta,
       });
     }
