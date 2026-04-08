@@ -22,12 +22,14 @@ import {
   removeUnitEverywhere,
   resetCatalogOverrides,
   setLeaderHidden,
+  setLeaderRosterOrder,
   setLeaderPointsOverride,
   setNewLeader,
   setHotspotsForUnit,
   setNewUnit,
   setRosterSlotPatch,
   setUnitPatch,
+  setUnitLibraryOrder,
   setDefaultHotspotLayoutPresetId,
   upsertHotspotLayoutPreset,
 } from './catalog/catalogOverrides';
@@ -104,6 +106,18 @@ function numOrU(v: string): number | undefined {
 function numOr0(v: string): number {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
+}
+
+function reorderIds(ids: string[], movedId: string, targetId: string, before: boolean): string[] {
+  if (!movedId || !targetId || movedId === targetId) return ids;
+  const from = ids.indexOf(movedId);
+  const to = ids.indexOf(targetId);
+  if (from < 0 || to < 0) return ids;
+  const next = [...ids];
+  next.splice(from, 1);
+  const insertAt = before ? (from < to ? to - 1 : to) : from < to ? to : to + 1;
+  next.splice(insertAt, 0, movedId);
+  return next;
 }
 
 /** `blob:` from file pickers dies after reload; persist as data URLs in localStorage. */
@@ -219,6 +233,7 @@ export class CatalogEditorPanel {
   private panel: HTMLElement;
   private body: HTMLElement;
   private open = false;
+  private overridesRefreshQueued = false;
   private selectedFactionId: string;
   private selectedDomainId: Domain;
   private selectedLeaderId: string;
@@ -407,6 +422,16 @@ export class CatalogEditorPanel {
     document.addEventListener('keydown', this.onDocumentHotspotShortcutsCapture, true);
 
     window.addEventListener(CATALOG_OVERRIDES_CHANGED, () => {
+      if (!this.open) return;
+      this.scheduleOverridesRefresh();
+    });
+  }
+
+  private scheduleOverridesRefresh(): void {
+    if (this.overridesRefreshQueued) return;
+    this.overridesRefreshQueued = true;
+    requestAnimationFrame(() => {
+      this.overridesRefreshQueued = false;
       if (!this.open) return;
       this.refreshLeaderSelect();
       this.refreshUnitLibraryList();
@@ -1292,6 +1317,8 @@ export class CatalogEditorPanel {
     const lid = leader.id;
     const mini = leader.catalogUnitId;
     const seen = new Set<string>([mini]);
+    const rosterUnitIds = leader.roster.map((s) => s.unitId);
+    const dndState: { draggedUnitId: string | null } = { draggedUnitId: null };
 
     const appendRow = (unitId: string, title: string, kind: 'mini' | 'slot', slotMax: number): void => {
       const def = getCatalogUnit(unitId);
@@ -1342,6 +1369,35 @@ export class CatalogEditorPanel {
         },
         actions,
       });
+      if (kind === 'slot') {
+        row.draggable = true;
+        row.dataset.unitId = unitId;
+        row.addEventListener('dragstart', (e) => {
+          dndState.draggedUnitId = unitId;
+          row.classList.add('ce-row-dragging');
+          e.dataTransfer?.setData('text/plain', unitId);
+          if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+        });
+        row.addEventListener('dragend', () => {
+          dndState.draggedUnitId = null;
+          row.classList.remove('ce-row-dragging');
+        });
+        row.addEventListener('dragover', (e) => {
+          if (!dndState.draggedUnitId || dndState.draggedUnitId === unitId) return;
+          e.preventDefault();
+          if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+        });
+        row.addEventListener('drop', (e) => {
+          const movedId = dndState.draggedUnitId ?? e.dataTransfer?.getData('text/plain') ?? '';
+          if (!movedId || movedId === unitId) return;
+          e.preventDefault();
+          const rect = row.getBoundingClientRect();
+          const before = e.clientY < rect.top + rect.height / 2;
+          const next = reorderIds(rosterUnitIds, movedId, unitId, before);
+          if (next.join('|') === rosterUnitIds.join('|')) return;
+          setLeaderRosterOrder(lid, next);
+        });
+      }
       this.leaderAttachedUnitsEl!.appendChild(row);
     };
 
@@ -1354,6 +1410,8 @@ export class CatalogEditorPanel {
         s.requiresUnitId != null ? ` · требует ${s.requiresUnitId}` : '';
       appendRow(s.unitId, `ростер${extra}`, 'slot', s.maxCopies);
     }
+    this.leaderAttachedUnitsEl.title =
+      rosterUnitIds.length > 1 ? 'Перетащите слот, чтобы изменить порядок юнитов у лидера' : '';
   }
 
   private buildLeaderModal(): void {
@@ -2099,6 +2157,8 @@ export class CatalogEditorPanel {
     const q = (this.unitSearchInput?.value ?? '').trim().toLowerCase();
     const facId = this.unitFactionFilterSel?.value ?? '';
     const allowed = facId ? unitIdsForFaction(facId) : null;
+    const visibleIds: string[] = [];
+    const dndState: { draggedUnitId: string | null } = { draggedUnitId: null };
     for (const id of listAllUnitIds()) {
       if (allowed && !allowed.has(id)) continue;
       const def = getCatalogUnit(id);
@@ -2122,8 +2182,36 @@ export class CatalogEditorPanel {
         actions: [editBtn],
       });
       row.dataset.unitId = id;
+      row.draggable = true;
+      row.addEventListener('dragstart', (e) => {
+        dndState.draggedUnitId = id;
+        row.classList.add('ce-row-dragging');
+        e.dataTransfer?.setData('text/plain', id);
+        if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+      });
+      row.addEventListener('dragend', () => {
+        dndState.draggedUnitId = null;
+        row.classList.remove('ce-row-dragging');
+      });
+      row.addEventListener('dragover', (e) => {
+        if (!dndState.draggedUnitId || dndState.draggedUnitId === id) return;
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+      });
+      row.addEventListener('drop', (e) => {
+        const movedId = dndState.draggedUnitId ?? e.dataTransfer?.getData('text/plain') ?? '';
+        if (!movedId || movedId === id) return;
+        e.preventDefault();
+        const rect = row.getBoundingClientRect();
+        const before = e.clientY < rect.top + rect.height / 2;
+        const nextOrder = reorderIds(listAllUnitIds(), movedId, id, before);
+        if (nextOrder.join('|') === listAllUnitIds().join('|')) return;
+        setUnitLibraryOrder(nextOrder);
+      });
       this.unitListEl.appendChild(row);
+      visibleIds.push(id);
     }
+    this.unitListEl.title = visibleIds.length > 1 ? 'Перетащите юнита, чтобы изменить порядок в библиотеке' : '';
   }
 
   private refreshUnitSelectors(): void {

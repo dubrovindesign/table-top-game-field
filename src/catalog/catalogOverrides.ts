@@ -37,6 +37,10 @@ export type CatalogOverridesV1 = {
   hotspotLayoutPresets: HotspotLayoutPreset[];
   /** id из `hotspotLayoutPresets` — подставлять раскладку при создании нового юнита. */
   defaultHotspotLayoutPresetId: string | null;
+  /** Пользовательский порядок id юнитов в редакторе библиотеки. */
+  unitOrder: string[];
+  /** Пользовательский порядок слотов ростера по лидеру (unitId[]). */
+  leaderRosterOrder: Record<string, string[]>;
 };
 
 function emptyOverrides(): CatalogOverridesV1 {
@@ -53,13 +57,42 @@ function emptyOverrides(): CatalogOverridesV1 {
     hotspots: {},
     hotspotLayoutPresets: [],
     defaultHotspotLayoutPresetId: null,
+    unitOrder: [],
+    leaderRosterOrder: {},
   };
 }
 
 let cache: CatalogOverridesV1 | null = null;
+let persistTimer: number | null = null;
+let notifyQueued = false;
+const PERSIST_DEBOUNCE_MS = 120;
+const dispatchAsync = (fn: () => void): void => {
+  if (typeof window.requestAnimationFrame === 'function') {
+    window.requestAnimationFrame(() => fn());
+    return;
+  }
+  window.setTimeout(fn, 0);
+};
+
+function schedulePersist(overrides: CatalogOverridesV1): void {
+  if (persistTimer !== null) window.clearTimeout(persistTimer);
+  persistTimer = window.setTimeout(() => {
+    persistTimer = null;
+    try {
+      localStorage.setItem(CATALOG_OVERRIDES_STORAGE_KEY, JSON.stringify(overrides));
+    } catch (e) {
+      console.error('[catalogOverrides] localStorage save failed', e);
+    }
+  }, PERSIST_DEBOUNCE_MS);
+}
 
 function notifyChanged(): void {
-  window.dispatchEvent(new CustomEvent(CATALOG_OVERRIDES_CHANGED));
+  if (notifyQueued) return;
+  notifyQueued = true;
+  dispatchAsync(() => {
+    notifyQueued = false;
+    window.dispatchEvent(new CustomEvent(CATALOG_OVERRIDES_CHANGED));
+  });
 }
 
 export function getCatalogOverrides(): CatalogOverridesV1 {
@@ -114,6 +147,16 @@ export function loadCatalogOverridesFromStorage(): CatalogOverridesV1 {
         o.defaultHotspotLayoutPresetId,
         hotspotLayoutPresets,
       ),
+      unitOrder: Array.isArray(o.unitOrder) ? o.unitOrder.filter((id): id is string => typeof id === 'string') : [],
+      leaderRosterOrder:
+        o.leaderRosterOrder && typeof o.leaderRosterOrder === 'object'
+          ? Object.fromEntries(
+              Object.entries(o.leaderRosterOrder).map(([leaderId, order]) => [
+                leaderId,
+                Array.isArray(order) ? order.filter((id): id is string => typeof id === 'string') : [],
+              ]),
+            )
+          : {},
     };
   } catch {
     return emptyOverrides();
@@ -155,11 +198,7 @@ function normalizeHotspotLayoutPresets(raw: unknown): HotspotLayoutPreset[] {
 
 export function saveCatalogOverrides(overrides: CatalogOverridesV1): void {
   cache = overrides;
-  try {
-    localStorage.setItem(CATALOG_OVERRIDES_STORAGE_KEY, JSON.stringify(overrides));
-  } catch (e) {
-    console.error('[catalogOverrides] localStorage save failed', e);
-  }
+  schedulePersist(overrides);
   notifyChanged();
 }
 
@@ -202,6 +241,16 @@ export function importCatalogOverridesJson(text: string): { ok: true } | { ok: f
         o.defaultHotspotLayoutPresetId,
         hotspotLayoutPresets,
       ),
+      unitOrder: Array.isArray(o.unitOrder) ? o.unitOrder.filter((id): id is string => typeof id === 'string') : [],
+      leaderRosterOrder:
+        o.leaderRosterOrder && typeof o.leaderRosterOrder === 'object'
+          ? Object.fromEntries(
+              Object.entries(o.leaderRosterOrder).map(([leaderId, order]) => [
+                leaderId,
+                Array.isArray(order) ? order.filter((id): id is string => typeof id === 'string') : [],
+              ]),
+            )
+          : {},
     };
     saveCatalogOverrides(merged);
     return { ok: true };
@@ -315,6 +364,20 @@ function mergeRoster(base: RosterSlotDef[], additions: RosterSlotDef[]): RosterS
   return out;
 }
 
+function applyIdOrder<T extends { unitId: string }>(items: T[], order: string[]): T[] {
+  if (!order.length || items.length < 2) return items;
+  const rank = new Map<string, number>();
+  for (let i = 0; i < order.length; i += 1) rank.set(order[i], i);
+  return [...items].sort((a, b) => {
+    const ra = rank.get(a.unitId);
+    const rb = rank.get(b.unitId);
+    if (ra == null && rb == null) return 0;
+    if (ra == null) return 1;
+    if (rb == null) return -1;
+    return ra - rb;
+  });
+}
+
 export function getMergedLeader(leaderId: string): LeaderDef | undefined {
   const o = getCatalogOverrides();
   const base = o.newLeaders[leaderId] ?? LEADERS.find((l) => l.id === leaderId);
@@ -336,6 +399,7 @@ export function getMergedLeader(leaderId: string): LeaderDef | undefined {
     });
   }
   roster = roster.filter((s) => getMergedCatalogUnit(s.unitId) != null);
+  roster = applyIdOrder(roster, o.leaderRosterOrder[leaderId] ?? []);
   let out: LeaderDef = { ...base, roster };
   if (!o.newLeaders[leaderId]) {
     const lp = o.leaderPatches[leaderId];
@@ -595,7 +659,38 @@ export function listNewUnitIds(): string[] {
 export function listAllUnitIds(): string[] {
   const o = getCatalogOverrides();
   const staticIds = Object.keys(CATALOG_UNITS).filter((id) => !o.hiddenUnitIds.includes(id));
-  return Array.from(new Set([...staticIds, ...Object.keys(o.newUnits)])).sort();
+  const ids = Array.from(new Set([...staticIds, ...Object.keys(o.newUnits)])).sort();
+  if (!o.unitOrder.length) return ids;
+  const rank = new Map<string, number>();
+  for (let i = 0; i < o.unitOrder.length; i += 1) rank.set(o.unitOrder[i], i);
+  return [...ids].sort((a, b) => {
+    const ra = rank.get(a);
+    const rb = rank.get(b);
+    if (ra == null && rb == null) return a.localeCompare(b);
+    if (ra == null) return 1;
+    if (rb == null) return -1;
+    return ra - rb;
+  });
+}
+
+export function setUnitLibraryOrder(unitIds: string[]): void {
+  const o = structuredClone(getCatalogOverrides());
+  const visible = new Set(listAllUnitIds());
+  o.unitOrder = Array.from(new Set(unitIds.filter((id) => visible.has(id))));
+  saveCatalogOverrides(o);
+}
+
+export function setLeaderRosterOrder(leaderId: string, unitIds: string[]): void {
+  const o = structuredClone(getCatalogOverrides());
+  const leader = getMergedLeader(leaderId);
+  const allowed = new Set((leader?.roster ?? []).map((s) => s.unitId));
+  const clean = Array.from(new Set(unitIds.filter((id) => allowed.has(id))));
+  if (clean.length === 0) {
+    delete o.leaderRosterOrder[leaderId];
+  } else {
+    o.leaderRosterOrder[leaderId] = clean;
+  }
+  saveCatalogOverrides(o);
 }
 
 export function listNewLeaderIds(): string[] {
@@ -626,6 +721,12 @@ export function removeUnitEverywhere(unitId: string): void {
   } else {
     o.hiddenUnitIds = o.hiddenUnitIds.filter((id) => id !== unitId);
   }
+  o.unitOrder = (o.unitOrder ?? []).filter((id) => id !== unitId);
+  for (const leaderId of Object.keys(o.leaderRosterOrder ?? {})) {
+    const next = (o.leaderRosterOrder[leaderId] ?? []).filter((id) => id !== unitId);
+    if (next.length === 0) delete o.leaderRosterOrder[leaderId];
+    else o.leaderRosterOrder[leaderId] = next;
+  }
   saveCatalogOverrides(o);
 }
 
@@ -641,6 +742,7 @@ export function removeLeaderEverywhere(leaderId: string): void {
   } else {
     o.hiddenLeaderIds = o.hiddenLeaderIds.filter((id) => id !== leaderId);
   }
+  delete o.leaderRosterOrder[leaderId];
   saveCatalogOverrides(o);
 }
 

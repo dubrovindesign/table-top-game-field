@@ -185,6 +185,18 @@ export class Renderer {
   private backgroundImageSrcLoaded: string | null = null;
   private backgroundImageSrcFailed: string | null = null;
 
+  private cellsSvgImage: HTMLImageElement | null = null;
+  private cellsSvgSrcLoaded: string | null = null;
+  private cellsSvgSrcFailed: string | null = null;
+  private cellsSvgLoadInFlight = false;
+  private cellsSvgLayout: {
+    cx: number;
+    cy: number;
+    w: number;
+    h: number;
+    rotDeg: number;
+  } | null = null;
+
   /** God cards / decks on the table. */
   private godTablePieces: GodTablePiece[] = [];
   private godLooseDraggingIndex: number | null = null;
@@ -568,6 +580,19 @@ export class Renderer {
     this.config = { ...this.config, ...patch };
   }
 
+  /** Screen-space layout for `cells.svg` (CSS px); drawn after hex fills, under terrain/units. */
+  setCellsSvgOverlayLayout(
+    layout: {
+      cx: number;
+      cy: number;
+      w: number;
+      h: number;
+      rotDeg: number;
+    } | null,
+  ): void {
+    this.cellsSvgLayout = layout;
+  }
+
   setRemoteBoardPointers(
     pointers: Array<{
       boardX: number;
@@ -602,18 +627,21 @@ export class Renderer {
     ctx.fillStyle = config.backgroundColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    const gridBounds = this.getGridWorldBounds();
+    const applyBoardRotation = (): void => {
+      if (config.boardRotationDeg !== 0) {
+        const centerX = (gridBounds.minX + gridBounds.maxX) / 2;
+        const centerY = (gridBounds.minY + gridBounds.maxY) / 2;
+        const angleRad = (config.boardRotationDeg * Math.PI) / 180;
+        ctx.translate(centerX, centerY);
+        ctx.rotate(angleRad);
+        ctx.translate(-centerX, -centerY);
+      }
+    };
+
     ctx.save();
     this.camera.apply(ctx);
-    const gridBounds = this.getGridWorldBounds();
-    if (config.boardRotationDeg !== 0) {
-      // Rotate around current board center in world space.
-      const centerX = (gridBounds.minX + gridBounds.maxX) / 2;
-      const centerY = (gridBounds.minY + gridBounds.maxY) / 2;
-      const angleRad = (config.boardRotationDeg * Math.PI) / 180;
-      ctx.translate(centerX, centerY);
-      ctx.rotate(angleRad);
-      ctx.translate(-centerX, -centerY);
-    }
+    applyBoardRotation();
 
     this.drawBackgroundImage(gridBounds);
 
@@ -628,6 +656,14 @@ export class Renderer {
         this.drawHexStroke(hex, config.strokeColor, config.strokeWidth);
       }
     }
+
+    ctx.restore();
+    // `cells.svg` sits above field/hex underlay, below terrain and all miniatures/UI in world space.
+    this.drawCellsSvgOverlay();
+
+    ctx.save();
+    this.camera.apply(ctx);
+    applyBoardRotation();
 
     // Pass 3: movement range overlay for selected unit
     this.drawMovementHighlights();
@@ -693,6 +729,77 @@ export class Renderer {
     ctx.restore();
   }
 
+  private ensureCellsSvgOverlayLoaded(): void {
+    const src = this.config.cellsSvgOverlaySrc;
+    if (!src) return;
+    if (this.cellsSvgSrcLoaded === src || this.cellsSvgSrcFailed === src) return;
+    if (this.cellsSvgLoadInFlight) return;
+    this.cellsSvgLoadInFlight = true;
+    void fetch(src)
+      .then((r) => {
+        if (!r.ok) throw new Error(`cells.svg ${r.status}`);
+        return r.text();
+      })
+      .then((raw) => {
+        this.cellsSvgLoadInFlight = false;
+        // Как у .board-grid-overlay-wrap { color: #e5e5e5 } для встроенного SVG; в <img> currentColor → чёрный.
+        const tinted = raw.replace(/currentColor/g, '#e5e5e5');
+        const blob = new Blob([tinted], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        const image = new Image();
+        image.onload = () => {
+          URL.revokeObjectURL(url);
+          this.cellsSvgImage = image;
+          this.cellsSvgSrcLoaded = src;
+          this.cellsSvgSrcFailed = null;
+          this.canvas.dispatchEvent(new CustomEvent('hex-cells-svg-ready', { bubbles: false }));
+        };
+        image.onerror = () => {
+          URL.revokeObjectURL(url);
+          this.cellsSvgImage = null;
+          this.cellsSvgSrcLoaded = null;
+          this.cellsSvgSrcFailed = src;
+        };
+        image.src = url;
+      })
+      .catch((err) => {
+        this.cellsSvgLoadInFlight = false;
+        this.cellsSvgSrcFailed = src;
+        console.error('[cells.svg] overlay load failed', err);
+      });
+  }
+
+  /** Full-board `cells.svg` in screen space, between hex underlay and terrain/units. */
+  private drawCellsSvgOverlay(): void {
+    const src = this.config.cellsSvgOverlaySrc;
+    if (!src) return;
+    this.ensureCellsSvgOverlayLoaded();
+    const img = this.cellsSvgImage;
+    const layout = this.cellsSvgLayout;
+    if (!img || !layout || !img.complete || img.naturalWidth === 0) return;
+    const { ctx } = this;
+    const { cx, cy, w, h, rotDeg } = layout;
+    if (w < 1 || h < 1) return;
+    const iw = img.naturalWidth;
+    const ih = img.naturalHeight;
+    // Как у встроенного SVG в DOM: preserveAspectRatio по умолчанию = xMidYMid meet (без растягивания по осям).
+    const scale = Math.min(w / iw, h / ih);
+    const dw = iw * scale;
+    const dh = ih * scale;
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.imageSmoothingEnabled = true;
+    ctx.translate(cx, cy);
+    ctx.rotate((rotDeg * Math.PI) / 180);
+    // Лёгкая тень под линиями сетки (экранные px, как и layout).
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 0.8;
+    ctx.shadowOffsetY = 1.2;
+    ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
+    ctx.restore();
+  }
+
   private drawRemoteBoardPointers(): void {
     if (this.remoteBoardPointers.length === 0) return;
     const { ctx } = this;
@@ -737,8 +844,9 @@ export class Renderer {
       if (p.x > maxX) maxX = p.x;
       if (p.y > maxY) maxY = p.y;
     }
-    const width = Math.max(1, maxX - minX + this.layout.size.x * 2.8);
-    const height = Math.max(1, maxY - minY + this.layout.size.y * 2.8);
+    /* Совпадает с getBoardDecorOverlayLayoutPx в main (HEX_SIZE * 3 к охвату поля). */
+    const width = Math.max(1, maxX - minX + this.layout.size.x * 3);
+    const height = Math.max(1, maxY - minY + this.layout.size.y * 3);
     return { minX, minY, maxX, maxY, width, height };
   }
 
@@ -765,29 +873,27 @@ export class Renderer {
     if (!this.backgroundImage) return;
     const { ctx, config } = this;
     const image = this.backgroundImage;
-    const targetX = bounds.minX - this.layout.size.x * 1.4;
-    const targetY = bounds.minY - this.layout.size.y * 1.4;
+    const targetX = bounds.minX - this.layout.size.x * 1.5;
+    const targetY = bounds.minY - this.layout.size.y * 1.5;
     const targetW = bounds.width;
     const targetH = bounds.height;
 
-    let drawX = targetX;
-    let drawY = targetY;
-    let drawW = targetW;
-    let drawH = targetH;
+    const iw = image.width;
+    const ih = image.height;
+    /** Всегда равномерный масштаб (пропорции PNG/SVG не ломаем). `stretch` больше не растягивает по осям. */
+    const fit = config.backgroundImageFit;
+    const baseScale =
+      fit === 'cover'
+        ? Math.max(targetW / iw, targetH / ih)
+        : Math.min(targetW / iw, targetH / ih);
+    let drawW = iw * baseScale;
+    let drawH = ih * baseScale;
+    let drawX = targetX + (targetW - drawW) / 2;
+    let drawY = targetY + (targetH - drawH) / 2;
 
-    if (config.backgroundImageFit !== 'stretch') {
-      const scale = config.backgroundImageFit === 'cover'
-        ? Math.max(targetW / image.width, targetH / image.height)
-        : Math.min(targetW / image.width, targetH / image.height);
-      drawW = image.width * scale;
-      drawH = image.height * scale;
-      drawX = targetX + (targetW - drawW) / 2;
-      drawY = targetY + (targetH - drawH) / 2;
-    }
-
-    const scale = Math.max(0.05, config.backgroundImageScale);
-    drawW *= scale;
-    drawH *= scale;
+    const userScale = Math.max(0.05, config.backgroundImageScale);
+    drawW *= userScale;
+    drawH *= userScale;
     drawX += config.backgroundImageOffsetX + (targetW - drawW) / 2;
     drawY += config.backgroundImageOffsetY + (targetH - drawH) / 2;
 

@@ -1060,6 +1060,14 @@
   cursor: default;
 }
 
+.catalog-editor-panel .ce-catalog-army-row.army-unit-row[draggable='true'] {
+  cursor: grab;
+}
+
+.catalog-editor-panel .ce-catalog-army-row.army-unit-row.ce-row-dragging {
+  opacity: 0.55;
+}
+
 .ce-catalog-army-row .ce-army-row-main--btn {
   flex: 1;
   min-width: 0;

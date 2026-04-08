@@ -42,13 +42,29 @@
       },
       {
         "unitId": "Na'atly-Wild-Huntress",
-        "maxCopies": 1
+        "maxCopies": 1,
+        "points": 40
       },
       {
         "unitId": "virmgling",
         "maxCopies": 4,
         "points": 12,
         "requiresUnitId": "Na'atly-Wild-Huntress"
+      },
+      {
+        "unitId": "Keld Predator",
+        "maxCopies": 3,
+        "points": 28
+      },
+      {
+        "unitId": "Keld-Predator-with-glaive",
+        "maxCopies": 2,
+        "points": 32
+      },
+      {
+        "unitId": "Keld-Predator-with-bow",
+        "maxCopies": 2,
+        "points": 34
       }
     ],
     "points": 40

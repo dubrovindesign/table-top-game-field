@@ -542,6 +542,13 @@ export class UnitCard {
     anchorScreen?: { x: number; y: number },
     options?: UnitCardShowOptions,
   ): void {
+    // `hide()` may force immediate invisible state; reset it before showing again.
+    this.container.style.visibility = '';
+    this.container.style.pointerEvents = '';
+    this.container.style.opacity = '';
+    this.container.style.transform = '';
+    this.container.style.transition = '';
+
     const catalogUnitId = options?.catalogUnitId ?? data.catalogUnitId;
     const hf = catalogUnitId ? getHotspotsForUnit(catalogUnitId) : undefined;
     const willImageMode = !!(hf?.image && hf.regions.length > 0);
@@ -947,19 +954,18 @@ export class UnitCard {
     this.clearDockedImageLayout();
     this.lastDockedShowKey = null;
     this.visible = false;
-    const wasFloating = this.container.classList.contains('unit-card-floating');
-    if (wasFloating) {
-      this.container.style.transition = 'none';
-    }
+    this.container.style.transition = 'none';
     this.container.classList.remove('unit-card-visible');
     this.container.classList.remove('unit-card-floating');
     this.clearFloatingPosition();
-    if (wasFloating) {
-      void this.container.offsetHeight;
-      requestAnimationFrame(() => {
-        this.container.style.transition = '';
-      });
-    }
+    // Must stop intercepting clicks immediately (no ghost overlay while fade would run).
+    this.container.style.opacity = '0';
+    this.container.style.transform = 'translate3d(30px, 0, 0) scale(1)';
+    this.container.style.pointerEvents = 'none';
+    this.container.style.visibility = 'hidden';
+    requestAnimationFrame(() => {
+      this.container.style.transition = '';
+    });
   }
 
   get isVisible(): boolean {

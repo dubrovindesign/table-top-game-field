@@ -1,5 +1,5 @@
 /**
- * Army Builder — slide-in panel: factions, leader strip (click = filter), roster list, Alt+hover, DnD.
+ * Army Builder — slide-in panel: factions, leader strip (click = filter), roster list, click-to-select, DnD.
  */
 
 import {
@@ -29,6 +29,7 @@ const DND_MIME = 'application/x-army-unit';
 const GOD_CARD_ARMY_PREVIEW_SCALE = 2.05;
 
 type ArmyMainTab = 'roster' | 'gods' | 'inventory';
+type SelectedArmyCardSource = 'leader' | 'roster';
 
 export type ArmyDragPayload =
   | { kind: 'troop'; leaderId: string; unitId: string }
@@ -36,7 +37,7 @@ export type ArmyDragPayload =
   | { kind: 'god'; cardId: string };
 
 export type ArmyPanelOptions = {
-  getAltKeyHeld: () => boolean;
+  getAltKeyHeld?: () => boolean;
   getUsedCount: (leaderId: string, unitId: string) => number;
   getPointsSpent: () => number;
   onDiceRequest?: (req: DiceRequest) => void;
@@ -83,11 +84,12 @@ export class ArmyBuilderPanel {
   private open = false;
   private selectedFactionId: string;
   private selectedLeaderId: string;
-  private hoverCard: UnitCard;
-  private hoverRowUnitId: string | null = null;
+  private selectedRosterCard: UnitCard;
+  private selectedCardUnitId: string | null = null;
+  private selectedCardSource: SelectedArmyCardSource | null = null;
   private opts: ArmyPanelOptions;
+  private overridesRefreshQueued = false;
   private boundKey = (e: KeyboardEvent) => this.onGlobalKey(e);
-  private boundMove = (e: PointerEvent) => this.onGlobalPointerMove(e);
   private boundPreviewScroll = (): void => this.syncGodPreviewPosition();
   private boundPreviewResize = (): void => this.syncGodPreviewPosition();
   /** Экранный прямоугольник увеличенной карты (учитывает `transform: scale` у флоатера). */
@@ -268,9 +270,9 @@ export class ArmyBuilderPanel {
     this.godPreviewFloater.setAttribute('aria-hidden', 'true');
     this.root.appendChild(this.godPreviewFloater);
 
-    this.hoverCard = new UnitCard(this.root, 'army-catalog-hover');
+    this.selectedRosterCard = new UnitCard(this.root, 'army-catalog-selected');
     if (opts.onDiceRequest) {
-      this.hoverCard.onDiceRequest = opts.onDiceRequest;
+      this.selectedRosterCard.onDiceRequest = opts.onDiceRequest;
     }
 
     this.buildFactionTabs();
@@ -280,21 +282,32 @@ export class ArmyBuilderPanel {
     this.renderGodSection();
 
     window.addEventListener('keydown', this.boundKey);
-    window.addEventListener('pointermove', this.boundMove, { passive: true });
     document.addEventListener('click', this.boundDocClick);
     window.addEventListener(CATALOG_OVERRIDES_CHANGED, this.boundCatalogOverridesChanged);
   }
 
-  private boundDocClick = (): void => {
+  private boundDocClick = (e: MouseEvent): void => {
     this.closePointsCapMenu();
+    if (!this.selectedCardUnitId) return;
+    const target = e.target;
+    if (target instanceof Node && this.panel.contains(target)) return;
+    if (this.selectedRosterCard.containsEventTarget(target)) return;
+    this.clearSelectedCard();
   };
   private boundCatalogOverridesChanged = (): void => {
     if (!this.open) return;
-    this.refresh();
+    if (this.overridesRefreshQueued) return;
+    this.overridesRefreshQueued = true;
+    requestAnimationFrame(() => {
+      this.overridesRefreshQueued = false;
+      if (!this.open) return;
+      this.refresh();
+    });
   };
 
   private selectMainTab(tab: ArmyMainTab): void {
     if (tab !== 'gods') this.closeGodCardPreview();
+    if (tab !== 'roster') this.clearSelectedCard();
     this.selectedMainTab = tab;
     this.syncMainTabUi();
   }
@@ -315,7 +328,6 @@ export class ArmyBuilderPanel {
   dispose(): void {
     this.detachGodPreviewListeners();
     window.removeEventListener('keydown', this.boundKey);
-    window.removeEventListener('pointermove', this.boundMove);
     document.removeEventListener('click', this.boundDocClick);
     window.removeEventListener(CATALOG_OVERRIDES_CHANGED, this.boundCatalogOverridesChanged);
     this.root.remove();
@@ -356,49 +368,40 @@ export class ArmyBuilderPanel {
     }
   }
 
-  private panelHoverTargetRow(el: EventTarget | null): HTMLElement | null {
-    const t = el as HTMLElement | null;
-    const row = t?.closest?.('.army-unit-row') as HTMLElement | null;
-    if (!row) return null;
-    if (!this.leadersListEl.contains(row) && !this.listEl.contains(row)) return null;
-    return row;
-  }
-
-  private onGlobalPointerMove(e: PointerEvent): void {
-    if (!this.opts.getAltKeyHeld() || !this.open) {
-      this.hideHoverCard();
-      return;
-    }
-    if (!this.isScreenPointOverPanel(e.clientX, e.clientY)) {
-      this.hideHoverCard();
-      return;
-    }
-    const row = this.panelHoverTargetRow(e.target);
-    if (!row) {
-      this.hideHoverCard();
-      return;
-    }
-    const unitId = row.dataset.unitId ?? null;
-    if (!unitId) {
-      this.hideHoverCard();
-      return;
-    }
+  private showSelectedCard(unitId: string, source: SelectedArmyCardSource): void {
     const def = getCatalogUnit(unitId);
-    if (!def) {
-      this.hideHoverCard();
-      return;
-    }
-    if (unitId === this.hoverRowUnitId) {
-      this.hoverCard.repositionFloating(e.clientX, e.clientY);
-      return;
-    }
-    this.hoverRowUnitId = unitId;
-    this.hoverCard.show(def.card, { x: e.clientX, y: e.clientY }, { catalogUnitId: unitId });
+    if (!def) return;
+    this.selectedCardUnitId = unitId;
+    this.selectedCardSource = source;
+    this.selectedRosterCard.show(def.card, undefined, { catalogUnitId: unitId });
+    this.syncRosterSelectionUi();
   }
 
-  private hideHoverCard(): void {
-    this.hoverRowUnitId = null;
-    this.hoverCard.hide();
+  private selectRosterUnit(unitId: string): void {
+    this.showSelectedCard(unitId, 'roster');
+  }
+
+  private selectLeaderCard(unitId: string): void {
+    this.showSelectedCard(unitId, 'leader');
+  }
+
+  private clearSelectedCard(): void {
+    if (!this.selectedCardUnitId && !this.selectedRosterCard.isVisible) return;
+    this.selectedCardUnitId = null;
+    this.selectedCardSource = null;
+    this.selectedRosterCard.hide();
+    this.syncRosterSelectionUi();
+  }
+
+  private syncRosterSelectionUi(): void {
+    for (const child of this.listEl.children) {
+      const row = child as HTMLElement;
+      if (!row.classList.contains('army-unit-row')) continue;
+      row.classList.toggle(
+        'army-unit-row-selected',
+        this.selectedCardSource === 'roster' && row.dataset.unitId === this.selectedCardUnitId,
+      );
+    }
   }
 
   private setOpen(v: boolean): void {
@@ -406,7 +409,7 @@ export class ArmyBuilderPanel {
     this.overlay.classList.toggle('army-panel-overlay-visible', v);
     this.panel.classList.toggle('army-panel-open', v);
     if (!v) {
-      this.hideHoverCard();
+      this.clearSelectedCard();
       this.closeGodCardPreview();
     }
     if (v) this.refresh();
@@ -487,6 +490,7 @@ export class ArmyBuilderPanel {
 
   private selectFaction(factionId: string): void {
     this.selectedFactionId = factionId;
+    this.clearSelectedCard();
     for (const child of this.factionTabs.children) {
       const b = child as HTMLElement;
       b.classList.toggle('army-faction-tab-active', b.dataset.factionId === factionId);
@@ -502,6 +506,12 @@ export class ArmyBuilderPanel {
 
   private selectLeader(leaderId: string): void {
     this.selectedLeaderId = leaderId;
+    const selectedLeader = leadersForFaction(this.selectedFactionId).find((l) => l.id === leaderId) ?? null;
+    if (selectedLeader?.catalogUnitId) {
+      this.selectLeaderCard(selectedLeader.catalogUnitId);
+    } else {
+      this.clearSelectedCard();
+    }
     this.syncLeaderRowActiveClass();
     this.renderList();
   }
@@ -632,6 +642,15 @@ export class ArmyBuilderPanel {
     for (const row of rows) {
       this.listEl.appendChild(this.makeTroopRow(row));
     }
+    if (
+      this.selectedCardSource === 'roster' &&
+      this.selectedCardUnitId &&
+      !rows.some((row) => row.unitId === this.selectedCardUnitId)
+    ) {
+      this.clearSelectedCard();
+    } else {
+      this.syncRosterSelectionUi();
+    }
     if (rows.length === 0) {
       this.listEl.appendChild(el('div', 'army-list-empty', 'Нет юнитов по фильтру'));
     }
@@ -664,6 +683,10 @@ export class ArmyBuilderPanel {
     meta.appendChild(sub);
     wrap.appendChild(thumb);
     wrap.appendChild(meta);
+    wrap.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.selectRosterUnit(row.unitId);
+    });
 
     wrap.addEventListener('dragstart', (e) => {
       if (atMax || blocked) {

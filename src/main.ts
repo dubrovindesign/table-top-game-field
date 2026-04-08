@@ -51,7 +51,6 @@ import {
   smallUnitHealthBadgeCenterWorldRad,
 } from './healthUi';
 import { CrystalWallet } from './crystalWallet';
-import { CATALOG_OVERRIDES_CHANGED } from './catalog/catalogOverrides';
 import {
   CATALOG_UNITS,
   getCatalogUnit,
@@ -168,7 +167,7 @@ function healthBadgePlusMinusCentersWorld(
 const BG_CALIBRATION_STEP = 1;
 const BG_CALIBRATION_STEP_FAST = 4;
 const BG_CALIBRATION_SCALE_STEP = 0.001;
-const BG_CALIBRATION_ROT_STEP = 0.1;
+const BG_CALIBRATION_ROT_STEP = 0.05;
 const ELEMENT_ROT_STEP = 5;
 const ELEMENT_ROT_STEP_FAST = 15;
 /** Huge mini: nudge card art inside the footprint (layout units). Alt+arrows; Shift = larger step. */
@@ -198,12 +197,17 @@ const LARGE_MINI_ROT_STEP_FAST = 120;
 const UNIT_DRAG_THRESHOLD_PX = 5;
 const UNIT_HEALTH_MIN = 0;
 
-/** Saved calibration for field background art — align with hex grid (adjust via bg hotkeys) */
+/** Общий доп. поворот текстуры поля и `cells.svg` относительно гексов — один источник правды. */
+const BOARD_FIELD_ART_EXTRA_ROTATION_DEG = 105.5;
+
+/**
+ * Калибровка текстуры поля (bg hotkeys). Базовый поворот = `BOARD_FIELD_ART_EXTRA_ROTATION_DEG` как у сетки.
+ */
 const FIELD_BG_PRESET = {
-  backgroundImageOffsetX: 0,
-  backgroundImageOffsetY: 48,
-  backgroundImageScale: 0.945,
-  backgroundImageRotationDeg: 105.7,
+  backgroundImageOffsetX: -47,
+  backgroundImageOffsetY: 1,
+  backgroundImageScale: 1.044,
+  backgroundImageRotationDeg: BOARD_FIELD_ART_EXTRA_ROTATION_DEG,
 };
 
 const SMALL_UNIT_SPRITES = ['/tern-unit-1.jpg', '/Frame 144.png'] as const;
@@ -214,6 +218,63 @@ const LARGE_UNIT_SPRITE = '/Frame 193.png';
 
 const canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
 if (!canvas) throw new Error('#game-canvas not found');
+
+/**
+ * `cells.svg`: доп. поворот сетки зафиксирован (`GRID_OVERLAY_EXTRA_ROTATION_DEG`), крутить нельзя.
+ * Alt+стрелки — смещение сетки; Alt+P — в консоль смещения/размеры (угол сетки в константе).
+ * `public/greenfield.png` — текстура поля в рендере (и скрытый DOM-подложка при необходимости).
+ * Alt+[ / Alt+] — поворот пустыни (Shift — крупный шаг), Alt+0 — сброс угла пустыни.
+ */
+const GRID_OVERLAY_EXTRA_ROTATION_DEG = BOARD_FIELD_ART_EXTRA_ROTATION_DEG;
+const GRID_OVERLAY_MOVE_STEP = 2;
+const GRID_OVERLAY_MOVE_STEP_FAST = 8;
+
+const DESERT_UNDERLAY_ROT_STEP = 0.5;
+const DESERT_UNDERLAY_ROT_STEP_FAST = 2;
+let desertUnderlayExtraRotationDeg = 0;
+
+let gridOverlayOffsetScreenX = 0;
+let gridOverlayOffsetScreenY = 0;
+/** `null` = размер по границам поля и текущему zoom */
+let gridOverlayManualWidthPx: number | null = null;
+let gridOverlayManualHeightPx: number | null = null;
+
+/** Версия в query — сброс кэша SW/браузера после смены `public/cellscontrast.svg`. */
+const CELLS_SVG_CACHE_KEY = 'e5e5e5-inline-contrast-2';
+const BOARD_UNDERLAY_IMAGE_CACHE_KEY = '2';
+
+function mountBoardDesertUnderlay(parent: HTMLElement): HTMLDivElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'board-desert-underlay-wrap';
+  wrap.setAttribute('aria-hidden', 'true');
+  const img = document.createElement('img');
+  img.className = 'board-desert-underlay-img';
+  img.src = `/greenfield.png?${BOARD_UNDERLAY_IMAGE_CACHE_KEY}`;
+  img.alt = '';
+  img.draggable = false;
+  wrap.appendChild(img);
+  parent.appendChild(wrap);
+  return wrap;
+}
+
+/** Пустой узел (калибровка Alt+стрелки по-прежнему двигает `gridOverlayOffset*`). Рисунок — в Renderer. */
+function mountBoardGridOverlay(parent: HTMLElement): HTMLDivElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'board-grid-overlay-wrap';
+  wrap.setAttribute('aria-hidden', 'true');
+  parent.appendChild(wrap);
+  return wrap;
+}
+
+const boardDesertUnderlay = mountBoardDesertUnderlay(document.body);
+const boardGridOverlay = mountBoardGridOverlay(document.body);
+
+/**
+ * Фон — в Renderer. `cells.svg` на канвасе после заливки гексов, под ландшафтом и юнитами (`cellsSvgOverlaySrc`).
+ * DOM-оверлеи скрыты; смещения сетки для хоткеев сохраняются на пустом wrap.
+ */
+boardDesertUnderlay.style.display = 'none';
+boardGridOverlay.style.display = 'none';
 
 function resizeCanvas(): void {
   const dpr = window.devicePixelRatio || 1;
@@ -642,11 +703,17 @@ function godBlindZoneContainsWorldForSlot(
 const renderConfig = {
   ...defaultRenderConfig,
   showCoordinates: false,
+  /** Логика гексов без отрисовки тонких граней; визуальная сетка — `cells.svg` поверх кадра. */
   showGrid: false,
   defaultHexFillColor: 'rgba(0, 0, 0, 0)',
-  backgroundImageSrc: '/fieldwithtrees.webp',
+  backgroundImageSrc: '/greenfield.png',
+  cellsSvgOverlaySrc: `/cellscontrast.svg?${CELLS_SVG_CACHE_KEY}`,
   backgroundImageOpacity: 1,
-  backgroundImageFit: 'cover' as const,
+  /**
+   * `contain` — вписать картинку в рамку поля без перекоса; `cover` — на всю рамку с обрезкой по краям.
+   * Размер: клавиши [ ] (масштаб одинаково по осям), Shift — крупнее шаг.
+   */
+  backgroundImageFit: 'contain' as const,
   backgroundImageOffsetX: FIELD_BG_PRESET.backgroundImageOffsetX,
   backgroundImageOffsetY: FIELD_BG_PRESET.backgroundImageOffsetY,
   backgroundImageScale: FIELD_BG_PRESET.backgroundImageScale,
@@ -1797,9 +1864,6 @@ armyBuilderPanel = new ArmyBuilderPanel(document.body, {
 
 const { CatalogEditorPanel } = await import('./catalogEditorPanel.ts');
 const catalogEditorPanel = new CatalogEditorPanel(armyBuilderPanel.getToolbarMount());
-window.addEventListener(CATALOG_OVERRIDES_CHANGED, () => {
-  armyBuilderPanel.refresh();
-});
 if (new URLSearchParams(window.location.search).get('catalogEdit') === '1') {
   catalogEditorPanel.setOpen(true);
 }
@@ -1818,6 +1882,8 @@ function scheduleRender(): void {
   needsRender = true;
   notifyBoardEditLocal();
 }
+
+canvas.addEventListener('hex-cells-svg-ready', () => scheduleRender());
 
 /** Multiplayer seat: slot 1 sees the board rotated 180° (same model, opposite view). */
 function applyMultiplayerViewSeat(slot: PlayerSlot | null): void {
@@ -1885,13 +1951,30 @@ function loop(): void {
     updateHugeMiniMovementHighlights();
     updateAttackRangeHighlights();
     updateUnitCard();
+    {
+      const { center, widthPx, heightPx } = getBoardDecorOverlayLayoutPx();
+      renderer.setCellsSvgOverlayLayout({
+        cx: center.x + gridOverlayOffsetScreenX,
+        cy: center.y + gridOverlayOffsetScreenY,
+        w: widthPx,
+        h: heightPx,
+        /* Поворот сетки не связан с калибровкой текстуры поля (запятая/точка/Alt+[). */
+        rotDeg: effectiveBoardRotationDeg() + GRID_OVERLAY_EXTRA_ROTATION_DEG,
+      });
+    }
+    renderer.updateConfig({
+      backgroundImageRotationDeg:
+        renderConfig.backgroundImageRotationDeg + desertUnderlayExtraRotationDeg,
+    });
     renderer.render();
+    godHandBlindDock?.applyDualBlindLayouts(
+      computeBlindZoneLayoutForSlot(effectiveMyGodSlot()),
+      computeBlindZoneLayoutForSlot(effectiveOpponentGodSlot()),
+    );
+    updateBoardDesertUnderlayTransform();
+    updateBoardGridOverlayTransform();
     needsRender = false;
   }
-  godHandBlindDock?.applyDualBlindLayouts(
-    computeBlindZoneLayoutForSlot(effectiveMyGodSlot()),
-    computeBlindZoneLayoutForSlot(effectiveOpponentGodSlot()),
-  );
   if (godPieceFlipAnim !== null) needsRender = true;
   tickTableDragOutbound(captureTableDragForNetwork);
   requestAnimationFrame(loop);
@@ -3429,6 +3512,46 @@ function boardWorldToScreen(world: { x: number; y: number }): { x: number; y: nu
     x: rotatedX * camera.zoom + camera.offsetX,
     y: rotatedY * camera.zoom + camera.offsetY,
   };
+}
+
+/** Общие размеры/центр декоративных слоёв «поле» (пустыня + сетка). */
+function getBoardDecorOverlayLayoutPx(): {
+  center: { x: number; y: number };
+  widthPx: number;
+  heightPx: number;
+} {
+  const ext = getBoardWorldExtentsForGodBlind();
+  const center = boardWorldToScreen({ x: ext.cx, y: ext.cy });
+  const boardWorldWidth = ext.maxX - ext.minX + HEX_SIZE * 3;
+  const boardWorldHeight = ext.maxY - ext.minY + HEX_SIZE * 3;
+  const autoW = Math.max(1, boardWorldWidth * camera.zoom);
+  const autoH = Math.max(1, boardWorldHeight * camera.zoom);
+  const widthPx =
+    gridOverlayManualWidthPx != null ? Math.max(1, gridOverlayManualWidthPx) : autoW;
+  const heightPx =
+    gridOverlayManualHeightPx != null ? Math.max(1, gridOverlayManualHeightPx) : autoH;
+  return { center, widthPx, heightPx };
+}
+
+function updateBoardDesertUnderlayTransform(): void {
+  const { center, widthPx, heightPx } = getBoardDecorOverlayLayoutPx();
+  const visualRotation = effectiveBoardRotationDeg() + desertUnderlayExtraRotationDeg;
+  boardDesertUnderlay.style.left = `${center.x}px`;
+  boardDesertUnderlay.style.top = `${center.y}px`;
+  boardDesertUnderlay.style.width = `${widthPx}px`;
+  boardDesertUnderlay.style.height = `${heightPx}px`;
+  boardDesertUnderlay.style.transform = `translate(-50%, -50%) rotate(${visualRotation}deg)`;
+}
+
+function updateBoardGridOverlayTransform(): void {
+  const { center, widthPx, heightPx } = getBoardDecorOverlayLayoutPx();
+  const visualRotation = effectiveBoardRotationDeg() + GRID_OVERLAY_EXTRA_ROTATION_DEG;
+
+  boardGridOverlay.style.left = `${center.x + gridOverlayOffsetScreenX}px`;
+  boardGridOverlay.style.top = `${center.y + gridOverlayOffsetScreenY}px`;
+  boardGridOverlay.style.width = `${widthPx}px`;
+  boardGridOverlay.style.height = `${heightPx}px`;
+  boardGridOverlay.style.transform = `translate(-50%, -50%) rotate(${visualRotation}deg)`;
 }
 
 function smallUnitHexHalfExtent(): { halfW: number; halfH: number } {
@@ -5165,6 +5288,58 @@ window.addEventListener('keydown', (e) => {
     }
   }
 
+  if (e.altKey && !e.ctrlKey && !e.metaKey) {
+    const desertRotStep = e.shiftKey ? DESERT_UNDERLAY_ROT_STEP_FAST : DESERT_UNDERLAY_ROT_STEP;
+    if (e.code === 'BracketLeft') {
+      desertUnderlayExtraRotationDeg =
+        ((desertUnderlayExtraRotationDeg - desertRotStep) % 360 + 360) % 360;
+      e.preventDefault();
+      scheduleRender();
+      return;
+    }
+    if (e.code === 'BracketRight') {
+      desertUnderlayExtraRotationDeg =
+        ((desertUnderlayExtraRotationDeg + desertRotStep) % 360 + 360) % 360;
+      e.preventDefault();
+      scheduleRender();
+      return;
+    }
+    if (e.code === 'Digit0') {
+      desertUnderlayExtraRotationDeg = 0;
+      e.preventDefault();
+      scheduleRender();
+      return;
+    }
+    if (e.code === 'KeyP') {
+      console.log('[board overlays] values for hardcode:', {
+        GRID_OVERLAY_EXTRA_ROTATION_DEG,
+        gridOverlayOffsetScreenX: Number(gridOverlayOffsetScreenX.toFixed(2)),
+        gridOverlayOffsetScreenY: Number(gridOverlayOffsetScreenY.toFixed(2)),
+        gridOverlayManualWidthPx: gridOverlayManualWidthPx,
+        gridOverlayManualHeightPx: gridOverlayManualHeightPx,
+        desertUnderlayExtraRotationDeg: Number(desertUnderlayExtraRotationDeg.toFixed(3)),
+      });
+      e.preventDefault();
+      return;
+    }
+    if (
+      selectedHugeMiniIndex === null &&
+      (e.code === 'ArrowLeft' ||
+        e.code === 'ArrowRight' ||
+        e.code === 'ArrowUp' ||
+        e.code === 'ArrowDown')
+    ) {
+      const gridMoveStep = e.shiftKey ? GRID_OVERLAY_MOVE_STEP_FAST : GRID_OVERLAY_MOVE_STEP;
+      if (e.code === 'ArrowLeft') gridOverlayOffsetScreenX -= gridMoveStep;
+      else if (e.code === 'ArrowRight') gridOverlayOffsetScreenX += gridMoveStep;
+      else if (e.code === 'ArrowUp') gridOverlayOffsetScreenY -= gridMoveStep;
+      else gridOverlayOffsetScreenY += gridMoveStep;
+      e.preventDefault();
+      scheduleRender();
+      return;
+    }
+  }
+
   // Physical keys (e.code) so Q/E work with non-Latin layouts (e.g. Russian).
   if (e.code === 'KeyQ') {
     if (
@@ -5238,14 +5413,40 @@ window.addEventListener('keydown', (e) => {
       changed = true;
       break;
     case 'p':
-    case 'P':
-      console.log('[BG preset]', {
-        backgroundImageOffsetX: Number(renderConfig.backgroundImageOffsetX.toFixed(2)),
-        backgroundImageOffsetY: Number(renderConfig.backgroundImageOffsetY.toFixed(2)),
-        backgroundImageScale: Number(renderConfig.backgroundImageScale.toFixed(4)),
-        backgroundImageRotationDeg: Number(renderConfig.backgroundImageRotationDeg.toFixed(3)),
+    case 'P': {
+      e.preventDefault();
+      const ox = Number(renderConfig.backgroundImageOffsetX.toFixed(2));
+      const oy = Number(renderConfig.backgroundImageOffsetY.toFixed(2));
+      const sc = Number(renderConfig.backgroundImageScale.toFixed(4));
+      const baseRot = Number(renderConfig.backgroundImageRotationDeg.toFixed(3));
+      const desert = Number(desertUnderlayExtraRotationDeg.toFixed(3));
+      const effectiveRot = Number((renderConfig.backgroundImageRotationDeg + desertUnderlayExtraRotationDeg).toFixed(3));
+      console.log('[field image] текущая калибровка (скопируйте в FIELD_BG_PRESET / renderConfig):', {
+        backgroundImageFit: renderConfig.backgroundImageFit,
+        backgroundImageOffsetX: ox,
+        backgroundImageOffsetY: oy,
+        backgroundImageScale: sc,
+        // базовый угол (запятая/точка); к рендеру добавляется desertUnderlayExtraRotationDeg (Alt+[)
+        backgroundImageRotationDeg: baseRot,
+        desertUnderlayExtraRotationDeg: desert,
+        // итог для Renderer.updateConfig (base + desert)
+        effectiveBackgroundImageRotationDeg: effectiveRot,
       });
+      console.log(
+        '[field image] вставка в FIELD_BG_PRESET:',
+        JSON.stringify(
+          {
+            backgroundImageOffsetX: ox,
+            backgroundImageOffsetY: oy,
+            backgroundImageScale: sc,
+            backgroundImageRotationDeg: baseRot,
+          },
+          null,
+          2,
+        ),
+      );
       break;
+    }
     default:
       break;
   }
@@ -5256,7 +5457,8 @@ window.addEventListener('keydown', (e) => {
       backgroundImageOffsetX: renderConfig.backgroundImageOffsetX,
       backgroundImageOffsetY: renderConfig.backgroundImageOffsetY,
       backgroundImageScale: renderConfig.backgroundImageScale,
-      backgroundImageRotationDeg: renderConfig.backgroundImageRotationDeg,
+      backgroundImageRotationDeg:
+        renderConfig.backgroundImageRotationDeg + desertUnderlayExtraRotationDeg,
     });
     scheduleRender();
   }

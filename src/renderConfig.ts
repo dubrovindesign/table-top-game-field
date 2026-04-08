@@ -16,11 +16,17 @@ export interface RenderConfig {
   oppositeSeatUnitRotationCorrectionDeg: number;
   backgroundImageSrc: string | null;
   backgroundImageOpacity: number;
+  /** `cover` / `contain` — равномерный масштаб. `stretch` в рендерере обрабатывается как `contain` (без перекоса). */
   backgroundImageFit: 'cover' | 'contain' | 'stretch';
   backgroundImageOffsetX: number;
   backgroundImageOffsetY: number;
   backgroundImageScale: number;
   backgroundImageRotationDeg: number;
+  /**
+   * Optional full-board grid art (e.g. public/cellscontrast.svg), drawn in screen space after hex underlay
+   * so it sits above miniatures. When null, no SVG overlay is drawn.
+   */
+  cellsSvgOverlaySrc: string | null;
   hoverFillColor: string;
   hoverStrokeColor: string;
   backgroundColor: string;
@@ -70,6 +76,7 @@ export const defaultRenderConfig: RenderConfig = {
   backgroundImageOffsetY: 0,
   backgroundImageScale: 1,
   backgroundImageRotationDeg: 0,
+  cellsSvgOverlaySrc: null,
   hoverFillColor: 'rgba(33, 150, 243, 0.5)',
   hoverStrokeColor: 'rgba(33, 150, 243, 0.5)',
   backgroundColor: '#1a1a1a',
