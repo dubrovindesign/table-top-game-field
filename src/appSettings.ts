@@ -40,11 +40,21 @@ export function onWheelBehaviorChange(cb: () => void): () => void {
   return () => wheelListeners.delete(cb);
 }
 
+export type TouchModToggles = {
+  getAlt: () => boolean;
+  getShift: () => boolean;
+  setAlt: (on: boolean) => void;
+  setShift: (on: boolean) => void;
+};
+
 /**
  * Кнопка «Настройки» и всплывающая панель. Вставлять в `ArmyBuilderPanel` toolbar
  * после якоря мультиплеера (тот же ряд, что Армия | Мультиплеер | …).
  */
-export function mountAppSettingsToolbar(toolbarMount: HTMLElement): void {
+export function mountAppSettingsToolbar(
+  toolbarMount: HTMLElement,
+  touchMods?: TouchModToggles,
+): void {
   const anchor = document.createElement('div');
   anchor.className = 'app-settings-toolbar-anchor';
 
@@ -76,6 +86,22 @@ export function mountAppSettingsToolbar(toolbarMount: HTMLElement): void {
         </label>
       </fieldset>
       <p class="app-settings-hint">В режиме панорамы зум остаётся на <strong>Ctrl</strong>+прокрутка или жестом «щипок» на тачпаде.</p>
+      ${
+        touchMods
+          ? `<fieldset class="app-settings-fieldset app-settings-touch-mods">
+        <legend class="app-settings-legend">Сенсорный экран</legend>
+        <label class="app-settings-option">
+          <input type="checkbox" name="hex-touch-alt" />
+          <span>Режим «Alt» — превью дальности по наведению (как удерживать Alt)</span>
+        </label>
+        <label class="app-settings-option">
+          <input type="checkbox" name="hex-touch-shift" />
+          <span>Режим «Shift» — превью атаки с карточки (как удерживать Shift)</span>
+        </label>
+        <p class="app-settings-hint">Два пальца на поле: панорама и масштаб. Долгое нажатие на фишку — маркеры эффектов (как ПКМ).</p>
+      </fieldset>`
+          : ''
+      }
     </div>
   `;
 
@@ -92,6 +118,12 @@ export function mountAppSettingsToolbar(toolbarMount: HTMLElement): void {
     const rPan = root.querySelector<HTMLInputElement>('input[value="pan"]');
     if (rZoom) rZoom.checked = v === 'zoom';
     if (rPan) rPan.checked = v === 'pan';
+    if (touchMods) {
+      const cAlt = root.querySelector<HTMLInputElement>('input[name="hex-touch-alt"]');
+      const cShift = root.querySelector<HTMLInputElement>('input[name="hex-touch-shift"]');
+      if (cAlt) cAlt.checked = touchMods.getAlt();
+      if (cShift) cShift.checked = touchMods.getShift();
+    }
   }
 
   toggleBtn.addEventListener('click', (e) => {
@@ -120,6 +152,17 @@ export function mountAppSettingsToolbar(toolbarMount: HTMLElement): void {
 
   onWheelBehaviorChange(syncRadios);
   syncRadios();
+
+  if (touchMods) {
+    const cAlt = root.querySelector<HTMLInputElement>('input[name="hex-touch-alt"]');
+    const cShift = root.querySelector<HTMLInputElement>('input[name="hex-touch-shift"]');
+    cAlt?.addEventListener('change', () => {
+      touchMods.setAlt(!!cAlt?.checked);
+    });
+    cShift?.addEventListener('change', () => {
+      touchMods.setShift(!!cShift?.checked);
+    });
+  }
 
   anchor.appendChild(toggleBtn);
   anchor.appendChild(root);

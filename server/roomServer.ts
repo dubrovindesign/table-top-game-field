@@ -16,8 +16,6 @@ const ROOM_EMPTY_TTL_MS = Math.max(
   Number(process.env.MP_ROOM_EMPTY_TTL_MS ?? 10 * 60 * 1000) || 10 * 60 * 1000,
 );
 
-const BOARD_HISTORY_MAX = 50;
-
 type Role = 'player' | 'spectator';
 
 type Attached = {
@@ -32,8 +30,6 @@ type Room = {
   spectators: Set<WebSocket>;
   /** Latest full-table JSON snapshot from clients. */
   boardState: object | null;
-  /** Older snapshots for global undo (most recent at end). */
-  boardHistory: object[];
   /** When the room became empty (no sockets); null if anyone is connected. */
   emptySince: number | null;
   emptyExpireTimer: ReturnType<typeof setTimeout> | null;
@@ -179,11 +175,10 @@ function genRoomId(): string {
 
 function newEmptyRoomFields(): Pick<
   Room,
-  'boardState' | 'boardHistory' | 'emptySince' | 'emptyExpireTimer'
+  'boardState' | 'emptySince' | 'emptyExpireTimer'
 > {
   return {
     boardState: null,
-    boardHistory: [],
     emptySince: null,
     emptyExpireTimer: null,
   };
@@ -335,29 +330,12 @@ wss.on('connection', (ws: WebSocket) => {
       }
       if (prevJson === nextJson) return;
 
-      if (room.boardState !== null) {
-        room.boardHistory.push(room.boardState);
-        while (room.boardHistory.length > BOARD_HISTORY_MAX) {
-          room.boardHistory.shift();
-        }
-      }
       room.boardState = msg.payload;
       broadcastRoom(
         meta.roomId,
         { type: 'boardState', payload: room.boardState },
         ws,
       );
-      return;
-    }
-
-    if (msg.type === 'requestUndo') {
-      if (!meta.roomId) return;
-      const room = rooms.get(meta.roomId);
-      if (!room) return;
-      if (room.boardHistory.length === 0) return;
-      const next = room.boardHistory.pop()!;
-      room.boardState = next;
-      broadcastRoom(meta.roomId, { type: 'boardState', payload: room.boardState });
       return;
     }
 

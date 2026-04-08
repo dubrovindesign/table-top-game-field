@@ -41,6 +41,10 @@ export type ArmyPanelOptions = {
   getUsedCount: (leaderId: string, unitId: string) => number;
   getPointsSpent: () => number;
   onDiceRequest?: (req: DiceRequest) => void;
+  /**
+   * Touch fallback: tap row to arm payload; next tap on the board spawns (HTML5 DnD often missing on touch).
+   */
+  onTouchArmPayload?: (json: string) => void;
 };
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -568,11 +572,21 @@ export class ArmyBuilderPanel {
     wrap.appendChild(thumb);
     wrap.appendChild(meta);
 
+    let leaderTapX = 0;
+    let leaderTapY = 0;
+    let leaderDragStarted = false;
+    wrap.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      leaderDragStarted = false;
+      leaderTapX = e.clientX;
+      leaderTapY = e.clientY;
+    });
     wrap.addEventListener('dragstart', (e) => {
       if (atMax) {
         e.preventDefault();
         return;
       }
+      leaderDragStarted = true;
       const payload: ArmyDragPayload = {
         kind: 'leader',
         leaderId: l.id,
@@ -582,6 +596,21 @@ export class ArmyBuilderPanel {
       e.dataTransfer?.setData(DND_MIME, json);
       e.dataTransfer?.setData('text/plain', json);
       e.dataTransfer!.effectAllowed = 'copy';
+    });
+    wrap.addEventListener('pointerup', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (e.pointerType === 'mouse') return;
+      if (atMax || !this.opts.onTouchArmPayload) return;
+      if (leaderDragStarted) return;
+      const dx = e.clientX - leaderTapX;
+      const dy = e.clientY - leaderTapY;
+      if (dx * dx + dy * dy > 100) return;
+      const payload: ArmyDragPayload = {
+        kind: 'leader',
+        leaderId: l.id,
+        unitId: l.catalogUnitId,
+      };
+      this.opts.onTouchArmPayload!(JSON.stringify(payload));
     });
 
     return wrap;
@@ -688,11 +717,21 @@ export class ArmyBuilderPanel {
       this.selectRosterUnit(row.unitId);
     });
 
+    let troopTapX = 0;
+    let troopTapY = 0;
+    let troopDragStarted = false;
+    wrap.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      troopDragStarted = false;
+      troopTapX = e.clientX;
+      troopTapY = e.clientY;
+    });
     wrap.addEventListener('dragstart', (e) => {
       if (atMax || blocked) {
         e.preventDefault();
         return;
       }
+      troopDragStarted = true;
       const payload: ArmyDragPayload = {
         kind: 'troop',
         leaderId: this.selectedLeaderId,
@@ -702,6 +741,21 @@ export class ArmyBuilderPanel {
       e.dataTransfer?.setData(DND_MIME, json);
       e.dataTransfer?.setData('text/plain', json);
       e.dataTransfer!.effectAllowed = 'copy';
+    });
+    wrap.addEventListener('pointerup', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (e.pointerType === 'mouse') return;
+      if (atMax || blocked || !this.opts.onTouchArmPayload) return;
+      if (troopDragStarted) return;
+      const dx = e.clientX - troopTapX;
+      const dy = e.clientY - troopTapY;
+      if (dx * dx + dy * dy > 100) return;
+      const payload: ArmyDragPayload = {
+        kind: 'troop',
+        leaderId: this.selectedLeaderId,
+        unitId: row.unitId,
+      };
+      this.opts.onTouchArmPayload!(JSON.stringify(payload));
     });
 
     return wrap;
@@ -765,6 +819,15 @@ export class ArmyBuilderPanel {
       const dx = e.clientX - tapDownX;
       const dy = e.clientY - tapDownY;
       if (dx * dx + dy * dy > TAP_MOVE_THRESHOLD_PX * TAP_MOVE_THRESHOLD_PX) return;
+      if (
+        this.opts.onTouchArmPayload &&
+        (e.pointerType === 'touch' || e.pointerType === 'pen')
+      ) {
+        this.opts.onTouchArmPayload(JSON.stringify({ kind: 'god', cardId: c.id }));
+        suppressNextClickForRow = true;
+        e.stopPropagation();
+        return;
+      }
       suppressNextClickForRow = true;
       e.stopPropagation();
       this.openGodCardPreview(c, wrap);

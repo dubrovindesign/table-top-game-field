@@ -47,7 +47,6 @@ export type ClientToServerMessage =
   | { type: 'pointer'; boardX: number; boardY: number }
   | { type: 'tableDrag'; drag: TableDragState }
   | { type: 'syncBoard'; payload: object }
-  | { type: 'requestUndo' }
   | { type: 'ping'; t: number }
   | { type: 'webrtcSignal'; payload: WebRtcSignalPayload };
 
@@ -113,7 +112,6 @@ export function parseClientMessage(raw: string): ClientToServerMessage | null {
       if (payload === null || typeof payload !== 'object') return null;
       return { type: 'syncBoard', payload: payload as object };
     }
-    if (t === 'requestUndo') return { type: 'requestUndo' };
     if (t === 'ping') {
       const tt = (o as { t?: number }).t;
       if (typeof tt !== 'number') return null;

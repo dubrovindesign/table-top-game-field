@@ -11,6 +11,18 @@ html, body {
   overscroll-behavior: none;
   background: #1a1a1a;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  /* Планшеты: долгое нажатие не должно включать выделение текста поверх канваса и круглых меню. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Поля форм — копирование ссылки MP, ввод в редакторе каталога и т.д. */
+input,
+textarea,
+select {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* Scrollbars — match dark glass / accent palette (Firefox + Chromium/WebKit) */
@@ -3146,6 +3158,43 @@ select option {
   width: 22px;
   height: 22px;
   display: block;
+}
+
+/* ── Touch / coarse pointer: quick actions (copy, paste, …) ───── */
+
+.touch-board-actions {
+  position: fixed;
+  bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  left: max(8px, env(safe-area-inset-left, 0px));
+  z-index: 9990;
+  display: none;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: min(420px, calc(100vw - 16px));
+  pointer-events: auto;
+}
+
+@media (pointer: coarse) {
+  .touch-board-actions {
+    display: flex;
+  }
+}
+
+.touch-board-action-btn {
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(22, 22, 26, 0.92);
+  color: #e8e8e8;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.touch-board-action-btn:active {
+  background: rgba(40, 40, 48, 0.96);
 }
 
 /* ── App settings (toolbar, рядом с мультиплеером) ─────────────── */

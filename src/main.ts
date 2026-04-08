@@ -93,11 +93,9 @@ import type {
 } from './multiplayer/boardState.ts';
 import { isSerializedBoardStateV1, parseSharedDiceState } from './multiplayer/boardState.ts';
 import {
-  isApplyingRemoteBoardState,
   isBoardMultiplayerSyncActive,
   notifyBoardEditLocal,
   registerBoardSyncApi,
-  requestMultiplayerUndo,
 } from './multiplayer/boardSync.ts';
 import type { PlayerSlot, TableDragState } from './multiplayer/protocol.ts';
 import { EMPTY_TABLE_DRAG } from './multiplayer/protocol.ts';
@@ -194,6 +192,18 @@ const LARGE_MINI_ROT_STEP = 60;
 const LARGE_MINI_ROT_STEP_FAST = 120;
 /** Pixels before a mousedown on the selected unit counts as drag (otherwise = click to deselect). */
 const UNIT_DRAG_THRESHOLD_PX = 5;
+/** Touch: long-press to open effect-marker menu (same as right-click). */
+const EFFECT_MARKER_LONG_PRESS_MS = 520;
+const EFFECT_MARKER_LONG_PRESS_MOVE_PX = 12;
+/** Touch: double-tap to flip loose god card (same as double-click). */
+const GOD_LOOSE_DOUBLE_TAP_MS = 380;
+const GOD_LOOSE_DOUBLE_TAP_DIST_PX = 28;
+/** Touch: double-tap miniature to pin unit card (same as mouse double-click). */
+const UNIT_CARD_DOUBLE_TAP_MS = GOD_LOOSE_DOUBLE_TAP_MS;
+const UNIT_CARD_DOUBLE_TAP_DIST_PX = GOD_LOOSE_DOUBLE_TAP_DIST_PX;
+
+/** Minimal client position (mouse / pointer / synthetic). */
+type ClientXY = { clientX: number; clientY: number };
 const UNIT_HEALTH_MIN = 0;
 
 /** Общий доп. поворот текстуры поля и `cells.svg` относительно гексов — один источник правды. */
@@ -925,10 +935,34 @@ let openHealthControlsHugeMiniIndex: number | null = null;
 
 /** Army Builder panel (assigned after `DiceRoller` wiring). */
 let armyBuilderPanel!: ArmyBuilderPanel;
+/** Touch: tap row in army panel → next tap on canvas spawns (see `onTouchArmPayload`). */
+let pendingTouchArmyPlaceRaw: string | null = null;
 
 /** Alt + hover: preview ranges. Shift + hover: show floating card. */
 let altKeyHeld = false;
 let shiftKeyHeld = false;
+/** Touch / on-screen: hold Alt-like range preview without a keyboard. */
+let touchAltSticky = false;
+/** Touch / on-screen: hold Shift-like attack preview without a keyboard. */
+let touchShiftSticky = false;
+
+function altModActive(): boolean {
+  return altKeyHeld || touchAltSticky;
+}
+function shiftModActive(): boolean {
+  return shiftKeyHeld || touchShiftSticky;
+}
+
+function setTouchAltSticky(on: boolean): void {
+  touchAltSticky = on;
+  refreshAltHoverTarget(hexUnderGlobalPointer() ?? hoveredHexUnderPointer);
+  scheduleRender();
+}
+function setTouchShiftSticky(on: boolean): void {
+  touchShiftSticky = on;
+  refreshShiftHoverTarget(hexUnderGlobalPointer() ?? hoveredHexUnderPointer);
+  scheduleRender();
+}
 type AltHoverTarget =
   | { kind: 'small'; index: number }
   | { kind: 'big'; index: number }
@@ -988,7 +1022,7 @@ document.addEventListener('mousedown', (e: MouseEvent) => {
 
 /** Which unit the visible card refers to (matches updateUnitCard priority). */
 function cardUnitForAttackHighlight(): AltHoverTarget | null {
-  if (shiftKeyHeld && shiftHoverTarget !== null) return shiftHoverTarget;
+  if (shiftModActive() && shiftHoverTarget !== null) return shiftHoverTarget;
   if (selectedUnitIndex !== null && showSelectedDetails) {
     return { kind: 'small', index: selectedUnitIndex };
   }
@@ -1177,12 +1211,12 @@ function unitCardOpts(data: UnitCardData, pieceCatalogId?: string): UnitCardShow
 }
 
 function updateUnitCard(): void {
-  if (!shiftKeyHeld) {
+  if (!shiftModActive()) {
     lastHoverCardSig = null;
   }
 
   if (
-    shiftKeyHeld &&
+    shiftModActive() &&
     shiftHoverTarget !== null &&
     !armyBuilderPanel.isScreenPointOverPanel(pointerScreenX, pointerScreenY)
   ) {
@@ -1422,7 +1456,7 @@ function updateMovementHighlights(): void {
     }
   }
 
-  if (altKeyHeld && altHoverTarget?.kind === 'small') {
+  if (altModActive() && altHoverTarget?.kind === 'small') {
     const hoverUnit = units[altHoverTarget.index];
     if (addUnitRanges(hoverUnit) && anchorHex === null) {
       anchorHex = hoverUnit.position;
@@ -1545,12 +1579,12 @@ function updateBigMiniMovementHighlights(): void {
   /** Keep selection ring on selected big mini; walk/run can preview another one (Alt-hover). */
   const ringIndex = selectedBigMiniIndex;
 
-  if (altKeyHeld && altHoverTarget?.kind === 'big') {
+  if (altModActive() && altHoverTarget?.kind === 'big') {
     const { walk, run } = computeBigMiniWalkRunCenters(altHoverTarget.index);
     renderer.setBigMiniMovement(ringIndex, walk, run);
     return;
   }
-  if (altKeyHeld && altHoverTarget?.kind === 'small') {
+  if (altModActive() && altHoverTarget?.kind === 'small') {
     renderer.setBigMiniMovement(ringIndex, [], []);
     return;
   }
@@ -1578,12 +1612,12 @@ function updateBigMiniMovementHighlights(): void {
 
 function updateLargeMiniMovementHighlights(): void {
   const ringIndex = selectedLargeMiniIndex;
-  if (selectedLargeMiniIndex === null && !(altKeyHeld && altHoverTarget?.kind === 'large')) {
+  if (selectedLargeMiniIndex === null && !(altModActive() && altHoverTarget?.kind === 'large')) {
     renderer.setLargeMiniMovement(null, [], []);
     return;
   }
   const sourceIndex =
-    altKeyHeld && altHoverTarget?.kind === 'large'
+    altModActive() && altHoverTarget?.kind === 'large'
       ? altHoverTarget.index
       : draggingLargeMiniIndex !== null
         ? draggingLargeMiniIndex
@@ -1656,12 +1690,12 @@ function computeHugeMiniWalkRunCenters(hugeIndex: number): { walk: Hex[]; run: H
 
 function updateHugeMiniMovementHighlights(): void {
   const ringIndex = selectedHugeMiniIndex;
-  if (selectedHugeMiniIndex === null && !(altKeyHeld && altHoverTarget?.kind === 'huge')) {
+  if (selectedHugeMiniIndex === null && !(altModActive() && altHoverTarget?.kind === 'huge')) {
     renderer.setHugeMiniMovement(null, [], []);
     return;
   }
   const sourceIndex =
-    altKeyHeld && altHoverTarget?.kind === 'huge'
+    altModActive() && altHoverTarget?.kind === 'huge'
       ? altHoverTarget.index
       : draggingHugeMiniIndex !== null
         ? draggingHugeMiniIndex
@@ -1682,7 +1716,6 @@ unitCard.onDiceRequest = (req: DiceRequest) => {
     actionKey: req.actionKey,
     rollImmediately: req.rollImmediately,
   });
-  commitBoardUndoCheckpoint();
 };
 
 /** Открытые карты эфирного вихря (индексы в `EPHIRIUM_VORTEX_CARDS`), синхронизируются в MP через снимок стола. */
@@ -1698,14 +1731,12 @@ const ephiriumVortexUi = new EphiriumVortexUi(document.body, {
     ];
     notifyBoardEditLocal();
     ephiriumVortexUi.applyOpenIndices(ephiriumOpenSpriteIndices);
-    commitBoardUndoCheckpoint();
   },
   requestCloseSlot: (slotIndex: number) => {
     if (slotIndex < 0 || slotIndex >= ephiriumOpenSpriteIndices.length) return;
     ephiriumOpenSpriteIndices = ephiriumOpenSpriteIndices.filter((_, i) => i !== slotIndex);
     notifyBoardEditLocal();
     ephiriumVortexUi.applyOpenIndices(ephiriumOpenSpriteIndices);
-    commitBoardUndoCheckpoint();
   },
 });
 
@@ -1838,7 +1869,6 @@ function moveBlindCardToTableFromZone(
   scheduleRender();
   refreshGodDock();
   armyBuilderPanel.refresh();
-  commitBoardUndoCheckpoint();
 }
 
 const topTurnPanel = mountTopTurnPanel(document.body);
@@ -1846,15 +1876,17 @@ new CrystalWallet(topTurnPanel.localWalletMount, { variant: 'local' });
 new CrystalWallet(topTurnPanel.opponentWalletMount, { variant: 'opponent' });
 
 armyBuilderPanel = new ArmyBuilderPanel(document.body, {
-  getAltKeyHeld: () => altKeyHeld,
+  getAltKeyHeld: () => altModActive(),
   getUsedCount: (leaderId, unitId) => countRosterCopies(leaderId, unitId),
   getPointsSpent: () => sumRosterPoints(),
+  onTouchArmPayload: (json) => {
+    pendingTouchArmyPlaceRaw = json;
+  },
   onDiceRequest: (req) => {
     diceRoller.addDice(req.pool, req.source, {
       actionKey: req.actionKey,
       rollImmediately: req.rollImmediately,
     });
-    commitBoardUndoCheckpoint();
   },
 });
 
@@ -2031,6 +2063,200 @@ let etherVortexPreviewWorld: Point | null = null;
 let etherVortexDragOverCenter: Hex | null = null;
 
 let godLooseCapturePointerId: number | null = null;
+/** Pointer captured during board piece drag (touch / pen) so move events keep firing. */
+let boardDragCapturePointerId: number | null = null;
+
+/** Active pointers currently down on the canvas (for two-finger zoom/pan). */
+const activeCanvasPointers = new Map<number, { x: number; y: number }>();
+let twoFingerCameraGesture = false;
+let pinchPrevCenterX = 0;
+let pinchPrevCenterY = 0;
+let pinchPrevDistance = 0;
+
+function releaseBoardDragCaptureIfAny(): void {
+  if (boardDragCapturePointerId === null) return;
+  try {
+    canvas.releasePointerCapture(boardDragCapturePointerId);
+  } catch {
+    /* not capturing */
+  }
+  boardDragCapturePointerId = null;
+}
+
+function captureBoardDragPointer(pointerId: number | undefined): void {
+  if (pointerId === undefined) return;
+  releaseBoardDragCaptureIfAny();
+  try {
+    canvas.setPointerCapture(pointerId);
+    boardDragCapturePointerId = pointerId;
+  } catch {
+    boardDragCapturePointerId = null;
+  }
+}
+
+function pinchSnapshotFromMap(): { cx: number; cy: number; dist: number } | null {
+  if (activeCanvasPointers.size !== 2) return null;
+  const pts = [...activeCanvasPointers.values()];
+  const cx = (pts[0].x + pts[1].x) / 2;
+  const cy = (pts[0].y + pts[1].y) / 2;
+  const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+  return { cx, cy, dist };
+}
+
+function applyTwoFingerPinchPan(): void {
+  const snap = pinchSnapshotFromMap();
+  if (!snap) return;
+  pinchPrevCenterX = snap.cx;
+  pinchPrevCenterY = snap.cy;
+  pinchPrevDistance = snap.dist;
+}
+
+function updateCameraFromTwoFingerMove(): void {
+  const snap = pinchSnapshotFromMap();
+  if (!snap || pinchPrevDistance <= 0) return;
+  const { cx, cy, dist } = snap;
+  const panDx = cx - pinchPrevCenterX;
+  const panDy = cy - pinchPrevCenterY;
+  camera.offsetX += panDx;
+  camera.offsetY += panDy;
+  const scale = dist / pinchPrevDistance;
+  const oldZoom = camera.zoom;
+  let newZoom = oldZoom * scale;
+  newZoom = Math.max(0.2, Math.min(5, newZoom));
+  camera.zoom = newZoom;
+  camera.offsetX = cx - (cx - camera.offsetX) * (camera.zoom / oldZoom);
+  camera.offsetY = cy - (cy - camera.offsetY) * (camera.zoom / oldZoom);
+  pinchPrevCenterX = cx;
+  pinchPrevCenterY = cy;
+  pinchPrevDistance = dist;
+}
+
+/** Commit pending / active board drags as if primary pointer released (used when 2nd finger touches). */
+function commitBoardDragStateAsPointerUpAt(clientX: number, clientY: number): void {
+  if (unitDragPendingIndex !== null) {
+    unitDragPendingIndex = null;
+    if (draggingUnitIndex === null) {
+      renderer.setDragState(null, null, null);
+    }
+  }
+  if (bigMiniDragPendingIndex !== null) {
+    bigMiniDragPendingIndex = null;
+    if (draggingBigMiniIndex === null) {
+      renderer.setBigMiniatures(bigMiniatures.map((m) => m.center), null, null, null, bigMiniOffBoards());
+    }
+  }
+  largeMiniDragPendingIndex = null;
+  hugeMiniDragPendingIndex = null;
+  if (terrainDragPending && !isDraggingTerrain) {
+    terrainDragPending = false;
+    terrainDragPendingIndex = null;
+  }
+  if (etherVortexDragPending && !isDraggingEtherVortex) {
+    etherVortexDragPending = false;
+    etherVortexDragPendingIndex = null;
+  }
+  if (draggingUnitIndex !== null) {
+    if (dragOverHex && !isHexOccupiedByOtherUnit(dragOverHex, draggingUnitIndex)) {
+      units[draggingUnitIndex].position = dragOverHex;
+      units[draggingUnitIndex].offBoardWorld = undefined;
+    } else if (!dragOverHex && dragPreviewPosition) {
+      units[draggingUnitIndex].offBoardWorld = { ...dragPreviewPosition };
+    }
+    draggingUnitIndex = null;
+    dragOverHex = null;
+    dragPreviewPosition = null;
+    unitCard.setPassthrough(false);
+    renderer.setDragState(null, null, null);
+    updateMovementHighlights();
+  }
+  if (draggingBigMiniIndex !== null) {
+    const dropWorld = screenToBoardWorld(clientX, clientY);
+    const dropHex = hexAtScreen(clientX, clientY);
+    if (dropHex) {
+      bigMiniatures[draggingBigMiniIndex].center = nearestHexonCenterFromWorld(dropWorld);
+      bigMiniatures[draggingBigMiniIndex].offBoardWorld = undefined;
+    } else if (bigMiniPreviewPosition) {
+      bigMiniatures[draggingBigMiniIndex].offBoardWorld = { ...bigMiniPreviewPosition };
+    }
+    draggingBigMiniIndex = null;
+    bigMiniPreviewPosition = null;
+    bigMiniDragOverCenter = null;
+    unitCard.setPassthrough(false);
+    renderer.setBigMiniatures(bigMiniatures.map((m) => m.center), null, null, null,
+      bigMiniatures.map((m) => m.offBoardWorld));
+    updateBigMiniMovementHighlights();
+  }
+  if (draggingLargeMiniIndex !== null) {
+    const dropHex = hexAtScreen(clientX, clientY);
+    if (dropHex && largeMiniDragOverAnchor) {
+      largeMiniatures[draggingLargeMiniIndex].anchor = largeMiniDragOverAnchor;
+      largeMiniatures[draggingLargeMiniIndex].offBoardWorld = undefined;
+    } else if (!dropHex && largeMiniPreviewPosition) {
+      largeMiniatures[draggingLargeMiniIndex].offBoardWorld = { ...largeMiniPreviewPosition };
+    }
+    draggingLargeMiniIndex = null;
+    largeMiniPreviewPosition = null;
+    largeMiniDragOverAnchor = null;
+    unitCard.setPassthrough(false);
+    updateLargeMiniMovementHighlights();
+  }
+  if (draggingHugeMiniIndex !== null) {
+    const idx = draggingHugeMiniIndex;
+    const dropWorld = hugeMiniPreviewPosition ?? screenToBoardWorld(clientX, clientY);
+    const dropHex = hexAtScreen(clientX, clientY);
+    if (dropHex) {
+      hugeMiniatures[idx].offBoardWorld = { ...dropWorld };
+      const anchor = findHugeMiniAnchorForPivotWorld(
+        dropWorld,
+        hugeMiniatures[idx].rotationDeg,
+        idx,
+      );
+      if (anchor !== null) hugeMiniatures[idx].anchor = anchor;
+    } else {
+      hugeMiniatures[idx].offBoardWorld = { ...dropWorld };
+    }
+    draggingHugeMiniIndex = null;
+    hugeMiniPreviewPosition = null;
+    hugeMiniDragOverAnchor = null;
+    unitCard.setPassthrough(false);
+    updateHugeMiniMovementHighlights();
+  }
+  if (isDraggingTerrain && draggingTerrainIndex !== null) {
+    const dropWorld = screenToBoardWorld(clientX, clientY);
+    const dropHex = hexAtScreen(clientX, clientY);
+    if (dropHex) {
+      terrains[draggingTerrainIndex] = nearestHexonCenterFromWorld(dropWorld);
+      terrainOffBoardWorlds[draggingTerrainIndex] = undefined;
+    } else {
+      terrainOffBoardWorlds[draggingTerrainIndex] = { ...dropWorld };
+    }
+    isDraggingTerrain = false;
+    draggingTerrainIndex = null;
+    terrainDragPendingIndex = null;
+    terrainPreviewWorld = null;
+    terrainDragOverCenter = null;
+    renderer.setTerrain(terrains, null, false, null, null, selectedTerrainIndex, terrainOffBoardWorlds);
+  }
+  if (isDraggingEtherVortex && draggingEtherVortexIndex !== null) {
+    const dropWorld = screenToBoardWorld(clientX, clientY);
+    const dropHex = hexAtScreen(clientX, clientY);
+    if (dropHex) {
+      etherVortexes[draggingEtherVortexIndex].center = nearestHexonCenterFromWorld(dropWorld);
+      etherVortexes[draggingEtherVortexIndex].offBoardWorld = undefined;
+    } else {
+      etherVortexes[draggingEtherVortexIndex].offBoardWorld = { ...dropWorld };
+    }
+    isDraggingEtherVortex = false;
+    draggingEtherVortexIndex = null;
+    etherVortexDragPendingIndex = null;
+    etherVortexPreviewWorld = null;
+    etherVortexDragOverCenter = null;
+    renderer.setEtherVortexDrag(null, null, null);
+    renderer.setEtherVortexes(etherVortexes, selectedEtherVortexIndex);
+  }
+  releaseBoardDragCaptureIfAny();
+  scheduleRender();
+}
 
 function captureTableDragForNetwork(): TableDragState {
   if (isDraggingGodLoose && godDraggingLooseIndex !== null && godLooseDragPreviewWorld) {
@@ -2713,7 +2939,6 @@ function placeArmyCatalogUnitOnBoard(
     selectedUnitIndex = units.length - 1;
     armyBuilderPanel.refresh();
     scheduleRender();
-    commitBoardUndoCheckpoint();
     return true;
   }
 
@@ -2732,7 +2957,6 @@ function placeArmyCatalogUnitOnBoard(
     selectedLargeMiniIndex = largeMiniatures.length - 1;
     armyBuilderPanel.refresh();
     scheduleRender();
-    commitBoardUndoCheckpoint();
     return true;
   }
 
@@ -2773,7 +2997,6 @@ function placeArmyCatalogUnitOnBoard(
     selectedHugeMiniIndex = hugeMiniatures.length - 1;
     armyBuilderPanel.refresh();
     scheduleRender();
-    commitBoardUndoCheckpoint();
     return true;
   }
 
@@ -2792,7 +3015,6 @@ function placeArmyCatalogUnitOnBoard(
   selectedBigMiniIndex = bigMiniatures.length - 1;
   armyBuilderPanel.refresh();
   scheduleRender();
-  commitBoardUndoCheckpoint();
   return true;
 }
 
@@ -2874,7 +3096,6 @@ function handleArmyBuilderDrop(clientX: number, clientY: number, raw: string): v
       godTablePieces.push(incoming);
     }
     scheduleRender();
-    commitBoardUndoCheckpoint();
     return;
   }
   if (p.kind === 'leader') {
@@ -2885,7 +3106,7 @@ function handleArmyBuilderDrop(clientX: number, clientY: number, raw: string): v
 }
 
 function refreshAltHoverTarget(hex: Hex | null): void {
-  if (!altKeyHeld || !hex) {
+  if (!altModActive() || !hex) {
     altHoverTarget = null;
     return;
   }
@@ -2916,7 +3137,7 @@ function refreshAltHoverTarget(hex: Hex | null): void {
 }
 
 function refreshShiftHoverTarget(hex: Hex | null): void {
-  if (!shiftKeyHeld || !hex) {
+  if (!shiftModActive() || !hex) {
     shiftHoverTarget = null;
     return;
   }
@@ -2987,7 +3208,7 @@ function computeBigMiniWalkRunCenters(bigIndex: number): { walk: Hex[]; run: Hex
   return { walk: walkCenters, run: runCenters };
 }
 
-function tryPromoteUnitDragFromPending(e: MouseEvent): void {
+function tryPromoteUnitDragFromPending(e: ClientXY, pointerId?: number): void {
   if (godLooseDragPending || isDraggingGodLoose) return;
   if (unitDragPendingIndex === null) return;
   const dx = e.clientX - unitDragPendingStartX;
@@ -3001,10 +3222,11 @@ function tryPromoteUnitDragFromPending(e: MouseEvent): void {
   dragOverHex = hex && !isHexOccupiedByOtherUnit(hex, idx) ? hex : null;
   dragPreviewPosition = screenToBoardWorld(e.clientX, e.clientY);
   renderer.setDragState(draggingUnitIndex, dragOverHex, dragPreviewPosition);
+  captureBoardDragPointer(pointerId);
   scheduleRender();
 }
 
-function tryPromoteBigMiniDragFromPending(e: MouseEvent): void {
+function tryPromoteBigMiniDragFromPending(e: ClientXY, pointerId?: number): void {
   if (godLooseDragPending || isDraggingGodLoose) return;
   if (bigMiniDragPendingIndex === null) return;
   const dx = e.clientX - bigMiniDragPendingStartX;
@@ -3022,10 +3244,11 @@ function tryPromoteBigMiniDragFromPending(e: MouseEvent): void {
     draggingBigMiniIndex,
     bigMiniDragOverCenter,
   );
+  captureBoardDragPointer(pointerId);
   scheduleRender();
 }
 
-function tryPromoteTerrainDragFromPending(e: MouseEvent): void {
+function tryPromoteTerrainDragFromPending(e: ClientXY, pointerId?: number): void {
   if (godLooseDragPending || isDraggingGodLoose) return;
   if (!terrainDragPending || isDraggingTerrain || terrainDragPendingIndex === null) return;
   const dx = e.clientX - terrainDragPendingStartX;
@@ -3047,10 +3270,11 @@ function tryPromoteTerrainDragFromPending(e: MouseEvent): void {
     selectedTerrainIndex,
     terrainOffBoardWorlds,
   );
+  captureBoardDragPointer(pointerId);
   scheduleRender();
 }
 
-function tryPromoteLargeMiniDragFromPending(e: MouseEvent): void {
+function tryPromoteLargeMiniDragFromPending(e: ClientXY, pointerId?: number): void {
   if (godLooseDragPending || isDraggingGodLoose) return;
   if (largeMiniDragPendingIndex === null) return;
   const dx = e.clientX - largeMiniDragPendingStartX;
@@ -3063,10 +3287,11 @@ function tryPromoteLargeMiniDragFromPending(e: MouseEvent): void {
   largeMiniPreviewPosition = screenToBoardWorld(e.clientX, e.clientY);
   const hex = hexAtScreen(e.clientX, e.clientY);
   largeMiniDragOverAnchor = hex ? bestLargeMiniAnchorForPointer(hex, largeMiniPreviewPosition, idx) : null;
+  captureBoardDragPointer(pointerId);
   scheduleRender();
 }
 
-function tryPromoteHugeMiniDragFromPending(e: MouseEvent): void {
+function tryPromoteHugeMiniDragFromPending(e: ClientXY, pointerId?: number): void {
   if (godLooseDragPending || isDraggingGodLoose) return;
   if (hugeMiniDragPendingIndex === null) return;
   const dx = e.clientX - hugeMiniDragPendingStartX;
@@ -3078,10 +3303,11 @@ function tryPromoteHugeMiniDragFromPending(e: MouseEvent): void {
   unitCard.setPassthrough(showSelectedDetails);
   hugeMiniPreviewPosition = screenToBoardWorld(e.clientX, e.clientY);
   hugeMiniDragOverAnchor = null;
+  captureBoardDragPointer(pointerId);
   scheduleRender();
 }
 
-function tryPromoteEtherVortexDragFromPending(e: MouseEvent): void {
+function tryPromoteEtherVortexDragFromPending(e: ClientXY, pointerId?: number): void {
   if (godLooseDragPending || isDraggingGodLoose) return;
   if (!etherVortexDragPending || isDraggingEtherVortex || etherVortexDragPendingIndex === null) return;
   const dx = e.clientX - etherVortexDragPendingStartX;
@@ -3095,10 +3321,11 @@ function tryPromoteEtherVortexDragFromPending(e: MouseEvent): void {
   etherVortexPreviewWorld = screenToBoardWorld(e.clientX, e.clientY);
   etherVortexDragOverCenter = nearestHexonCenterFromWorld(etherVortexPreviewWorld);
   renderer.setEtherVortexDrag(draggingEtherVortexIndex, etherVortexPreviewWorld, etherVortexDragOverCenter);
+  captureBoardDragPointer(pointerId);
   scheduleRender();
 }
 
-function tryPromoteGodLooseDrag(e: MouseEvent): void {
+function tryPromoteGodLooseDrag(e: ClientXY): void {
   if (!godLooseDragPending || isDraggingGodLoose || godLooseDragPendingIndex === null) return;
   const dx = e.clientX - godLooseDragPendingStartX;
   const dy = e.clientY - godLooseDragPendingStartY;
@@ -3160,7 +3387,6 @@ function tryPromoteGodLooseDrag(e: MouseEvent): void {
   godDeckDragWholeStackAfterHold = false;
   godLooseDragPreviewWorld = previewW;
   scheduleRender();
-  commitBoardUndoCheckpoint();
 }
 
 // ── Collect all hexon centers from the grid build ──────────────
@@ -3328,7 +3554,6 @@ function pasteClipboard(): void {
     clearSelection();
     selectedUnitIndex = units.length - 1;
     armyBuilderPanel.refresh();
-    commitBoardUndoCheckpoint();
     return;
   }
   if (clipboardEntity.kind === 'big') {
@@ -3346,7 +3571,6 @@ function pasteClipboard(): void {
     clearSelection();
     selectedBigMiniIndex = bigMiniatures.length - 1;
     armyBuilderPanel.refresh();
-    commitBoardUndoCheckpoint();
     return;
   }
   if (clipboardEntity.kind === 'large') {
@@ -3377,7 +3601,6 @@ function pasteClipboard(): void {
     clearSelection();
     selectedLargeMiniIndex = largeMiniatures.length - 1;
     armyBuilderPanel.refresh();
-    commitBoardUndoCheckpoint();
     return;
   }
   if (clipboardEntity.kind === 'huge') {
@@ -3405,7 +3628,6 @@ function pasteClipboard(): void {
     clearSelection();
     selectedHugeMiniIndex = hugeMiniatures.length - 1;
     armyBuilderPanel.refresh();
-    commitBoardUndoCheckpoint();
     return;
   }
   if (clipboardEntity.kind === 'etherVortex') {
@@ -3422,7 +3644,6 @@ function pasteClipboard(): void {
     });
     clearSelection();
     selectedEtherVortexIndex = etherVortexes.length - 1;
-    commitBoardUndoCheckpoint();
     return;
   }
   const base = clipboardEntity.center;
@@ -3435,7 +3656,6 @@ function pasteClipboard(): void {
   terrainRotationDegs.push(clipboardEntity.rotationDeg);
   clearSelection();
   selectedTerrainIndex = terrains.length - 1;
-  commitBoardUndoCheckpoint();
 }
 
 function duplicateSelected(): void {
@@ -3449,7 +3669,6 @@ function deleteSelected(): void {
   if (sel.kind === 'godTable') {
     removeGodTablePieceAtIndex(sel.index);
     clearSelection();
-    commitBoardUndoCheckpoint();
     return;
   }
   if (sel.kind === 'small') {
@@ -3457,7 +3676,6 @@ function deleteSelected(): void {
     unitCardData.splice(sel.index, 1);
     clearSelection();
     armyBuilderPanel.refresh();
-    commitBoardUndoCheckpoint();
     return;
   }
   if (sel.kind === 'big') {
@@ -3465,7 +3683,6 @@ function deleteSelected(): void {
     bigMiniCardData.splice(sel.index, 1);
     clearSelection();
     armyBuilderPanel.refresh();
-    commitBoardUndoCheckpoint();
     return;
   }
   if (sel.kind === 'large') {
@@ -3473,7 +3690,6 @@ function deleteSelected(): void {
     largeMiniCardData.splice(sel.index, 1);
     clearSelection();
     armyBuilderPanel.refresh();
-    commitBoardUndoCheckpoint();
     return;
   }
   if (sel.kind === 'huge') {
@@ -3481,20 +3697,17 @@ function deleteSelected(): void {
     hugeMiniCardData.splice(sel.index, 1);
     clearSelection();
     armyBuilderPanel.refresh();
-    commitBoardUndoCheckpoint();
     return;
   }
   if (sel.kind === 'etherVortex') {
     etherVortexes.splice(sel.index, 1);
     clearSelection();
-    commitBoardUndoCheckpoint();
     return;
   }
   terrains.splice(sel.index, 1);
   terrainOffBoardWorlds.splice(sel.index, 1);
   terrainRotationDegs.splice(sel.index, 1);
   clearSelection();
-  commitBoardUndoCheckpoint();
 }
 
 function boardWorldToScreen(world: { x: number; y: number }): { x: number; y: number } {
@@ -3827,7 +4040,6 @@ function handleMiniatureActivationClick(screenX: number, screenY: number): boole
     const g = getUnitActivationToggleGeometry(i);
     if (isPointInCircle(screenX, screenY, g.center, g.radiusScreen)) {
       units[i]!.activated = units[i]!.activated === false;
-      commitBoardUndoCheckpoint();
       return true;
     }
   }
@@ -3838,7 +4050,6 @@ function handleMiniatureActivationClick(screenX: number, screenY: number): boole
     );
     if (isPointInCircle(screenX, screenY, g.center, g.radiusScreen)) {
       largeMiniatures[i]!.activated = largeMiniatures[i]!.activated === false;
-      commitBoardUndoCheckpoint();
       return true;
     }
   }
@@ -3849,7 +4060,6 @@ function handleMiniatureActivationClick(screenX: number, screenY: number): boole
     );
     if (isPointInCircle(screenX, screenY, g.center, g.radiusScreen)) {
       hugeMiniatures[i]!.activated = hugeMiniatures[i]!.activated === false;
-      commitBoardUndoCheckpoint();
       return true;
     }
   }
@@ -3860,7 +4070,6 @@ function handleMiniatureActivationClick(screenX: number, screenY: number): boole
     );
     if (isPointInCircle(screenX, screenY, g.center, g.radiusScreen)) {
       bigMiniatures[i]!.activated = bigMiniatures[i]!.activated === false;
-      commitBoardUndoCheckpoint();
       return true;
     }
   }
@@ -3893,7 +4102,6 @@ function tryEtherVortexCrystalBadgeOpen(screenX: number, screenY: number): boole
         onCrystalsDelta: (delta) => {
           v.etherCrystals = Math.max(0, v.etherCrystals + delta);
           scheduleRender();
-          commitBoardUndoCheckpoint();
         },
       });
       return true;
@@ -3910,12 +4118,10 @@ function handleMiniatureHealthClick(screenX: number, screenY: number): boolean {
         UNIT_HEALTH_MIN,
         units[openHealthControlsUnitIndex].health - 1,
       );
-      commitBoardUndoCheckpoint();
       return true;
     }
     if (isPointInCircle(screenX, screenY, openGeom.plusCenter, openGeom.buttonRadius)) {
       units[openHealthControlsUnitIndex].health += 1;
-      commitBoardUndoCheckpoint();
       return true;
     }
   }
@@ -3931,12 +4137,10 @@ function handleMiniatureHealthClick(screenX: number, screenY: number): boolean {
         UNIT_HEALTH_MIN,
         bigMiniatures[openHealthControlsBigMiniIndex].health - 1,
       );
-      commitBoardUndoCheckpoint();
       return true;
     }
     if (isPointInCircle(screenX, screenY, openGeom.plusCenter, openGeom.buttonRadius)) {
       bigMiniatures[openHealthControlsBigMiniIndex].health += 1;
-      commitBoardUndoCheckpoint();
       return true;
     }
   }
@@ -3949,12 +4153,10 @@ function handleMiniatureHealthClick(screenX: number, screenY: number): boolean {
     );
     if (isPointInCircle(screenX, screenY, openGeom.minusCenter, openGeom.buttonRadius)) {
       largeMiniatures[li].health = Math.max(UNIT_HEALTH_MIN, largeMiniatures[li].health - 1);
-      commitBoardUndoCheckpoint();
       return true;
     }
     if (isPointInCircle(screenX, screenY, openGeom.plusCenter, openGeom.buttonRadius)) {
       largeMiniatures[li].health += 1;
-      commitBoardUndoCheckpoint();
       return true;
     }
   }
@@ -3967,12 +4169,10 @@ function handleMiniatureHealthClick(screenX: number, screenY: number): boolean {
     );
     if (isPointInCircle(screenX, screenY, openGeom.minusCenter, openGeom.buttonRadius)) {
       hugeMiniatures[hi].health = Math.max(UNIT_HEALTH_MIN, hugeMiniatures[hi].health - 1);
-      commitBoardUndoCheckpoint();
       return true;
     }
     if (isPointInCircle(screenX, screenY, openGeom.plusCenter, openGeom.buttonRadius)) {
       hugeMiniatures[hi].health += 1;
-      commitBoardUndoCheckpoint();
       return true;
     }
   }
@@ -4059,16 +4259,430 @@ function handleMiniatureHealthClick(screenX: number, screenY: number): boolean {
   return false;
 }
 
-// ── Input: mouse hover + eraser drag ───────────────────────────
+// ── Input: pointer hover + board drag (touch-safe via pointer events) ─
 
-window.addEventListener('mousemove', (e) => {
-  if (!isPanning) return;
-  camera.offsetX = e.clientX - panStartX;
-  camera.offsetY = e.clientY - panStartY;
+let effectMarkerLongPressTimer: ReturnType<typeof setTimeout> | null = null;
+let effectMarkerLongPressStartX = 0;
+let effectMarkerLongPressStartY = 0;
+
+function clearEffectMarkerLongPressTimer(): void {
+  if (effectMarkerLongPressTimer !== null) {
+    clearTimeout(effectMarkerLongPressTimer);
+    effectMarkerLongPressTimer = null;
+  }
+}
+
+let godLooseLastTapMs = 0;
+let godLooseLastTapX = 0;
+let godLooseLastTapY = 0;
+let godLooseLastTapGodIndex: number | null = null;
+
+let unitCardDoubleTapLastKey: string | null = null;
+let unitCardDoubleTapLastMs = 0;
+let unitCardDoubleTapLastX = 0;
+let unitCardDoubleTapLastY = 0;
+/** After touch double-tap opens card, skip duplicate mousedown handling. */
+let touchUnitDoubleTapSuppressMouseDown = false;
+
+/** Hit test for small/big/large/huge (on- or off-board); order matches canvas mousedown. */
+function resolveMiniatureTapKeyForDoubleTap(clientX: number, clientY: number): string | null {
+  const hex = hexAtScreen(clientX, clientY);
+  if (!hex) {
+    const obUnit = findOffBoardUnitAtScreen(clientX, clientY);
+    if (obUnit !== -1) return `os:${obUnit}`;
+    const obBig = findOffBoardBigMiniAtScreen(clientX, clientY);
+    if (obBig !== -1) return `ob:${obBig}`;
+    const obLarge = findOffBoardLargeMiniAtScreen(clientX, clientY);
+    if (obLarge !== -1) return `ol:${obLarge}`;
+    const obHuge = findOffBoardHugeMiniAtScreen(clientX, clientY);
+    if (obHuge !== -1) return `oh:${obHuge}`;
+    return null;
+  }
+  if (altModActive()) {
+    const altTerrainIdx = findTerrainAtHex(hex);
+    if (altTerrainIdx !== -1) return null;
+  }
+  const clickedUnitIndex = units.findIndex((unit) => unit.position.key === hex.key);
+  if (clickedUnitIndex !== -1) return `s:${clickedUnitIndex}`;
+  const bigMiniIdx = findBigMiniAtHex(hex);
+  if (bigMiniIdx !== -1) return `b:${bigMiniIdx}`;
+  const largeMiniIdx = findLargeMiniAtHex(hex);
+  if (largeMiniIdx !== -1) return `l:${largeMiniIdx}`;
+  const hugeMiniIdx = resolveHugeMiniIndexAtPointer(hex, screenToBoardWorld(clientX, clientY));
+  if (hugeMiniIdx !== -1) return `h:${hugeMiniIdx}`;
+  return null;
+}
+
+function applyTouchDoubleTapUnitCard(key: string, clientX: number, clientY: number): void {
+  if (key.startsWith('os:')) {
+    const n = Number(key.slice(3));
+    if (Number.isNaN(n)) return;
+    bigMiniDragPendingIndex = null;
+    terrainDragPendingIndex = null;
+    etherVortexDragPendingIndex = null;
+    openHealthControlsUnitIndex = null;
+    openHealthControlsBigMiniIndex = null;
+    selectedEtherVortexIndex = null;
+    unitDragPendingIndex = n;
+    unitDragPendingStartX = clientX;
+    unitDragPendingStartY = clientY;
+    unitDragPendingIsNewSelection = selectedUnitIndex !== n;
+    if (unitDragPendingIsNewSelection) {
+      selectedUnitIndex = n;
+      selectedBigMiniIndex = null;
+      selectedTerrainIndex = null;
+      selectedGodTablePieceIndex = null;
+      updateBigMiniMovementHighlights();
+      updateMovementHighlights();
+    }
+    showSelectedDetails = true;
+    return;
+  }
+  if (key.startsWith('ob:')) {
+    const n = Number(key.slice(3));
+    if (Number.isNaN(n)) return;
+    unitDragPendingIndex = null;
+    terrainDragPendingIndex = null;
+    etherVortexDragPendingIndex = null;
+    openHealthControlsUnitIndex = null;
+    openHealthControlsBigMiniIndex = null;
+    selectedEtherVortexIndex = null;
+    bigMiniDragPendingIndex = n;
+    bigMiniDragPendingStartX = clientX;
+    bigMiniDragPendingStartY = clientY;
+    if (selectedBigMiniIndex !== n) {
+      selectedUnitIndex = null;
+      updateMovementHighlights();
+      selectedBigMiniIndex = n;
+      selectedTerrainIndex = null;
+      selectedGodTablePieceIndex = null;
+      updateBigMiniMovementHighlights();
+    }
+    showSelectedDetails = true;
+    return;
+  }
+  if (key.startsWith('ol:')) {
+    const n = Number(key.slice(3));
+    if (Number.isNaN(n)) return;
+    unitDragPendingIndex = null;
+    bigMiniDragPendingIndex = null;
+    terrainDragPendingIndex = null;
+    etherVortexDragPendingIndex = null;
+    openHealthControlsUnitIndex = null;
+    openHealthControlsBigMiniIndex = null;
+    openHealthControlsLargeMiniIndex = null;
+    openHealthControlsHugeMiniIndex = null;
+    selectedEtherVortexIndex = null;
+    largeMiniDragPendingIndex = n;
+    largeMiniDragPendingStartX = clientX;
+    largeMiniDragPendingStartY = clientY;
+    if (selectedLargeMiniIndex !== n) {
+      selectedUnitIndex = null;
+      selectedBigMiniIndex = null;
+      selectedHugeMiniIndex = null;
+      selectedTerrainIndex = null;
+      selectedGodTablePieceIndex = null;
+      selectedLargeMiniIndex = n;
+      updateMovementHighlights();
+      updateBigMiniMovementHighlights();
+      updateLargeMiniMovementHighlights();
+      updateHugeMiniMovementHighlights();
+    }
+    showSelectedDetails = true;
+    return;
+  }
+  if (key.startsWith('oh:')) {
+    const n = Number(key.slice(3));
+    if (Number.isNaN(n)) return;
+    unitDragPendingIndex = null;
+    bigMiniDragPendingIndex = null;
+    largeMiniDragPendingIndex = null;
+    terrainDragPendingIndex = null;
+    etherVortexDragPendingIndex = null;
+    openHealthControlsUnitIndex = null;
+    openHealthControlsBigMiniIndex = null;
+    openHealthControlsLargeMiniIndex = null;
+    openHealthControlsHugeMiniIndex = null;
+    selectedEtherVortexIndex = null;
+    hugeMiniDragPendingIndex = n;
+    hugeMiniDragPendingStartX = clientX;
+    hugeMiniDragPendingStartY = clientY;
+    if (selectedHugeMiniIndex !== n) {
+      selectedUnitIndex = null;
+      selectedBigMiniIndex = null;
+      selectedLargeMiniIndex = null;
+      selectedTerrainIndex = null;
+      selectedGodTablePieceIndex = null;
+      selectedHugeMiniIndex = n;
+      updateMovementHighlights();
+      updateBigMiniMovementHighlights();
+      updateLargeMiniMovementHighlights();
+      updateHugeMiniMovementHighlights();
+    }
+    showSelectedDetails = true;
+    return;
+  }
+  if (key.startsWith('s:')) {
+    const n = Number(key.slice(2));
+    if (Number.isNaN(n)) return;
+    bigMiniDragPendingIndex = null;
+    terrainDragPendingIndex = null;
+    etherVortexDragPendingIndex = null;
+    openHealthControlsUnitIndex = null;
+    openHealthControlsBigMiniIndex = null;
+    selectedEtherVortexIndex = null;
+    unitDragPendingIndex = n;
+    unitDragPendingStartX = clientX;
+    unitDragPendingStartY = clientY;
+    unitDragPendingIsNewSelection = selectedUnitIndex !== n;
+    if (unitDragPendingIsNewSelection) {
+      selectedUnitIndex = n;
+      selectedBigMiniIndex = null;
+      selectedLargeMiniIndex = null;
+      selectedHugeMiniIndex = null;
+      selectedTerrainIndex = null;
+      selectedGodTablePieceIndex = null;
+      updateBigMiniMovementHighlights();
+      updateMovementHighlights();
+    }
+    showSelectedDetails = true;
+    return;
+  }
+  if (key.startsWith('b:')) {
+    const n = Number(key.slice(2));
+    if (Number.isNaN(n)) return;
+    unitDragPendingIndex = null;
+    terrainDragPendingIndex = null;
+    etherVortexDragPendingIndex = null;
+    largeMiniDragPendingIndex = null;
+    hugeMiniDragPendingIndex = null;
+    openHealthControlsUnitIndex = null;
+    openHealthControlsBigMiniIndex = null;
+    selectedEtherVortexIndex = null;
+    bigMiniDragPendingIndex = n;
+    bigMiniDragPendingStartX = clientX;
+    bigMiniDragPendingStartY = clientY;
+    if (selectedBigMiniIndex !== n) {
+      clearSelection();
+      selectedBigMiniIndex = n;
+      updateMovementHighlights();
+      updateBigMiniMovementHighlights();
+    }
+    showSelectedDetails = true;
+    return;
+  }
+  if (key.startsWith('l:')) {
+    const n = Number(key.slice(2));
+    if (Number.isNaN(n)) return;
+    unitDragPendingIndex = null;
+    bigMiniDragPendingIndex = null;
+    terrainDragPendingIndex = null;
+    etherVortexDragPendingIndex = null;
+    hugeMiniDragPendingIndex = null;
+    openHealthControlsUnitIndex = null;
+    openHealthControlsBigMiniIndex = null;
+    openHealthControlsLargeMiniIndex = null;
+    openHealthControlsHugeMiniIndex = null;
+    selectedEtherVortexIndex = null;
+    largeMiniDragPendingIndex = n;
+    largeMiniDragPendingStartX = clientX;
+    largeMiniDragPendingStartY = clientY;
+    if (selectedLargeMiniIndex !== n) {
+      clearSelection();
+      selectedLargeMiniIndex = n;
+      updateMovementHighlights();
+      updateLargeMiniMovementHighlights();
+    }
+    showSelectedDetails = true;
+    return;
+  }
+  if (key.startsWith('h:')) {
+    const n = Number(key.slice(2));
+    if (Number.isNaN(n)) return;
+    unitDragPendingIndex = null;
+    bigMiniDragPendingIndex = null;
+    largeMiniDragPendingIndex = null;
+    terrainDragPendingIndex = null;
+    etherVortexDragPendingIndex = null;
+    openHealthControlsUnitIndex = null;
+    openHealthControlsBigMiniIndex = null;
+    openHealthControlsLargeMiniIndex = null;
+    openHealthControlsHugeMiniIndex = null;
+    selectedEtherVortexIndex = null;
+    hugeMiniDragPendingIndex = n;
+    hugeMiniDragPendingStartX = clientX;
+    hugeMiniDragPendingStartY = clientY;
+    if (selectedHugeMiniIndex !== n) {
+      clearSelection();
+      selectedHugeMiniIndex = n;
+      updateMovementHighlights();
+      updateHugeMiniMovementHighlights();
+    }
+    showSelectedDetails = true;
+  }
+}
+
+function tryTouchDoubleTapOnMiniatureForCard(e: PointerEvent): boolean {
+  if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return false;
+  if (e.button !== 0 || e.ctrlKey) return false;
+  if (!isPointOverCanvas(e.clientX, e.clientY)) return false;
+  if (armyBuilderPanel.isScreenPointOverPanel(e.clientX, e.clientY)) return false;
+  if (tryEtherVortexCrystalBadgeOpen(e.clientX, e.clientY)) return false;
+  if (handleMiniatureActivationClick(e.clientX, e.clientY)) return false;
+  if (handleMiniatureHealthClick(e.clientX, e.clientY)) return false;
+  if (godLooseHitIndex(e.clientX, e.clientY) !== null) return false;
+
+  const key = resolveMiniatureTapKeyForDoubleTap(e.clientX, e.clientY);
+  if (key === null) {
+    unitCardDoubleTapLastKey = null;
+    return false;
+  }
+  const now = Date.now();
+  if (
+    unitCardDoubleTapLastKey === key &&
+    now - unitCardDoubleTapLastMs < UNIT_CARD_DOUBLE_TAP_MS &&
+    Math.hypot(e.clientX - unitCardDoubleTapLastX, e.clientY - unitCardDoubleTapLastY) <
+      UNIT_CARD_DOUBLE_TAP_DIST_PX
+  ) {
+    applyTouchDoubleTapUnitCard(key, e.clientX, e.clientY);
+    unitCardDoubleTapLastKey = null;
+    touchUnitDoubleTapSuppressMouseDown = true;
+    pointerScreenX = e.clientX;
+    pointerScreenY = e.clientY;
+    // Passthrough = ghost + no pointer capture (only while dragging a pinned card). Docked card must stay opaque and scrollable.
+    unitCard.setPassthrough(false);
+    e.preventDefault();
+    updateUnitCard();
+    return true;
+  }
+  unitCardDoubleTapLastKey = key;
+  unitCardDoubleTapLastMs = now;
+  unitCardDoubleTapLastX = e.clientX;
+  unitCardDoubleTapLastY = e.clientY;
+  return false;
+}
+
+function handleCanvasPointerMove(clientX: number, clientY: number, pointerId?: number): void {
+  pointerScreenX = clientX;
+  pointerScreenY = clientY;
+  const e: ClientXY = { clientX, clientY };
+  tryPromoteGodLooseDrag(e);
+  tryPromoteUnitDragFromPending(e, pointerId);
+  tryPromoteBigMiniDragFromPending(e, pointerId);
+  tryPromoteLargeMiniDragFromPending(e, pointerId);
+  tryPromoteHugeMiniDragFromPending(e, pointerId);
+  tryPromoteTerrainDragFromPending(e, pointerId);
+  tryPromoteEtherVortexDragFromPending(e, pointerId);
+
+  const hex = hexAtScreen(clientX, clientY);
+  if (!hex) {
+    hoveredHexUnderPointer = null;
+    renderer.setHoveredHex(null);
+    refreshAltHoverTarget(null);
+    refreshShiftHoverTarget(null);
+    if (draggingUnitIndex !== null && !isDraggingGodLoose) {
+      dragOverHex = null;
+      dragPreviewPosition = screenToBoardWorld(clientX, clientY);
+      renderer.setDragState(draggingUnitIndex, null, dragPreviewPosition);
+    }
+    if (isDraggingTerrain && !isDraggingGodLoose) {
+      terrainPreviewWorld = screenToBoardWorld(clientX, clientY);
+      terrainDragOverCenter = null;
+      renderer.setTerrain(terrains, terrainPreviewWorld, true, draggingTerrainIndex, null, selectedTerrainIndex, terrainOffBoardWorlds);
+    }
+    if (draggingBigMiniIndex !== null && !isDraggingGodLoose) {
+      bigMiniPreviewPosition = screenToBoardWorld(clientX, clientY);
+      bigMiniDragOverCenter = null;
+      renderer.setBigMiniatures(bigMiniatures.map((m) => m.center), bigMiniPreviewPosition, draggingBigMiniIndex, null, bigMiniOffBoards());
+    }
+    if (draggingLargeMiniIndex !== null && !isDraggingGodLoose) {
+      largeMiniPreviewPosition = screenToBoardWorld(clientX, clientY);
+      largeMiniDragOverAnchor = null;
+    }
+    if (draggingHugeMiniIndex !== null && !isDraggingGodLoose) {
+      hugeMiniPreviewPosition = screenToBoardWorld(clientX, clientY);
+      hugeMiniDragOverAnchor = null;
+    }
+    if (isDraggingEtherVortex && !isDraggingGodLoose) {
+      etherVortexPreviewWorld = screenToBoardWorld(clientX, clientY);
+      etherVortexDragOverCenter = null;
+      renderer.setEtherVortexDrag(draggingEtherVortexIndex, etherVortexPreviewWorld, null);
+    }
+    if (isDraggingGodLoose) {
+      godLooseDragPreviewWorld = screenToBoardWorld(clientX, clientY);
+    }
+    scheduleRender();
+    return;
+  }
+
+  hoveredHexUnderPointer = hex;
+  renderer.setHoveredHex(hex);
+  refreshAltHoverTarget(hex);
+  refreshShiftHoverTarget(hex);
+
+  if (draggingUnitIndex !== null && !isDraggingGodLoose) {
+    dragOverHex = isHexOccupiedByOtherUnit(hex, draggingUnitIndex) ? null : hex;
+    dragPreviewPosition = screenToBoardWorld(clientX, clientY);
+    renderer.setDragState(draggingUnitIndex, dragOverHex, dragPreviewPosition);
+  }
+  if (isDraggingTerrain && !isDraggingGodLoose) {
+    terrainPreviewWorld = screenToBoardWorld(clientX, clientY);
+    terrainDragOverCenter = nearestHexonCenterFromWorld(terrainPreviewWorld);
+    renderer.setTerrain(terrains, terrainPreviewWorld, true, draggingTerrainIndex, terrainDragOverCenter, selectedTerrainIndex, terrainOffBoardWorlds);
+  }
+  if (draggingBigMiniIndex !== null && !isDraggingGodLoose) {
+    bigMiniPreviewPosition = screenToBoardWorld(clientX, clientY);
+    bigMiniDragOverCenter = nearestHexonCenterFromWorld(bigMiniPreviewPosition);
+    renderer.setBigMiniatures(bigMiniatures.map((m) => m.center), bigMiniPreviewPosition, draggingBigMiniIndex, bigMiniDragOverCenter, bigMiniOffBoards());
+  }
+  if (draggingLargeMiniIndex !== null && !isDraggingGodLoose) {
+    largeMiniPreviewPosition = screenToBoardWorld(clientX, clientY);
+    largeMiniDragOverAnchor = bestLargeMiniAnchorForPointer(hex, largeMiniPreviewPosition, draggingLargeMiniIndex);
+  }
+  if (draggingHugeMiniIndex !== null && !isDraggingGodLoose) {
+    hugeMiniPreviewPosition = screenToBoardWorld(clientX, clientY);
+    hugeMiniDragOverAnchor = null;
+  }
+  if (isDraggingEtherVortex && !isDraggingGodLoose) {
+    etherVortexPreviewWorld = screenToBoardWorld(clientX, clientY);
+    etherVortexDragOverCenter = nearestHexonCenterFromWorld(etherVortexPreviewWorld);
+    renderer.setEtherVortexDrag(draggingEtherVortexIndex, etherVortexPreviewWorld, etherVortexDragOverCenter);
+  }
+  if (isDraggingGodLoose) {
+    godLooseDragPreviewWorld = screenToBoardWorld(clientX, clientY);
+  }
+
   scheduleRender();
-});
+}
+
+canvas.addEventListener(
+  'pointerdown',
+  (e) => {
+    if (!isPointOverCanvas(e.clientX, e.clientY)) return;
+    activeCanvasPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (activeCanvasPointers.size === 2) {
+      commitBoardDragStateAsPointerUpAt(e.clientX, e.clientY);
+      clearEffectMarkerLongPressTimer();
+      twoFingerCameraGesture = true;
+      applyTwoFingerPinchPan();
+    }
+  },
+  true,
+);
 
 window.addEventListener('pointermove', (e) => {
+  if (effectMarkerLongPressTimer !== null) {
+    const dx = e.clientX - effectMarkerLongPressStartX;
+    const dy = e.clientY - effectMarkerLongPressStartY;
+    if (dx * dx + dy * dy > EFFECT_MARKER_LONG_PRESS_MOVE_PX * EFFECT_MARKER_LONG_PRESS_MOVE_PX) {
+      clearEffectMarkerLongPressTimer();
+    }
+  }
+  if (isPanning) {
+    camera.offsetX = e.clientX - panStartX;
+    camera.offsetY = e.clientY - panStartY;
+    scheduleRender();
+  }
   pointerScreenX = e.clientX;
   pointerScreenY = e.clientY;
   if (godLooseDragPending && godLooseDragPendingIndex !== null) {
@@ -4084,99 +4698,27 @@ window.addEventListener('pointermove', (e) => {
   }
 });
 
-canvas.addEventListener('mousemove', (e) => {
-  pointerScreenX = e.clientX;
-  pointerScreenY = e.clientY;
-  tryPromoteGodLooseDrag(e);
-  tryPromoteUnitDragFromPending(e);
-  tryPromoteBigMiniDragFromPending(e);
-  tryPromoteLargeMiniDragFromPending(e);
-  tryPromoteHugeMiniDragFromPending(e);
-  tryPromoteTerrainDragFromPending(e);
-  tryPromoteEtherVortexDragFromPending(e);
-
-  const hex = hexAtScreen(e.clientX, e.clientY);
-  if (!hex) {
-    hoveredHexUnderPointer = null;
-    renderer.setHoveredHex(null);
-    refreshAltHoverTarget(null);
-    refreshShiftHoverTarget(null);
-    if (draggingUnitIndex !== null && !isDraggingGodLoose) {
-      dragOverHex = null;
-      dragPreviewPosition = screenToBoardWorld(e.clientX, e.clientY);
-      renderer.setDragState(draggingUnitIndex, null, dragPreviewPosition);
+canvas.addEventListener('pointermove', (e) => {
+  if (effectMarkerLongPressTimer !== null) {
+    const dx = e.clientX - effectMarkerLongPressStartX;
+    const dy = e.clientY - effectMarkerLongPressStartY;
+    if (dx * dx + dy * dy > EFFECT_MARKER_LONG_PRESS_MOVE_PX * EFFECT_MARKER_LONG_PRESS_MOVE_PX) {
+      clearEffectMarkerLongPressTimer();
     }
-    if (isDraggingTerrain && !isDraggingGodLoose) {
-      terrainPreviewWorld = screenToBoardWorld(e.clientX, e.clientY);
-      terrainDragOverCenter = null;
-      renderer.setTerrain(terrains, terrainPreviewWorld, true, draggingTerrainIndex, null, selectedTerrainIndex, terrainOffBoardWorlds);
-    }
-    if (draggingBigMiniIndex !== null && !isDraggingGodLoose) {
-      bigMiniPreviewPosition = screenToBoardWorld(e.clientX, e.clientY);
-      bigMiniDragOverCenter = null;
-      renderer.setBigMiniatures(bigMiniatures.map((m) => m.center), bigMiniPreviewPosition, draggingBigMiniIndex, null, bigMiniOffBoards());
-    }
-    if (draggingLargeMiniIndex !== null && !isDraggingGodLoose) {
-      largeMiniPreviewPosition = screenToBoardWorld(e.clientX, e.clientY);
-      largeMiniDragOverAnchor = null;
-    }
-    if (draggingHugeMiniIndex !== null && !isDraggingGodLoose) {
-      hugeMiniPreviewPosition = screenToBoardWorld(e.clientX, e.clientY);
-      hugeMiniDragOverAnchor = null;
-    }
-    if (isDraggingEtherVortex && !isDraggingGodLoose) {
-      etherVortexPreviewWorld = screenToBoardWorld(e.clientX, e.clientY);
-      etherVortexDragOverCenter = null;
-      renderer.setEtherVortexDrag(draggingEtherVortexIndex, etherVortexPreviewWorld, null);
-    }
-    if (isDraggingGodLoose) {
-      godLooseDragPreviewWorld = screenToBoardWorld(e.clientX, e.clientY);
-    }
+  }
+  if (activeCanvasPointers.has(e.pointerId)) {
+    activeCanvasPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  }
+  if (twoFingerCameraGesture && activeCanvasPointers.size === 2) {
+    updateCameraFromTwoFingerMove();
     scheduleRender();
     return;
   }
-
-  hoveredHexUnderPointer = hex;
-  renderer.setHoveredHex(hex);
-  refreshAltHoverTarget(hex);
-  refreshShiftHoverTarget(hex);
-
-  if (draggingUnitIndex !== null && !isDraggingGodLoose) {
-    dragOverHex = isHexOccupiedByOtherUnit(hex, draggingUnitIndex) ? null : hex;
-    dragPreviewPosition = screenToBoardWorld(e.clientX, e.clientY);
-    renderer.setDragState(draggingUnitIndex, dragOverHex, dragPreviewPosition);
-  }
-  if (isDraggingTerrain && !isDraggingGodLoose) {
-    terrainPreviewWorld = screenToBoardWorld(e.clientX, e.clientY);
-    terrainDragOverCenter = nearestHexonCenterFromWorld(terrainPreviewWorld);
-    renderer.setTerrain(terrains, terrainPreviewWorld, true, draggingTerrainIndex, terrainDragOverCenter, selectedTerrainIndex, terrainOffBoardWorlds);
-  }
-  if (draggingBigMiniIndex !== null && !isDraggingGodLoose) {
-    bigMiniPreviewPosition = screenToBoardWorld(e.clientX, e.clientY);
-    bigMiniDragOverCenter = nearestHexonCenterFromWorld(bigMiniPreviewPosition);
-    renderer.setBigMiniatures(bigMiniatures.map((m) => m.center), bigMiniPreviewPosition, draggingBigMiniIndex, bigMiniDragOverCenter, bigMiniOffBoards());
-  }
-  if (draggingLargeMiniIndex !== null && !isDraggingGodLoose) {
-    largeMiniPreviewPosition = screenToBoardWorld(e.clientX, e.clientY);
-    largeMiniDragOverAnchor = bestLargeMiniAnchorForPointer(hex, largeMiniPreviewPosition, draggingLargeMiniIndex);
-  }
-  if (draggingHugeMiniIndex !== null && !isDraggingGodLoose) {
-    hugeMiniPreviewPosition = screenToBoardWorld(e.clientX, e.clientY);
-    hugeMiniDragOverAnchor = null;
-  }
-  if (isDraggingEtherVortex && !isDraggingGodLoose) {
-    etherVortexPreviewWorld = screenToBoardWorld(e.clientX, e.clientY);
-    etherVortexDragOverCenter = nearestHexonCenterFromWorld(etherVortexPreviewWorld);
-    renderer.setEtherVortexDrag(draggingEtherVortexIndex, etherVortexPreviewWorld, etherVortexDragOverCenter);
-  }
-  if (isDraggingGodLoose) {
-    godLooseDragPreviewWorld = screenToBoardWorld(e.clientX, e.clientY);
-  }
-
-  scheduleRender();
+  if (twoFingerCameraGesture) return;
+  handleCanvasPointerMove(e.clientX, e.clientY, e.pointerId);
 });
 
-canvas.addEventListener('mouseleave', () => {
+canvas.addEventListener('pointerleave', () => {
   hoveredHexUnderPointer = null;
   renderer.setHoveredHex(null);
   refreshAltHoverTarget(null);
@@ -4250,7 +4792,6 @@ function finishGodLooseDragIfActive(e: MouseEvent | PointerEvent): void {
         godLooseDragPendingIndex = null;
         godDeckDragWholeStackAfterHold = false;
         scheduleRender();
-        commitBoardUndoCheckpoint();
         return;
       }
 
@@ -4283,12 +4824,7 @@ function finishGodLooseDragIfActive(e: MouseEvent | PointerEvent): void {
     godLooseDragPendingIndex = null;
     godDeckDragWholeStackAfterHold = false;
     scheduleRender();
-    commitBoardUndoCheckpoint();
   }
-}
-
-function onWindowGodPointerEnd(e: PointerEvent): void {
-  finishGodLooseDragIfActive(e);
 }
 
 /** Loose god cards on canvas (primary button). */
@@ -4372,11 +4908,38 @@ canvas.addEventListener('dblclick', (e: MouseEvent) => {
     fromFaceUp,
   };
   scheduleRender();
-  commitBoardUndoCheckpoint();
 });
 
 canvas.addEventListener('pointerdown', (e: PointerEvent) => {
   if (e.button !== 0 || e.ctrlKey) return;
+  const looseTapI = godLooseHitIndex(e.clientX, e.clientY);
+  if (looseTapI !== null && (e.pointerType === 'touch' || e.pointerType === 'pen')) {
+    const now = Date.now();
+    if (
+      godLooseLastTapGodIndex === looseTapI &&
+      now - godLooseLastTapMs < GOD_LOOSE_DOUBLE_TAP_MS &&
+      Math.hypot(e.clientX - godLooseLastTapX, e.clientY - godLooseLastTapY) < GOD_LOOSE_DOUBLE_TAP_DIST_PX
+    ) {
+      godLooseLastTapMs = 0;
+      godLooseLastTapGodIndex = null;
+      e.preventDefault();
+      const p = godTablePieces[looseTapI]!;
+      const fromFaceUp = p.faceUp;
+      godTablePieces[looseTapI] = { ...p, faceUp: !p.faceUp };
+      godPieceFlipAnim = {
+        index: looseTapI,
+        startMs: performance.now(),
+        durationMs: GOD_TABLE_CARD_FLIP_MS,
+        fromFaceUp,
+      };
+      scheduleRender();
+      return;
+    }
+    godLooseLastTapMs = now;
+    godLooseLastTapX = e.clientX;
+    godLooseLastTapY = e.clientY;
+    godLooseLastTapGodIndex = looseTapI;
+  }
   if (tryEtherVortexCrystalBadgeOpen(e.clientX, e.clientY)) {
     e.preventDefault();
     scheduleRender();
@@ -4389,6 +4952,10 @@ canvas.addEventListener('pointerdown', (e: PointerEvent) => {
   }
   if (handleMiniatureHealthClick(e.clientX, e.clientY)) {
     e.preventDefault();
+    scheduleRender();
+    return;
+  }
+  if (tryTouchDoubleTapOnMiniatureForCard(e)) {
     scheduleRender();
     return;
   }
@@ -4407,6 +4974,20 @@ canvas.addEventListener('pointerdown', (e: PointerEvent) => {
   }
 });
 
+canvas.addEventListener('pointerdown', (e: PointerEvent) => {
+  if (e.button !== 0 || e.ctrlKey) return;
+  if (e.defaultPrevented) return;
+  if (!isPointOverCanvas(e.clientX, e.clientY)) return;
+  if (armyBuilderPanel.isScreenPointOverPanel(e.clientX, e.clientY)) return;
+  clearEffectMarkerLongPressTimer();
+  effectMarkerLongPressStartX = e.clientX;
+  effectMarkerLongPressStartY = e.clientY;
+  effectMarkerLongPressTimer = window.setTimeout(() => {
+    effectMarkerLongPressTimer = null;
+    showBoardContextMenuAt(e.clientX, e.clientY);
+  }, EFFECT_MARKER_LONG_PRESS_MS);
+});
+
 // ── Input: mousedown ───────────────────────────────────────────
 
 canvas.addEventListener('mousedown', (e) => {
@@ -4421,6 +5002,24 @@ canvas.addEventListener('mousedown', (e) => {
 
   // Left-click: select piece; double-click: pin card + walk/run (Alt+hover still previews ranges)
   if (e.button === 0) {
+    if (touchUnitDoubleTapSuppressMouseDown) {
+      touchUnitDoubleTapSuppressMouseDown = false;
+      e.preventDefault();
+      scheduleRender();
+      return;
+    }
+    clearEffectMarkerLongPressTimer();
+    if (
+      pendingTouchArmyPlaceRaw &&
+      isPointOverCanvas(e.clientX, e.clientY) &&
+      !armyBuilderPanel.isScreenPointOverPanel(e.clientX, e.clientY)
+    ) {
+      handleArmyBuilderDrop(e.clientX, e.clientY, pendingTouchArmyPlaceRaw);
+      pendingTouchArmyPlaceRaw = null;
+      e.preventDefault();
+      scheduleRender();
+      return;
+    }
     if (tryEtherVortexCrystalBadgeOpen(e.clientX, e.clientY)) {
       scheduleRender();
       return;
@@ -4625,7 +5224,7 @@ canvas.addEventListener('mousedown', (e) => {
     }
 
     // Alt+click: pick terrain even when a small or big miniature shares its hexes (normal hit order hides terrain).
-    if (altKeyHeld) {
+    if (altModActive()) {
       const altTerrainIdx = findTerrainAtHex(hex);
       if (altTerrainIdx !== -1) {
         unitDragPendingIndex = null;
@@ -4819,13 +5418,19 @@ canvas.addEventListener('mousedown', (e) => {
   }
 });
 
-// ── Input: mouseup ─────────────────────────────────────────────
+// ── Input: pointerup / cancel (touch + mouse) ─────────────────
 
-window.addEventListener('pointerup', onWindowGodPointerEnd);
-window.addEventListener('pointercancel', onWindowGodPointerEnd);
-
-window.addEventListener('mouseup', (e) => {
+function onWindowPointerUpOrCancel(e: PointerEvent): void {
+  activeCanvasPointers.delete(e.pointerId);
+  if (activeCanvasPointers.size < 2) {
+    twoFingerCameraGesture = false;
+    pinchPrevDistance = 0;
+  }
+  clearEffectMarkerLongPressTimer();
   finishGodLooseDragIfActive(e);
+  if (boardDragCapturePointerId === e.pointerId) {
+    releaseBoardDragCaptureIfAny();
+  }
   if (e.button === 0 && unitDragPendingIndex !== null) {
     unitDragPendingIndex = null;
     if (draggingUnitIndex === null) {
@@ -4868,7 +5473,6 @@ window.addEventListener('mouseup', (e) => {
     renderer.setDragState(null, null, null);
     updateMovementHighlights();
     scheduleRender();
-    commitBoardUndoCheckpoint();
   }
   if (e.button === 0 && draggingBigMiniIndex !== null) {
     const dropWorld = screenToBoardWorld(e.clientX, e.clientY);
@@ -4889,7 +5493,6 @@ window.addEventListener('mouseup', (e) => {
       bigMiniatures.map((m) => m.offBoardWorld));
     updateBigMiniMovementHighlights();
     scheduleRender();
-    commitBoardUndoCheckpoint();
   }
   if (e.button === 0 && draggingLargeMiniIndex !== null) {
     const dropHex = hexAtScreen(e.clientX, e.clientY);
@@ -4905,7 +5508,6 @@ window.addEventListener('mouseup', (e) => {
     unitCard.setPassthrough(false);
     updateLargeMiniMovementHighlights();
     scheduleRender();
-    commitBoardUndoCheckpoint();
   }
   if (e.button === 0 && draggingHugeMiniIndex !== null) {
     const idx = draggingHugeMiniIndex;
@@ -4928,7 +5530,6 @@ window.addEventListener('mouseup', (e) => {
     unitCard.setPassthrough(false);
     updateHugeMiniMovementHighlights();
     scheduleRender();
-    commitBoardUndoCheckpoint();
   }
   if (e.button === 0 && isDraggingTerrain) {
     const dropWorld = screenToBoardWorld(e.clientX, e.clientY);
@@ -4948,7 +5549,6 @@ window.addEventListener('mouseup', (e) => {
     terrainDragOverCenter = null;
     renderer.setTerrain(terrains, null, false, null, null, selectedTerrainIndex, terrainOffBoardWorlds);
     scheduleRender();
-    commitBoardUndoCheckpoint();
   }
   if (e.button === 0 && isDraggingEtherVortex) {
     const dropWorld = screenToBoardWorld(e.clientX, e.clientY);
@@ -4969,10 +5569,12 @@ window.addEventListener('mouseup', (e) => {
     renderer.setEtherVortexDrag(null, null, null);
     renderer.setEtherVortexes(etherVortexes, selectedEtherVortexIndex);
     scheduleRender();
-    commitBoardUndoCheckpoint();
   }
   isPanning = false;
-});
+}
+
+window.addEventListener('pointerup', onWindowPointerUpOrCancel);
+window.addEventListener('pointercancel', onWindowPointerUpOrCancel);
 
 window.addEventListener('keydown', (e) => {
   if (isEditableTarget(e.target)) return;
@@ -4996,18 +5598,6 @@ window.addEventListener('keydown', (e) => {
     scheduleRender();
     return;
   }
-  if (mod && !e.shiftKey && e.code === 'KeyZ') {
-    if (e.repeat) return;
-    if (isBoardMultiplayerSyncActive()) {
-      if (localViewPlayerSlot === null) return;
-      e.preventDefault();
-      requestMultiplayerUndo();
-    } else {
-      e.preventDefault();
-      performSoloUndo();
-    }
-    return;
-  }
   if (!mod && !e.repeat && e.code === 'KeyR') {
     if (
       isPointOverCanvas(pointerScreenX, pointerScreenY) &&
@@ -5022,7 +5612,6 @@ window.addEventListener('keydown', (e) => {
           notifyBoardEditLocal();
           e.preventDefault();
           scheduleRender();
-          commitBoardUndoCheckpoint();
           return;
         }
       }
@@ -5082,6 +5671,8 @@ window.addEventListener('blur', () => {
 
   altKeyHeld = false;
   shiftKeyHeld = false;
+  touchAltSticky = false;
+  touchShiftSticky = false;
   altHoverTarget = null;
   shiftHoverTarget = null;
   hoveredAttack = null;
@@ -5246,7 +5837,6 @@ window.addEventListener('keydown', (e) => {
       else m.spriteOffsetLocal.y += step;
       e.preventDefault();
       scheduleRender();
-      commitBoardUndoCheckpoint();
       return;
     }
   }
@@ -5257,7 +5847,6 @@ window.addEventListener('keydown', (e) => {
       m.spriteRotationDeg = 0;
       e.preventDefault();
       scheduleRender();
-      commitBoardUndoCheckpoint();
       return;
     }
   }
@@ -5278,7 +5867,6 @@ window.addEventListener('keydown', (e) => {
       m.spriteRotationDeg = r;
       e.preventDefault();
       scheduleRender();
-      commitBoardUndoCheckpoint();
       return;
     }
   }
@@ -5325,7 +5913,6 @@ window.addEventListener('keydown', (e) => {
       rotateElementUnderHex(hoveredHexUnderPointer, -elementRotStep)
     ) {
       scheduleRender();
-      commitBoardUndoCheckpoint();
       e.preventDefault();
     }
     return;
@@ -5340,7 +5927,6 @@ window.addEventListener('keydown', (e) => {
       rotateElementUnderHex(hoveredHexUnderPointer, elementRotStep)
     ) {
       scheduleRender();
-      commitBoardUndoCheckpoint();
       e.preventDefault();
     }
     return;
@@ -5430,140 +6016,124 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-canvas.addEventListener('contextmenu', (e) => {
-  const hex = hexAtScreen(e.clientX, e.clientY);
+function showBoardContextMenuAt(clientX: number, clientY: number): boolean {
+  const hex = hexAtScreen(clientX, clientY);
 
-  // Off-board unit right-click
   if (!hex) {
-    const obUnit = findOffBoardUnitAtScreen(e.clientX, e.clientY);
+    const obUnit = findOffBoardUnitAtScreen(clientX, clientY);
     if (obUnit !== -1) {
-      e.preventDefault();
       const unit = units[obUnit];
-      effectMarkerMenu.show(e.clientX, e.clientY, unit.effectMarkers, {
+      effectMarkerMenu.show(clientX, clientY, unit.effectMarkers, {
         onToggle: () => {
           syncEffectMarkersToRenderer();
           scheduleRender();
-          commitBoardUndoCheckpoint();
         },
       });
-      return;
+      return true;
     }
-    const obBig = findOffBoardBigMiniAtScreen(e.clientX, e.clientY);
+    const obBig = findOffBoardBigMiniAtScreen(clientX, clientY);
     if (obBig !== -1) {
-      e.preventDefault();
       const bm = bigMiniatures[obBig];
-      effectMarkerMenu.show(e.clientX, e.clientY, bm.effectMarkers, {
+      effectMarkerMenu.show(clientX, clientY, bm.effectMarkers, {
         onToggle: () => {
           syncEffectMarkersToRenderer();
           scheduleRender();
-          commitBoardUndoCheckpoint();
         },
       });
-      return;
+      return true;
     }
-    const obLarge = findOffBoardLargeMiniAtScreen(e.clientX, e.clientY);
+    const obLarge = findOffBoardLargeMiniAtScreen(clientX, clientY);
     if (obLarge !== -1) {
-      e.preventDefault();
-      effectMarkerMenu.show(e.clientX, e.clientY, largeMiniatures[obLarge].effectMarkers, {
+      effectMarkerMenu.show(clientX, clientY, largeMiniatures[obLarge].effectMarkers, {
         onToggle: () => {
           syncEffectMarkersToRenderer();
           scheduleRender();
-          commitBoardUndoCheckpoint();
         },
       });
-      return;
+      return true;
     }
-    const obHuge = findOffBoardHugeMiniAtScreen(e.clientX, e.clientY);
+    const obHuge = findOffBoardHugeMiniAtScreen(clientX, clientY);
     if (obHuge !== -1) {
-      e.preventDefault();
-      effectMarkerMenu.show(e.clientX, e.clientY, hugeMiniatures[obHuge].effectMarkers, {
+      effectMarkerMenu.show(clientX, clientY, hugeMiniatures[obHuge].effectMarkers, {
         onToggle: () => {
           syncEffectMarkersToRenderer();
           scheduleRender();
-          commitBoardUndoCheckpoint();
         },
       });
-      return;
+      return true;
     }
-    e.preventDefault();
-    return;
+    return false;
   }
 
-  // On-board: check units first, then big minis, then ether vortexes
   const clickedUnitIndex = units.findIndex((unit) => unit.position.key === hex.key);
   if (clickedUnitIndex !== -1) {
-    e.preventDefault();
     const unit = units[clickedUnitIndex];
-    effectMarkerMenu.show(e.clientX, e.clientY, unit.effectMarkers, {
+    effectMarkerMenu.show(clientX, clientY, unit.effectMarkers, {
       onToggle: () => {
         syncEffectMarkersToRenderer();
         scheduleRender();
-        commitBoardUndoCheckpoint();
       },
     });
-    return;
+    return true;
   }
 
   const bigIdx = findBigMiniAtHex(hex);
   if (bigIdx !== -1) {
-    e.preventDefault();
     const bm = bigMiniatures[bigIdx];
-    effectMarkerMenu.show(e.clientX, e.clientY, bm.effectMarkers, {
+    effectMarkerMenu.show(clientX, clientY, bm.effectMarkers, {
       onToggle: () => {
         syncEffectMarkersToRenderer();
         scheduleRender();
-        commitBoardUndoCheckpoint();
       },
     });
-    return;
+    return true;
   }
 
   const largeIdx = findLargeMiniAtHex(hex);
   if (largeIdx !== -1) {
-    e.preventDefault();
-    effectMarkerMenu.show(e.clientX, e.clientY, largeMiniatures[largeIdx].effectMarkers, {
+    effectMarkerMenu.show(clientX, clientY, largeMiniatures[largeIdx].effectMarkers, {
       onToggle: () => {
         syncEffectMarkersToRenderer();
         scheduleRender();
-        commitBoardUndoCheckpoint();
       },
     });
-    return;
+    return true;
   }
 
-  const hugeIdx = resolveHugeMiniIndexAtPointer(hex, screenToBoardWorld(e.clientX, e.clientY));
+  const hugeIdx = resolveHugeMiniIndexAtPointer(hex, screenToBoardWorld(clientX, clientY));
   if (hugeIdx !== -1) {
-    e.preventDefault();
-    effectMarkerMenu.show(e.clientX, e.clientY, hugeMiniatures[hugeIdx].effectMarkers, {
+    effectMarkerMenu.show(clientX, clientY, hugeMiniatures[hugeIdx].effectMarkers, {
       onToggle: () => {
         syncEffectMarkersToRenderer();
         scheduleRender();
-        commitBoardUndoCheckpoint();
       },
     });
-    return;
+    return true;
   }
 
   const vi = findEtherVortexAtHex(hex);
   if (vi !== -1) {
-    e.preventDefault();
     etherVortexCrystalPopover.hide();
     const v = etherVortexes[vi];
-    etherVortexMenu.show(e.clientX, e.clientY, {
+    etherVortexMenu.show(clientX, clientY, {
       onPickDomain: (domain) => {
         v.domain = domain;
         scheduleRender();
-        commitBoardUndoCheckpoint();
       },
       onClearDomain: () => {
         v.domain = null;
         scheduleRender();
-        commitBoardUndoCheckpoint();
       },
     });
-    return;
+    return true;
   }
-  e.preventDefault();
+  return false;
+}
+
+canvas.addEventListener('contextmenu', (e) => {
+  if (showBoardContextMenuAt(e.clientX, e.clientY)) {
+    e.preventDefault();
+  }
 });
 
 // ── Multiplayer: full board snapshot (units, terrain, god cards, …) ──
@@ -5870,64 +6440,36 @@ registerBoardSyncApi({
   apply: applyBoardSnapshot,
 });
 
-const SOLO_UNDO_MAX = 50;
-
-const soloUndoStack: SerializedBoardStateV1[] = [];
-/** JSON of board state after the last committed solo action (for stacking previous states on the next change). */
-let soloUndoLastCommittedJson = '';
-let wasMpSyncActive = false;
-
-/** Call after each discrete local edit in solo mode so Ctrl+Z steps one user action back. */
-function commitBoardUndoCheckpoint(): void {
-  if (isBoardMultiplayerSyncActive()) return;
-  if (isApplyingRemoteBoardState()) return;
-  let j = '';
-  try {
-    j = JSON.stringify(captureBoardSnapshot());
-  } catch {
-    return;
-  }
-  if (j === soloUndoLastCommittedJson) return;
-  if (soloUndoLastCommittedJson !== '') {
-    try {
-      const parsed: unknown = JSON.parse(soloUndoLastCommittedJson);
-      if (isSerializedBoardStateV1(parsed)) {
-        soloUndoStack.push(structuredClone(parsed));
-        while (soloUndoStack.length > SOLO_UNDO_MAX) {
-          soloUndoStack.shift();
-        }
-      }
-    } catch {
-      /* ignore */
-    }
-  }
-  soloUndoLastCommittedJson = j;
+function mountTouchBoardActionsBar(): void {
+  const bar = document.createElement('div');
+  bar.className = 'touch-board-actions';
+  bar.setAttribute('aria-label', 'Быстрые действия');
+  const add = (label: string, title: string, fn: () => void) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'touch-board-action-btn';
+    b.textContent = label;
+    b.title = title;
+    b.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      fn();
+    });
+    bar.appendChild(b);
+  };
+  add('Копия', 'Копировать выделение (Ctrl+C)', () => {
+    copySelected();
+    scheduleRender();
+  });
+  add('Вставить', 'Вставить (Ctrl+V)', () => {
+    pasteClipboard();
+    scheduleRender();
+  });
+  add('Дубль', 'Дублировать (Ctrl+D)', () => {
+    duplicateSelected();
+    scheduleRender();
+  });
+  document.body.appendChild(bar);
 }
-
-function performSoloUndo(): void {
-  if (soloUndoStack.length === 0) return;
-  const prev = soloUndoStack.pop()!;
-  applyBoardSnapshot(prev);
-  try {
-    soloUndoLastCommittedJson = JSON.stringify(captureBoardSnapshot());
-  } catch {
-    soloUndoLastCommittedJson = '';
-  }
-  scheduleRender();
-}
-
-window.setInterval(() => {
-  const mp = isBoardMultiplayerSyncActive();
-  if (mp) {
-    wasMpSyncActive = true;
-    return;
-  }
-  if (wasMpSyncActive) {
-    wasMpSyncActive = false;
-    soloUndoStack.length = 0;
-    soloUndoLastCommittedJson = '';
-  }
-}, 500);
 
 const toolbarMountEl = armyBuilderPanel.getToolbarMount();
 initMultiplayerSession({
@@ -5938,7 +6480,13 @@ initMultiplayerSession({
   toolbarMount: toolbarMountEl,
 });
 mountPwaInstallToolbar(toolbarMountEl);
-mountAppSettingsToolbar(toolbarMountEl);
+mountAppSettingsToolbar(toolbarMountEl, {
+  getAlt: () => touchAltSticky,
+  getShift: () => touchShiftSticky,
+  setAlt: setTouchAltSticky,
+  setShift: setTouchShiftSticky,
+});
+mountTouchBoardActionsBar();
 
 /**
  * Console helper: выровняйте арт (Alt+стрелки / Alt+Q,E), выберите huge-модель, затем в консоли:

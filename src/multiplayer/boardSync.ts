@@ -7,7 +7,6 @@ type BoardApi = {
 
 let api: BoardApi | null = null;
 let sendFn: ((msg: ClientToServerMessage) => void) | null = null;
-let undoSend: (() => void) | null = null;
 let mpActive = false;
 let applyingRemote = false;
 let lastSentJson = '';
@@ -43,14 +42,6 @@ export function setBoardSyncTransport(
   send: ((msg: ClientToServerMessage) => void) | null,
 ): void {
   sendFn = send;
-}
-
-export function setMultiplayerUndoSend(fn: (() => void) | null): void {
-  undoSend = fn;
-}
-
-export function requestMultiplayerUndo(): void {
-  undoSend?.();
 }
 
 export function setMultiplayerBoardSyncActive(active: boolean): void {
