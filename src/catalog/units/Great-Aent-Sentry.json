@@ -1,23 +1,36 @@
 {
-  "id": "Great-Aent-Sentry",
-  "points": 0,
   "card": {
-    "name": "Великий Аэнт-Страж",
-    "catalogUnitId": "Great-Aent-Sentry",
-    "size": "huge",
-    "health": 10,
-    "maxHealth": 10,
-    "defense": { "white": 1, "green": 1 },
-    "walk": 3,
-    "run": 5,
-    "domains": ["life"],
-    "concentration": { "red": 0, "green": 0, "white": 0, "black": 0 },
-    "defenseReaction": { "white": 0, "green": 0 },
     "attacks": [],
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 1,
+      "white": 0
+    },
+    "defense": {
+      "green": 0,
+      "white": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "life"
+    ],
+    "explorationRange": 0,
+    "grabRange": 0,
+    "health": 30,
     "keywords": [],
-    "sprite": "/catalog-units/Great-Aent-Sentry/card_sprite.jpg",
+    "maxHealth": 30,
     "miniatureSprite": "/catalog-units/Great-Aent-Sentry/card_miniatureSprite.jpg",
-    "hugeSpriteOffsetLocal": { "x": 67.2, "y": -29.4 },
-    "hugeSpriteRotationDeg": 58
-  }
+    "movementDistanceUnit": "hexon",
+    "name": "Великий Аэнт-Страж",
+    "run": 2,
+    "size": "huge",
+    "sprite": "/catalog-units/Great-Aent-Sentry/card_sprite.jpg",
+    "walk": 1
+  },
+  "id": "Great-Aent-Sentry",
+  "points": 0
 }

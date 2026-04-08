@@ -1,5 +1,49 @@
 [
   {
+    "id": "Bram'mn-the-Wise",
+    "name": "Брам'мн Мудрый",
+    "factionId": "keld",
+    "catalogUnitId": "Bram'mn-the-Wise",
+    "roster": [
+      {
+        "unitId": "Blade-Dancer",
+        "maxCopies": 1,
+        "points": 27
+      },
+      {
+        "unitId": "Dryadint-Archer",
+        "maxCopies": 1,
+        "points": 27
+      },
+      {
+        "unitId": "Dryadint-Warrior",
+        "maxCopies": 1,
+        "points": 20
+      },
+      {
+        "unitId": "Great-Aent-Sentry",
+        "maxCopies": 2,
+        "points": 75
+      },
+      {
+        "unitId": "Silent-Blade",
+        "maxCopies": 2,
+        "points": 28
+      },
+      {
+        "unitId": "Spirit-of-Keld",
+        "maxCopies": 1,
+        "points": 29
+      },
+      {
+        "unitId": "defender_seedlings",
+        "maxCopies": 5,
+        "points": 16
+      }
+    ],
+    "points": 40
+  },
+  {
     "id": "Kellantra",
     "name": "Келлантра, Ярость Леса",
     "factionId": "keld",
@@ -73,6 +117,11 @@
         "unitId": "Spirit-of-Keld",
         "maxCopies": 2,
         "points": 29
+      },
+      {
+        "unitId": "Great-Aent-Sentry",
+        "maxCopies": 1,
+        "points": 75
       }
     ],
     "points": 70

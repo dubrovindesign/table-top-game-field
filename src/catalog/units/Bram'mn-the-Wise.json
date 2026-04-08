@@ -1,0 +1,25 @@
+{
+  "card": {
+    "attacks": [],
+    "concentration": {},
+    "defense": {
+      "green": 0,
+      "white": 2
+    },
+    "defenseReaction": {},
+    "domains": [
+      "life"
+    ],
+    "health": 8,
+    "keywords": [],
+    "maxHealth": 8,
+    "miniatureSprite": "/catalog-units/Bram'mn-the-Wise/card_miniatureSprite.jpg",
+    "name": "Брам'мн Мудрый",
+    "run": 5,
+    "size": "small",
+    "sprite": "/catalog-units/Bram'mn-the-Wise/card_sprite.jpg",
+    "walk": 3
+  },
+  "id": "Bram'mn-the-Wise",
+  "points": 0
+}

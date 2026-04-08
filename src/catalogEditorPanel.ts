@@ -7,8 +7,10 @@ import './catalogEditorPanel.css';
 import {
   addRosterSlot,
   CATALOG_OVERRIDES_CHANGED,
+  clearCardSpriteFromUnitOverrides,
   createStubCatalogUnit,
   exportCatalogOverridesJson,
+  finalizeCardForUnitSave,
   getCatalogOverrides,
   getHotspotsForUnit,
   importCatalogOverridesJson,
@@ -1218,7 +1220,7 @@ export class CatalogEditorPanel {
     const def = getCatalogUnit(unitId);
     if (!def) return;
     this.unitNameInput.value = def.card.name;
-    this.loadCardIntoForm(def.card);
+    this.loadCardIntoForm(def.card, unitId);
     this.applyError.textContent = '';
 
     const hf = getHotspotsForUnit(unitId);
@@ -1261,7 +1263,8 @@ export class CatalogEditorPanel {
       const stubDef = createStubCatalogUnit(id, name, 0, cloneFrom);
       const rawCard = this.readCardFromForm(stubDef.card);
       if (!rawCard) return;
-      const card = await resolveCardImageUrlsForStorage(rawCard);
+      const cardResolved = await resolveCardImageUrlsForStorage(rawCard);
+      const card = finalizeCardForUnitSave(id, cardResolved, 'newUnit');
       setNewUnit(id, { id, points: 0, card });
       this.selectedUnitId = id;
       if (this.unitCreatePresetLeaderId) {
@@ -1944,7 +1947,7 @@ export class CatalogEditorPanel {
     this.attackRows.push(refs);
   }
 
-  private loadCardIntoForm(card: UnitCardData): void {
+  private loadCardIntoForm(card: UnitCardData, unitId?: string): void {
     this.cardName.value = card.name;
     this.cardSize.value = card.size;
     this.cardHealth.value = String(card.health);
@@ -1956,7 +1959,9 @@ export class CatalogEditorPanel {
     this.cardDefG.value = card.defense.green != null ? String(card.defense.green) : '';
     this.cardDomains.value = card.domains.join(', ');
     this.cardKeywords.value = (card.keywords ?? []).join(', ');
-    this.cardSprite.value = card.sprite ?? '';
+    const spriteFallback =
+      unitId && !card.sprite?.trim() ? getHotspotsForUnit(unitId)?.image?.trim() : '';
+    this.cardSprite.value = card.sprite?.trim() || spriteFallback || '';
     this.cardMiniatureSprite.value = card.miniatureSprite ?? '';
     const conc = card.concentration ?? {};
     this.cardConcR.value = conc.red != null ? String(conc.red) : '';
@@ -2515,7 +2520,8 @@ export class CatalogEditorPanel {
         alert('Укажите имя на карточке или имя лидера');
         return;
       }
-      const card = await resolveCardImageUrlsForStorage(rawCard);
+      const cardResolved = await resolveCardImageUrlsForStorage(rawCard);
+      const card = finalizeCardForUnitSave(catalogUnitId, cardResolved, 'newUnit');
       setNewUnit(catalogUnitId, {
         id: catalogUnitId,
         points: 0,
@@ -2543,8 +2549,10 @@ export class CatalogEditorPanel {
         alert('Укажите имя на карточке');
         return;
       }
-      const card = await resolveCardImageUrlsForStorage(rawCard);
       const catalogUnitId = L.catalogUnitId;
+      const cardResolved = await resolveCardImageUrlsForStorage(rawCard);
+      const storage = o.newLeaders[id] ? 'newUnit' : 'patch';
+      const card = finalizeCardForUnitSave(catalogUnitId, cardResolved, storage);
       const udef = getCatalogUnit(catalogUnitId);
       if (!udef) {
         alert('Нет юнита миниатюры');
@@ -2729,9 +2737,11 @@ export class CatalogEditorPanel {
     if (!def) return;
     const cardRaw = this.readCardFromForm(def.card);
     if (!cardRaw) return;
-    const card = await resolveCardImageUrlsForStorage(cardRaw);
-    card.catalogUnitId = def.card.catalogUnitId ?? this.selectedUnitId;
+    const cardResolved = await resolveCardImageUrlsForStorage(cardRaw);
     const id = this.selectedUnitId;
+    const storage = getCatalogOverrides().newUnits[id] ? 'newUnit' : 'patch';
+    const card = finalizeCardForUnitSave(id, cardResolved, storage);
+    card.catalogUnitId = def.card.catalogUnitId ?? this.selectedUnitId;
     if (getCatalogOverrides().newUnits[id]) {
       setNewUnit(id, { ...def, card });
     } else {
@@ -2792,6 +2802,10 @@ export class CatalogEditorPanel {
       regions: this.hotspotRegions.map((r) => stripRegionForSave(structuredClone(r))),
     };
     setHotspotsForUnit(unitId, file);
+    clearCardSpriteFromUnitOverrides(unitId);
+    const defAfter = getCatalogUnit(unitId);
+    const thumb = defAfter ? unitPanelThumbSrc(defAfter.card) : undefined;
+    if (thumb) this.cardSprite.value = thumb;
     this.hotspotImageInput.value = image;
     this.hotspotImageUrl = image;
     if (this.unitFormIsNew) this.selectedUnitId = unitId;

@@ -358,6 +358,60 @@ export function getHotspotsForUnit(unitId: string): HotspotFile | undefined {
   return o.hotspots[unitId] ?? getStaticHotspotForUnit(unitId);
 }
 
+/** Только оверрайд из редактора (не статика из репозитория). */
+export function getHotspotOverrideImage(unitId: string): string | undefined {
+  const img = getCatalogOverrides().hotspots[unitId]?.image?.trim();
+  return img || undefined;
+}
+
+/**
+ * Когда для юнита в оверрайдах задана картинка хотспотов, не дублируем её в `card.sprite`
+ * (иначе extract base64 создаёт два файла: card_sprite и image).
+ * Для `newUnit` ключ `sprite` убираем; для патча к статике нужен `sprite: ''`, иначе deepMerge оставит sprite из базы.
+ */
+export function finalizeCardForUnitSave(
+  unitId: string,
+  card: UnitCardData,
+  storage: 'newUnit' | 'patch',
+): UnitCardData {
+  if (!getHotspotOverrideImage(unitId)) return card;
+  if (storage === 'newUnit') {
+    const { sprite: _omit, ...rest } = card;
+    return rest as UnitCardData;
+  }
+  return { ...card, sprite: '' };
+}
+
+/** После сохранения хотспотов с картинкой — убрать дубликат art из карточки в оверрайдах. */
+export function clearCardSpriteFromUnitOverrides(unitId: string): void {
+  const o = structuredClone(getCatalogOverrides());
+  if (!o.hotspots[unitId]?.image?.trim()) return;
+  let changed = false;
+
+  const nu = o.newUnits[unitId];
+  if (nu?.card?.sprite) {
+    delete nu.card.sprite;
+    o.newUnits[unitId] = nu;
+    changed = true;
+  }
+
+  if (!nu) {
+    const p = o.unitPatches[unitId];
+    if (p?.card) {
+      if (p.card.sprite !== '') {
+        p.card.sprite = '';
+        o.unitPatches[unitId] = p;
+        changed = true;
+      }
+    } else if (CATALOG_UNITS[unitId]?.card?.sprite) {
+      o.unitPatches[unitId] = { card: { sprite: '' } } as Partial<CatalogUnitDef>;
+      changed = true;
+    }
+  }
+
+  if (changed) saveCatalogOverrides(o);
+}
+
 export function setHotspotsForUnit(unitId: string, file: HotspotFile | undefined): void {
   const o = structuredClone(getCatalogOverrides());
   if (file === undefined) {
