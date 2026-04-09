@@ -1,0 +1,40 @@
+{
+  "image": "/catalog-units/castilla-osadnaya-mortira/image.jpg",
+  "title": "Осадная Мортира",
+  "regions": [
+    {
+      "x": 0.045,
+      "y": 0.230363196125908,
+      "w": 0.91,
+      "h": 0.03896690879741727,
+      "id": "attack_0",
+      "label": "Разрывной снаряд (регион, без видимости)",
+      "red": 3,
+      "green": 1,
+      "black": 1,
+      "white": 0,
+      "range": 4,
+      "rangeUnit": "hexon",
+      "damage": 2
+    },
+    {
+      "x": 0.045,
+      "y": 0.2716222760290556,
+      "w": 0.91,
+      "h": 0.03896690879741727,
+      "id": "attack_1",
+      "label": "Горящие осколки (площадь, без видимости)",
+      "red": 5,
+      "green": 1,
+      "black": 1,
+      "white": 0,
+      "range": 4,
+      "rangeUnit": "hexon",
+      "damage": 1
+    }
+  ],
+  "scrollLayout": {
+    "faceH": 1420,
+    "totalH": 2478
+  }
+}

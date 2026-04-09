@@ -1,0 +1,87 @@
+{
+  "id": "engeln-devring-olverton",
+  "points": 23,
+  "card": {
+    "attacks": [
+      {
+        "name": "Атака",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "fire",
+        "damage": 2,
+        "dice": {
+          "red": 2,
+          "green": 2,
+          "black": 1,
+          "white": 0
+        },
+        "modifiers": [
+          {
+            "kind": "text",
+            "label": "Огнемёт"
+          }
+        ]
+      }
+    ],
+    "catalogUnitId": "engeln-devring-olverton",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 1,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "creation"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 6,
+    "keywords": [
+      "Ангельн",
+      "Кастилия",
+      "Персонаж",
+      "Воин",
+      "Огнемёт",
+      "Секира"
+    ],
+    "maxHealth": 6,
+    "miniatureSprite": "/catalog-units/engeln-devring-olverton/miniature.jpg",
+    "name": "Девринг Олвертон",
+    "run": 6,
+    "size": "small",
+    "sprite": "/catalog-units/engeln-devring-olverton/image.jpg",
+    "walk": 3,
+    "flagSprite": "/engeln.webp",
+    "faithMarkers": {
+      "red": 1
+    },
+    "traits": [
+      {
+        "name": "Охотник за головами",
+        "description": ""
+      },
+      {
+        "name": "Заклятый враг: не человек",
+        "description": ""
+      },
+      {
+        "name": "Генератор Молний",
+        "description": ""
+      }
+    ]
+  }
+}

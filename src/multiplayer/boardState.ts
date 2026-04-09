@@ -24,6 +24,8 @@ export type SerializedUnit = {
   catalogUnitId?: string;
   rosterLeaderId?: string;
   armyOwnerPlayerSlot?: PlayerSlot;
+  /** Орда брумгаров: голод / нейтраль / разгул */
+  broomgarHungerPhase?: 0 | 1 | 2;
 };
 
 export type SerializedBigMini = {
@@ -39,6 +41,7 @@ export type SerializedBigMini = {
   catalogUnitId?: string;
   rosterLeaderId?: string;
   armyOwnerPlayerSlot?: PlayerSlot;
+  broomgarHungerPhase?: 0 | 1 | 2;
 };
 
 export type SerializedLargeMini = {
@@ -54,6 +57,7 @@ export type SerializedLargeMini = {
   catalogUnitId?: string;
   rosterLeaderId?: string;
   armyOwnerPlayerSlot?: PlayerSlot;
+  broomgarHungerPhase?: 0 | 1 | 2;
 };
 
 export type SerializedHugeMini = {
@@ -69,10 +73,20 @@ export type SerializedHugeMini = {
   catalogUnitId?: string;
   rosterLeaderId?: string;
   armyOwnerPlayerSlot?: PlayerSlot;
+  broomgarHungerPhase?: 0 | 1 | 2;
   /** Nudge of card art inside the huge footprint (layout units, after bbox-centering). */
   spriteOffsetLocal?: SerializedPoint;
   /** Rotation of card art inside the clip (degrees). */
   spriteRotationDeg?: number;
+};
+
+/** Inventory item token on the board (catalog `itemId`). */
+export type SerializedInventoryTablePiece = {
+  rosterLeaderId: string;
+  itemId: string;
+  world: SerializedPoint;
+  spawnedFromArmyPanel?: boolean;
+  armyOwnerPlayerSlot?: PlayerSlot;
 };
 
 export type SerializedEtherVortex = {
@@ -145,6 +159,8 @@ export type SerializedBoardStateV1 = {
   terrainRotationDeg?: number;
   etherVortexes: SerializedEtherVortex[];
   godTablePieces: GodTablePiece[];
+  /** Предметы инвентаря на столе (опционально для старых снимков). */
+  inventoryTablePieces?: SerializedInventoryTablePiece[];
   /**
    * Открытые карты эфирного вихря (индексы спрайта в `EPHIRIUM_VORTEX_CARDS`), порядок = порядок вытягивания, макс. 2.
    */
@@ -384,5 +400,18 @@ export function isSerializedBoardStateV1(raw: unknown): raw is SerializedBoardSt
   }
   const sh = (o as { sharedDice?: unknown }).sharedDice;
   if (sh !== undefined && parseSharedDiceState(sh) === undefined) return false;
+  const inv = (o as { inventoryTablePieces?: unknown }).inventoryTablePieces;
+  if (inv !== undefined) {
+    if (!Array.isArray(inv)) return false;
+    for (const p of inv) {
+      if (!p || typeof p !== 'object') return false;
+      const q = p as Record<string, unknown>;
+      if (typeof q.rosterLeaderId !== 'string' || typeof q.itemId !== 'string') return false;
+      if (!q.world || typeof q.world !== 'object') return false;
+      const w = q.world as { x?: unknown; y?: unknown };
+      if (typeof w.x !== 'number' || typeof w.y !== 'number') return false;
+      if (!validOptionalArmyOwnerSlot(q.armyOwnerPlayerSlot)) return false;
+    }
+  }
   return true;
 }

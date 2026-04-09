@@ -1,0 +1,48 @@
+{
+  "id": "broomgar-mutsereg-topory",
+  "points": 30,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "broomgar-mutsereg-topory",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 0,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "destruction"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 12,
+    "keywords": [
+      "Орда брумгаров"
+    ],
+    "maxHealth": 12,
+    "miniatureSprite": "/catalog-units/broomgar-mutsereg-topory/miniature.jpg",
+    "name": "Муцерег с Топорами",
+    "run": 6,
+    "size": "small",
+    "sprite": "/catalog-units/broomgar-mutsereg-topory/image.jpg",
+    "walk": 3,
+    "faithMarkers": {
+      "red": 1
+    },
+    "flagSprite": "/broomgar_horde.webp"
+  }
+}

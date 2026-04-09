@@ -1,0 +1,82 @@
+{
+  "id": "engeln-master-mecha",
+  "points": 20,
+  "card": {
+    "attacks": [
+      {
+        "name": "Удар мечом",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 2,
+        "dice": {
+          "red": 2,
+          "green": 2,
+          "black": 2,
+          "white": 0
+        }
+      },
+      {
+        "name": "Круговая атака",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 2,
+        "dice": {
+          "red": 3,
+          "green": 2,
+          "black": 1,
+          "white": 0
+        },
+        "areaAttack": true
+      }
+    ],
+    "catalogUnitId": "engeln-master-mecha",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 1,
+      "green": 0
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "creation"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 5,
+    "keywords": [
+      "Ангельн"
+    ],
+    "maxHealth": 5,
+    "miniatureSprite": "/catalog-units/engeln-master-mecha/miniature.jpg",
+    "name": "Мастер Меча",
+    "run": 6,
+    "size": "small",
+    "sprite": "/catalog-units/engeln-master-mecha/image.jpg",
+    "walk": 3,
+    "flagSprite": "/engeln.webp",
+    "faithMarkers": {
+      "red": 1
+    },
+    "traits": [
+      {
+        "name": "Ветеран",
+        "description": "Опытный боец."
+      }
+    ]
+  }
+}

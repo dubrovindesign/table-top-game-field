@@ -1,0 +1,38 @@
+{
+  "image": "/catalog-units/krigmark-war-abomination/image.jpg",
+  "title": "Абоминация войны",
+  "regions": [
+    {
+      "x": 0.045,
+      "y": 0.230363196125908,
+      "w": 0.91,
+      "h": 0.03896690879741727,
+      "id": "attack_0",
+      "label": "Удар клинком",
+      "red": 3,
+      "green": 0,
+      "black": 1,
+      "white": 0,
+      "range": 1,
+      "damage": 4
+    },
+    {
+      "x": 0.045,
+      "y": 0.27162227602905564,
+      "w": 0.91,
+      "h": 0.03896690879741727,
+      "id": "attack_1",
+      "label": "Град ударов",
+      "red": 5,
+      "green": 0,
+      "black": 1,
+      "white": 0,
+      "range": 1,
+      "damage": 1
+    }
+  ],
+  "scrollLayout": {
+    "faceH": 1420,
+    "totalH": 2478
+  }
+}

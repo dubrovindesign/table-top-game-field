@@ -1,0 +1,30 @@
+{
+  "id": "krigmark-dalmar-shultz-starshiy-inzhener",
+  "points": 34,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "krigmark-dalmar-shultz-starshiy-inzhener",
+    "concentration": { "black": 0, "green": 0, "red": 0, "white": 0 },
+    "defense": { "white": 1, "green": 2 },
+    "defenseReaction": { "green": 0, "white": 1 },
+    "domains": ["death"],
+    "exploration": { "black": 0, "green": 0, "red": 0, "white": 0 },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 12,
+    "keywords": ["Кригмарк"],
+    "maxHealth": 12,
+    "name": "Дальмар Шульц Старший Инженер",
+    "run": 4,
+    "size": "large",
+    "walk": 3,
+    "faithMarkers": { "red": 2 },
+    "flagSprite": "/krigmark.webp",
+    "traits": [
+      {
+        "name": "Лидер Army Builder",
+        "description": "Миниатюра лидера без арта; очки и ростер из torn-world.com."
+      }
+    ]
+  }
+}

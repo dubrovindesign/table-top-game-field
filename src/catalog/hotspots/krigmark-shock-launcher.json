@@ -1,0 +1,39 @@
+{
+  "image": "/catalog-units/krigmark-shock-launcher/image.jpg",
+  "title": "Штоссрягер (пусковой стреломёт)",
+  "regions": [
+    {
+      "x": 0.045,
+      "y": 0.2303869143780291,
+      "w": 0.91,
+      "h": 0.03897092084006462,
+      "id": "attack_0",
+      "label": "Удар булавой",
+      "red": 2,
+      "green": 1,
+      "black": 2,
+      "white": 0,
+      "range": 1,
+      "damage": 3
+    },
+    {
+      "x": 0.045,
+      "y": 0.2716502423263328,
+      "w": 0.91,
+      "h": 0.03897092084006462,
+      "id": "attack_1",
+      "label": "Залп",
+      "red": 4,
+      "green": 0,
+      "black": 0,
+      "white": 0,
+      "range": 3,
+      "rangeUnit": "hexon",
+      "damage": 2
+    }
+  ],
+  "scrollLayout": {
+    "faceH": 1419,
+    "totalH": 2476
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "image": "/catalog-units/krigmark-feldwebel-reapers/image.jpg",
+  "title": "Фельдфебель жнецов",
+  "scrollLayout": {
+    "faceH": 1418,
+    "totalH": 2474
+  },
+  "regions": [
+    {
+      "x": 0.045,
+      "y": 0.23041067097817303,
+      "w": 0.91,
+      "h": 0.038974939369442206,
+      "id": "attack_0",
+      "label": "Атака 1",
+      "red": 1,
+      "green": 1,
+      "black": 1,
+      "white": 0,
+      "range": 1,
+      "damage": 1
+    },
+    {
+      "x": 0.045,
+      "y": 0.2716782538399353,
+      "w": 0.91,
+      "h": 0.038974939369442206,
+      "id": "attack_1",
+      "label": "Атака 2",
+      "red": 1,
+      "green": 1,
+      "black": 0,
+      "white": 0,
+      "range": 1,
+      "damage": 1
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "image": "/catalog-units/broomgar-yargachin-bulava/image.jpg",
+  "title": "Яргачин (булавой)",
+  "regions": [
+    {
+      "x": 0.045,
+      "y": 0.23037948152233867,
+      "w": 0.91,
+      "h": 0.03896966354109211,
+      "id": "attack_0",
+      "label": "Ближний бой",
+      "red": 2,
+      "green": 1,
+      "black": 1,
+      "white": 0,
+      "range": 1,
+      "rangeUnit": "hex",
+      "damage": 2
+    },
+    {
+      "x": 0.045,
+      "y": 0.27164147821290674,
+      "w": 0.91,
+      "h": 0.03896966354109211,
+      "id": "attack_1",
+      "label": "Дополнительная атака",
+      "red": 1,
+      "green": 1,
+      "black": 0,
+      "white": 0,
+      "range": 1,
+      "rangeUnit": "hex",
+      "damage": 1
+    }
+  ],
+  "scrollLayout": {
+    "faceH": 1039,
+    "totalH": 1813
+  }
+}

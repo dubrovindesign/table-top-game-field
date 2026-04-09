@@ -1,0 +1,48 @@
+{
+  "id": "castilla-flammalero-topory",
+  "points": 0,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "castilla-flammalero-topory",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 2,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "destruction"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 8,
+    "keywords": [
+      "Кастилия"
+    ],
+    "maxHealth": 8,
+    "miniatureSprite": "/catalog-units/castilla-flammalero-topory/miniature.jpg",
+    "name": "Фламмальеро с топорами",
+    "run": 6,
+    "size": "small",
+    "sprite": "/catalog-units/castilla-flammalero-topory/image.jpg",
+    "walk": 3,
+    "faithMarkers": {
+      "red": 2
+    },
+    "flagSprite": "/castilla.webp"
+  }
+}

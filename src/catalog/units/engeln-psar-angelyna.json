@@ -1,0 +1,68 @@
+{
+  "id": "engeln-psar-angelyna",
+  "points": 22,
+  "card": {
+    "attacks": [
+      {
+        "name": "Удар дубиной",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 3,
+        "dice": {
+          "red": 3,
+          "green": 1,
+          "black": 1,
+          "white": 0
+        }
+      }
+    ],
+    "catalogUnitId": "engeln-psar-angelyna",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 1,
+      "white": 0
+    },
+    "defense": {
+      "white": 1,
+      "green": 0
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "creation"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 7,
+    "keywords": [
+      "Ангельн"
+    ],
+    "maxHealth": 7,
+    "miniatureSprite": "/catalog-units/engeln-psar-angelyna/miniature.jpg",
+    "name": "Псарь Ангельна",
+    "run": 6,
+    "size": "small",
+    "sprite": "/catalog-units/engeln-psar-angelyna/image.jpg",
+    "walk": 3,
+    "flagSprite": "/engeln.webp",
+    "faithMarkers": {
+      "red": 1
+    },
+    "traits": [
+      {
+        "name": "Псарь",
+        "description": "Связан с боевым псом отряда."
+      }
+    ]
+  }
+}

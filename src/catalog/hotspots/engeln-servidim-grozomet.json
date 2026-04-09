@@ -1,0 +1,40 @@
+{
+  "image": "/catalog-units/engeln-servidim-grozomet/image.jpg",
+  "title": "Сервидим Ангельна с грозомётом",
+  "regions": [
+    {
+      "id": "attack_0",
+      "label": "Залп молний",
+      "x": 0.042,
+      "y": 0.3026289409862571,
+      "w": 0.916,
+      "h": 0.03324333063864188,
+      "range": 3,
+      "rangeUnit": "hex",
+      "damage": 2,
+      "red": 2,
+      "green": 2,
+      "black": 1,
+      "white": 0
+    },
+    {
+      "id": "attack_1",
+      "label": "Удар прикладом",
+      "x": 0.042,
+      "y": 0.34504284559417947,
+      "w": 0.916,
+      "h": 0.03324333063864188,
+      "range": 1,
+      "rangeUnit": "hex",
+      "damage": 2,
+      "red": 1,
+      "green": 2,
+      "black": 1,
+      "white": 0
+    }
+  ],
+  "scrollLayout": {
+    "faceH": 1418,
+    "totalH": 2474
+  }
+}

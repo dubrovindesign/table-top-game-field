@@ -1,0 +1,38 @@
+{
+  "image": "/catalog-units/castilla-flammalero-mortira/image.jpg",
+  "title": "Фламмальеро с ручной мортирой",
+  "regions": [
+    {
+      "x": 0.045,
+      "y": 0.2303869143780291,
+      "w": 0.91,
+      "h": 0.03897092084006462,
+      "id": "attack_0",
+      "label": "Выстрел (атака по региону)",
+      "red": 4,
+      "green": 1,
+      "black": 2,
+      "white": 0,
+      "range": 3,
+      "damage": 2
+    },
+    {
+      "x": 0.045,
+      "y": 0.2716502423263328,
+      "w": 0.91,
+      "h": 0.03897092084006462,
+      "id": "attack_1",
+      "label": "Удар клинком",
+      "red": 1,
+      "green": 1,
+      "black": 4,
+      "white": 0,
+      "range": 1,
+      "damage": 2
+    }
+  ],
+  "scrollLayout": {
+    "faceH": 1419,
+    "totalH": 2476
+  }
+}

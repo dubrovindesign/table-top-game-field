@@ -81,6 +81,26 @@ export function smallUnitActivationToggleCenterWorldRad(
   };
 }
 
+/** Broomgar hunger/rampage disc: bottom-left of hex (opposite «activation» corner). */
+export const SMALL_UNIT_BROOMGAR_HUNGER_CORNER_INDEX = 2;
+export const SMALL_UNIT_BROOMGAR_HUNGER_INSET_FRAC = 0.92;
+
+export function smallUnitBroomgarHungerCenterWorldRad(
+  hexCenterWorld: Point,
+  rotationRad: number,
+  layout: Layout,
+): Point {
+  const v = layout.hexCornerOffset(SMALL_UNIT_BROOMGAR_HUNGER_CORNER_INDEX);
+  const x0 = v.x * SMALL_UNIT_BROOMGAR_HUNGER_INSET_FRAC;
+  const y0 = v.y * SMALL_UNIT_BROOMGAR_HUNGER_INSET_FRAC;
+  const c = Math.cos(rotationRad);
+  const s = Math.sin(rotationRad);
+  return {
+    x: hexCenterWorld.x + c * x0 - s * y0,
+    y: hexCenterWorld.y + s * x0 + c * y0,
+  };
+}
+
 /**
  * Big miniature: activation dot on the east peripheral hex, right edge (same local rule as small).
  */
@@ -104,6 +124,23 @@ export function bigMiniActivationToggleCenterWorld(
   );
 }
 
+/** Big miniature: Broomgar disc on west peripheral hex (mirror of activation). */
+export function bigMiniBroomgarHungerCenterWorld(
+  hexonCenterWorld: Point,
+  rotationDeg: number,
+  layout: Layout,
+): Point {
+  const zero = new Hex(0, 0);
+  const o = layout.hexToPixel(zero);
+  const pw = layout.hexToPixel(new Hex(-1, 0));
+  const westCellCenterWorld = {
+    x: hexonCenterWorld.x + (pw.x - o.x),
+    y: hexonCenterWorld.y + (pw.y - o.y),
+  };
+  const rotRad = (rotationDeg * Math.PI) / 180;
+  return smallUnitBroomgarHungerCenterWorldRad(westCellCenterWorld, rotRad, layout);
+}
+
 /** Large triangle: right side of silhouette, vertically centered. Use model `rotationDeg` on all seats. */
 export function largeMiniActivationToggleCenterWorld(
   anchorHexCenterWorld: Point,
@@ -113,6 +150,27 @@ export function largeMiniActivationToggleCenterWorld(
   const b = largeTriangleBoundsLocal(layout);
   const pad = Math.min(layout.size.x, layout.size.y) * 0.1;
   const lx = b.maxX - pad;
+  const ly = (b.minY + b.maxY) / 2;
+  const dx = lx * LARGE_MINI_VISUAL_SCALE;
+  const dy = ly * LARGE_MINI_VISUAL_SCALE;
+  const rotRad = (rotationDeg * Math.PI) / 180;
+  const c = Math.cos(rotRad);
+  const s = Math.sin(rotRad);
+  return {
+    x: anchorHexCenterWorld.x + c * dx - s * dy,
+    y: anchorHexCenterWorld.y + s * dx + c * dy,
+  };
+}
+
+/** Large triangle: left side (mirror of activation). */
+export function largeMiniBroomgarHungerCenterWorld(
+  anchorHexCenterWorld: Point,
+  rotationDeg: number,
+  layout: Layout,
+): Point {
+  const b = largeTriangleBoundsLocal(layout);
+  const pad = Math.min(layout.size.x, layout.size.y) * 0.1;
+  const lx = b.minX + pad;
   const ly = (b.minY + b.maxY) / 2;
   const dx = lx * LARGE_MINI_VISUAL_SCALE;
   const dy = ly * LARGE_MINI_VISUAL_SCALE;
@@ -136,6 +194,29 @@ export function hugeMiniActivationToggleCenterFromPivotWorld(
   const cy = (b.minY + b.maxY) / 2;
   const pad = Math.min(layout.size.x, layout.size.y) * 0.1;
   const lx = b.maxX - pad;
+  const ly = (b.minY + b.maxY) / 2;
+  const dx = (lx - cx) * HUGE_MINI_VISUAL_SCALE;
+  const dy = (ly - cy) * HUGE_MINI_VISUAL_SCALE;
+  const rotRad = (rotationDeg * Math.PI) / 180;
+  const c = Math.cos(rotRad);
+  const s = Math.sin(rotRad);
+  return {
+    x: pivotWorld.x + c * dx - s * dy,
+    y: pivotWorld.y + s * dx + c * dy,
+  };
+}
+
+/** Huge triangle: left side (mirror of activation). */
+export function hugeMiniBroomgarHungerCenterFromPivotWorld(
+  pivotWorld: Point,
+  rotationDeg: number,
+  layout: Layout,
+): Point {
+  const b = hugeTriangleBoundsLocal(layout);
+  const cx = (b.minX + b.maxX) / 2;
+  const cy = (b.minY + b.maxY) / 2;
+  const pad = Math.min(layout.size.x, layout.size.y) * 0.1;
+  const lx = b.minX + pad;
   const ly = (b.minY + b.maxY) / 2;
   const dx = (lx - cx) * HUGE_MINI_VISUAL_SCALE;
   const dy = (ly - cy) * HUGE_MINI_VISUAL_SCALE;

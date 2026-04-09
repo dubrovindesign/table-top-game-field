@@ -1,0 +1,4723 @@
+{
+  "source": "https://armybuilder.torn-world.com",
+  "locale": "ru",
+  "scrapedAt": "2026-04-09T16:01:03.935Z",
+  "leaders": [
+    {
+      "hero_id": 3,
+      "hero_tech_name": "richard",
+      "hero_name": "Ричард, Сердце Леогриффа",
+      "hero_point_cost": 65,
+      "domain": {
+        "id": 1,
+        "tech_name": "creation",
+        "name": "Созидание"
+      },
+      "faction": {
+        "id": 1,
+        "tech_name": "engeln",
+        "name": "Ангельн"
+      },
+      "units": [
+        {
+          "tech_name": "swordsman",
+          "name": "Мечник",
+          "point_cost": 20,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "swordmaster",
+          "name": "Мастер Меча",
+          "point_cost": 21,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "healing_hand",
+          "name": "Клирик Исцеляющей Длани",
+          "point_cost": 28,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "shieldman",
+          "name": "Почетный Щитоносец",
+          "point_cost": 30,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "ranger_archer",
+          "name": "Рейнджер Лучник",
+          "point_cost": 27,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "shadowstep_thief",
+          "name": "Плут Теневого Шага",
+          "point_cost": 28,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "lion_cavalry_knight",
+          "name": "Рыцарь Львиной Кавалерии",
+          "point_cost": 42,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "magister_windtower",
+          "name": "Магистр Башни Воздуха",
+          "point_cost": 58,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "houndmaster",
+          "name": "Псарь",
+          "point_cost": 15,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "taorgas_blades",
+          "name": "Таоргас с Клинками",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_book",
+          "name": "Алдвин Летописец",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_beast",
+          "name": "Алдвин Искатель Истины",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_blades",
+          "name": "Гатархин, убийца",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "militia_sword",
+          "name": "Ополченец с Мечом",
+          "point_cost": 11,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "militia_banner",
+          "name": "Ополченец со Знаменем",
+          "point_cost": 12,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "militia_crossbow",
+          "name": "Ополченец Арбалетчик",
+          "point_cost": 21,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "exonaut_spear",
+          "name": "Экзонавт с Копьем",
+          "point_cost": 32,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "ranger_swordsman",
+          "name": "Рейнджер Мечник",
+          "point_cost": 26,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "exonaut_sword",
+          "name": "Экзонавт с Мечом",
+          "point_cost": 35,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "rob_liberated_ogrid",
+          "name": "Роб, Беглый Огрид",
+          "point_cost": 34,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "thunderbird",
+          "name": "Буревестник Ангельна",
+          "point_cost": 30,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "thunderbird_crossbow",
+          "name": "Стрелок Ангельна",
+          "point_cost": 33,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "stingray_captain",
+          "name": "Капитан \"Ската\"",
+          "point_cost": 28,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "ekzo_efirnat_lightning",
+          "name": "Проводник Молний Башни Воздуха",
+          "point_cost": 62,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "siege_golem",
+          "name": "Осадный Голем",
+          "point_cost": 100,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "ekzoknight_two_swords",
+          "name": "Экзо-рыцарь с мечами",
+          "point_cost": 25,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "ekzoknight_spear",
+          "name": "Экзо-рыцарь с копьём",
+          "point_cost": 24,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "ekzoknight_shield",
+          "name": "Экзо-рыцарь с щитом и мечом",
+          "point_cost": 24,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "ekzoknight_twohanded_sword",
+          "name": "Экзо-рыцарь с двуручным мечом",
+          "point_cost": 24,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "olverton",
+          "name": "Девринг Олвертон",
+          "point_cost": 23,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "condesator_of_lightning",
+          "name": "Конденсатор Молний",
+          "point_cost": 3,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "ekzoknight_heavy_gun",
+          "name": "Экзо-рыцарь с тяжелым грозометом",
+          "point_cost": 50,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "servidim_sword_shield",
+          "name": "Сервидим с мечом и щитом",
+          "point_cost": 43,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "servidim_swords",
+          "name": "Сервидим с мечами",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "servidim_shooter",
+          "name": "Сервидим с грозометом",
+          "point_cost": 47,
+          "max_quantity": 1
+        }
+      ]
+    },
+    {
+      "hero_id": 9,
+      "hero_tech_name": "richard_2",
+      "hero_name": "Ричард, Первый Рыцарь",
+      "hero_point_cost": 30,
+      "domain": {
+        "id": 1,
+        "tech_name": "creation",
+        "name": "Созидание"
+      },
+      "faction": {
+        "id": 1,
+        "tech_name": "engeln",
+        "name": "Ангельн"
+      },
+      "units": [
+        {
+          "tech_name": "swordsman",
+          "name": "Мечник",
+          "point_cost": 20,
+          "max_quantity": 5
+        },
+        {
+          "tech_name": "swordmaster",
+          "name": "Мастер Меча",
+          "point_cost": 21,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "healing_hand",
+          "name": "Клирик Исцеляющей Длани",
+          "point_cost": 28,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "shieldman",
+          "name": "Почетный Щитоносец",
+          "point_cost": 30,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "ranger_archer",
+          "name": "Рейнджер Лучник",
+          "point_cost": 27,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "shadowstep_thief",
+          "name": "Плут Теневого Шага",
+          "point_cost": 28,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "lion_cavalry_knight",
+          "name": "Рыцарь Львиной Кавалерии",
+          "point_cost": 42,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "magister_windtower",
+          "name": "Магистр Башни Воздуха",
+          "point_cost": 58,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "houndmaster",
+          "name": "Псарь",
+          "point_cost": 15,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "taorgas_blades",
+          "name": "Таоргас с Клинками",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_book",
+          "name": "Алдвин Летописец",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_beast",
+          "name": "Алдвин Искатель Истины",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_blades",
+          "name": "Гатархин, убийца",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "militia_sword",
+          "name": "Ополченец с Мечом",
+          "point_cost": 11,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "militia_banner",
+          "name": "Ополченец со Знаменем",
+          "point_cost": 12,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "militia_crossbow",
+          "name": "Ополченец Арбалетчик",
+          "point_cost": 21,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "exonaut_spear",
+          "name": "Экзонавт с Копьем",
+          "point_cost": 32,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "ranger_swordsman",
+          "name": "Рейнджер Мечник",
+          "point_cost": 26,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "exonaut_sword",
+          "name": "Экзонавт с Мечом",
+          "point_cost": 35,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "rob_liberated_ogrid",
+          "name": "Роб, Беглый Огрид",
+          "point_cost": 34,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "thunderbird",
+          "name": "Буревестник Ангельна",
+          "point_cost": 30,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "thunderbird_crossbow",
+          "name": "Стрелок Ангельна",
+          "point_cost": 33,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "stingray_captain",
+          "name": "Капитан \"Ската\"",
+          "point_cost": 28,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "ekzo_efirnat_lightning",
+          "name": "Проводник Молний Башни Воздуха",
+          "point_cost": 62,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "siege_golem",
+          "name": "Осадный Голем",
+          "point_cost": 100,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "ekzoknight_two_swords",
+          "name": "Экзо-рыцарь с мечами",
+          "point_cost": 25,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "ekzoknight_spear",
+          "name": "Экзо-рыцарь с копьём",
+          "point_cost": 24,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "ekzoknight_shield",
+          "name": "Экзо-рыцарь с щитом и мечом",
+          "point_cost": 24,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "ekzoknight_twohanded_sword",
+          "name": "Экзо-рыцарь с двуручным мечом",
+          "point_cost": 24,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "olverton",
+          "name": "Девринг Олвертон",
+          "point_cost": 23,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "condesator_of_lightning",
+          "name": "Конденсатор Молний",
+          "point_cost": 3,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "ekzoknight_heavy_gun",
+          "name": "Экзо-рыцарь с тяжелым грозометом",
+          "point_cost": 50,
+          "max_quantity": 1
+        }
+      ]
+    },
+    {
+      "hero_id": 30,
+      "hero_tech_name": "breylon",
+      "hero_name": "Брэйлон, Освещающий Путь",
+      "hero_point_cost": 30,
+      "domain": {
+        "id": 1,
+        "tech_name": "creation",
+        "name": "Созидание"
+      },
+      "faction": {
+        "id": 1,
+        "tech_name": "engeln",
+        "name": "Ангельн"
+      },
+      "units": [
+        {
+          "tech_name": "healing_hand",
+          "name": "Клирик Исцеляющей Длани",
+          "point_cost": 28,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "lion_cavalry_knight",
+          "name": "Рыцарь Львиной Кавалерии",
+          "point_cost": 42,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_blades",
+          "name": "Таоргас с Клинками",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_book",
+          "name": "Алдвин Летописец",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_beast",
+          "name": "Алдвин Искатель Истины",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_blades",
+          "name": "Гатархин, убийца",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "militia_sword",
+          "name": "Ополченец с Мечом",
+          "point_cost": 11,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "militia_banner",
+          "name": "Ополченец со Знаменем",
+          "point_cost": 12,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "militia_crossbow",
+          "name": "Ополченец Арбалетчик",
+          "point_cost": 21,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "thunderbird",
+          "name": "Буревестник Ангельна",
+          "point_cost": 30,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "ekzo_efirnat_lightning",
+          "name": "Проводник Молний Башни Воздуха",
+          "point_cost": 62,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "siege_golem",
+          "name": "Осадный Голем",
+          "point_cost": 100,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "ekzoknight_two_swords",
+          "name": "Экзо-рыцарь с мечами",
+          "point_cost": 25,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "ekzoknight_spear",
+          "name": "Экзо-рыцарь с копьём",
+          "point_cost": 24,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "ekzoknight_shield",
+          "name": "Экзо-рыцарь с щитом и мечом",
+          "point_cost": 24,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "ekzoknight_twohanded_sword",
+          "name": "Экзо-рыцарь с двуручным мечом",
+          "point_cost": 24,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "exonaut_sword_breylon",
+          "name": "Экзонавт с Мечом",
+          "point_cost": 33,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "exonaut_spear_breylon",
+          "name": "Экзонавт с Копьем",
+          "point_cost": 30,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "olverton",
+          "name": "Девринг Олвертон",
+          "point_cost": 23,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "condesator_of_lightning",
+          "name": "Конденсатор Молний",
+          "point_cost": 3,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "ekzoknight_heavy_gun",
+          "name": "Экзо-рыцарь с тяжелым грозометом",
+          "point_cost": 50,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "servidim_sword_shield",
+          "name": "Сервидим с мечом и щитом",
+          "point_cost": 43,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "servidim_swords",
+          "name": "Сервидим с мечами",
+          "point_cost": 41,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "servidim_shooter",
+          "name": "Сервидим с грозометом",
+          "point_cost": 47,
+          "max_quantity": 2
+        }
+      ]
+    },
+    {
+      "hero_id": 31,
+      "hero_tech_name": "ayris",
+      "hero_name": "Айрис из Йорвика",
+      "hero_point_cost": 45,
+      "domain": {
+        "id": 1,
+        "tech_name": "creation",
+        "name": "Созидание"
+      },
+      "faction": {
+        "id": 1,
+        "tech_name": "engeln",
+        "name": "Ангельн"
+      },
+      "units": [
+        {
+          "tech_name": "healing_hand",
+          "name": "Клирик Исцеляющей Длани",
+          "point_cost": 28,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "lion_cavalry_knight",
+          "name": "Рыцарь Львиной Кавалерии",
+          "point_cost": 42,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_blades",
+          "name": "Таоргас с Клинками",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_book",
+          "name": "Алдвин Летописец",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_beast",
+          "name": "Алдвин Искатель Истины",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_blades",
+          "name": "Гатархин, убийца",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "militia_sword",
+          "name": "Ополченец с Мечом",
+          "point_cost": 11,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "militia_banner",
+          "name": "Ополченец со Знаменем",
+          "point_cost": 12,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "militia_crossbow",
+          "name": "Ополченец Арбалетчик",
+          "point_cost": 21,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "exonaut_spear",
+          "name": "Экзонавт с Копьем",
+          "point_cost": 32,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "exonaut_sword",
+          "name": "Экзонавт с Мечом",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "thunderbird",
+          "name": "Буревестник Ангельна",
+          "point_cost": 30,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "ekzo_efirnat_lightning",
+          "name": "Проводник Молний Башни Воздуха",
+          "point_cost": 62,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "siege_golem",
+          "name": "Осадный Голем",
+          "point_cost": 100,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "ekzoknight_two_swords",
+          "name": "Экзо-рыцарь с мечами",
+          "point_cost": 25,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "ekzoknight_spear",
+          "name": "Экзо-рыцарь с копьём",
+          "point_cost": 24,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "ekzoknight_shield",
+          "name": "Экзо-рыцарь с щитом и мечом",
+          "point_cost": 24,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "ekzoknight_twohanded_sword",
+          "name": "Экзо-рыцарь с двуручным мечом",
+          "point_cost": 24,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "olverton",
+          "name": "Девринг Олвертон",
+          "point_cost": 23,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "condesator_of_lightning",
+          "name": "Конденсатор Молний",
+          "point_cost": 3,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "ekzoknight_heavy_gun",
+          "name": "Экзо-рыцарь с тяжелым грозометом",
+          "point_cost": 50,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "servidim_sword_shield",
+          "name": "Сервидим с мечом и щитом",
+          "point_cost": 43,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "servidim_swords",
+          "name": "Сервидим с мечами",
+          "point_cost": 41,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "servidim_shooter",
+          "name": "Сервидим с грозометом",
+          "point_cost": 47,
+          "max_quantity": 3
+        }
+      ]
+    },
+    {
+      "hero_id": 13,
+      "hero_tech_name": "hoakin_de_esperando",
+      "hero_name": "Хоакин де Эсперандо",
+      "hero_point_cost": 28,
+      "domain": {
+        "id": 1,
+        "tech_name": "creation",
+        "name": "Созидание"
+      },
+      "faction": {
+        "id": 9,
+        "tech_name": "priory_of_hope",
+        "name": "Приорат Надежды"
+      },
+      "units": [
+        {
+          "tech_name": "ranger_archer",
+          "name": "Рейнджер Лучник",
+          "point_cost": 27,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "shadowstep_thief",
+          "name": "Плут Теневого Шага",
+          "point_cost": 28,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "taorgas_blades",
+          "name": "Таоргас с Клинками",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_book",
+          "name": "Алдвин Летописец",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_beast",
+          "name": "Алдвин Искатель Истины",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_blades",
+          "name": "Гатархин, убийца",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gerrilyas_halberd",
+          "name": "Геррильяс Алебардист",
+          "point_cost": 20,
+          "max_quantity": 5
+        },
+        {
+          "tech_name": "tolero's_rider_pistol",
+          "name": "Толерский Налетчик с пистолетом",
+          "point_cost": 42,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "tolero's_rider",
+          "name": "Толерский Налетчик",
+          "point_cost": 40,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "field_cannon",
+          "name": "Полевое Орудие",
+          "point_cost": 50,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "ranger_swordsman",
+          "name": "Рейнджер Мечник",
+          "point_cost": 26,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "officer_priory_of_hope",
+          "name": "Майор Приората Надежды",
+          "point_cost": 20,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "rob_liberated_ogrid",
+          "name": "Роб, Беглый Огрид",
+          "point_cost": 34,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gerrilyas_musketeer",
+          "name": "Геррильяс Мушкетер",
+          "point_cost": 40,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "stingray_seeman_2",
+          "name": "Матрос \"Ската\" с пистолем",
+          "point_cost": 14,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "stingray_seeman_1",
+          "name": "Матрос \"Ската\" с гарпуном",
+          "point_cost": 12,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "stingray_captain",
+          "name": "Капитан \"Ската\"",
+          "point_cost": 28,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "coast_guard_cannon",
+          "name": "Страж Побережья с кулевриной",
+          "point_cost": 44,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "coast_guard_musket",
+          "name": "Страж Побережья с мушкетом",
+          "point_cost": 37,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "coast_guard_assault_musket",
+          "name": "Страж Побережья со штурмовым мушкетом",
+          "point_cost": 32,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "coast_guard_halberd",
+          "name": "Страж Побережья с алебардой",
+          "point_cost": 23,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "coast_guard_mace",
+          "name": "Страж Побережья с булавой",
+          "point_cost": 24,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "ferran_infantry_unit",
+          "name": "Рикардо Ферран",
+          "point_cost": 30,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "coast_guard_officer",
+          "name": "Бригадир Стражей Побережья",
+          "point_cost": 23,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "coast_guard_seeker",
+          "name": "Искатель Стражей Побережья",
+          "point_cost": 26,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "coast_guard_medic",
+          "name": "Санадор Стражей Побережья",
+          "point_cost": 21,
+          "max_quantity": 1
+        }
+      ]
+    },
+    {
+      "hero_id": 20,
+      "hero_tech_name": "ferran_infantry",
+      "hero_name": "Рикардо Ферран",
+      "hero_point_cost": 30,
+      "domain": {
+        "id": 1,
+        "tech_name": "creation",
+        "name": "Созидание"
+      },
+      "faction": {
+        "id": 9,
+        "tech_name": "priory_of_hope",
+        "name": "Приорат Надежды"
+      },
+      "units": [
+        {
+          "tech_name": "ranger_archer",
+          "name": "Рейнджер Лучник",
+          "point_cost": 27,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "shadowstep_thief",
+          "name": "Плут Теневого Шага",
+          "point_cost": 28,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_blades",
+          "name": "Таоргас с Клинками",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_book",
+          "name": "Алдвин Летописец",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_beast",
+          "name": "Алдвин Искатель Истины",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_blades",
+          "name": "Гатархин, убийца",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gerrilyas_halberd",
+          "name": "Геррильяс Алебардист",
+          "point_cost": 20,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "tolero's_rider_pistol",
+          "name": "Толерский Налетчик с пистолетом",
+          "point_cost": 42,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "tolero's_rider",
+          "name": "Толерский Налетчик",
+          "point_cost": 40,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "field_cannon",
+          "name": "Полевое Орудие",
+          "point_cost": 50,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "ranger_swordsman",
+          "name": "Рейнджер Мечник",
+          "point_cost": 26,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "officer_priory_of_hope",
+          "name": "Майор Приората Надежды",
+          "point_cost": 20,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "rob_liberated_ogrid",
+          "name": "Роб, Беглый Огрид",
+          "point_cost": 34,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gerrilyas_musketeer",
+          "name": "Геррильяс Мушкетер",
+          "point_cost": 40,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "stingray_seeman_2",
+          "name": "Матрос \"Ската\" с пистолем",
+          "point_cost": 14,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "stingray_seeman_1",
+          "name": "Матрос \"Ската\" с гарпуном",
+          "point_cost": 12,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "stingray_captain",
+          "name": "Капитан \"Ската\"",
+          "point_cost": 28,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "coast_guard_cannon",
+          "name": "Страж Побережья с кулевриной",
+          "point_cost": 44,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "coast_guard_musket",
+          "name": "Страж Побережья с мушкетом",
+          "point_cost": 37,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "coast_guard_assault_musket",
+          "name": "Страж Побережья со штурмовым мушкетом",
+          "point_cost": 32,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "coast_guard_halberd",
+          "name": "Страж Побережья с алебардой",
+          "point_cost": 23,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "coast_guard_mace",
+          "name": "Страж Побережья с булавой",
+          "point_cost": 24,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "hoakin_de_esperando_rebel",
+          "name": "Хоакин де Эсперандо, Мятежный Капитан",
+          "point_cost": 28,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "coast_guard_officer",
+          "name": "Бригадир Стражей Побережья",
+          "point_cost": 23,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "coast_guard_seeker",
+          "name": "Искатель Стражей Побережья",
+          "point_cost": 26,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "coast_guard_medic",
+          "name": "Санадор Стражей Побережья",
+          "point_cost": 21,
+          "max_quantity": 2
+        }
+      ]
+    },
+    {
+      "hero_id": 24,
+      "hero_tech_name": "ferran_bull",
+      "hero_name": "Рикардо Ферран, Рокот Моря",
+      "hero_point_cost": 55,
+      "domain": {
+        "id": 1,
+        "tech_name": "creation",
+        "name": "Созидание"
+      },
+      "faction": {
+        "id": 9,
+        "tech_name": "priory_of_hope",
+        "name": "Приорат Надежды"
+      },
+      "units": [
+        {
+          "tech_name": "ranger_archer",
+          "name": "Рейнджер Лучник",
+          "point_cost": 27,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "shadowstep_thief",
+          "name": "Плут Теневого Шага",
+          "point_cost": 28,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_blades",
+          "name": "Таоргас с Клинками",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_book",
+          "name": "Алдвин Летописец",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_beast",
+          "name": "Алдвин Искатель Истины",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_blades",
+          "name": "Гатархин, убийца",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gerrilyas_halberd",
+          "name": "Геррильяс Алебардист",
+          "point_cost": 20,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "tolero's_rider_pistol",
+          "name": "Толерский Налетчик с пистолетом",
+          "point_cost": 42,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "tolero's_rider",
+          "name": "Толерский Налетчик",
+          "point_cost": 40,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "field_cannon",
+          "name": "Полевое Орудие",
+          "point_cost": 50,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "ranger_swordsman",
+          "name": "Рейнджер Мечник",
+          "point_cost": 26,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "officer_priory_of_hope",
+          "name": "Майор Приората Надежды",
+          "point_cost": 20,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "rob_liberated_ogrid",
+          "name": "Роб, Беглый Огрид",
+          "point_cost": 34,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gerrilyas_musketeer",
+          "name": "Геррильяс Мушкетер",
+          "point_cost": 40,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "stingray_seeman_2",
+          "name": "Матрос \"Ската\" с пистолем",
+          "point_cost": 14,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "stingray_seeman_1",
+          "name": "Матрос \"Ската\" с гарпуном",
+          "point_cost": 12,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "stingray_captain",
+          "name": "Капитан \"Ската\"",
+          "point_cost": 28,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "coast_guard_cannon",
+          "name": "Страж Побережья с кулевриной",
+          "point_cost": 44,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "coast_guard_musket",
+          "name": "Страж Побережья с мушкетом",
+          "point_cost": 37,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "coast_guard_assault_musket",
+          "name": "Страж Побережья со штурмовым мушкетом",
+          "point_cost": 32,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "coast_guard_halberd",
+          "name": "Страж Побережья с алебардой",
+          "point_cost": 23,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "coast_guard_mace",
+          "name": "Страж Побережья с булавой",
+          "point_cost": 24,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "hoakin_de_esperando_rebel",
+          "name": "Хоакин де Эсперандо, Мятежный Капитан",
+          "point_cost": 28,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "coast_guard_officer",
+          "name": "Бригадир Стражей Побережья",
+          "point_cost": 23,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "coast_guard_seeker",
+          "name": "Искатель Стражей Побережья",
+          "point_cost": 26,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "coast_guard_medic",
+          "name": "Санадор Стражей Побережья",
+          "point_cost": 21,
+          "max_quantity": 2
+        }
+      ]
+    },
+    {
+      "hero_id": 1,
+      "hero_tech_name": "torquemad",
+      "hero_name": "Торкемад, Прелат Чистоты",
+      "hero_point_cost": 60,
+      "domain": {
+        "id": 2,
+        "tech_name": "destruction",
+        "name": "Разрушение"
+      },
+      "faction": {
+        "id": 2,
+        "tech_name": "castilla",
+        "name": "Кастилия"
+      },
+      "units": [
+        {
+          "tech_name": "saint_hunter",
+          "name": "Охотник на Святых",
+          "point_cost": 28,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "succubus",
+          "name": "Суккуб Пороков",
+          "point_cost": 30,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "possessed_rider",
+          "name": "Одержимый Наездник",
+          "point_cost": 40,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "hellhound",
+          "name": "Гончая Бездны",
+          "point_cost": 25,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "guardsman_halberd",
+          "name": "Гвардеец с алебардой",
+          "point_cost": 20,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "marauder",
+          "name": "Дьявол-налетчик",
+          "point_cost": 15,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "guardsman_officer",
+          "name": "Капрал Гвардии",
+          "point_cost": 20,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "flamethrower",
+          "name": "Гвардеец Кастилии с штурмовым Очистителем",
+          "point_cost": 26,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "guardsman_musketeer",
+          "name": "Гвардеец с мушкетом",
+          "point_cost": 42,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "faceless_unit",
+          "name": "Безликий, Владыка Ненависти",
+          "point_cost": 70,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_blades",
+          "name": "Таоргас с Клинками",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_book",
+          "name": "Алдвин Летописец",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_beast",
+          "name": "Алдвин Искатель Истины",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "flammalero_bigaxe",
+          "name": "Фламмальеро с секирой",
+          "point_cost": 40,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "flammalero_axes",
+          "name": "Фламмальеро с топорами",
+          "point_cost": 35,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "flammalero_mortar",
+          "name": "Фламмальеро с ручной мортирой",
+          "point_cost": 50,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "gatarkhin_blades",
+          "name": "Гатархин, убийца",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gabrielit_monk",
+          "name": "Монах-Габриэлит",
+          "point_cost": 18,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "siege_mortar",
+          "name": "Осадная Мортира",
+          "point_cost": 50,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "purifirer",
+          "name": "Очиститель",
+          "point_cost": 14,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "hoakin_de_esperando_captan_of_targera",
+          "name": "Хоакин де Эсперандо, Капитан Таргеры",
+          "point_cost": 25,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "possessed_rider_two_handed_axe",
+          "name": "Одержимый Наездник с Двуручной Секирой",
+          "point_cost": 46,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "possessed_rider_hand_mortar",
+          "name": "Одержимый Наездник с Ручной Мортирой",
+          "point_cost": 51,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "void_walker_hammer",
+          "name": "Разрушитель Бездны с молотом",
+          "point_cost": 44,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "void_walker_flamethrower",
+          "name": "Разрушитель Бездны с тяжелым огнеметом",
+          "point_cost": 58,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "catimp",
+          "name": "Каттимп Бездны",
+          "point_cost": 6,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "catimp_gun",
+          "name": "Каттимп Бездны с пистолем",
+          "point_cost": 8,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "marauder_trident",
+          "name": "Дьявол-налетчик с трезубцем",
+          "point_cost": 17,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "imp_sword",
+          "name": "Имп Бездны с мечом",
+          "point_cost": 6,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "imp_grenade",
+          "name": "Имп Бездны с гранатой",
+          "point_cost": 7,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "succubus_flamehands",
+          "name": "Суккуб Пламенных Дланей",
+          "point_cost": 36,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "torres_unit",
+          "name": "Карлос Торрес",
+          "point_cost": 38,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "heavy_inquisitor_flamer",
+          "name": "Инквизитор-Ревнитель с Очистителем",
+          "point_cost": 31,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "inquisitor_sword",
+          "name": "Инквизитор с Очистителем и Мечом",
+          "point_cost": 25,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "sacrifice_monk",
+          "name": "Монах Искупления",
+          "point_cost": 10,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "heavy_castilla_guard_halberd",
+          "name": "Тяжелый Гвардеец с алебардой",
+          "point_cost": 24,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "olverton",
+          "name": "Девринг Олвертон",
+          "point_cost": 23,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "castilla_guard_hand",
+          "name": "Гвардеец с с мечом",
+          "point_cost": 23,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "heavy_inquisitor_light_flamer",
+          "name": "Инквизитор-Ревнитель с штурмовым Очистителем",
+          "point_cost": 29,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "heavy_inquisitor_hand",
+          "name": "Инквизитор-Ревнитель с Оком Вихря",
+          "point_cost": 28,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "heavy_inquisitor_swords",
+          "name": "Инквизитор-Ревнитель с Мечами",
+          "point_cost": 28,
+          "max_quantity": 1
+        }
+      ]
+    },
+    {
+      "hero_id": 7,
+      "hero_tech_name": "torquemad_2",
+      "hero_name": "Торкемад, Ревнитель Чистоты",
+      "hero_point_cost": 36,
+      "domain": {
+        "id": 2,
+        "tech_name": "destruction",
+        "name": "Разрушение"
+      },
+      "faction": {
+        "id": 2,
+        "tech_name": "castilla",
+        "name": "Кастилия"
+      },
+      "units": [
+        {
+          "tech_name": "saint_hunter",
+          "name": "Охотник на Святых",
+          "point_cost": 28,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "succubus",
+          "name": "Суккуб Пороков",
+          "point_cost": 30,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "possessed_rider",
+          "name": "Одержимый Наездник",
+          "point_cost": 40,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "hellhound",
+          "name": "Гончая Бездны",
+          "point_cost": 25,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "guardsman_halberd",
+          "name": "Гвардеец с алебардой",
+          "point_cost": 20,
+          "max_quantity": 5
+        },
+        {
+          "tech_name": "marauder",
+          "name": "Дьявол-налетчик",
+          "point_cost": 15,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "guardsman_officer",
+          "name": "Капрал Гвардии",
+          "point_cost": 20,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "flamethrower",
+          "name": "Гвардеец Кастилии с штурмовым Очистителем",
+          "point_cost": 26,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "guardsman_musketeer",
+          "name": "Гвардеец с мушкетом",
+          "point_cost": 42,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "taorgas_blades",
+          "name": "Таоргас с Клинками",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_book",
+          "name": "Алдвин Летописец",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_beast",
+          "name": "Алдвин Искатель Истины",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "flammalero_bigaxe",
+          "name": "Фламмальеро с секирой",
+          "point_cost": 40,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "flammalero_axes",
+          "name": "Фламмальеро с топорами",
+          "point_cost": 35,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "flammalero_mortar",
+          "name": "Фламмальеро с ручной мортирой",
+          "point_cost": 50,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "gatarkhin_blades",
+          "name": "Гатархин, убийца",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gabrielit_monk",
+          "name": "Монах-Габриэлит",
+          "point_cost": 18,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "siege_mortar",
+          "name": "Осадная Мортира",
+          "point_cost": 50,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "purifirer",
+          "name": "Очиститель",
+          "point_cost": 14,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "hoakin_de_esperando_captan_of_targera",
+          "name": "Хоакин де Эсперандо, Капитан Таргеры",
+          "point_cost": 25,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "possessed_rider_two_handed_axe",
+          "name": "Одержимый Наездник с Двуручной Секирой",
+          "point_cost": 46,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "possessed_rider_hand_mortar",
+          "name": "Одержимый Наездник с Ручной Мортирой",
+          "point_cost": 51,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "void_walker_hammer",
+          "name": "Разрушитель Бездны с молотом",
+          "point_cost": 44,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "void_walker_flamethrower",
+          "name": "Разрушитель Бездны с тяжелым огнеметом",
+          "point_cost": 58,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "catimp",
+          "name": "Каттимп Бездны",
+          "point_cost": 6,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "catimp_gun",
+          "name": "Каттимп Бездны с пистолем",
+          "point_cost": 8,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "marauder_trident",
+          "name": "Дьявол-налетчик с трезубцем",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "imp_sword",
+          "name": "Имп Бездны с мечом",
+          "point_cost": 6,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "imp_grenade",
+          "name": "Имп Бездны с гранатой",
+          "point_cost": 7,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "succubus_flamehands",
+          "name": "Суккуб Пламенных Дланей",
+          "point_cost": 36,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "torres_unit",
+          "name": "Карлос Торрес",
+          "point_cost": 38,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "heavy_inquisitor_flamer",
+          "name": "Инквизитор-Ревнитель с Очистителем",
+          "point_cost": 31,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "inquisitor_sword",
+          "name": "Инквизитор с Очистителем и Мечом",
+          "point_cost": 25,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "sacrifice_monk",
+          "name": "Монах Искупления",
+          "point_cost": 10,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "heavy_castilla_guard_halberd",
+          "name": "Тяжелый Гвардеец с алебардой",
+          "point_cost": 24,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "olverton",
+          "name": "Девринг Олвертон",
+          "point_cost": 23,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "castilla_guard_hand",
+          "name": "Гвардеец с с мечом",
+          "point_cost": 23,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "heavy_inquisitor_light_flamer",
+          "name": "Инквизитор-Ревнитель с штурмовым Очистителем",
+          "point_cost": 29,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "heavy_inquisitor_hand",
+          "name": "Инквизитор-Ревнитель с Оком Вихря",
+          "point_cost": 28,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "heavy_inquisitor_swords",
+          "name": "Инквизитор-Ревнитель с Мечами",
+          "point_cost": 28,
+          "max_quantity": 1
+        }
+      ]
+    },
+    {
+      "hero_id": 28,
+      "hero_tech_name": "torres",
+      "hero_name": "Карлос Торрес",
+      "hero_point_cost": 38,
+      "domain": {
+        "id": 2,
+        "tech_name": "destruction",
+        "name": "Разрушение"
+      },
+      "faction": {
+        "id": 2,
+        "tech_name": "castilla",
+        "name": "Кастилия"
+      },
+      "units": [
+        {
+          "tech_name": "saint_hunter",
+          "name": "Охотник на Святых",
+          "point_cost": 28,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "guardsman_halberd",
+          "name": "Гвардеец с алебардой",
+          "point_cost": 20,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "guardsman_officer",
+          "name": "Капрал Гвардии",
+          "point_cost": 20,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "flamethrower",
+          "name": "Гвардеец Кастилии с штурмовым Очистителем",
+          "point_cost": 26,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "guardsman_musketeer",
+          "name": "Гвардеец с мушкетом",
+          "point_cost": 42,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "taorgas_blades",
+          "name": "Таоргас с Клинками",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_book",
+          "name": "Алдвин Летописец",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_beast",
+          "name": "Алдвин Искатель Истины",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_blades",
+          "name": "Гатархин, убийца",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gabrielit_monk",
+          "name": "Монах-Габриэлит",
+          "point_cost": 18,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "siege_mortar",
+          "name": "Осадная Мортира",
+          "point_cost": 50,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "purifirer",
+          "name": "Очиститель",
+          "point_cost": 14,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "hoakin_de_esperando_captan_of_targera",
+          "name": "Хоакин де Эсперандо, Капитан Таргеры",
+          "point_cost": 25,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "void_walker_hammer",
+          "name": "Разрушитель Бездны с молотом",
+          "point_cost": 44,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "void_walker_flamethrower",
+          "name": "Разрушитель Бездны с тяжелым огнеметом",
+          "point_cost": 58,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "possessed_rider_two_handed_axe_torres",
+          "name": "Одержимый Наездник с Двуручной Секирой",
+          "point_cost": 43,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "possessed_rider_hand_mortar_torres",
+          "name": "Одержимый Наездник с Ручной Мортирой",
+          "point_cost": 48,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "possessed_rider_torres",
+          "name": "Одержимый Наездник",
+          "point_cost": 38,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "flammalero_bigaxe_torres",
+          "name": "Фламмальеро с секирой",
+          "point_cost": 37,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "flammalero_axes_torres",
+          "name": "Фламмальеро с топорами",
+          "point_cost": 33,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "flammalero_mortar_torres",
+          "name": "Фламмальеро с ручной мортирой",
+          "point_cost": 47,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "torquemad_2_unit",
+          "name": "Торкемад, Ревнитель Чистоты",
+          "point_cost": 38,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "heavy_inquisitor_flamer",
+          "name": "Инквизитор-Ревнитель с Очистителем",
+          "point_cost": 31,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "inquisitor_sword",
+          "name": "Инквизитор с Очистителем и Мечом",
+          "point_cost": 25,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "sacrifice_monk",
+          "name": "Монах Искупления",
+          "point_cost": 10,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "heavy_castilla_guard_halberd",
+          "name": "Тяжелый Гвардеец с алебардой",
+          "point_cost": 24,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "olverton",
+          "name": "Девринг Олвертон",
+          "point_cost": 23,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "castilla_guard_hand",
+          "name": "Гвардеец с с мечом",
+          "point_cost": 23,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "heavy_inquisitor_light_flamer",
+          "name": "Инквизитор-Ревнитель с штурмовым Очистителем",
+          "point_cost": 29,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "heavy_inquisitor_hand",
+          "name": "Инквизитор-Ревнитель с Оком Вихря",
+          "point_cost": 28,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "heavy_inquisitor_swords",
+          "name": "Инквизитор-Ревнитель с Мечами",
+          "point_cost": 28,
+          "max_quantity": 1
+        }
+      ]
+    },
+    {
+      "hero_id": 29,
+      "hero_tech_name": "salvador",
+      "hero_name": "Сальвадор Йерро",
+      "hero_point_cost": 30,
+      "domain": {
+        "id": 2,
+        "tech_name": "destruction",
+        "name": "Разрушение"
+      },
+      "faction": {
+        "id": 2,
+        "tech_name": "castilla",
+        "name": "Кастилия"
+      },
+      "units": [
+        {
+          "tech_name": "possessed_rider",
+          "name": "Одержимый Наездник",
+          "point_cost": 40,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "guardsman_halberd",
+          "name": "Гвардеец с алебардой",
+          "point_cost": 20,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "guardsman_officer",
+          "name": "Капрал Гвардии",
+          "point_cost": 20,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "flamethrower",
+          "name": "Гвардеец Кастилии с штурмовым Очистителем",
+          "point_cost": 26,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "guardsman_musketeer",
+          "name": "Гвардеец с мушкетом",
+          "point_cost": 42,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "taorgas_blades",
+          "name": "Таоргас с Клинками",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_book",
+          "name": "Алдвин Летописец",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_beast",
+          "name": "Алдвин Искатель Истины",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "flammalero_bigaxe",
+          "name": "Фламмальеро с секирой",
+          "point_cost": 40,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "flammalero_axes",
+          "name": "Фламмальеро с топорами",
+          "point_cost": 35,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "flammalero_mortar",
+          "name": "Фламмальеро с ручной мортирой",
+          "point_cost": 50,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "gatarkhin_blades",
+          "name": "Гатархин, убийца",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gabrielit_monk",
+          "name": "Монах-Габриэлит",
+          "point_cost": 18,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "purifirer",
+          "name": "Очиститель",
+          "point_cost": 14,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "possessed_rider_two_handed_axe",
+          "name": "Одержимый Наездник с Двуручной Секирой",
+          "point_cost": 46,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "possessed_rider_hand_mortar",
+          "name": "Одержимый Наездник с Ручной Мортирой",
+          "point_cost": 51,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "saint_hunter_salvador",
+          "name": "Охотник на Святых",
+          "point_cost": 26,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "heavy_inquisitor_flamer",
+          "name": "Инквизитор-Ревнитель с Очистителем",
+          "point_cost": 31,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "inquisitor_sword",
+          "name": "Инквизитор с Очистителем и Мечом",
+          "point_cost": 25,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "sacrifice_monk",
+          "name": "Монах Искупления",
+          "point_cost": 10,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "heavy_castilla_guard_halberd",
+          "name": "Тяжелый Гвардеец с алебардой",
+          "point_cost": 24,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "olverton",
+          "name": "Девринг Олвертон",
+          "point_cost": 23,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "castilla_guard_hand",
+          "name": "Гвардеец с с мечом",
+          "point_cost": 23,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "heavy_inquisitor_light_flamer",
+          "name": "Инквизитор-Ревнитель с штурмовым Очистителем",
+          "point_cost": 29,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "heavy_inquisitor_hand",
+          "name": "Инквизитор-Ревнитель с Оком Вихря",
+          "point_cost": 28,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "heavy_inquisitor_swords",
+          "name": "Инквизитор-Ревнитель с Мечами",
+          "point_cost": 28,
+          "max_quantity": 2
+        }
+      ]
+    },
+    {
+      "hero_id": 2,
+      "hero_tech_name": "faceless",
+      "hero_name": "Безликий, Владыка Ненависти",
+      "hero_point_cost": 70,
+      "domain": {
+        "id": 2,
+        "tech_name": "destruction",
+        "name": "Разрушение"
+      },
+      "faction": {
+        "id": 5,
+        "tech_name": "chasm",
+        "name": "Бездна"
+      },
+      "units": [
+        {
+          "tech_name": "succubus",
+          "name": "Суккуб Пороков",
+          "point_cost": 30,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "hellhound",
+          "name": "Гончая Бездны",
+          "point_cost": 25,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "marauder",
+          "name": "Дьявол-налетчик",
+          "point_cost": 15,
+          "max_quantity": 7
+        },
+        {
+          "tech_name": "taorgas_blades",
+          "name": "Таоргас с Клинками",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_blades",
+          "name": "Гатархин, убийца",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "void_walker_hammer",
+          "name": "Разрушитель Бездны с молотом",
+          "point_cost": 44,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "void_walker_flamethrower",
+          "name": "Разрушитель Бездны с тяжелым огнеметом",
+          "point_cost": 58,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "catimp",
+          "name": "Каттимп Бездны",
+          "point_cost": 6,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "catimp_gun",
+          "name": "Каттимп Бездны с пистолем",
+          "point_cost": 8,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "inkubus_sword",
+          "name": "Инкуб с мечом",
+          "point_cost": 36,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "inkubus_flail",
+          "name": "Инкуб с цепом",
+          "point_cost": 37,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "marauder_trident",
+          "name": "Дьявол-налетчик с трезубцем",
+          "point_cost": 17,
+          "max_quantity": 7
+        },
+        {
+          "tech_name": "imp_sword",
+          "name": "Имп Бездны с мечом",
+          "point_cost": 6,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "imp_grenade",
+          "name": "Имп Бездны с гранатой",
+          "point_cost": 7,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "drazzgl",
+          "name": "Драззгл Шкуродер",
+          "point_cost": 20,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "garkrand_unit",
+          "name": "Гаркранд",
+          "point_cost": 40,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "succubus_flamehands",
+          "name": "Суккуб Пламенных Дланей",
+          "point_cost": 36,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "inkubus_raider_glaive",
+          "name": "Инкуб-налетчик с глефой",
+          "point_cost": 41,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "inkubus_raider_sword",
+          "name": "Инкуб-налетчик с мечом",
+          "point_cost": 42,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "abgorr_unit",
+          "name": "Абгорр Неотразимый",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "chazz_unit",
+          "name": "Чазз",
+          "point_cost": 13,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "valafar",
+          "name": "Валафар, Кровавый Истязатель",
+          "point_cost": 40,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 1
+        }
+      ]
+    },
+    {
+      "hero_id": 23,
+      "hero_tech_name": "garkrand",
+      "hero_name": "Гаркранд, Сотник Четвертого круга",
+      "hero_point_cost": 40,
+      "domain": {
+        "id": 2,
+        "tech_name": "destruction",
+        "name": "Разрушение"
+      },
+      "faction": {
+        "id": 5,
+        "tech_name": "chasm",
+        "name": "Бездна"
+      },
+      "units": [
+        {
+          "tech_name": "succubus",
+          "name": "Суккуб Пороков",
+          "point_cost": 30,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "hellhound",
+          "name": "Гончая Бездны",
+          "point_cost": 25,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "marauder",
+          "name": "Дьявол-налетчик",
+          "point_cost": 15,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "faceless_unit",
+          "name": "Безликий, Владыка Ненависти",
+          "point_cost": 70,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_blades",
+          "name": "Таоргас с Клинками",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_blades",
+          "name": "Гатархин, убийца",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "void_walker_hammer",
+          "name": "Разрушитель Бездны с молотом",
+          "point_cost": 44,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "void_walker_flamethrower",
+          "name": "Разрушитель Бездны с тяжелым огнеметом",
+          "point_cost": 58,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "catimp",
+          "name": "Каттимп Бездны",
+          "point_cost": 6,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "catimp_gun",
+          "name": "Каттимп Бездны с пистолем",
+          "point_cost": 8,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "inkubus_sword",
+          "name": "Инкуб с мечом",
+          "point_cost": 36,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "inkubus_flail",
+          "name": "Инкуб с цепом",
+          "point_cost": 37,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "marauder_trident",
+          "name": "Дьявол-налетчик с трезубцем",
+          "point_cost": 17,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "imp_sword",
+          "name": "Имп Бездны с мечом",
+          "point_cost": 6,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "imp_grenade",
+          "name": "Имп Бездны с гранатой",
+          "point_cost": 7,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "drazzgl",
+          "name": "Драззгл Шкуродер",
+          "point_cost": 20,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "succubus_flamehands",
+          "name": "Суккуб Пламенных Дланей",
+          "point_cost": 36,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "inkubus_raider_glaive",
+          "name": "Инкуб-налетчик с глефой",
+          "point_cost": 41,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "inkubus_raider_sword",
+          "name": "Инкуб-налетчик с мечом",
+          "point_cost": 42,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "chazz_unit",
+          "name": "Чазз",
+          "point_cost": 13,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "valafar",
+          "name": "Валафар, Кровавый Истязатель",
+          "point_cost": 40,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 1
+        }
+      ]
+    },
+    {
+      "hero_id": 26,
+      "hero_tech_name": "abgorr",
+      "hero_name": "Абгорр, Неотразимый Истязатель",
+      "hero_point_cost": 45,
+      "domain": {
+        "id": 2,
+        "tech_name": "destruction",
+        "name": "Разрушение"
+      },
+      "faction": {
+        "id": 5,
+        "tech_name": "chasm",
+        "name": "Бездна"
+      },
+      "units": [
+        {
+          "tech_name": "succubus",
+          "name": "Суккуб Пороков",
+          "point_cost": 30,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "hellhound",
+          "name": "Гончая Бездны",
+          "point_cost": 25,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "marauder",
+          "name": "Дьявол-налетчик",
+          "point_cost": 15,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "faceless_unit",
+          "name": "Безликий, Владыка Ненависти",
+          "point_cost": 70,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_blades",
+          "name": "Таоргас с Клинками",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_blades",
+          "name": "Гатархин, убийца",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "void_walker_hammer",
+          "name": "Разрушитель Бездны с молотом",
+          "point_cost": 44,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "void_walker_flamethrower",
+          "name": "Разрушитель Бездны с тяжелым огнеметом",
+          "point_cost": 58,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "catimp",
+          "name": "Каттимп Бездны",
+          "point_cost": 6,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "catimp_gun",
+          "name": "Каттимп Бездны с пистолем",
+          "point_cost": 8,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "inkubus_sword",
+          "name": "Инкуб с мечом",
+          "point_cost": 36,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "inkubus_flail",
+          "name": "Инкуб с цепом",
+          "point_cost": 37,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "marauder_trident",
+          "name": "Дьявол-налетчик с трезубцем",
+          "point_cost": 17,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "imp_sword",
+          "name": "Имп Бездны с мечом",
+          "point_cost": 6,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "imp_grenade",
+          "name": "Имп Бездны с гранатой",
+          "point_cost": 7,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "drazzgl",
+          "name": "Драззгл Шкуродер",
+          "point_cost": 20,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "garkrand_unit",
+          "name": "Гаркранд",
+          "point_cost": 40,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "succubus_flamehands",
+          "name": "Суккуб Пламенных Дланей",
+          "point_cost": 36,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "inkubus_raider_glaive",
+          "name": "Инкуб-налетчик с глефой",
+          "point_cost": 41,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "inkubus_raider_sword",
+          "name": "Инкуб-налетчик с мечом",
+          "point_cost": 42,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "chazz_unit",
+          "name": "Чазз",
+          "point_cost": 13,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "valafar",
+          "name": "Валафар, Кровавый Истязатель",
+          "point_cost": 40,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 1
+        }
+      ]
+    },
+    {
+      "hero_id": 27,
+      "hero_tech_name": "chazz",
+      "hero_name": "Чазз, Отпрыск Неотразимого",
+      "hero_point_cost": 13,
+      "domain": {
+        "id": 2,
+        "tech_name": "destruction",
+        "name": "Разрушение"
+      },
+      "faction": {
+        "id": 5,
+        "tech_name": "chasm",
+        "name": "Бездна"
+      },
+      "units": [
+        {
+          "tech_name": "marauder",
+          "name": "Дьявол-налетчик",
+          "point_cost": 15,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "catimp",
+          "name": "Каттимп Бездны",
+          "point_cost": 6,
+          "max_quantity": 6
+        },
+        {
+          "tech_name": "catimp_gun",
+          "name": "Каттимп Бездны с пистолем",
+          "point_cost": 8,
+          "max_quantity": 6
+        },
+        {
+          "tech_name": "marauder_trident",
+          "name": "Дьявол-налетчик с трезубцем",
+          "point_cost": 17,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "imp_sword",
+          "name": "Имп Бездны с мечом",
+          "point_cost": 6,
+          "max_quantity": 6
+        },
+        {
+          "tech_name": "imp_grenade",
+          "name": "Имп Бездны с гранатой",
+          "point_cost": 7,
+          "max_quantity": 6
+        },
+        {
+          "tech_name": "drazzgl",
+          "name": "Драззгл Шкуродер",
+          "point_cost": 20,
+          "max_quantity": 1
+        }
+      ]
+    },
+    {
+      "hero_id": 18,
+      "hero_tech_name": "kurosh_khan",
+      "hero_name": "Курош Хан",
+      "hero_point_cost": 50,
+      "domain": {
+        "id": 2,
+        "tech_name": "destruction",
+        "name": "Разрушение"
+      },
+      "faction": {
+        "id": 10,
+        "tech_name": "broomgar_horde",
+        "name": "Орда Брумгаров"
+      },
+      "units": [
+        {
+          "tech_name": "taorgas_blades",
+          "name": "Таоргас с Клинками",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_blades",
+          "name": "Гатархин, убийца",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "boiler_soup",
+          "name": "Котел с Супом из Бул-Рагвы, Трав и мяса Виверны",
+          "point_cost": 3,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "boiler_fish",
+          "name": "Котел с Рыбой, Лосось-Огневик с Мандрой",
+          "point_cost": 3,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "boiler_sausage",
+          "name": "Котел с Колбасами из мяса Буртага под Жгун-перцем",
+          "point_cost": 4,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "hogrim_shaktan_spear",
+          "name": "Шактан с Трезубцем",
+          "point_cost": 55,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "hogrim_shaktan_gun",
+          "name": "Шактан с Ручницей",
+          "point_cost": 50,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "hogrim_daichin_spear",
+          "name": "Дайчин Знаменосец",
+          "point_cost": 27,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "hogrim_daichin_maul",
+          "name": "Дайчин с Булавой",
+          "point_cost": 35,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "hogrim_daichin_cleavers",
+          "name": "Дайчин с Тесаками",
+          "point_cost": 30,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "hogrim_yargochin_maul",
+          "name": "Яргачин с Булавой",
+          "point_cost": 40,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "hogrim_tsereg_axe",
+          "name": "Церег с Тесаком",
+          "point_cost": 25,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "hogrim_mutsereg_axe",
+          "name": "Муцерег с Секирой",
+          "point_cost": 31,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "hogrim_mutsereg_cleavers",
+          "name": "Муцерег с Топорами",
+          "point_cost": 30,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "gahai_spear",
+          "name": "Гахай с Рогатиной",
+          "point_cost": 20,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "gahai_boomerang",
+          "name": "Гахай с Бумерангом",
+          "point_cost": 23,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "zurbag_butcher",
+          "name": "Зурбаг Мясник",
+          "point_cost": 12,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "bibar_boptir_bombard",
+          "name": "Бибар-Батыр с Бомбардой",
+          "point_cost": 46,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "bibar_boptir_axe",
+          "name": "Бибар-Батыр с Топорами",
+          "point_cost": 36,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gahai_sling",
+          "name": "Гахай с Пращей",
+          "point_cost": 22,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "hogrim_tsereg_maul",
+          "name": "Церег с Булавой",
+          "point_cost": 26,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "hogrim_yargochin_sword",
+          "name": "Яргачин с Мечем",
+          "point_cost": 39,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "zurbag_devastator",
+          "name": "Зурбаг Разоритель",
+          "point_cost": 15,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "zurbag_conqueror",
+          "name": "Зурбаг Покоритель",
+          "point_cost": 20,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "grrokh",
+          "name": "Гррох, Тень Шактана",
+          "point_cost": 25,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 1
+        }
+      ]
+    },
+    {
+      "hero_id": 5,
+      "hero_tech_name": "kellantra",
+      "hero_name": "Келлантра, Ярость Леса",
+      "hero_point_cost": 28,
+      "domain": {
+        "id": 3,
+        "tech_name": "life",
+        "name": "Жизнь"
+      },
+      "faction": {
+        "id": 4,
+        "tech_name": "keld",
+        "name": "Кельд"
+      },
+      "units": [
+        {
+          "tech_name": "aent",
+          "name": "Великий Аэнт-Страж",
+          "point_cost": 75,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "barkbeast",
+          "name": "Зверь Подлеска",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "defender_seedlings",
+          "name": "Защитник Саженцев",
+          "point_cost": 16,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "alraune",
+          "name": "Альраун, Семя Аэнта",
+          "point_cost": 4,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "dryadint_warrior",
+          "name": "Дриадинта Воин",
+          "point_cost": 20,
+          "max_quantity": 5
+        },
+        {
+          "tech_name": "dryadint_archer",
+          "name": "Дриадинта Лучник",
+          "point_cost": 27,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "centaur_dryadint",
+          "name": "Дриадинта-кентавр",
+          "point_cost": 32,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "spirit_of_keld",
+          "name": "Дух Кельда",
+          "point_cost": 29,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "felidarn_bow",
+          "name": "Наездница с луком",
+          "point_cost": 38,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "felidarn_spear",
+          "name": "Наездница с копьем",
+          "point_cost": 40,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "felidarn_sword",
+          "name": "Наездница с мечом",
+          "point_cost": 42,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_blades",
+          "name": "Таоргас с Клинками",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_book",
+          "name": "Алдвин Летописец",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_beast",
+          "name": "Алдвин Искатель Истины",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "dryadint_woodseer",
+          "name": "Дриадинта Провидица Леса",
+          "point_cost": 42,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_blades",
+          "name": "Гатархин, убийца",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "keld_assassin_1",
+          "name": "Танцующая с Клинками",
+          "point_cost": 27,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "keld_assassin_2",
+          "name": "Тихий Клинок Кельда",
+          "point_cost": 28,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "keld_hunter_claw",
+          "name": "Охотник Кельда",
+          "point_cost": 28,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "keld_hunter_glaive",
+          "name": "Охотник Кельда с Глефой",
+          "point_cost": 32,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "keld_hunter_bow",
+          "name": "Охотник Кельда с Луком",
+          "point_cost": 34,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "brammn_unit",
+          "name": "Брам'мн Мудрый",
+          "point_cost": 40,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "thicket_guardian_sword",
+          "name": "Стражей Дубовой Чащи c мечом",
+          "point_cost": 50,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "thicket_guardian_stone",
+          "name": "Стражей Дубовой Чащи c камнем",
+          "point_cost": 60,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "kristoff_keller_who_discovered_life",
+          "name": "Кристоф Келлер, Познавший Жизнь",
+          "point_cost": 21,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "na'atly_unit",
+          "name": "На'атли Дикая Охотница",
+          "point_cost": 40,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 1
+        }
+      ]
+    },
+    {
+      "hero_id": 6,
+      "hero_tech_name": "kellantra_lindwurm",
+      "hero_name": "Келлантра с Линдвурмом, Ярость Леса",
+      "hero_point_cost": 70,
+      "domain": {
+        "id": 3,
+        "tech_name": "life",
+        "name": "Жизнь"
+      },
+      "faction": {
+        "id": 4,
+        "tech_name": "keld",
+        "name": "Кельд"
+      },
+      "units": [
+        {
+          "tech_name": "aent",
+          "name": "Великий Аэнт-Страж",
+          "point_cost": 75,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "barkbeast",
+          "name": "Зверь Подлеска",
+          "point_cost": 33,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "defender_seedlings",
+          "name": "Защитник Саженцев",
+          "point_cost": 16,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "alraune",
+          "name": "Альраун, Семя Аэнта",
+          "point_cost": 4,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "dryadint_warrior",
+          "name": "Дриадинта Воин",
+          "point_cost": 20,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "dryadint_archer",
+          "name": "Дриадинта Лучник",
+          "point_cost": 27,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "centaur_dryadint",
+          "name": "Дриадинта-кентавр",
+          "point_cost": 32,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "spirit_of_keld",
+          "name": "Дух Кельда",
+          "point_cost": 29,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "felidarn_bow",
+          "name": "Наездница с луком",
+          "point_cost": 38,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "felidarn_spear",
+          "name": "Наездница с копьем",
+          "point_cost": 40,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "felidarn_sword",
+          "name": "Наездница с мечом",
+          "point_cost": 42,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_blades",
+          "name": "Таоргас с Клинками",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_book",
+          "name": "Алдвин Летописец",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_beast",
+          "name": "Алдвин Искатель Истины",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "dryadint_woodseer",
+          "name": "Дриадинта Провидица Леса",
+          "point_cost": 42,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "gatarkhin_blades",
+          "name": "Гатархин, убийца",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "keld_assassin_1",
+          "name": "Танцующая с Клинками",
+          "point_cost": 27,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "keld_assassin_2",
+          "name": "Тихий Клинок Кельда",
+          "point_cost": 28,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "keld_hunter_claw",
+          "name": "Охотник Кельда",
+          "point_cost": 28,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "keld_hunter_glaive",
+          "name": "Охотник Кельда с Глефой",
+          "point_cost": 32,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "keld_hunter_bow",
+          "name": "Охотник Кельда с Луком",
+          "point_cost": 34,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "brammn_unit",
+          "name": "Брам'мн Мудрый",
+          "point_cost": 40,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "thicket_guardian_sword",
+          "name": "Стражей Дубовой Чащи c мечом",
+          "point_cost": 50,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "thicket_guardian_stone",
+          "name": "Стражей Дубовой Чащи c камнем",
+          "point_cost": 60,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "kristoff_keller_who_discovered_life",
+          "name": "Кристоф Келлер, Познавший Жизнь",
+          "point_cost": 21,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "na'atly_unit",
+          "name": "На'атли Дикая Охотница",
+          "point_cost": 40,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "sild_protector_keld",
+          "name": "Сильд Защитник Кельда",
+          "point_cost": 36,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "sild_seeder_keld",
+          "name": "Сильд Сеятель Кельда",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "sild_glaive_keld",
+          "name": "Сильд Кельда с Глефой",
+          "point_cost": 37,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "voice_of_keld",
+          "name": "Сильд Голос Кельда",
+          "point_cost": 48,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 1
+        }
+      ]
+    },
+    {
+      "hero_id": 10,
+      "hero_tech_name": "brammn_hero",
+      "hero_name": "Брам'мн Мудрый",
+      "hero_point_cost": 40,
+      "domain": {
+        "id": 3,
+        "tech_name": "life",
+        "name": "Жизнь"
+      },
+      "faction": {
+        "id": 4,
+        "tech_name": "keld",
+        "name": "Кельд"
+      },
+      "units": [
+        {
+          "tech_name": "aent",
+          "name": "Великий Аэнт-Страж",
+          "point_cost": 75,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "barkbeast",
+          "name": "Зверь Подлеска",
+          "point_cost": 33,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "defender_seedlings",
+          "name": "Защитник Саженцев",
+          "point_cost": 16,
+          "max_quantity": 5
+        },
+        {
+          "tech_name": "alraune",
+          "name": "Альраун, Семя Аэнта",
+          "point_cost": 4,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "dryadint_warrior",
+          "name": "Дриадинта Воин",
+          "point_cost": 20,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "dryadint_archer",
+          "name": "Дриадинта Лучник",
+          "point_cost": 27,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "centaur_dryadint",
+          "name": "Дриадинта-кентавр",
+          "point_cost": 32,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "spirit_of_keld",
+          "name": "Дух Кельда",
+          "point_cost": 29,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "felidarn_bow",
+          "name": "Наездница с луком",
+          "point_cost": 38,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "felidarn_spear",
+          "name": "Наездница с копьем",
+          "point_cost": 40,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "felidarn_sword",
+          "name": "Наездница с мечом",
+          "point_cost": 42,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_blades",
+          "name": "Таоргас с Клинками",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_book",
+          "name": "Алдвин Летописец",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_beast",
+          "name": "Алдвин Искатель Истины",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "dryadint_woodseer",
+          "name": "Дриадинта Провидица Леса",
+          "point_cost": 42,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_blades",
+          "name": "Гатархин, убийца",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "keld_assassin_1",
+          "name": "Танцующая с Клинками",
+          "point_cost": 27,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "keld_assassin_2",
+          "name": "Тихий Клинок Кельда",
+          "point_cost": 28,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "keld_hunter_claw",
+          "name": "Охотник Кельда",
+          "point_cost": 28,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "keld_hunter_glaive",
+          "name": "Охотник Кельда с Глефой",
+          "point_cost": 32,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "keld_hunter_bow",
+          "name": "Охотник Кельда с Луком",
+          "point_cost": 34,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "thicket_guardian_sword",
+          "name": "Стражей Дубовой Чащи c мечом",
+          "point_cost": 50,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "thicket_guardian_stone",
+          "name": "Стражей Дубовой Чащи c камнем",
+          "point_cost": 60,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "kristoff_keller_who_discovered_life",
+          "name": "Кристоф Келлер, Познавший Жизнь",
+          "point_cost": 21,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "na'atly_unit",
+          "name": "На'атли Дикая Охотница",
+          "point_cost": 40,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "sild_protector_keld",
+          "name": "Сильд Защитник Кельда",
+          "point_cost": 36,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "sild_seeder_keld",
+          "name": "Сильд Сеятель Кельда",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "sild_glaive_keld",
+          "name": "Сильд Кельда с Глефой",
+          "point_cost": 37,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "voice_of_keld",
+          "name": "Сильд Голос Кельда",
+          "point_cost": 48,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 1
+        }
+      ]
+    },
+    {
+      "hero_id": 17,
+      "hero_tech_name": "na'atly_hero",
+      "hero_name": "На'атли Дикая Охотница",
+      "hero_point_cost": 40,
+      "domain": {
+        "id": 3,
+        "tech_name": "life",
+        "name": "Жизнь"
+      },
+      "faction": {
+        "id": 4,
+        "tech_name": "keld",
+        "name": "Кельд"
+      },
+      "units": [
+        {
+          "tech_name": "barkbeast",
+          "name": "Зверь Подлеска",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "alraune",
+          "name": "Альраун, Семя Аэнта",
+          "point_cost": 4,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "dryadint_warrior",
+          "name": "Дриадинта Воин",
+          "point_cost": 20,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "dryadint_archer",
+          "name": "Дриадинта Лучник",
+          "point_cost": 27,
+          "max_quantity": 5
+        },
+        {
+          "tech_name": "centaur_dryadint",
+          "name": "Дриадинта-кентавр",
+          "point_cost": 32,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "spirit_of_keld",
+          "name": "Дух Кельда",
+          "point_cost": 29,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "felidarn_bow",
+          "name": "Наездница с луком",
+          "point_cost": 38,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "felidarn_spear",
+          "name": "Наездница с копьем",
+          "point_cost": 40,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "aldvin_book",
+          "name": "Алдвин Летописец",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_beast",
+          "name": "Алдвин Искатель Истины",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "dryadint_woodseer",
+          "name": "Дриадинта Провидица Леса",
+          "point_cost": 42,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "keld_assassin_1",
+          "name": "Танцующая с Клинками",
+          "point_cost": 27,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "keld_assassin_2",
+          "name": "Тихий Клинок Кельда",
+          "point_cost": 28,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "keld_hunter_claw",
+          "name": "Охотник Кельда",
+          "point_cost": 28,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "keld_hunter_glaive",
+          "name": "Охотник Кельда с Глефой",
+          "point_cost": 32,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "keld_hunter_bow",
+          "name": "Охотник Кельда с Луком",
+          "point_cost": 34,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "thicket_guardian_sword",
+          "name": "Стражей Дубовой Чащи c мечом",
+          "point_cost": 50,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "virmgling",
+          "name": "Вирмглинг",
+          "point_cost": 12,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "kristoff_keller_who_discovered_life",
+          "name": "Кристоф Келлер, Познавший Жизнь",
+          "point_cost": 21,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 1
+        }
+      ]
+    },
+    {
+      "hero_id": 4,
+      "hero_tech_name": "gottfried",
+      "hero_name": "Готфрид «Гёц» фон Криглихинген",
+      "hero_point_cost": 60,
+      "domain": {
+        "id": 4,
+        "tech_name": "death",
+        "name": "Смерть"
+      },
+      "faction": {
+        "id": 3,
+        "tech_name": "krigmark",
+        "name": "Кригмарк"
+      },
+      "units": [
+        {
+          "tech_name": "abomination",
+          "name": "Абоминация Войны",
+          "point_cost": 50,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "grenadier",
+          "name": "Обреченный Гренадер",
+          "point_cost": 22,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "alchemist",
+          "name": "Некро-Алхимик",
+          "point_cost": 17,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "frontline_healer",
+          "name": "Фронтовой Медик",
+          "point_cost": 21,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "immortal",
+          "name": "Бессмертный",
+          "point_cost": 33,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "footsoldier_mace",
+          "name": "Рядовой с Булавой",
+          "point_cost": 20,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "deathbringer",
+          "name": "Несущий Смерть",
+          "point_cost": 45,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "bolt_thrower",
+          "name": "Тяжелый Стреломет",
+          "point_cost": 55,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "untoten_1",
+          "name": "Возвратившийся Мод.1",
+          "point_cost": 10,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "taorgas_blades",
+          "name": "Таоргас с Клинками",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_book",
+          "name": "Алдвин Летописец",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_beast",
+          "name": "Алдвин Искатель Истины",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_blades",
+          "name": "Гатархин, убийца",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "stosskrieger_1",
+          "name": "Штосскригер с булавой",
+          "point_cost": 40,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "stosskrieger_2",
+          "name": "Штосскригер с пусковым стрелометом",
+          "point_cost": 45,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "stosskrieger_3",
+          "name": "Штосскригер со стрелометом",
+          "point_cost": 50,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "dalmar_shultz_unit",
+          "name": "Дальмар Шульц",
+          "point_cost": 34,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "kristoff_keller_who_discovered_life",
+          "name": "Кристоф Келлер, Познавший Жизнь",
+          "point_cost": 21,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "jagdzombie",
+          "name": "Ягдзомби",
+          "point_cost": 16,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "stormtrooper_2",
+          "name": "Штурмтрупер с \"Губителем\"",
+          "point_cost": 27,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "stormtrooper_reaper",
+          "name": "Окопный Жнец",
+          "point_cost": 23,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "stormtrooper_sergant",
+          "name": "Фельдфебель Штурмтруперов",
+          "point_cost": 30,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "stormtrooper_reaper_sergant",
+          "name": "Фельдфебель Жнецов",
+          "point_cost": 27,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "stormtrooper_1",
+          "name": "Штурмтрупер со Штурмовым Карабином",
+          "point_cost": 26,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "hundmeister",
+          "name": "Хундмейстер",
+          "point_cost": 18,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "twins_wolf",
+          "name": "Вольф Бальдауф",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "twins_verena",
+          "name": "Верена Бальдауф",
+          "point_cost": 60,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 2
+        }
+      ]
+    },
+    {
+      "hero_id": 8,
+      "hero_tech_name": "gottfried_2",
+      "hero_name": "Готфрид, Железная Длань",
+      "hero_point_cost": 32,
+      "domain": {
+        "id": 4,
+        "tech_name": "death",
+        "name": "Смерть"
+      },
+      "faction": {
+        "id": 3,
+        "tech_name": "krigmark",
+        "name": "Кригмарк"
+      },
+      "units": [
+        {
+          "tech_name": "abomination",
+          "name": "Абоминация Войны",
+          "point_cost": 50,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "grenadier",
+          "name": "Обреченный Гренадер",
+          "point_cost": 22,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "alchemist",
+          "name": "Некро-Алхимик",
+          "point_cost": 17,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "frontline_healer",
+          "name": "Фронтовой Медик",
+          "point_cost": 21,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "immortal",
+          "name": "Бессмертный",
+          "point_cost": 33,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "footsoldier_mace",
+          "name": "Рядовой с Булавой",
+          "point_cost": 20,
+          "max_quantity": 5
+        },
+        {
+          "tech_name": "deathbringer",
+          "name": "Несущий Смерть",
+          "point_cost": 45,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "bolt_thrower",
+          "name": "Тяжелый Стреломет",
+          "point_cost": 55,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "untoten_1",
+          "name": "Возвратившийся Мод.1",
+          "point_cost": 10,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_blades",
+          "name": "Таоргас с Клинками",
+          "point_cost": 41,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_book",
+          "name": "Алдвин Летописец",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_beast",
+          "name": "Алдвин Искатель Истины",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_blades",
+          "name": "Гатархин, убийца",
+          "point_cost": 33,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "stosskrieger_1",
+          "name": "Штосскригер с булавой",
+          "point_cost": 40,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "stosskrieger_2",
+          "name": "Штосскригер с пусковым стрелометом",
+          "point_cost": 45,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "stosskrieger_3",
+          "name": "Штосскригер со стрелометом",
+          "point_cost": 50,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "dalmar_shultz_unit",
+          "name": "Дальмар Шульц",
+          "point_cost": 34,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "kristoff_keller_who_discovered_life",
+          "name": "Кристоф Келлер, Познавший Жизнь",
+          "point_cost": 21,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "jagdzombie",
+          "name": "Ягдзомби",
+          "point_cost": 16,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "stormtrooper_2",
+          "name": "Штурмтрупер с \"Губителем\"",
+          "point_cost": 27,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "stormtrooper_reaper",
+          "name": "Окопный Жнец",
+          "point_cost": 23,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "stormtrooper_sergant",
+          "name": "Фельдфебель Штурмтруперов",
+          "point_cost": 30,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "stormtrooper_reaper_sergant",
+          "name": "Фельдфебель Жнецов",
+          "point_cost": 27,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "stormtrooper_1",
+          "name": "Штурмтрупер со Штурмовым Карабином",
+          "point_cost": 26,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "hundmeister",
+          "name": "Хундмейстер",
+          "point_cost": 18,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "twins_wolf",
+          "name": "Вольф Бальдауф",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "twins_verena",
+          "name": "Верена Бальдауф",
+          "point_cost": 60,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 2
+        }
+      ]
+    },
+    {
+      "hero_id": 16,
+      "hero_tech_name": "dalmar_shultz_hero",
+      "hero_name": "Дальмар Шульц Старший Инженер",
+      "hero_point_cost": 34,
+      "domain": {
+        "id": 4,
+        "tech_name": "death",
+        "name": "Смерть"
+      },
+      "faction": {
+        "id": 3,
+        "tech_name": "krigmark",
+        "name": "Кригмарк"
+      },
+      "units": [
+        {
+          "tech_name": "abomination",
+          "name": "Абоминация Войны",
+          "point_cost": 50,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "grenadier",
+          "name": "Обреченный Гренадер",
+          "point_cost": 22,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "alchemist",
+          "name": "Некро-Алхимик",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "frontline_healer",
+          "name": "Фронтовой Медик",
+          "point_cost": 21,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "immortal",
+          "name": "Бессмертный",
+          "point_cost": 33,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "footsoldier_mace",
+          "name": "Рядовой с Булавой",
+          "point_cost": 20,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "deathbringer",
+          "name": "Несущий Смерть",
+          "point_cost": 45,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "bolt_thrower",
+          "name": "Тяжелый Стреломет",
+          "point_cost": 55,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "untoten_1",
+          "name": "Возвратившийся Мод.1",
+          "point_cost": 10,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "taorgas_hammer",
+          "name": "Таоргас с Молотом",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_book",
+          "name": "Алдвин Летописец",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_beast",
+          "name": "Алдвин Искатель Истины",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "gatarkhin_glaive",
+          "name": "Гатархин, дуэлянт",
+          "point_cost": 35,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "stosskrieger_2",
+          "name": "Штосскригер с пусковым стрелометом",
+          "point_cost": 45,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "stosskrieger_3",
+          "name": "Штосскригер со стрелометом",
+          "point_cost": 50,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "kefer_modification_a",
+          "name": "Кефер модификация А",
+          "point_cost": 8,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "kefer_modification_c",
+          "name": "Кефер модификация С",
+          "point_cost": 6,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "kristoff_keller_who_discovered_life",
+          "name": "Кристоф Келлер, Познавший Жизнь",
+          "point_cost": 21,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "jagdzombie",
+          "name": "Ягдзомби",
+          "point_cost": 16,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "kefer_modification_b",
+          "name": "Кефер модификация Б",
+          "point_cost": 12,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "stormtrooper_2",
+          "name": "Штурмтрупер с \"Губителем\"",
+          "point_cost": 27,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "stormtrooper_reaper",
+          "name": "Окопный Жнец",
+          "point_cost": 23,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "stormtrooper_1",
+          "name": "Штурмтрупер со Штурмовым Карабином",
+          "point_cost": 26,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "hundmeister",
+          "name": "Хундмейстер",
+          "point_cost": 18,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "twins_wolf",
+          "name": "Вольф Бальдауф",
+          "point_cost": 45,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "twins_verena",
+          "name": "Верена Бальдауф",
+          "point_cost": 60,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 3
+        }
+      ]
+    },
+    {
+      "hero_id": 25,
+      "hero_tech_name": "drago_mort",
+      "hero_name": "Драго-Морт Дэа'Мор",
+      "hero_point_cost": 55,
+      "domain": {
+        "id": 4,
+        "tech_name": "death",
+        "name": "Смерть"
+      },
+      "faction": {
+        "id": 11,
+        "tech_name": "blackthorn",
+        "name": "Великий Терновник"
+      },
+      "units": [
+        {
+          "tech_name": "aldvin_book",
+          "name": "Алдвин Летописец",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "aldvin_beast",
+          "name": "Алдвин Искатель Истины",
+          "point_cost": 19,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "kristoff_keller_who_discovered_life",
+          "name": "Кристоф Келлер, Познавший Жизнь",
+          "point_cost": 21,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "alraune_blackthorn",
+          "name": "Альраун, Семя Терновника",
+          "point_cost": 3,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "defender_seedlings_blackthorn",
+          "name": "Защитник Саженцев Терновника",
+          "point_cost": 15,
+          "max_quantity": 4
+        },
+        {
+          "tech_name": "blackthorn_assassin_2",
+          "name": "Тихий Клинок Терновника",
+          "point_cost": 26,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "blackthorn_hunter_claw",
+          "name": "Охотник Терновника",
+          "point_cost": 27,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "centaur_dryadint_blackthorn",
+          "name": "Дриадинта-Кентавр Терновника",
+          "point_cost": 32,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "barkbeast_blackthorn",
+          "name": "Зверь Подлеска Терновника",
+          "point_cost": 31,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "sild_protector",
+          "name": "Сильд Защитник Терновника",
+          "point_cost": 33,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "sild_seeder",
+          "name": "Сильд Сеятель Терновника",
+          "point_cost": 32,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "sild_glaive",
+          "name": "Сильд Мститель с Глефой",
+          "point_cost": 34,
+          "max_quantity": 3
+        },
+        {
+          "tech_name": "voice_of_blackthorn",
+          "name": "Сильд Голос Терновника",
+          "point_cost": 45,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "dal_hiar",
+          "name": "Дал'Хиар Отшельник Терновника",
+          "point_cost": 50,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "blackthorn_hunter_glaive",
+          "name": "Охотник Терновника с Глефой",
+          "point_cost": 31,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "blackthorn_hunter_bow",
+          "name": "Охотник Терновника с Луком",
+          "point_cost": 33,
+          "max_quantity": 2
+        },
+        {
+          "tech_name": "boyd",
+          "name": "Бойд Великолепный",
+          "point_cost": 17,
+          "max_quantity": 1
+        },
+        {
+          "tech_name": "mul",
+          "name": "Автоматон \"М.У.Л.\"",
+          "point_cost": 10,
+          "max_quantity": 1
+        }
+      ]
+    }
+  ]
+}

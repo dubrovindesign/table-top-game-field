@@ -1,0 +1,24 @@
+{
+  "image": "/catalog-units/engeln-malyy-golem-torgvara/image.jpg",
+  "title": "Малый Голем Торгвара",
+  "regions": [
+    {
+      "id": "attack_0",
+      "label": "Удар кулаком",
+      "x": 0.042,
+      "y": 0.3026,
+      "w": 0.916,
+      "h": 0.0332,
+      "range": 1,
+      "rangeUnit": "hex",
+      "damage": 2,
+      "red": 1,
+      "green": 1,
+      "black": 0,
+      "white": 0
+    }
+  ],
+  "scrollLayout": {
+    "scaleY": 0.5731608730800324
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "krigmark-feldwebel-stormtroopers",
+  "points": 30,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "krigmark-feldwebel-stormtroopers",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 1,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "death"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 5,
+    "faithMarkers": {
+      "red": 1
+    },
+    "keywords": [
+      "Кригмарк"
+    ],
+    "maxHealth": 5,
+    "miniatureSprite": "/catalog-units/krigmark-feldwebel-stormtroopers/miniature.jpg",
+    "name": "Фельдфебель штурмтруперов",
+    "run": 6,
+    "size": "small",
+    "sprite": "/catalog-units/krigmark-feldwebel-stormtroopers/image.jpg",
+    "walk": 3,
+    "flagSprite": "/krigmark.webp"
+  }
+}

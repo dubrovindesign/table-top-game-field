@@ -1,0 +1,56 @@
+{
+  "id": "ab-ns-prioryofhope-mul",
+  "points": 10,
+  "card": {
+    "name": "Автоматон \"М.У.Л.\"",
+    "size": "small",
+    "health": 5,
+    "maxHealth": 5,
+    "defense": {
+      "white": 1,
+      "green": 0
+    },
+    "walk": 3,
+    "run": 6,
+    "movementDistanceUnit": "hex",
+    "domains": [
+      "creation"
+    ],
+    "catalogUnitId": "ab-ns-prioryofhope-mul",
+    "concentration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "exploration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "defenseReaction": {
+      "white": 1,
+      "green": 0
+    },
+    "attacks": [],
+    "traits": [
+      {
+        "name": "Ростер Army Builder",
+        "description": "Карточка-заглушка: заданы только имя, очки и лимит из torn-world.com. Арт и игровые статы не заполнены."
+      }
+    ],
+    "keywords": [
+      "Приорат Надежды",
+      "Army Builder"
+    ],
+    "flagSprite": "/priory_of_hope.webp",
+    "faithMarkers": {
+      "red": 0
+    },
+    "sprite": "/catalog-units/armybuilder-mul/image.jpg",
+    "miniatureSprite": "/catalog-units/armybuilder-mul/miniature.jpg"
+  }
+}

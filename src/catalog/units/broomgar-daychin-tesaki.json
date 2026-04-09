@@ -1,0 +1,48 @@
+{
+  "id": "broomgar-daychin-tesaki",
+  "points": 30,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "broomgar-daychin-tesaki",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 1,
+      "green": 0
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "destruction"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 12,
+    "keywords": [
+      "Орда брумгаров"
+    ],
+    "maxHealth": 12,
+    "miniatureSprite": "/catalog-units/broomgar-daychin-tesaki/miniature.jpg",
+    "name": "Дайчин с Тесаками",
+    "run": 6,
+    "size": "small",
+    "sprite": "/catalog-units/broomgar-daychin-tesaki/image.jpg",
+    "walk": 3,
+    "faithMarkers": {
+      "red": 1
+    },
+    "flagSprite": "/broomgar_horde.webp"
+  }
+}

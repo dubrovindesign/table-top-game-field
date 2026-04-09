@@ -1,0 +1,40 @@
+{
+  "image": "/catalog-units/priory_of_hope-khoakin-de-esperando/image.jpg",
+  "title": "Хоакин де Эсперандо",
+  "regions": [
+    {
+      "x": 0.045,
+      "y": 0.29796143250688706,
+      "w": 0.91,
+      "h": 0.021774104683195593,
+      "id": "attack_0",
+      "label": "Удар мечом",
+      "red": 3,
+      "green": 2,
+      "black": 2,
+      "white": 0,
+      "range": 1,
+      "rangeUnit": "hex",
+      "damage": 3
+    },
+    {
+      "x": 0.045,
+      "y": 0.32546556473829197,
+      "w": 0.91,
+      "h": 0.021774104683195593,
+      "id": "attack_1",
+      "label": "Круговая атака",
+      "red": 2,
+      "green": 2,
+      "black": 2,
+      "white": 0,
+      "range": 1,
+      "rangeUnit": "hex",
+      "damage": 3
+    }
+  ],
+  "scrollLayout": {
+    "faceH": 1040,
+    "totalH": 1815
+  }
+}

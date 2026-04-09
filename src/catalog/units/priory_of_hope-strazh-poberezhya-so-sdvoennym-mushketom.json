@@ -1,0 +1,77 @@
+{
+  "id": "priory_of_hope-strazh-poberezhya-so-sdvoennym-mushketom",
+  "points": 22,
+  "card": {
+    "attacks": [
+      {
+        "name": "Выстрел",
+        "range": 4,
+        "attackRange": "ranged",
+        "damageType": "physical",
+        "damage": 2,
+        "dice": {
+          "red": 2,
+          "black": 2,
+          "green": 1
+        }
+      },
+      {
+        "name": "Удар кинжалом",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 2,
+        "dice": {
+          "red": 2,
+          "black": 1,
+          "green": 1
+        }
+      }
+    ],
+    "catalogUnitId": "priory_of_hope-strazh-poberezhya-so-sdvoennym-mushketom",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 2,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "creation"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 5,
+    "keywords": [
+      "Приорат Надежды",
+      "Гвардеец",
+      "Стрелок",
+      "Мушкет"
+    ],
+    "maxHealth": 5,
+    "miniatureSprite": "/catalog-units/priory_of_hope-strazh-poberezhya-so-sdvoennym-mushketom/miniature.jpg",
+    "name": "Страж Побережья со сдвоенным мушкетом",
+    "run": 5,
+    "size": "small",
+    "sprite": "/catalog-units/priory_of_hope-strazh-poberezhya-so-sdvoennym-mushketom/image.jpg",
+    "walk": 3,
+    "movementDistanceUnit": "hex",
+    "faithMarkers": {
+      "red": 1
+    },
+    "flagSprite": "/priory_of_hope.webp"
+  }
+}

@@ -2136,10 +2136,81 @@ select option {
   cursor: not-allowed;
 }
 
+.army-inventory-row .army-unit-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.army-inventory-stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.army-inventory-step-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.army-inventory-step-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.army-inventory-qty {
+  min-width: 1.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+
+.army-inventory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0 16px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.army-god-catalog .army-inventory-clear-loadout {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: 100%;
+  max-width: 320px;
+}
+
+.army-inventory-clear-loadout {
+  margin-top: 4px;
+  text-align: center;
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(35, 35, 42, 0.9);
+  color: #e0e0e8;
+  cursor: pointer;
+}
+
+.army-inventory-clear-loadout:hover {
+  border-color: rgba(186, 104, 200, 0.4);
+  background: rgba(50, 40, 58, 0.95);
+}
+
 .army-unit-thumb {
   width: 44px;
   height: 44px;
-  border-radius: 8px;
+  border-radius: 0;
   overflow: hidden;
   flex-shrink: 0;
   background: rgba(0, 0, 0, 0.3);
@@ -2752,6 +2823,43 @@ select option {
 .army-god-catalog-item:focus-visible {
   box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.75);
   border-radius: 6px;
+}
+
+.army-god-thumb-wrap {
+  position: relative;
+  width: 112px;
+  height: 156px;
+  flex-shrink: 0;
+}
+
+.army-god-avail-badge {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  color: #f4f4f8;
+  background: rgba(12, 12, 18, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.army-god-catalog-item--depleted .army-god-thumb {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.army-god-catalog-item--depleted .army-god-thumb:active {
+  cursor: default;
 }
 
 .army-god-add-btn {
@@ -3538,6 +3646,9 @@ select option {
   z-index: 60;
   box-sizing: border-box;
   pointer-events: none;
+  --god-blind-zoom: 1;
+  --god-blind-zone-radius: 18px;
+  --god-blind-card-radius: 10px;
 }
 
 .god-blind-table-wrap--inactive {
@@ -3547,7 +3658,7 @@ select option {
 .god-blind-zone {
   width: min(420px, 88vw);
   min-height: 120px;
-  border-radius: 18px;
+  border-radius: var(--god-blind-zone-radius);
   box-sizing: border-box;
   background: transparent;
   display: flex;
@@ -3584,14 +3695,15 @@ select option {
 .god-dock-card--blind-slot.god-dock-card--back {
   box-sizing: border-box;
   overflow: hidden;
+  min-height: 0;
 }
 
 .god-dock-card--blind-slot.god-dock-card--face {
   padding: 0;
   background-color: #1a1a22;
   background-repeat: no-repeat;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
+  border: calc(1px * var(--god-blind-zoom)) solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--god-blind-card-radius);
 }
 
 .god-dock-card--blind-slot.god-dock-card--back .god-dock-back-mark {
@@ -3599,8 +3711,9 @@ select option {
 }
 
 .god-dock-card {
-  border-radius: 10px;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+  border-radius: var(--god-blind-card-radius);
+  box-shadow: 0 calc(8px * var(--god-blind-zoom)) calc(22px * var(--god-blind-zoom))
+    rgba(0, 0, 0, 0.45);
   overflow: hidden;
   user-select: none;
   touch-action: none;
@@ -3633,11 +3746,10 @@ select option {
 }
 
 .god-dock-card--back {
-  background: linear-gradient(145deg, #5e35b1, #1a237e 55%, #4527a0);
+  background-color: #1a1a22;
+  background-repeat: no-repeat;
+  background-size: 700% 500%;
   border: 1px solid rgba(255, 255, 255, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .god-dock-back-mark {
@@ -3677,10 +3789,6 @@ select option {
 }
 
 .god-dock-card--ghost {
-  width: 140px;
-  height: 96px;
-  min-height: 96px;
-  max-height: 96px;
   box-sizing: border-box;
 }
 

@@ -19,6 +19,8 @@ import {
   GOD_TABLE_CARD_HW,
   GOD_TABLE_CARD_HH,
   GOD_TABLE_CARD_ROT_CW_DEG,
+  INVENTORY_TABLE_MARKER_HW,
+  INVENTORY_TABLE_MARKER_HH,
   Renderer,
   defaultRenderConfig,
 } from './renderer';
@@ -35,14 +37,17 @@ import {
   BIG_MINI_VISUAL_SCALE,
   BIG_UNIT_HEALTH_UI_SCALE,
   bigMiniActivationToggleCenterWorld,
+  bigMiniBroomgarHungerCenterWorld,
   bigMiniHealthBadgeCenterWorld,
   LARGE_MINI_VISUAL_SCALE,
   LARGE_UNIT_HEALTH_UI_SCALE,
   largeMiniActivationToggleCenterWorld,
+  largeMiniBroomgarHungerCenterWorld,
   largeMiniHealthBadgeCenterWorld,
   HUGE_MINI_VISUAL_SCALE,
   HUGE_UNIT_HEALTH_UI_SCALE,
   hugeMiniActivationToggleCenterFromPivotWorld,
+  hugeMiniBroomgarHungerCenterFromPivotWorld,
   hugeMiniDrawPivotWorld,
   hugeMiniHealthBadgeCenterWorld,
   isWorldPointInBigMiniSilhouette,
@@ -52,8 +57,15 @@ import {
   SMALL_UNIT_HEALTH_BADGE_EXPAND_WHEN_OPEN,
   SMALL_UNIT_HEALTH_BADGE_SCALE,
   smallUnitActivationToggleCenterWorldRad,
+  smallUnitBroomgarHungerCenterWorldRad,
   smallUnitHealthBadgeCenterWorldRad,
 } from './healthUi';
+import {
+  isBroomgarRosterLeader,
+  nextBroomgarHungerPhase,
+  parseBroomgarHungerPhase,
+  type BroomgarHungerPhase,
+} from './broomgarHunger';
 import { CrystalWallet } from './crystalWallet';
 import {
   CATALOG_UNITS,
@@ -63,6 +75,7 @@ import {
   maxCopiesForSlot,
   rosterSpawnPoints,
 } from './armyCatalog';
+import { getMergedInventoryItem } from './catalog/catalogOverrides';
 import type { CatalogUnitDef } from './catalog/types';
 import { ArmyBuilderPanel, DND_MIME, type ArmyDragPayload } from './armyBuilderPanel';
 import { EPHIRIUM_VORTEX_CARDS } from './ephiriumVortexCards';
@@ -85,6 +98,9 @@ import {
   createInitialGodPiles,
   EMPTY_GOD_PILE,
   GOD_BLIND_ZONE_MAX_CARDS,
+  godCardIdsInPlay,
+  registerArmyRosterGodCardIdsInPlay,
+  registerArmyRosterInventoryItemIdsInPlay,
   shuffleIds,
   type GodSlotPile,
 } from './godDeckState.ts';
@@ -109,7 +125,7 @@ import { mountAppMoreMenu } from './appMoreMenu.ts';
 import { getWheelBehavior, mountAppSettingsToolbar } from './appSettings.ts';
 import { createPwaInstallMenuFlow } from './pwaInstallUi.ts';
 import './style.css';
-import { playBoardDragDrop, playBoardDragLift } from './boardDragSfx';
+import { playBoardDragDrop, playBoardDragLift, playGodDeckShuffle } from './boardDragSfx';
 import { loadCatalogBundle } from './catalog/index.ts';
 
 await loadCatalogBundle();
@@ -465,11 +481,24 @@ function getBoardCenterWorld(): { x: number; y: number } {
 
 /** God cards / decks on the table (from panel DnD or merged stacks). */
 let godTablePieces: GodTablePiece[] = [];
+
+/** Inventory item tokens on the board (sprites from catalog). */
+export type InventoryTablePiece = {
+  rosterLeaderId: string;
+  itemId: string;
+  world: Point;
+  spawnedFromArmyPanel?: boolean;
+  armyOwnerPlayerSlot?: PlayerSlot;
+};
+let inventoryTablePieces: InventoryTablePiece[] = [];
+
+/** Budget: how many of each item are taken in the army list (per leader). */
 /** Колода / рука / сброс / слепая зона по слотам 0 и 1. */
 let godPiles: [GodSlotPile, GodSlotPile] = createInitialGodPiles();
 let godHandBlindDock: GodHandBlindDock | null = null;
 /** Selected loose god piece index (same pattern as terrain / big mini). */
 let selectedGodTablePieceIndex: number | null = null;
+let selectedInventoryTablePieceIndex: number | null = null;
 /** True from pointerdown on an already-selected deck until drag ends — next drag moves whole stack (no peel). */
 let godDragWholeGodDeck = false;
 let godLooseDragPending = false;
@@ -486,6 +515,20 @@ let godPieceFlipAnim: {
   durationMs: number;
   fromFaceUp: boolean;
 } | null = null;
+let godDeckShuffleAnim: {
+  index: number;
+  startMs: number;
+  durationMs: number;
+} | null = null;
+
+/** Inventory markers — loose drag hit box (совпадает с max-рамкой отрисовки в renderer). */
+let inventoryLooseDragPending = false;
+let inventoryLooseDragPendingIndex: number | null = null;
+let inventoryLooseDragPendingStartX = 0;
+let inventoryLooseDragPendingStartY = 0;
+let isDraggingInventoryLoose = false;
+let inventoryDraggingIndex: number | null = null;
+let inventoryLooseDragPreviewWorld: Point | null = null;
 
 const GOD_BLIND_ZONE_GAP_FROM_BOARD = 28;
 /** Базовый зазор между картами в экранных px при zoom=1 (далее × camera.zoom). */
@@ -631,19 +674,13 @@ function godBlindCardCountForSlot(slot: PlayerSlot): number {
 
 function computeBlindZoneLayoutForSlot(slot: PlayerSlot): GodBlindZoneLayout {
   const n = godBlindCardCountForSlot(slot);
-  const { anchor: anchorW, tx, ty } = getGodBlindRowFrameWorld(slot);
+  const { anchor: anchorW } = getGodBlindRowFrameWorld(slot);
   const abb = godTableCardScreenAabb(anchorW);
   const Ws = abb.maxSX - abb.minSX;
   const Hs = abb.maxSY - abb.minSY;
 
   const anchorS = boardWorldToScreen(anchorW);
-  const tTipS = boardWorldToScreen({ x: anchorW.x + tx, y: anchorW.y + ty });
-  const tdx = tTipS.x - anchorS.x;
-  const tdy = tTipS.y - anchorS.y;
-  const tLen = Math.hypot(tdx, tdy) || 1;
-  const tsx = tdx / tLen;
   /** Ряд в экране — строго по горизонтали (иначе проекция касательной даёт «лестницу»). */
-  const rowDirX = Math.sign(tsx) || 1;
 
   const cardsAbs: Array<{ left: number; top: number; width: number; height: number }> = [];
   const gapPx = Math.max(0, Math.round(godBlindCardGapScreenPx()));
@@ -659,8 +696,9 @@ function computeBlindZoneLayoutForSlot(slot: PlayerSlot): GodBlindZoneLayout {
   } else {
     const rowY = anchorS.y;
     for (let i = 0; i < n; i++) {
-      const off = i - (n - 1) / 2;
-      const cx = anchorS.x + rowDirX * off * step;
+      // Заполнение слепой зоны: левый слот фиксирован, новые карты растут вправо.
+      // Используем экранное +X, чтобы направление было стабильным независимо от ориентации поля.
+      const cx = anchorS.x + i * step;
       const cy = rowY;
       cardsAbs.push({ left: cx - Ws / 2, top: cy - Hs / 2, width: Ws, height: Hs });
     }
@@ -693,7 +731,7 @@ function computeBlindZoneLayoutForSlot(slot: PlayerSlot): GodBlindZoneLayout {
     height: c.height,
   }));
 
-  return { container, cards, borderScreenPx: b };
+  return { container, cards, borderScreenPx: b, zoom: camera.zoom };
 }
 
 function godBlindZoneContainsWorldForSlot(
@@ -764,6 +802,8 @@ type Unit = {
   rosterLeaderId?: string;
   /** Who placed this roster unit in multiplayer (`PlayerSlot`); omitted in solo. */
   armyOwnerPlayerSlot?: PlayerSlot;
+  /** Орда брумгаров: голод / нейтраль / разгул (клик по цветному кругу циклически меняет). */
+  broomgarHungerPhase?: BroomgarHungerPhase;
 };
 
 /** Demo board minis — пусто при пустом каталоге; юниты ставятся из панели армии. */
@@ -793,6 +833,7 @@ type SelectedEntity =
   | { kind: 'terrain'; index: number }
   | { kind: 'etherVortex'; index: number }
   | { kind: 'godTable'; index: number }
+  | { kind: 'inventoryTable'; index: number }
   | null;
 
 type ClipboardEntity =
@@ -824,6 +865,7 @@ type BigMini = {
   catalogUnitId?: string;
   rosterLeaderId?: string;
   armyOwnerPlayerSlot?: PlayerSlot;
+  broomgarHungerPhase?: BroomgarHungerPhase;
 };
 
 const bigMiniatures: BigMini[] = [];
@@ -845,6 +887,7 @@ type LargeMini = {
   catalogUnitId?: string;
   rosterLeaderId?: string;
   armyOwnerPlayerSlot?: PlayerSlot;
+  broomgarHungerPhase?: BroomgarHungerPhase;
 };
 
 function largeMiniFootprint(m: Pick<LargeMini, 'anchor' | 'rotationDeg'>): Hex[] {
@@ -881,6 +924,7 @@ type HugeMini = {
   catalogUnitId?: string;
   rosterLeaderId?: string;
   armyOwnerPlayerSlot?: PlayerSlot;
+  broomgarHungerPhase?: BroomgarHungerPhase;
   /** Nudge of miniature art inside the clip (layout units, same frame as path after centering on bbox). */
   spriteOffsetLocal?: { x: number; y: number };
   /** Rotation of art inside the clip (degrees), around bbox center after seat fix. */
@@ -1356,6 +1400,8 @@ function getSelectedEntity(): SelectedEntity {
   if (selectedTerrainIndex !== null) return { kind: 'terrain', index: selectedTerrainIndex };
   if (selectedEtherVortexIndex !== null) return { kind: 'etherVortex', index: selectedEtherVortexIndex };
   if (selectedGodTablePieceIndex !== null) return { kind: 'godTable', index: selectedGodTablePieceIndex };
+  if (selectedInventoryTablePieceIndex !== null)
+    return { kind: 'inventoryTable', index: selectedInventoryTablePieceIndex };
   return null;
 }
 
@@ -1367,6 +1413,7 @@ function clearSelection(): void {
   selectedTerrainIndex = null;
   selectedEtherVortexIndex = null;
   selectedGodTablePieceIndex = null;
+  selectedInventoryTablePieceIndex = null;
   showSelectedDetails = false;
 }
 
@@ -1522,6 +1569,18 @@ function pushPieceRotationsToRenderer(): void {
   renderer.setBigMiniActivated(bigMiniatures.map((m) => m.activated !== false));
   renderer.setLargeMiniActivated(largeMiniatures.map((m) => m.activated !== false));
   renderer.setHugeMiniActivated(hugeMiniatures.map((m) => m.activated !== false));
+  renderer.setUnitBroomgarHungerPhase(
+    units.map((u) => (u.broomgarHungerPhase !== undefined ? u.broomgarHungerPhase : null)),
+  );
+  renderer.setBigMiniBroomgarHungerPhase(
+    bigMiniatures.map((m) => (m.broomgarHungerPhase !== undefined ? m.broomgarHungerPhase : null)),
+  );
+  renderer.setLargeMiniBroomgarHungerPhase(
+    largeMiniatures.map((m) => (m.broomgarHungerPhase !== undefined ? m.broomgarHungerPhase : null)),
+  );
+  renderer.setHugeMiniBroomgarHungerPhase(
+    hugeMiniatures.map((m) => (m.broomgarHungerPhase !== undefined ? m.broomgarHungerPhase : null)),
+  );
   // Effect markers live only in the model; push every frame with other piece state so
   // remote board snapshots and local toggles both show on canvas without opening the menu.
   syncEffectMarkersToRenderer();
@@ -1540,7 +1599,7 @@ function rotateSelectedBoardPiece(deltaDeg: number): boolean {
     return false;
   }
   const sel = getSelectedEntity();
-  if (!sel || sel.kind === 'godTable') return false;
+  if (!sel || sel.kind === 'godTable' || sel.kind === 'inventoryTable') return false;
 
   switch (sel.kind) {
     case 'small': {
@@ -1888,6 +1947,7 @@ function moveBlindCardToTableFromZone(
   if (!id) return;
   const { x, y } = screenToBoardWorld(clientX, clientY);
   godTablePieces.push({ kind: 'single', id, world: { x, y }, faceUp: true });
+  playBoardDragDrop();
   p.blindCardIds = p.blindCardIds.filter((_, i) => i !== blindIndex);
   notifyBoardEditLocal();
   scheduleRender();
@@ -1895,10 +1955,23 @@ function moveBlindCardToTableFromZone(
   armyBuilderPanel.refresh();
 }
 
+registerArmyRosterGodCardIdsInPlay(() => godCardIdsInPlay(godTablePieces, godPiles));
+
+function inventoryItemIdsInPlay(): Set<string> {
+  const s = new Set<string>();
+  for (const p of inventoryTablePieces) {
+    if (!p.spawnedFromArmyPanel || !rosterPieceCountsForLocalArmiesPanel(p)) continue;
+    s.add(p.itemId);
+  }
+  return s;
+}
+
+registerArmyRosterInventoryItemIdsInPlay(() => inventoryItemIdsInPlay());
+
 armyBuilderPanel = new ArmyBuilderPanel(document.body, {
   getAltKeyHeld: () => altModActive(),
   getUsedCount: (leaderId, unitId) => countRosterCopies(leaderId, unitId),
-  getPointsSpent: () => sumRosterPoints(),
+  getPointsSpent: () => sumArmyPoints(),
   onTouchArmPayload: (json) => {
     pendingTouchArmyPlaceRaw = json;
   },
@@ -1958,6 +2031,7 @@ new CrystalWallet(topTurnPanel.localWalletMount, { variant: 'local' });
 new CrystalWallet(topTurnPanel.opponentWalletMount, { variant: 'opponent' });
 
 canvas.addEventListener('hex-cells-svg-ready', () => scheduleRender());
+canvas.addEventListener('inventory-sprite-ready', () => scheduleRender());
 
 /** Multiplayer seat: slot 1 sees the board rotated 180° (same model, opposite view). */
 function applyMultiplayerViewSeat(slot: PlayerSlot | null): void {
@@ -1975,6 +2049,9 @@ function applyMultiplayerViewSeat(slot: PlayerSlot | null): void {
 function loop(): void {
   if (godPieceFlipAnim && performance.now() - godPieceFlipAnim.startMs >= godPieceFlipAnim.durationMs) {
     godPieceFlipAnim = null;
+  }
+  if (godDeckShuffleAnim && performance.now() - godDeckShuffleAnim.startMs >= godDeckShuffleAnim.durationMs) {
+    godDeckShuffleAnim = null;
   }
   if (needsRender) {
     pushPieceRotationsToRenderer();
@@ -2018,7 +2095,17 @@ function loop(): void {
       godLooseDragPreviewWorld,
       selectedGodTablePieceIndex,
     );
+    renderer.setInventoryTablePieces(
+      inventoryTablePieces.map((p) => {
+        const def = getMergedInventoryItem(p.itemId);
+        return { world: p.world, spriteSrc: def?.sprite ?? null };
+      }),
+      isDraggingInventoryLoose ? inventoryDraggingIndex : null,
+      inventoryLooseDragPreviewWorld,
+      selectedInventoryTablePieceIndex,
+    );
     renderer.setGodPieceFlipAnim(godPieceFlipAnim);
+    renderer.setGodDeckShuffleAnim(godDeckShuffleAnim);
     updateMovementHighlights();
     updateBigMiniMovementHighlights();
     updateLargeMiniMovementHighlights();
@@ -2050,6 +2137,7 @@ function loop(): void {
     needsRender = false;
   }
   if (godPieceFlipAnim !== null) needsRender = true;
+  if (godDeckShuffleAnim !== null) needsRender = true;
   tickTableDragOutbound(captureTableDragForNetwork);
   requestAnimationFrame(loop);
 }
@@ -2437,6 +2525,20 @@ function godLooseHitIndex(clientX: number, clientY: number): number | null {
   return null;
 }
 
+function inventoryLooseHitIndex(clientX: number, clientY: number): number | null {
+  const pt = screenToBoardWorld(clientX, clientY);
+  for (let i = inventoryTablePieces.length - 1; i >= 0; i--) {
+    const p = inventoryTablePieces[i]!;
+    if (!rosterPieceCountsForLocalArmiesPanel(p)) continue;
+    const center =
+      isDraggingInventoryLoose && inventoryDraggingIndex === i && inventoryLooseDragPreviewWorld
+        ? inventoryLooseDragPreviewWorld
+        : p.world;
+    if (godEllipseContains(pt, center, INVENTORY_TABLE_MARKER_HW, INVENTORY_TABLE_MARKER_HH)) return i;
+  }
+  return null;
+}
+
 function normalizeGodTablePiece(p: GodTablePiece): GodTablePiece {
   if (p.kind === 'deck' && p.ids.length === 1) {
     return { kind: 'single', id: p.ids[0]!, world: p.world, faceUp: p.faceUp };
@@ -2448,7 +2550,9 @@ function mergeGodTablePieces(incoming: GodTablePiece, base: GodTablePiece): GodT
   const inc = incoming.kind === 'single' ? [incoming.id] : incoming.ids;
   const baseIds = base.kind === 'single' ? [base.id] : base.ids;
   const ids = [...baseIds, ...inc];
-  const faceUp = incoming.faceUp;
+  // Ориентация результирующей стопки наследуется от целевой стопки (base),
+  // чтобы «доложить в колоду» не переворачивало её состоянием входящей карты.
+  const faceUp = base.faceUp;
   const world = { ...base.world };
   if (ids.length === 1) return { kind: 'single', id: ids[0]!, world, faceUp };
   return { kind: 'deck', ids, world, faceUp };
@@ -2503,6 +2607,32 @@ function removeGodTablePieceAtIndex(i: number): void {
   if (selectedGodTablePieceIndex !== null) {
     if (selectedGodTablePieceIndex === i) selectedGodTablePieceIndex = null;
     else if (selectedGodTablePieceIndex > i) selectedGodTablePieceIndex -= 1;
+  }
+}
+
+function removeInventoryTablePieceAtIndex(i: number): void {
+  if (i < 0 || i >= inventoryTablePieces.length) return;
+
+  if (isDraggingInventoryLoose && inventoryDraggingIndex === i) {
+    isDraggingInventoryLoose = false;
+    inventoryDraggingIndex = null;
+    inventoryLooseDragPreviewWorld = null;
+  } else if (isDraggingInventoryLoose && inventoryDraggingIndex !== null && inventoryDraggingIndex > i) {
+    inventoryDraggingIndex -= 1;
+  }
+
+  if (inventoryLooseDragPending && inventoryLooseDragPendingIndex === i) {
+    inventoryLooseDragPending = false;
+    inventoryLooseDragPendingIndex = null;
+  } else if (inventoryLooseDragPending && inventoryLooseDragPendingIndex !== null && inventoryLooseDragPendingIndex > i) {
+    inventoryLooseDragPendingIndex -= 1;
+  }
+
+  inventoryTablePieces.splice(i, 1);
+
+  if (selectedInventoryTablePieceIndex !== null) {
+    if (selectedInventoryTablePieceIndex === i) selectedInventoryTablePieceIndex = null;
+    else if (selectedInventoryTablePieceIndex > i) selectedInventoryTablePieceIndex -= 1;
   }
 }
 
@@ -2766,6 +2896,32 @@ function sumRosterPoints(): number {
   return s;
 }
 
+function isInventoryItemIdInPlay(itemId: string): boolean {
+  for (const p of inventoryTablePieces) {
+    if (!p.spawnedFromArmyPanel || !rosterPieceCountsForLocalArmiesPanel(p)) continue;
+    if (p.itemId === itemId) return true;
+  }
+  return false;
+}
+
+/** Очки за предметы, уже вынесенные на стол из панели армии (каждый id предмета — один раз). */
+function sumInventoryPoints(): number {
+  let s = 0;
+  const seen = new Set<string>();
+  for (const p of inventoryTablePieces) {
+    if (!p.spawnedFromArmyPanel || !rosterPieceCountsForLocalArmiesPanel(p)) continue;
+    if (seen.has(p.itemId)) continue;
+    seen.add(p.itemId);
+    const def = getMergedInventoryItem(p.itemId);
+    if (def) s += def.points;
+  }
+  return s;
+}
+
+function sumArmyPoints(): number {
+  return sumRosterPoints() + sumInventoryPoints();
+}
+
 function isHexBlockedForSmall(hex: Hex): boolean {
   if (!grid.has(hex)) return true;
   if (units.some((u) => u.position.key === hex.key)) return true;
@@ -2980,15 +3136,39 @@ function placeArmyCatalogUnitOnBoard(
           catalogUnitId: unitId,
           rosterLeaderId: leaderId,
         } as const);
+  const broomgarHungerMeta = isBroomgarRosterLeader(leaderId)
+    ? ({ broomgarHungerPhase: 0 as BroomgarHungerPhase })
+    : {};
 
   if (def.card.size === 'small') {
     const world = screenToBoardWorld(screenX, screenY);
     const hex = hexAtScreen(screenX, screenY);
     if (hex) {
       if (isHexBlockedForSmall(hex)) return false;
-      units.push({ position: hex, walk: card.walk, run: card.run, rotationDeg: 0, health: card.health, activated: true, effectMarkers: new Set(), ...rosterMeta });
+      units.push({
+        position: hex,
+        walk: card.walk,
+        run: card.run,
+        rotationDeg: 0,
+        health: card.health,
+        activated: true,
+        effectMarkers: new Set(),
+        ...rosterMeta,
+        ...broomgarHungerMeta,
+      });
     } else {
-      units.push({ position: layout.pixelToHex(world), offBoardWorld: { ...world }, walk: card.walk, run: card.run, rotationDeg: 0, health: card.health, activated: true, effectMarkers: new Set(), ...rosterMeta });
+      units.push({
+        position: layout.pixelToHex(world),
+        offBoardWorld: { ...world },
+        walk: card.walk,
+        run: card.run,
+        rotationDeg: 0,
+        health: card.health,
+        activated: true,
+        effectMarkers: new Set(),
+        ...rosterMeta,
+        ...broomgarHungerMeta,
+      });
     }
     unitCardData.push(card);
     clearSelection();
@@ -3004,9 +3184,30 @@ function placeArmyCatalogUnitOnBoard(
     if (hex) {
       const anchor = bestLargeMiniAnchorForPointer(hex, world, -1);
       if (!anchor) return false;
-      largeMiniatures.push({ anchor, walk: card.walk, run: card.run, rotationDeg: 0, health: card.health, activated: true, effectMarkers: new Set(), ...rosterMeta });
+      largeMiniatures.push({
+        anchor,
+        walk: card.walk,
+        run: card.run,
+        rotationDeg: 0,
+        health: card.health,
+        activated: true,
+        effectMarkers: new Set(),
+        ...rosterMeta,
+        ...broomgarHungerMeta,
+      });
     } else {
-      largeMiniatures.push({ anchor: layout.pixelToHex(world), offBoardWorld: { ...world }, walk: card.walk, run: card.run, rotationDeg: 0, health: card.health, activated: true, effectMarkers: new Set(), ...rosterMeta });
+      largeMiniatures.push({
+        anchor: layout.pixelToHex(world),
+        offBoardWorld: { ...world },
+        walk: card.walk,
+        run: card.run,
+        rotationDeg: 0,
+        health: card.health,
+        activated: true,
+        effectMarkers: new Set(),
+        ...rosterMeta,
+        ...broomgarHungerMeta,
+      });
     }
     largeMiniCardData.push(card);
     clearSelection();
@@ -3032,6 +3233,7 @@ function placeArmyCatalogUnitOnBoard(
         effectMarkers: new Set(),
         ...hugeSpriteAlignFromCard(card, unitId),
         ...rosterMeta,
+        ...broomgarHungerMeta,
       });
     } else {
       const anchor = nearestHexonCenterFromWorld(world);
@@ -3046,6 +3248,7 @@ function placeArmyCatalogUnitOnBoard(
         effectMarkers: new Set(),
         ...hugeSpriteAlignFromCard(card, unitId),
         ...rosterMeta,
+        ...broomgarHungerMeta,
       });
     }
     hugeMiniCardData.push(card);
@@ -3062,9 +3265,30 @@ function placeArmyCatalogUnitOnBoard(
   const center = nearestHexonCenterFromWorld(world);
   if (hex) {
     if (!canPlaceBigMiniAt(center)) return false;
-    bigMiniatures.push({ center, walk: card.walk, run: card.run, rotationDeg: 0, health: card.health, activated: true, effectMarkers: new Set(), ...rosterMeta });
+    bigMiniatures.push({
+      center,
+      walk: card.walk,
+      run: card.run,
+      rotationDeg: 0,
+      health: card.health,
+      activated: true,
+      effectMarkers: new Set(),
+      ...rosterMeta,
+      ...broomgarHungerMeta,
+    });
   } else {
-    bigMiniatures.push({ center, offBoardWorld: { ...world }, walk: card.walk, run: card.run, rotationDeg: 0, health: card.health, activated: true, effectMarkers: new Set(), ...rosterMeta });
+    bigMiniatures.push({
+      center,
+      offBoardWorld: { ...world },
+      walk: card.walk,
+      run: card.run,
+      rotationDeg: 0,
+      health: card.health,
+      activated: true,
+      effectMarkers: new Set(),
+      ...rosterMeta,
+      ...broomgarHungerMeta,
+    });
   }
   bigMiniCardData.push(card);
   clearSelection();
@@ -3108,14 +3332,56 @@ function trySpawnLeaderMiniFromArmyBuilder(
   return placeArmyCatalogUnitOnBoard(def, card, unitId, leaderId, screenX, screenY);
 }
 
+function trySpawnInventoryFromArmyBuilder(
+  leaderId: string,
+  itemId: string,
+  screenX: number,
+  screenY: number,
+): boolean {
+  const def = getMergedInventoryItem(itemId);
+  if (!def) return false;
+  if (isInventoryItemIdInPlay(itemId)) return false;
+  const cap = armyBuilderPanel.getArmyPointsCap();
+  const rosterPts = sumRosterPoints();
+  const invPts = sumInventoryPoints();
+  if (rosterPts + invPts + def.points > cap) return false;
+
+  const w = screenToBoardWorld(screenX, screenY);
+  const piece: InventoryTablePiece =
+    isBoardMultiplayerSyncActive() && localViewPlayerSlot !== null
+      ? {
+          rosterLeaderId: leaderId,
+          itemId,
+          world: w,
+          spawnedFromArmyPanel: true,
+          armyOwnerPlayerSlot: localViewPlayerSlot,
+        }
+      : {
+          rosterLeaderId: leaderId,
+          itemId,
+          world: w,
+          spawnedFromArmyPanel: true,
+        };
+  inventoryTablePieces.push(piece);
+  clearSelection();
+  armyBuilderPanel.refresh();
+  notifyBoardEditLocal();
+  scheduleRender();
+  return true;
+}
+
 function parseArmyDragPayload(raw: string): ArmyDragPayload | null {
   try {
     const o = JSON.parse(raw) as Partial<ArmyDragPayload> & {
       unitId?: string;
       leaderId?: string;
       cardId?: string;
+      itemId?: string;
       kind?: string;
     };
+    if (o.kind === 'inventory' && typeof o.itemId === 'string' && typeof o.leaderId === 'string') {
+      return { kind: 'inventory', leaderId: o.leaderId, itemId: o.itemId };
+    }
     if (o.kind === 'god' && typeof o.cardId === 'string') {
       return { kind: 'god', cardId: o.cardId };
     }
@@ -3140,6 +3406,11 @@ function parseArmyDragPayload(raw: string): ArmyDragPayload | null {
 function handleArmyBuilderDrop(clientX: number, clientY: number, raw: string): void {
   const p = parseArmyDragPayload(raw);
   if (!p) return;
+  if (p.kind === 'inventory') {
+    const placed = trySpawnInventoryFromArmyBuilder(p.leaderId, p.itemId, clientX, clientY);
+    if (placed) playBoardDragDrop();
+    return;
+  }
   if (p.kind === 'god') {
     if (!getGodCardById(p.cardId)) return;
     const w = screenToBoardWorld(clientX, clientY);
@@ -3151,13 +3422,17 @@ function handleArmyBuilderDrop(clientX: number, clientY: number, raw: string): v
     } else {
       godTablePieces.push(incoming);
     }
+    playBoardDragDrop();
     scheduleRender();
+    armyBuilderPanel.refresh();
     return;
   }
   if (p.kind === 'leader') {
-    trySpawnLeaderMiniFromArmyBuilder(p.leaderId, p.unitId, clientX, clientY);
+    const placed = trySpawnLeaderMiniFromArmyBuilder(p.leaderId, p.unitId, clientX, clientY);
+    if (placed) playBoardDragDrop();
   } else {
-    trySpawnTroopFromArmyBuilder(p.unitId, p.leaderId, clientX, clientY);
+    const placed = trySpawnTroopFromArmyBuilder(p.unitId, p.leaderId, clientX, clientY);
+    if (placed) playBoardDragDrop();
   }
 }
 
@@ -3301,7 +3576,7 @@ function computeBigMiniWalkRunCenters(bigIndex: number): { walk: Hex[]; run: Hex
 }
 
 function tryPromoteUnitDragFromPending(e: ClientXY, pointerId?: number): void {
-  if (godLooseDragPending || isDraggingGodLoose) return;
+  if (godLooseDragPending || isDraggingGodLoose || inventoryLooseDragPending || isDraggingInventoryLoose) return;
   if (unitDragPendingIndex === null) return;
   const dx = e.clientX - unitDragPendingStartX;
   const dy = e.clientY - unitDragPendingStartY;
@@ -3320,7 +3595,7 @@ function tryPromoteUnitDragFromPending(e: ClientXY, pointerId?: number): void {
 }
 
 function tryPromoteBigMiniDragFromPending(e: ClientXY, pointerId?: number): void {
-  if (godLooseDragPending || isDraggingGodLoose) return;
+  if (godLooseDragPending || isDraggingGodLoose || inventoryLooseDragPending || isDraggingInventoryLoose) return;
   if (bigMiniDragPendingIndex === null) return;
   const dx = e.clientX - bigMiniDragPendingStartX;
   const dy = e.clientY - bigMiniDragPendingStartY;
@@ -3343,7 +3618,7 @@ function tryPromoteBigMiniDragFromPending(e: ClientXY, pointerId?: number): void
 }
 
 function tryPromoteTerrainDragFromPending(e: ClientXY, pointerId?: number): void {
-  if (godLooseDragPending || isDraggingGodLoose) return;
+  if (godLooseDragPending || isDraggingGodLoose || inventoryLooseDragPending || isDraggingInventoryLoose) return;
   if (!terrainDragPending || isDraggingTerrain || terrainDragPendingIndex === null) return;
   const dx = e.clientX - terrainDragPendingStartX;
   const dy = e.clientY - terrainDragPendingStartY;
@@ -3370,7 +3645,7 @@ function tryPromoteTerrainDragFromPending(e: ClientXY, pointerId?: number): void
 }
 
 function tryPromoteLargeMiniDragFromPending(e: ClientXY, pointerId?: number): void {
-  if (godLooseDragPending || isDraggingGodLoose) return;
+  if (godLooseDragPending || isDraggingGodLoose || inventoryLooseDragPending || isDraggingInventoryLoose) return;
   if (largeMiniDragPendingIndex === null) return;
   const dx = e.clientX - largeMiniDragPendingStartX;
   const dy = e.clientY - largeMiniDragPendingStartY;
@@ -3388,7 +3663,7 @@ function tryPromoteLargeMiniDragFromPending(e: ClientXY, pointerId?: number): vo
 }
 
 function tryPromoteHugeMiniDragFromPending(e: ClientXY, pointerId?: number): void {
-  if (godLooseDragPending || isDraggingGodLoose) return;
+  if (godLooseDragPending || isDraggingGodLoose || inventoryLooseDragPending || isDraggingInventoryLoose) return;
   if (hugeMiniDragPendingIndex === null) return;
   const dx = e.clientX - hugeMiniDragPendingStartX;
   const dy = e.clientY - hugeMiniDragPendingStartY;
@@ -3405,7 +3680,7 @@ function tryPromoteHugeMiniDragFromPending(e: ClientXY, pointerId?: number): voi
 }
 
 function tryPromoteEtherVortexDragFromPending(e: ClientXY, pointerId?: number): void {
-  if (godLooseDragPending || isDraggingGodLoose) return;
+  if (godLooseDragPending || isDraggingGodLoose || inventoryLooseDragPending || isDraggingInventoryLoose) return;
   if (!etherVortexDragPending || isDraggingEtherVortex || etherVortexDragPendingIndex === null) return;
   const dx = e.clientX - etherVortexDragPendingStartX;
   const dy = e.clientY - etherVortexDragPendingStartY;
@@ -3424,6 +3699,7 @@ function tryPromoteEtherVortexDragFromPending(e: ClientXY, pointerId?: number): 
 }
 
 function tryPromoteGodLooseDrag(e: ClientXY): void {
+  if (inventoryLooseDragPending || isDraggingInventoryLoose) return;
   if (!godLooseDragPending || isDraggingGodLoose || godLooseDragPendingIndex === null) return;
   const dx = e.clientX - godLooseDragPendingStartX;
   const dy = e.clientY - godLooseDragPendingStartY;
@@ -3486,6 +3762,53 @@ function tryPromoteGodLooseDrag(e: ClientXY): void {
   godLooseDragPreviewWorld = previewW;
   playBoardDragLift();
   scheduleRender();
+}
+
+function tryPromoteInventoryLooseDrag(e: ClientXY): void {
+  if (!inventoryLooseDragPending || isDraggingInventoryLoose || inventoryLooseDragPendingIndex === null) return;
+  if (godLooseDragPending || isDraggingGodLoose) return;
+  const dx = e.clientX - inventoryLooseDragPendingStartX;
+  const dy = e.clientY - inventoryLooseDragPendingStartY;
+  if (dx * dx + dy * dy <= UNIT_DRAG_THRESHOLD_PX * UNIT_DRAG_THRESHOLD_PX) return;
+  const idx = inventoryLooseDragPendingIndex;
+  unitDragPendingIndex = null;
+  bigMiniDragPendingIndex = null;
+  terrainDragPending = false;
+  terrainDragPendingIndex = null;
+  etherVortexDragPending = false;
+  etherVortexDragPendingIndex = null;
+  if (draggingUnitIndex !== null) {
+    draggingUnitIndex = null;
+    dragOverHex = null;
+    dragPreviewPosition = null;
+    unitCard.setPassthrough(false);
+  }
+  if (draggingBigMiniIndex !== null) {
+    draggingBigMiniIndex = null;
+    bigMiniPreviewPosition = null;
+    bigMiniDragOverCenter = null;
+    unitCard.setPassthrough(false);
+  }
+  inventoryLooseDragPending = false;
+  inventoryLooseDragPendingIndex = null;
+  isDraggingInventoryLoose = true;
+  inventoryDraggingIndex = idx;
+  inventoryLooseDragPreviewWorld = screenToBoardWorld(e.clientX, e.clientY);
+  playBoardDragLift();
+  scheduleRender();
+}
+
+function tryHandleInventoryTablePrimaryDown(clientX: number, clientY: number): boolean {
+  if (!isPointOverCanvas(clientX, clientY)) return false;
+  if (godLooseDragPending || isDraggingGodLoose) return false;
+  const ii = inventoryLooseHitIndex(clientX, clientY);
+  if (ii === null) return false;
+  clearSelection();
+  inventoryLooseDragPending = true;
+  inventoryLooseDragPendingIndex = ii;
+  inventoryLooseDragPendingStartX = clientX;
+  inventoryLooseDragPendingStartY = clientY;
+  return true;
 }
 
 // ── Collect all hexon centers from the grid build ──────────────
@@ -3572,6 +3895,7 @@ function cursorWorldOnCanvas(): { x: number; y: number } | null {
 function copySelected(): void {
   const sel = getSelectedEntity();
   if (!sel) return;
+  if (sel.kind === 'godTable' || sel.kind === 'inventoryTable') return;
   if (sel.kind === 'small') {
     const unit = units[sel.index];
     const card = unitCardData[sel.index];
@@ -3768,6 +4092,14 @@ function deleteSelected(): void {
   if (sel.kind === 'godTable') {
     removeGodTablePieceAtIndex(sel.index);
     clearSelection();
+    armyBuilderPanel.refresh();
+    return;
+  }
+  if (sel.kind === 'inventoryTable') {
+    removeInventoryTablePieceAtIndex(sel.index);
+    clearSelection();
+    armyBuilderPanel.refresh();
+    notifyBoardEditLocal();
     return;
   }
   if (sel.kind === 'small') {
@@ -4161,6 +4493,83 @@ function getHugeMiniActivationToggleGeometry(
   return { center: boardWorldToScreen(w), radiusScreen: rw * camera.zoom };
 }
 
+function getUnitBroomgarHungerGeometry(unitIndex: number): { center: Point; radiusScreen: number } {
+  const { halfH } = smallUnitHexHalfExtent();
+  const cw = unitCenterWorldForHud(unitIndex);
+  const rotRad = unitRotationRadForMiniatureLocalUi(units[unitIndex]!.rotationDeg);
+  const world = smallUnitBroomgarHungerCenterWorldRad(cw, rotRad, layout);
+  const rw = halfH * 0.2175;
+  return {
+    center: boardWorldToScreen(world),
+    radiusScreen: rw * camera.zoom,
+  };
+}
+
+function getBigMiniBroomgarHungerGeometry(bigMiniIndex: number): { center: Point; radiusScreen: number } {
+  const rotDeg = bigMiniatures[bigMiniIndex]!.rotationDeg;
+  const rotDegVis = unitRotationDegForMiniatureLocalUi(rotDeg);
+  const cw = bigMiniHealthCenterWorld(bigMiniIndex);
+  const w = bigMiniBroomgarHungerCenterWorld(cw, rotDegVis, layout);
+  const rw = bigActivationToggleRadiusWorld();
+  return { center: boardWorldToScreen(w), radiusScreen: rw * camera.zoom };
+}
+
+function getLargeMiniBroomgarHungerGeometry(largeIdx: number): { center: Point; radiusScreen: number } {
+  const anchorWorld = largeMiniHealthAnchorWorld(largeIdx);
+  const rotDeg = largeMiniatures[largeIdx]!.rotationDeg;
+  const w = largeMiniBroomgarHungerCenterWorld(anchorWorld, rotDeg, layout);
+  const rw = largeActivationToggleRadiusWorld();
+  return { center: boardWorldToScreen(w), radiusScreen: rw * camera.zoom };
+}
+
+function getHugeMiniBroomgarHungerGeometry(hugeIdx: number): { center: Point; radiusScreen: number } {
+  const pivotWorld = hugeMiniHealthAnchorWorld(hugeIdx);
+  const rotDeg = hugeMiniatures[hugeIdx]!.rotationDeg;
+  const w = hugeMiniBroomgarHungerCenterFromPivotWorld(pivotWorld, rotDeg, layout);
+  const rw = hugeActivationToggleRadiusWorld();
+  return { center: boardWorldToScreen(w), radiusScreen: rw * camera.zoom };
+}
+
+function handleBroomgarHungerClick(screenX: number, screenY: number): boolean {
+  for (let i = 0; i < units.length; i++) {
+    const ph = units[i]!.broomgarHungerPhase;
+    if (ph === undefined) continue;
+    const g = getUnitBroomgarHungerGeometry(i);
+    if (isPointInCircle(screenX, screenY, g.center, g.radiusScreen)) {
+      units[i]!.broomgarHungerPhase = nextBroomgarHungerPhase(ph);
+      return true;
+    }
+  }
+  for (let i = 0; i < bigMiniatures.length; i++) {
+    const ph = bigMiniatures[i]!.broomgarHungerPhase;
+    if (ph === undefined) continue;
+    const g = getBigMiniBroomgarHungerGeometry(i);
+    if (isPointInCircle(screenX, screenY, g.center, g.radiusScreen)) {
+      bigMiniatures[i]!.broomgarHungerPhase = nextBroomgarHungerPhase(ph);
+      return true;
+    }
+  }
+  for (let i = 0; i < largeMiniatures.length; i++) {
+    const ph = largeMiniatures[i]!.broomgarHungerPhase;
+    if (ph === undefined) continue;
+    const g = getLargeMiniBroomgarHungerGeometry(i);
+    if (isPointInCircle(screenX, screenY, g.center, g.radiusScreen)) {
+      largeMiniatures[i]!.broomgarHungerPhase = nextBroomgarHungerPhase(ph);
+      return true;
+    }
+  }
+  for (let i = 0; i < hugeMiniatures.length; i++) {
+    const ph = hugeMiniatures[i]!.broomgarHungerPhase;
+    if (ph === undefined) continue;
+    const g = getHugeMiniBroomgarHungerGeometry(i);
+    if (isPointInCircle(screenX, screenY, g.center, g.radiusScreen)) {
+      hugeMiniatures[i]!.broomgarHungerPhase = nextBroomgarHungerPhase(ph);
+      return true;
+    }
+  }
+  return false;
+}
+
 function handleMiniatureActivationClick(screenX: number, screenY: number): boolean {
   for (let i = 0; i < units.length; i++) {
     const g = getUnitActivationToggleGeometry(i);
@@ -4479,6 +4888,7 @@ function applyTouchDoubleTapUnitCard(key: string, clientX: number, clientY: numb
       selectedBigMiniIndex = null;
       selectedTerrainIndex = null;
       selectedGodTablePieceIndex = null;
+      selectedInventoryTablePieceIndex = null;
       updateBigMiniMovementHighlights();
       updateMovementHighlights();
     }
@@ -4503,6 +4913,7 @@ function applyTouchDoubleTapUnitCard(key: string, clientX: number, clientY: numb
       selectedBigMiniIndex = n;
       selectedTerrainIndex = null;
       selectedGodTablePieceIndex = null;
+      selectedInventoryTablePieceIndex = null;
       updateBigMiniMovementHighlights();
     }
     showSelectedDetails = true;
@@ -4529,6 +4940,7 @@ function applyTouchDoubleTapUnitCard(key: string, clientX: number, clientY: numb
       selectedHugeMiniIndex = null;
       selectedTerrainIndex = null;
       selectedGodTablePieceIndex = null;
+      selectedInventoryTablePieceIndex = null;
       selectedLargeMiniIndex = n;
       updateMovementHighlights();
       updateBigMiniMovementHighlights();
@@ -4560,6 +4972,7 @@ function applyTouchDoubleTapUnitCard(key: string, clientX: number, clientY: numb
       selectedLargeMiniIndex = null;
       selectedTerrainIndex = null;
       selectedGodTablePieceIndex = null;
+      selectedInventoryTablePieceIndex = null;
       selectedHugeMiniIndex = n;
       updateMovementHighlights();
       updateBigMiniMovementHighlights();
@@ -4589,6 +5002,7 @@ function applyTouchDoubleTapUnitCard(key: string, clientX: number, clientY: numb
       selectedHugeMiniIndex = null;
       selectedTerrainIndex = null;
       selectedGodTablePieceIndex = null;
+      selectedInventoryTablePieceIndex = null;
       updateBigMiniMovementHighlights();
       updateMovementHighlights();
     }
@@ -4675,6 +5089,7 @@ function tryTouchDoubleTapOnMiniatureForCard(e: PointerEvent): boolean {
   if (!isPointOverCanvas(e.clientX, e.clientY)) return false;
   if (armyBuilderPanel.isScreenPointOverPanel(e.clientX, e.clientY)) return false;
   if (tryEtherVortexCrystalBadgeOpen(e.clientX, e.clientY)) return false;
+  if (handleBroomgarHungerClick(e.clientX, e.clientY)) return false;
   if (handleMiniatureActivationClick(e.clientX, e.clientY)) return false;
   if (handleMiniatureHealthClick(e.clientX, e.clientY)) return false;
   if (godLooseHitIndex(e.clientX, e.clientY) !== null) return false;
@@ -4714,6 +5129,7 @@ function handleCanvasPointerMove(clientX: number, clientY: number, pointerId?: n
   pointerScreenY = clientY;
   const e: ClientXY = { clientX, clientY };
   tryPromoteGodLooseDrag(e);
+  tryPromoteInventoryLooseDrag(e);
   tryPromoteUnitDragFromPending(e, pointerId);
   tryPromoteBigMiniDragFromPending(e, pointerId);
   tryPromoteLargeMiniDragFromPending(e, pointerId);
@@ -4758,6 +5174,9 @@ function handleCanvasPointerMove(clientX: number, clientY: number, pointerId?: n
     if (isDraggingGodLoose) {
       godLooseDragPreviewWorld = screenToBoardWorld(clientX, clientY);
     }
+    if (isDraggingInventoryLoose) {
+      inventoryLooseDragPreviewWorld = screenToBoardWorld(clientX, clientY);
+    }
     scheduleRender();
     return;
   }
@@ -4798,6 +5217,9 @@ function handleCanvasPointerMove(clientX: number, clientY: number, pointerId?: n
   if (isDraggingGodLoose) {
     godLooseDragPreviewWorld = screenToBoardWorld(clientX, clientY);
   }
+  if (isDraggingInventoryLoose) {
+    inventoryLooseDragPreviewWorld = screenToBoardWorld(clientX, clientY);
+  }
 
   scheduleRender();
 }
@@ -4833,8 +5255,13 @@ window.addEventListener('pointermove', (e) => {
   pointerScreenX = e.clientX;
   pointerScreenY = e.clientY;
   tryPromoteGodLooseDrag(e);
+  tryPromoteInventoryLooseDrag(e);
   if (isDraggingGodLoose) {
     godLooseDragPreviewWorld = screenToBoardWorld(e.clientX, e.clientY);
+    scheduleRender();
+  }
+  if (isDraggingInventoryLoose) {
+    inventoryLooseDragPreviewWorld = screenToBoardWorld(e.clientX, e.clientY);
     scheduleRender();
   }
 });
@@ -4975,9 +5402,40 @@ function finishGodLooseDragIfActive(e: MouseEvent | PointerEvent): void {
   }
 }
 
+function finishInventoryLooseDragIfActive(e: MouseEvent | PointerEvent): void {
+  if (e.button !== 0) return;
+  if (inventoryLooseDragPending && !isDraggingInventoryLoose) {
+    const tappedIdx = inventoryLooseDragPendingIndex;
+    inventoryLooseDragPending = false;
+    inventoryLooseDragPendingIndex = null;
+    if (tappedIdx !== null) {
+      clearSelection();
+      selectedInventoryTablePieceIndex = tappedIdx;
+    }
+    scheduleRender();
+  }
+  if (isDraggingInventoryLoose && inventoryDraggingIndex !== null) {
+    const w = inventoryLooseDragPreviewWorld ?? screenToBoardWorld(e.clientX, e.clientY);
+    const idx = inventoryDraggingIndex;
+    const entry = inventoryTablePieces[idx];
+    if (entry) {
+      inventoryTablePieces[idx] = { ...entry, world: { ...w } };
+    }
+    playBoardDragDrop();
+    isDraggingInventoryLoose = false;
+    inventoryDraggingIndex = null;
+    inventoryLooseDragPreviewWorld = null;
+    inventoryLooseDragPending = false;
+    inventoryLooseDragPendingIndex = null;
+    notifyBoardEditLocal();
+    scheduleRender();
+  }
+}
+
 /** Loose god cards on canvas (primary button). */
 function tryHandleGodTablePrimaryDown(clientX: number, clientY: number, altKey: boolean): boolean {
   if (!isPointOverCanvas(clientX, clientY)) return false;
+  if (inventoryLooseDragPending || isDraggingInventoryLoose) return false;
   if (!altKey && godTablePieces.length > 0) {
     const looseI = godLooseHitIndex(clientX, clientY);
     if (looseI !== null) {
@@ -5104,6 +5562,11 @@ canvas.addEventListener('pointerdown', (e: PointerEvent) => {
     scheduleRender();
     return;
   }
+  if (handleBroomgarHungerClick(e.clientX, e.clientY)) {
+    e.preventDefault();
+    scheduleRender();
+    return;
+  }
   if (handleMiniatureActivationClick(e.clientX, e.clientY)) {
     e.preventDefault();
     scheduleRender();
@@ -5115,6 +5578,16 @@ canvas.addEventListener('pointerdown', (e: PointerEvent) => {
     return;
   }
   if (tryTouchDoubleTapOnMiniatureForCard(e)) {
+    scheduleRender();
+    return;
+  }
+  if (tryHandleInventoryTablePrimaryDown(e.clientX, e.clientY)) {
+    try {
+      canvas.setPointerCapture(e.pointerId);
+    } catch {
+      /* ignore */
+    }
+    e.preventDefault();
     scheduleRender();
     return;
   }
@@ -5149,15 +5622,29 @@ canvas.addEventListener('pointerdown', (e: PointerEvent) => {
 
 // ── Input: mousedown ───────────────────────────────────────────
 
+function tryStartCameraPanFromMouseDown(e: MouseEvent): boolean {
+  if (!(e.button === 1 || (e.button === 0 && e.ctrlKey))) return false;
+  if (!isPointOverCanvas(e.clientX, e.clientY)) return false;
+  if (armyBuilderPanel.isScreenPointOverPanel(e.clientX, e.clientY)) return false;
+  isPanning = true;
+  panStartX = e.clientX - camera.offsetX;
+  panStartY = e.clientY - camera.offsetY;
+  e.preventDefault();
+  return true;
+}
+
+// Start pan from anywhere above the board (including DOM overlays over canvas).
+window.addEventListener(
+  'mousedown',
+  (e: MouseEvent) => {
+    tryStartCameraPanFromMouseDown(e);
+  },
+  true,
+);
+
 canvas.addEventListener('mousedown', (e) => {
   // Pan: middle-click or Ctrl+left-click
-  if (e.button === 1 || (e.button === 0 && e.ctrlKey)) {
-    isPanning = true;
-    panStartX = e.clientX - camera.offsetX;
-    panStartY = e.clientY - camera.offsetY;
-    e.preventDefault();
-    return;
-  }
+  if (tryStartCameraPanFromMouseDown(e)) return;
 
   // Left-click: select piece; double-click: pin card + walk/run (Alt+hover still previews ranges)
   if (e.button === 0) {
@@ -5183,6 +5670,10 @@ canvas.addEventListener('mousedown', (e) => {
       scheduleRender();
       return;
     }
+    if (handleBroomgarHungerClick(e.clientX, e.clientY)) {
+      scheduleRender();
+      return;
+    }
     if (handleMiniatureActivationClick(e.clientX, e.clientY)) {
       scheduleRender();
       return;
@@ -5194,6 +5685,11 @@ canvas.addEventListener('mousedown', (e) => {
 
     // God table: handled on pointerdown when Pointer Events exist (deck pull uses setPointerCapture).
     if (typeof PointerEvent === 'undefined') {
+      if (tryHandleInventoryTablePrimaryDown(e.clientX, e.clientY)) {
+        e.preventDefault();
+        scheduleRender();
+        return;
+      }
       if (tryHandleGodTablePrimaryDown(e.clientX, e.clientY, e.altKey)) {
         e.preventDefault();
         scheduleRender();
@@ -5201,7 +5697,7 @@ canvas.addEventListener('mousedown', (e) => {
       }
     }
 
-    if (godLooseDragPending || isDraggingGodLoose) {
+    if (godLooseDragPending || isDraggingGodLoose || inventoryLooseDragPending || isDraggingInventoryLoose) {
       e.preventDefault();
       scheduleRender();
       return;
@@ -5228,6 +5724,7 @@ canvas.addEventListener('mousedown', (e) => {
           selectedBigMiniIndex = null;
           selectedTerrainIndex = null;
           selectedGodTablePieceIndex = null;
+          selectedInventoryTablePieceIndex = null;
           updateBigMiniMovementHighlights();
           updateMovementHighlights();
         }
@@ -5252,6 +5749,7 @@ canvas.addEventListener('mousedown', (e) => {
           selectedBigMiniIndex = obBig;
           selectedTerrainIndex = null;
           selectedGodTablePieceIndex = null;
+          selectedInventoryTablePieceIndex = null;
           updateBigMiniMovementHighlights();
         }
         scheduleRender();
@@ -5278,6 +5776,7 @@ canvas.addEventListener('mousedown', (e) => {
           selectedHugeMiniIndex = null;
           selectedTerrainIndex = null;
           selectedGodTablePieceIndex = null;
+          selectedInventoryTablePieceIndex = null;
           selectedLargeMiniIndex = obLarge;
           updateMovementHighlights();
           updateBigMiniMovementHighlights();
@@ -5309,6 +5808,7 @@ canvas.addEventListener('mousedown', (e) => {
           selectedLargeMiniIndex = null;
           selectedTerrainIndex = null;
           selectedGodTablePieceIndex = null;
+          selectedInventoryTablePieceIndex = null;
           selectedHugeMiniIndex = obHuge;
           updateMovementHighlights();
           updateBigMiniMovementHighlights();
@@ -5360,7 +5860,8 @@ canvas.addEventListener('mousedown', (e) => {
         selectedHugeMiniIndex !== null ||
         selectedTerrainIndex !== null ||
         selectedEtherVortexIndex !== null ||
-        selectedGodTablePieceIndex !== null
+        selectedGodTablePieceIndex !== null ||
+        selectedInventoryTablePieceIndex !== null
       ) {
         unitDragPendingIndex = null;
         bigMiniDragPendingIndex = null;
@@ -5426,6 +5927,7 @@ canvas.addEventListener('mousedown', (e) => {
         selectedHugeMiniIndex = null;
         selectedTerrainIndex = null;
         selectedGodTablePieceIndex = null;
+        selectedInventoryTablePieceIndex = null;
         updateBigMiniMovementHighlights();
         updateMovementHighlights();
       }
@@ -5574,7 +6076,8 @@ canvas.addEventListener('mousedown', (e) => {
       selectedHugeMiniIndex !== null ||
       selectedTerrainIndex !== null ||
       selectedEtherVortexIndex !== null ||
-      selectedGodTablePieceIndex !== null
+      selectedGodTablePieceIndex !== null ||
+      selectedInventoryTablePieceIndex !== null
     ) {
       unitDragPendingIndex = null;
       bigMiniDragPendingIndex = null;
@@ -5606,6 +6109,7 @@ function onWindowPointerUpOrCancel(e: PointerEvent): void {
   }
   clearEffectMarkerLongPressTimer();
   finishGodLooseDragIfActive(e);
+  finishInventoryLooseDragIfActive(e);
   if (boardDragCapturePointerId === e.pointerId) {
     releaseBoardDragCaptureIfAny();
   }
@@ -5793,6 +6297,12 @@ window.addEventListener('keydown', (e) => {
         const p = godTablePieces[hi]!;
         if (p.kind === 'deck' && p.ids.length >= 2) {
           godTablePieces[hi] = { ...p, ids: shuffleIds(p.ids) };
+          godDeckShuffleAnim = {
+            index: hi,
+            startMs: performance.now(),
+            durationMs: 320,
+          };
+          playGodDeckShuffle();
           notifyBoardEditLocal();
           e.preventDefault();
           scheduleRender();
@@ -5996,6 +6506,33 @@ window.addEventListener('resize', () => {
 
 window.addEventListener('keydown', (e) => {
   if (isEditableTarget(e.target)) return;
+  const cameraPanStep = e.shiftKey ? 40 : 20;
+  if (!e.altKey && !e.ctrlKey && !e.metaKey) {
+    if (e.code === 'KeyA') {
+      camera.offsetX += cameraPanStep;
+      e.preventDefault();
+      scheduleRender();
+      return;
+    }
+    if (e.code === 'KeyD') {
+      camera.offsetX -= cameraPanStep;
+      e.preventDefault();
+      scheduleRender();
+      return;
+    }
+    if (e.code === 'KeyW') {
+      camera.offsetY += cameraPanStep;
+      e.preventDefault();
+      scheduleRender();
+      return;
+    }
+    if (e.code === 'KeyS') {
+      camera.offsetY -= cameraPanStep;
+      e.preventDefault();
+      scheduleRender();
+      return;
+    }
+  }
   const moveStep = e.shiftKey ? BG_CALIBRATION_STEP_FAST : BG_CALIBRATION_STEP;
   const scaleStep = e.shiftKey ? BG_CALIBRATION_SCALE_STEP * 2 : BG_CALIBRATION_SCALE_STEP;
   const elementRotStep = e.shiftKey ? ELEMENT_ROT_STEP_FAST : ELEMENT_ROT_STEP;
@@ -6373,6 +6910,9 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
       catalogUnitId: u.catalogUnitId,
       rosterLeaderId: u.rosterLeaderId,
       armyOwnerPlayerSlot: u.armyOwnerPlayerSlot,
+      ...(u.broomgarHungerPhase !== undefined
+        ? { broomgarHungerPhase: u.broomgarHungerPhase }
+        : {}),
     })),
     unitCardData: structuredClone(unitCardData),
     bigMiniatures: bigMiniatures.map((m) => ({
@@ -6388,6 +6928,9 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
       catalogUnitId: m.catalogUnitId,
       rosterLeaderId: m.rosterLeaderId,
       armyOwnerPlayerSlot: m.armyOwnerPlayerSlot,
+      ...(m.broomgarHungerPhase !== undefined
+        ? { broomgarHungerPhase: m.broomgarHungerPhase }
+        : {}),
     })),
     bigMiniCardData: structuredClone(bigMiniCardData),
     largeMiniatures: largeMiniatures.map((m) => ({
@@ -6403,6 +6946,9 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
       catalogUnitId: m.catalogUnitId,
       rosterLeaderId: m.rosterLeaderId,
       armyOwnerPlayerSlot: m.armyOwnerPlayerSlot,
+      ...(m.broomgarHungerPhase !== undefined
+        ? { broomgarHungerPhase: m.broomgarHungerPhase }
+        : {}),
     })),
     largeMiniCardData: structuredClone(largeMiniCardData),
     hugeMiniatures: hugeMiniatures.map((m) => ({
@@ -6418,6 +6964,9 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
       catalogUnitId: m.catalogUnitId,
       rosterLeaderId: m.rosterLeaderId,
       armyOwnerPlayerSlot: m.armyOwnerPlayerSlot,
+      ...(m.broomgarHungerPhase !== undefined
+        ? { broomgarHungerPhase: m.broomgarHungerPhase }
+        : {}),
       spriteOffsetLocal: m.spriteOffsetLocal,
       spriteRotationDeg: m.spriteRotationDeg,
     })),
@@ -6435,6 +6984,13 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
       offBoardWorld: v.offBoardWorld,
     })),
     godTablePieces: structuredClone(godTablePieces),
+    inventoryTablePieces: inventoryTablePieces.map((p) => ({
+      rosterLeaderId: p.rosterLeaderId,
+      itemId: p.itemId,
+      world: { ...p.world },
+      spawnedFromArmyPanel: p.spawnedFromArmyPanel,
+      armyOwnerPlayerSlot: p.armyOwnerPlayerSlot,
+    })),
     ephiriumOpenSpriteIndices: [...ephiriumOpenSpriteIndices],
     godDeckSlots: {
       '0': serializeGodSlotForCapture(0),
@@ -6502,6 +7058,7 @@ function applyBoardSnapshot(raw: unknown): void {
 
   units.length = 0;
   for (const u of s.units) {
+    const bh = parseBroomgarHungerPhase(u.broomgarHungerPhase);
     units.push({
       position: new Hex(u.position.q, u.position.r),
       offBoardWorld: u.offBoardWorld,
@@ -6515,6 +7072,7 @@ function applyBoardSnapshot(raw: unknown): void {
       catalogUnitId: u.catalogUnitId,
       rosterLeaderId: u.rosterLeaderId,
       armyOwnerPlayerSlot: u.armyOwnerPlayerSlot,
+      ...(bh !== undefined ? { broomgarHungerPhase: bh } : {}),
     });
   }
 
@@ -6523,6 +7081,7 @@ function applyBoardSnapshot(raw: unknown): void {
 
   bigMiniatures.length = 0;
   for (const m of s.bigMiniatures) {
+    const bh = parseBroomgarHungerPhase(m.broomgarHungerPhase);
     bigMiniatures.push({
       center: new Hex(m.center.q, m.center.r),
       offBoardWorld: m.offBoardWorld,
@@ -6536,6 +7095,7 @@ function applyBoardSnapshot(raw: unknown): void {
       catalogUnitId: m.catalogUnitId,
       rosterLeaderId: m.rosterLeaderId,
       armyOwnerPlayerSlot: m.armyOwnerPlayerSlot,
+      ...(bh !== undefined ? { broomgarHungerPhase: bh } : {}),
     });
   }
   bigMiniCardData.length = 0;
@@ -6543,6 +7103,7 @@ function applyBoardSnapshot(raw: unknown): void {
 
   largeMiniatures.length = 0;
   for (const m of s.largeMiniatures) {
+    const bh = parseBroomgarHungerPhase(m.broomgarHungerPhase);
     largeMiniatures.push({
       anchor: new Hex(m.anchor.q, m.anchor.r),
       offBoardWorld: m.offBoardWorld,
@@ -6556,6 +7117,7 @@ function applyBoardSnapshot(raw: unknown): void {
       catalogUnitId: m.catalogUnitId,
       rosterLeaderId: m.rosterLeaderId,
       armyOwnerPlayerSlot: m.armyOwnerPlayerSlot,
+      ...(bh !== undefined ? { broomgarHungerPhase: bh } : {}),
     });
   }
   largeMiniCardData.length = 0;
@@ -6563,6 +7125,7 @@ function applyBoardSnapshot(raw: unknown): void {
 
   hugeMiniatures.length = 0;
   for (const m of s.hugeMiniatures) {
+    const bh = parseBroomgarHungerPhase(m.broomgarHungerPhase);
     hugeMiniatures.push({
       anchor: new Hex(m.anchor.q, m.anchor.r),
       offBoardWorld: m.offBoardWorld,
@@ -6576,6 +7139,7 @@ function applyBoardSnapshot(raw: unknown): void {
       catalogUnitId: m.catalogUnitId,
       rosterLeaderId: m.rosterLeaderId,
       armyOwnerPlayerSlot: m.armyOwnerPlayerSlot,
+      ...(bh !== undefined ? { broomgarHungerPhase: bh } : {}),
       spriteOffsetLocal: m.spriteOffsetLocal,
       spriteRotationDeg: m.spriteRotationDeg,
     });
@@ -6616,6 +7180,17 @@ function applyBoardSnapshot(raw: unknown): void {
 
   godTablePieces.length = 0;
   godTablePieces.push(...structuredClone(s.godTablePieces));
+
+  inventoryTablePieces.length = 0;
+  for (const p of s.inventoryTablePieces ?? []) {
+    inventoryTablePieces.push({
+      rosterLeaderId: p.rosterLeaderId,
+      itemId: p.itemId,
+      world: { ...p.world },
+      spawnedFromArmyPanel: p.spawnedFromArmyPanel,
+      armyOwnerPlayerSlot: p.armyOwnerPlayerSlot,
+    });
+  }
 
   if (s.godDeckSlots) {
     applyGodDeckSlotsFromSnapshot(s.godDeckSlots);

@@ -1,0 +1,48 @@
+{
+  "id": "broomgar-kotel-sup-bul-ragvy",
+  "points": 3,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "broomgar-kotel-sup-bul-ragvy",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 1,
+      "green": 0
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "destruction"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 2,
+    "keywords": [
+      "Орда брумгаров"
+    ],
+    "maxHealth": 2,
+    "miniatureSprite": "/catalog-units/broomgar-kotel-sup-bul-ragvy/miniature.jpg",
+    "name": "Котел с Супом из Бул-Рагвы, Травы и Корней",
+    "run": 4,
+    "size": "small",
+    "sprite": "/catalog-units/broomgar-kotel-sup-bul-ragvy/image.jpg",
+    "walk": 2,
+    "faithMarkers": {
+      "red": 1
+    },
+    "flagSprite": "/broomgar_horde.webp"
+  }
+}

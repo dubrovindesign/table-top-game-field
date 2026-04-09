@@ -1,0 +1,48 @@
+{
+  "id": "castilla-torkemad-prelat-chistoty",
+  "points": 0,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "castilla-torkemad-prelat-chistoty",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 2,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "destruction"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 8,
+    "keywords": [
+      "Кастилия"
+    ],
+    "maxHealth": 8,
+    "miniatureSprite": "/catalog-units/castilla-torkemad-prelat-chistoty/miniature.jpg",
+    "name": "Торкемад Прелат Чистоты",
+    "run": 2,
+    "size": "small",
+    "sprite": "/catalog-units/castilla-torkemad-prelat-chistoty/image.jpg",
+    "walk": 1,
+    "faithMarkers": {
+      "red": 2
+    },
+    "flagSprite": "/castilla.webp"
+  }
+}

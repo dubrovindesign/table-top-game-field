@@ -11,12 +11,21 @@ import {
   createStubCatalogUnit,
   exportCatalogOverridesJson,
   finalizeCardForUnitSave,
+  applyHotspotLayoutPresetToAllUnits,
+  applyLeaderGodCardLoadout,
+  effectiveGodCardCopiesForLeader,
   getCatalogOverrides,
   getHotspotsForUnit,
+  getLeaderGodDeckMax,
+  getMergedGodCard,
+  getMergedInventoryItem,
   importCatalogOverridesJson,
+  listAllInventoryItemIds,
   listAllUnitIds,
+  listNewInventoryItemIds,
   listNewLeaderIds,
   listNewUnitIds,
+  removeInventoryItemEverywhere,
   removeLeaderEverywhere,
   removeRosterAddition,
   removeUnitEverywhere,
@@ -26,6 +35,9 @@ import {
   setLeaderPointsOverride,
   setNewLeader,
   setHotspotsForUnit,
+  setNewInventoryItem,
+  setLeaderGodDeckMax,
+  setInventoryPatch,
   setNewUnit,
   setRosterSlotPatch,
   setUnitPatch,
@@ -40,17 +52,21 @@ import {
   type HotspotFile,
   type HotspotRegion,
 } from './catalog/hotspotTypes';
-import type { CatalogUnitDef, FactionDef, LeaderDef, RosterSlotDef } from './catalog/types';
+import type { CatalogUnitDef, FactionDef, InventoryItemDef, LeaderDef, RosterSlotDef } from './catalog/types';
+import { CATALOG_INVENTORY } from './catalog';
 import {
   FACTIONS,
   getCatalogUnit,
   getFaction,
   getLeader,
+  inventoryItemMaxCopies,
   leadersForFaction,
-  LEADER_MINI_MAX_COPIES,
+  listAllMergedLeaderIds,
+  MERCENARY_FACTION_ID,
   rosterSpawnPoints,
 } from './armyCatalog';
 import { buildCatalogArmyStyleRow, createPencilEditButton } from './catalogEditorRosterRow';
+import { applyGodCardSpriteCss, GOD_CARDS } from './godCards';
 import {
   unitPanelThumbSrc,
   type AttackAbility,
@@ -58,6 +74,13 @@ import {
   type Domain,
   type UnitCardData,
 } from './unitCard';
+import {
+  compositeUnitScrollFromFaceBackFiles,
+  rescaleHotspotRegionsForScroll,
+} from './catalog/unitScrollComposite';
+import { buildTornscapeScrollHotspotRegionsFromA2Preset } from './catalog/tornscapeScrollHotspots';
+import { parsedAttackToAbility } from './catalog/kowCardStatsOcrParse';
+import { runOcrOnFaceBackFiles } from './catalog/kowCardStatsOcrBrowser';
 
 const DAMAGE_TYPES: DamageType[] = ['physical', 'fire', 'mental', 'poison', 'cold', 'electric'];
 const DOMAIN_IDS: Domain[] = ['life', 'creation', 'death', 'destruction'];
@@ -70,12 +93,23 @@ const DOMAIN_LABELS: Record<Domain, string> = {
 };
 
 function factionsForDomain(domain: Domain): FactionDef[] {
-  return FACTIONS.filter((f) => f.domain === domain);
+  const base = FACTIONS.filter((f) => f.domain === domain);
+  const merc = FACTIONS.find((f) => f.id === MERCENARY_FACTION_ID);
+  if (merc && merc.domain !== domain && !base.some((f) => f.id === MERCENARY_FACTION_ID)) {
+    return [...base, merc];
+  }
+  return base;
 }
 
-/** Unit ids used by any leader of this faction (mini + roster). */
+/** Unit ids used by any leader of this faction (mini + roster), или наёмники по флагу каталога. */
 function unitIdsForFaction(factionId: string): Set<string> {
   const ids = new Set<string>();
+  if (factionId === MERCENARY_FACTION_ID) {
+    for (const id of listAllUnitIds()) {
+      if (getCatalogUnit(id)?.mercenary) ids.add(id);
+    }
+    return ids;
+  }
   for (const l of leadersForFaction(factionId)) {
     ids.add(l.catalogUnitId);
     for (const s of l.roster) ids.add(s.unitId);
@@ -176,25 +210,6 @@ function commitCatalogLeaderPoints(
   else setRosterSlotPatch(leaderId, unitId, { points: v });
 }
 
-function commitCatalogLeaderMaxCopies(leaderId: string, unitId: string, raw: string): void {
-  const o = getCatalogOverrides();
-  const isNewLeader = o.newLeaders[leaderId] != null;
-  const trimmed = raw.trim();
-  if (trimmed === '') {
-    if (isNewLeader) setRosterSlotPatch(leaderId, unitId, { maxCopies: 1 });
-    else setRosterSlotPatch(leaderId, unitId, { maxCopies: undefined });
-    return;
-  }
-  const v = numOrU(raw);
-  if (v === undefined) {
-    if (isNewLeader) setRosterSlotPatch(leaderId, unitId, { maxCopies: 1 });
-    else setRosterSlotPatch(leaderId, unitId, { maxCopies: undefined });
-    return;
-  }
-  const mc = Math.max(1, Math.floor(v));
-  setRosterSlotPatch(leaderId, unitId, { maxCopies: mc });
-}
-
 /** Убрать legacy binding при редактировании; custom dice → поля. */
 function normalizeHotspotRegion(r: HotspotRegion): HotspotRegion {
   const out: HotspotRegion = { ...r };
@@ -284,7 +299,6 @@ export class CatalogEditorPanel {
   private leaderRosterListEl!: HTMLElement;
   private leaderCatalogUnitSel!: HTMLSelectElement;
   private leaderRosterUnitSel!: HTMLSelectElement;
-  private leaderRosterMaxCopies!: HTMLInputElement;
   private leaderRosterPoints!: HTMLInputElement;
   private leaderRosterRequiresUnitId!: HTMLSelectElement;
   private factionSelectEl!: HTMLSelectElement;
@@ -298,10 +312,14 @@ export class CatalogEditorPanel {
   private cardMoveUnit!: HTMLSelectElement;
   private cardDefW!: HTMLInputElement;
   private cardDefG!: HTMLInputElement;
+  private unitMercenaryCb!: HTMLInputElement;
   private cardDomains!: HTMLInputElement;
   private cardKeywords!: HTMLInputElement;
   private cardSprite!: HTMLInputElement;
   private cardMiniatureSprite!: HTMLInputElement;
+  /** Пара «лицо + оборот» для склейки как ingest-unit-card-pair.ts */
+  private cardPairFaceIn!: HTMLInputElement;
+  private cardPairBackIn!: HTMLInputElement;
   private cardConcR!: HTMLInputElement;
   private cardConcG!: HTMLInputElement;
   private cardConcB!: HTMLInputElement;
@@ -381,6 +399,53 @@ export class CatalogEditorPanel {
   private leaderAttachExistingUnitSel!: HTMLSelectElement;
   private unitStubFieldsWrap!: HTMLElement;
 
+  private inventoryPane!: HTMLElement;
+  private inventoryListEl!: HTMLElement;
+  private inventorySearchInput!: HTMLInputElement;
+  private inventoryFormWrap!: HTMLElement;
+  private inventoryIdInput!: HTMLInputElement;
+  private inventoryNameInput!: HTMLInputElement;
+  private inventoryPointsInput!: HTMLInputElement;
+  private inventorySpriteInput!: HTMLInputElement;
+  private inventoryMaxCopiesInput!: HTMLInputElement;
+  private inventoryLeaderPickerRoot!: HTMLElement;
+  private inventoryLeaderPickerToggle!: HTMLButtonElement;
+  private inventoryLeaderPickerLabelEl!: HTMLElement;
+  private inventoryLeaderPickerPanel!: HTMLElement;
+  private inventorySaveBtn!: HTMLButtonElement;
+  private inventoryDeleteBtn!: HTMLButtonElement;
+  private inventoryAddBtn!: HTMLButtonElement;
+  private selectedInventoryItemId: string | null = null;
+  private inventoryFormIsNew = false;
+
+  private godsPane!: HTMLElement;
+  private godsMainRow!: HTMLElement;
+  private godCardsListEl!: HTMLElement;
+  private godCardsSearchInput!: HTMLInputElement;
+  private godDomainFilterSel!: HTMLSelectElement;
+  private godLeaderFilterSel!: HTMLSelectElement;
+  private godLeaderDeckMaxRow!: HTMLElement;
+  private godLeaderDeckMaxInput!: HTMLInputElement;
+  private godLeaderDeckMaxHint!: HTMLElement;
+  private godCardsSaveFooter!: HTMLElement;
+  private godAttachCardSel!: HTMLSelectElement;
+  private godAttachCardBtn!: HTMLButtonElement;
+  /** Черновик списка карт для выбранного в фильтре лидера (до «Сохранить»). */
+  private godLeaderDraftCardIds = new Set<string>();
+  private godLeaderDraftCopies: Record<string, number> = {};
+  private godCardSaveBtn!: HTMLButtonElement;
+
+  private readonly onDocumentCloseInventoryLeaderPicker = (e: MouseEvent): void => {
+    if (!this.inventoryLeaderPickerRoot?.classList.contains('ce-inventory-leader-picker--open')) return;
+    const t = e.target as Node | null;
+    if (!t || this.inventoryLeaderPickerRoot.contains(t)) return;
+    this.closeInventoryLeaderPicker();
+  };
+
+  private readonly onDocumentCloseDropdownPickers = (e: MouseEvent): void => {
+    this.onDocumentCloseInventoryLeaderPicker(e);
+  };
+
   constructor(
     toolbarMount: HTMLElement,
     opts?: { skipToolbarButton?: boolean },
@@ -445,6 +510,10 @@ export class CatalogEditorPanel {
       this.refreshLeaderRosterEditor();
       this.refreshUnitSelectors();
       this.refreshHotspotPresetSelect();
+      this.refreshInventoryList();
+      this.loadGodLeaderDraftFromCatalog();
+      this.refillGodAttachCardSelect();
+      this.refreshGodCardsList();
     });
   }
 
@@ -456,31 +525,48 @@ export class CatalogEditorPanel {
     this.body.innerHTML = '';
     const leaderPane = el('div', 'ce-root-pane ce-pane--leaders');
     const unitPane = el('div', 'ce-root-pane ce-pane--units');
+    this.inventoryPane = el('div', 'ce-root-pane ce-pane--inventory');
     unitPane.hidden = true;
+    this.inventoryPane.hidden = true;
     const rootTabs = el('div', 'catalog-editor-tabs ce-root-tabs');
     const tLeaders = el('button', 'catalog-editor-tab catalog-editor-tab--active', 'Лидеры');
     const tUnits = el('button', 'catalog-editor-tab', 'Юниты');
+    const tGods = el('button', 'catalog-editor-tab', 'Карты богов');
+    const tInventory = el('button', 'catalog-editor-tab', 'Инвентарь');
     tLeaders.type = 'button';
     tUnits.type = 'button';
-    tLeaders.addEventListener('click', () => {
-      tLeaders.classList.add('catalog-editor-tab--active');
-      tUnits.classList.remove('catalog-editor-tab--active');
-      leaderPane.hidden = false;
-      unitPane.hidden = true;
-      this.panel.classList.remove('ce-panel--units-mode');
-      this.panel.classList.add('ce-panel--leaders-mode');
-      this.backFromUnitFormIfNeeded();
-    });
-    tUnits.addEventListener('click', () => {
-      tUnits.classList.add('catalog-editor-tab--active');
-      tLeaders.classList.remove('catalog-editor-tab--active');
-      unitPane.hidden = false;
-      leaderPane.hidden = true;
-      this.panel.classList.remove('ce-panel--leaders-mode');
-      this.panel.classList.add('ce-panel--units-mode');
-    });
+    tGods.type = 'button';
+    tInventory.type = 'button';
+    const activateRootTab = (which: 'leaders' | 'units' | 'gods' | 'inventory'): void => {
+      if (which !== 'inventory') this.closeInventoryLeaderPicker();
+      tLeaders.classList.toggle('catalog-editor-tab--active', which === 'leaders');
+      tUnits.classList.toggle('catalog-editor-tab--active', which === 'units');
+      tGods.classList.toggle('catalog-editor-tab--active', which === 'gods');
+      tInventory.classList.toggle('catalog-editor-tab--active', which === 'inventory');
+      leaderPane.hidden = which !== 'leaders';
+      unitPane.hidden = which !== 'units';
+      this.godsPane.hidden = which !== 'gods';
+      this.inventoryPane.hidden = which !== 'inventory';
+      this.panel.classList.toggle('ce-panel--leaders-mode', which === 'leaders');
+      this.panel.classList.toggle('ce-panel--units-mode', which === 'units');
+      this.panel.classList.toggle('ce-panel--gods-mode', which === 'gods');
+      this.panel.classList.toggle('ce-panel--inventory-mode', which === 'inventory');
+      if (which !== 'units') this.backFromUnitFormIfNeeded();
+      if (which === 'gods') {
+        this.loadGodLeaderDraftFromCatalog();
+        this.refillGodAttachCardSelect();
+        this.refreshGodCardsList();
+      }
+      if (which === 'inventory') this.refreshInventoryList();
+    };
+    tLeaders.addEventListener('click', () => activateRootTab('leaders'));
+    tUnits.addEventListener('click', () => activateRootTab('units'));
+    tGods.addEventListener('click', () => activateRootTab('gods'));
+    tInventory.addEventListener('click', () => activateRootTab('inventory'));
     rootTabs.appendChild(tLeaders);
     rootTabs.appendChild(tUnits);
+    rootTabs.appendChild(tGods);
+    rootTabs.appendChild(tInventory);
     this.panel.classList.add('ce-panel--leaders-mode');
 
     this.body.appendChild(
@@ -670,6 +756,13 @@ export class CatalogEditorPanel {
       'Стоимость в армии задаётся у лидера: миниатюра лидера и слоты ростера (не здесь).',
     );
     newBlock.appendChild(this.unitCostHintEl);
+    this.unitMercenaryCb = el('input', 'catalog-editor-input') as HTMLInputElement;
+    this.unitMercenaryCb.type = 'checkbox';
+    this.unitMercenaryCb.id = 'ce-unit-mercenary';
+    const mercLabel = el('label', 'ce-unit-mercenary-label', 'Наёмник (вкладка «Наёмники» в армии и фильтр в библиотеке)');
+    mercLabel.setAttribute('for', 'ce-unit-mercenary');
+    newBlock.appendChild(this.unitMercenaryCb);
+    newBlock.appendChild(mercLabel);
     unitEditorCol.appendChild(newBlock);
 
     const unitSubTabs = el('div', 'catalog-editor-tabs ce-unit-subtabs');
@@ -701,58 +794,78 @@ export class CatalogEditorPanel {
 
     this.applyError = el('div', 'catalog-editor-error');
 
-    const mk = (label: string, inp: HTMLElement) => {
-      const row = el('div', 'catalog-editor-field');
-      row.appendChild(el('span', 'catalog-editor-field-label', label));
-      row.appendChild(inp);
+    const mkField = (label: string, inp: HTMLElement, extraClass?: string) => {
+      const field = el('div', `catalog-editor-field ce-unit-main-field${extraClass ? ` ${extraClass}` : ''}`);
+      field.appendChild(el('span', 'catalog-editor-field-label', label));
+      field.appendChild(inp);
+      return field;
+    };
+    const appendMainRow = (className: string, ...fields: HTMLElement[]) => {
+      const row = el('div', `ce-unit-main-row ${className}`);
+      for (const f of fields) row.appendChild(f);
       this.unitFormMainWrap.appendChild(row);
     };
 
     this.cardName = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.cardName.type = 'text';
-    mk('Имя', this.cardName);
 
     this.cardSize = el('select', 'catalog-editor-select') as HTMLSelectElement;
     for (const s of ['small', 'big', 'large', 'huge'] as const) {
       this.cardSize.appendChild(new Option(s, s));
     }
-    mk('Размер', this.cardSize);
+    appendMainRow(
+      'ce-unit-main-row--name-size',
+      mkField('Имя', this.cardName, 'ce-unit-main-field--grow'),
+      mkField('Размер', this.cardSize, 'ce-unit-main-field--size'),
+    );
 
     this.cardHealth = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.cardHealth.type = 'number';
-    mk('Здоровье', this.cardHealth);
 
     this.cardMaxHealth = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.cardMaxHealth.type = 'number';
-    mk('Макс. здоровье', this.cardMaxHealth);
 
     this.cardWalk = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.cardWalk.type = 'number';
-    mk('Шаг', this.cardWalk);
 
     this.cardRun = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.cardRun.type = 'number';
-    mk('Бег', this.cardRun);
 
     this.cardMoveUnit = el('select', 'catalog-editor-select') as HTMLSelectElement;
     this.cardMoveUnit.appendChild(new Option('по умолчанию', ''));
     this.cardMoveUnit.appendChild(new Option('hex', 'hex'));
     this.cardMoveUnit.appendChild(new Option('hexon', 'hexon'));
-    mk('Единица движения', this.cardMoveUnit);
+    appendMainRow(
+      'ce-unit-main-row--movement',
+      mkField('Здоровье', this.cardHealth),
+      mkField('Макс. здоровье', this.cardMaxHealth),
+      mkField('Шаг', this.cardWalk),
+      mkField('Бег', this.cardRun),
+      mkField('Единица движения', this.cardMoveUnit, 'ce-unit-main-field--move-unit'),
+    );
 
     this.cardDefW = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.cardDefW.type = 'number';
-    mk('Защита (белые)', this.cardDefW);
     this.cardDefG = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.cardDefG.type = 'number';
-    mk('Защита (зелёные)', this.cardDefG);
+    const defenseHeading = el('div', 'ce-unit-main-defense-heading');
+    defenseHeading.appendChild(el('span', 'catalog-editor-field-label', 'Защита'));
+    appendMainRow(
+      'ce-unit-main-row--defense',
+      defenseHeading,
+      mkField('Белые', this.cardDefW),
+      mkField('Зелёные', this.cardDefG),
+    );
 
     this.cardDomains = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.cardDomains.placeholder = 'life, creation';
-    mk('Домены (через запятую)', this.cardDomains);
 
     this.cardKeywords = el('input', 'catalog-editor-input') as HTMLInputElement;
-    mk('Ключевые слова (через запятую)', this.cardKeywords);
+    appendMainRow(
+      'ce-unit-main-row--domains',
+      mkField('Домены (через запятую)', this.cardDomains, 'ce-unit-main-field--grow'),
+      mkField('Ключевые слова (через запятую)', this.cardKeywords, 'ce-unit-main-field--grow'),
+    );
 
     this.cardSprite = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.cardMiniatureSprite = el('input', 'catalog-editor-input') as HTMLInputElement;
@@ -786,6 +899,34 @@ export class CatalogEditorPanel {
     };
     mkImgRow('Карточка (изображение)', this.cardSprite);
     mkImgRow('Миниатюра (токен на столе)', this.cardMiniatureSprite);
+
+    const pairRow = el('div', 'catalog-editor-field ce-img-url-row ce-card-pair-upload-row');
+    pairRow.appendChild(el('span', 'catalog-editor-field-label', 'Склейка лица и оборота'));
+    const pairControls = el('div', 'ce-img-url-row-controls ce-card-pair-upload-controls');
+    this.cardPairFaceIn = el('input', 'catalog-editor-input') as HTMLInputElement;
+    this.cardPairFaceIn.type = 'file';
+    this.cardPairFaceIn.accept = 'image/*';
+    this.cardPairFaceIn.title = 'Лицевая сторона карты';
+    this.cardPairBackIn = el('input', 'catalog-editor-input') as HTMLInputElement;
+    this.cardPairBackIn.type = 'file';
+    this.cardPairBackIn.accept = 'image/*';
+    this.cardPairBackIn.title = 'Оборот карты';
+    const pairLabFace = el('label', 'ce-card-pair-file');
+    pairLabFace.appendChild(el('span', 'ce-card-pair-file-lab', 'Лицо'));
+    pairLabFace.appendChild(this.cardPairFaceIn);
+    const pairLabBack = el('label', 'ce-card-pair-file');
+    pairLabBack.appendChild(el('span', 'ce-card-pair-file-lab', 'Оборот'));
+    pairLabBack.appendChild(this.cardPairBackIn);
+    pairControls.appendChild(pairLabFace);
+    pairControls.appendChild(pairLabBack);
+    pairRow.appendChild(pairControls);
+    const pairHint = el(
+      'div',
+      'catalog-editor-hint ce-card-pair-hint',
+      'Выберите оба файла и сохраните карточку: Tesseract (rus+eng) попытается заполнить ОЗ, шаг, бег, защиту и первую атаку; склеится длинная карта; хотспоты — две полосы как у «Торкемад Прелат» (защита + первая атака). Проверьте распознанные числа.',
+    );
+    pairRow.appendChild(pairHint);
+    this.unitFormMainWrap.appendChild(pairRow);
 
     const mkDiceRow = (
       sectionTitle: string,
@@ -1040,9 +1181,20 @@ export class CatalogEditorPanel {
     presetRow.appendChild(el('span', 'ce-hs-field-lab', 'Пресет раскладки'));
     presetRow.appendChild(this.hsPresetSelect);
     hotSection.appendChild(presetRow);
+    const applyPresetAllBtn = el(
+      'button',
+      'catalog-editor-btn catalog-editor-btn-secondary',
+      'Пресет → все юниты',
+    ) as HTMLButtonElement;
+    applyPresetAllBtn.type = 'button';
+    applyPresetAllBtn.title =
+      'Кубики и подписи с карточек каждого юнита; координаты — из выбранного пресета (число зон = защита + атаки, либо два прямоугольника: защита + полоса атаки).';
+    applyPresetAllBtn.addEventListener('click', () => this.applyHotspotLayoutPresetToAllCatalogUnits());
+
     const saveHotRow = el('div', 'ce-hs-save-row');
     saveHotRow.appendChild(saveHotBtn);
     saveHotRow.appendChild(this.saveHotspotPresetBtn);
+    saveHotRow.appendChild(applyPresetAllBtn);
     hotSection.appendChild(saveHotRow);
     hotSection.appendChild(this.hotspotHint);
     this.refreshHotspotPresetSelect();
@@ -1092,6 +1244,7 @@ export class CatalogEditorPanel {
           if (!res.ok) alert(res.error);
           else {
             this.refreshUnitLibraryList();
+            this.refreshInventoryList();
             alert('Импортировано');
           }
         };
@@ -1108,9 +1261,219 @@ export class CatalogEditorPanel {
     ioRow.appendChild(imp);
     ioRow.appendChild(reset);
     unitPane.appendChild(ioRow);
+
+    this.godsPane = el('div', 'ce-root-pane ce-pane--gods');
+    this.godsPane.hidden = true;
+    this.godsPane.appendChild(el('div', 'ce-pane-title', 'Карты богов'));
+    const godsTop = el('div', 'catalog-editor-row ce-inventory-toolbar ce-gods-toolbar');
+    this.godCardsSearchInput = el('input', 'catalog-editor-input') as HTMLInputElement;
+    this.godCardsSearchInput.type = 'search';
+    this.godCardsSearchInput.placeholder = 'Поиск по id или названию…';
+    this.godCardsSearchInput.addEventListener('input', () => this.refreshGodCardsList());
+    godsTop.appendChild(this.godCardsSearchInput);
+
+    this.godDomainFilterSel = el('select', 'catalog-editor-select') as HTMLSelectElement;
+    this.godDomainFilterSel.setAttribute('aria-label', 'Фильтр по домену фракции лидера');
+    this.godDomainFilterSel.appendChild(new Option('Все домены', ''));
+    for (const d of DOMAIN_IDS) {
+      this.godDomainFilterSel.appendChild(new Option(DOMAIN_LABELS[d], d));
+    }
+    this.godDomainFilterSel.addEventListener('change', () => {
+      this.rebuildGodLeaderFilterOptions();
+      this.refreshGodCardsList();
+    });
+    godsTop.appendChild(this.godDomainFilterSel);
+
+    this.godLeaderFilterSel = el('select', 'catalog-editor-select') as HTMLSelectElement;
+    this.godLeaderFilterSel.setAttribute('aria-label', 'Лидер (колода карт богов)');
+    this.godLeaderFilterSel.addEventListener('change', () => {
+      this.loadGodLeaderDraftFromCatalog();
+      this.refillGodAttachCardSelect();
+      this.syncGodLeaderFilterUi();
+      this.refreshGodCardsList();
+    });
+    godsTop.appendChild(this.godLeaderFilterSel);
+    this.godsPane.appendChild(godsTop);
+
+    this.godLeaderDeckMaxRow = el('div', 'catalog-editor-row ce-gods-deckmax-row');
+    const deckMaxLab = el('label', 'ce-gods-deckmax-label');
+    deckMaxLab.textContent = 'Максимальное количество карт';
+    this.godLeaderDeckMaxRow.appendChild(deckMaxLab);
+    this.godLeaderDeckMaxInput = el('input', 'catalog-editor-input') as HTMLInputElement;
+    this.godLeaderDeckMaxInput.type = 'number';
+    this.godLeaderDeckMaxInput.min = '0';
+    this.godLeaderDeckMaxInput.placeholder = 'без лимита';
+    this.godLeaderDeckMaxInput.title = 'Сохраняется вместе с кнопкой «Сохранить» внизу';
+    this.godLeaderDeckMaxRow.appendChild(this.godLeaderDeckMaxInput);
+    this.godLeaderDeckMaxHint = el('div', 'catalog-editor-hint ce-gods-deckmax-hint', '');
+    this.godLeaderDeckMaxRow.appendChild(this.godLeaderDeckMaxHint);
+    this.godLeaderDeckMaxRow.hidden = true;
+    this.godsPane.appendChild(this.godLeaderDeckMaxRow);
+
+    const godAttachRow = el('div', 'catalog-editor-row ce-god-attach-row');
+    godAttachRow.appendChild(el('span', 'ce-god-attach-label', 'Библиотека карт богов'));
+    this.godAttachCardSel = el('select', 'catalog-editor-select') as HTMLSelectElement;
+    this.godAttachCardSel.setAttribute('aria-label', 'Карта из библиотеки');
+    this.godAttachCardBtn = el(
+      'button',
+      'catalog-editor-btn catalog-editor-btn-secondary',
+      'Добавить',
+    ) as HTMLButtonElement;
+    this.godAttachCardBtn.type = 'button';
+    this.godAttachCardBtn.title = 'Добавить карту в колоду выбранного лидера (черновик; зафиксируйте «Сохранить»)';
+    this.godAttachCardBtn.addEventListener('click', () => this.attachGodCardFromLibrary());
+    godAttachRow.appendChild(this.godAttachCardSel);
+    godAttachRow.appendChild(this.godAttachCardBtn);
+    this.godsPane.appendChild(godAttachRow);
+
+    this.godsMainRow = el('div', 'ce-gods-stack');
+    this.godCardsListEl = el('div', 'catalog-editor-unit-list ce-inventory-list ce-god-cards-list');
+    this.godsMainRow.appendChild(this.godCardsListEl);
+
+    this.godCardsSaveFooter = el('div', 'ce-god-cards-save-footer ce-inventory-form');
+    const godSaveRow = el('div', 'catalog-editor-row ce-god-card-save-row');
+    this.godCardSaveBtn = el('button', 'catalog-editor-btn', 'Сохранить') as HTMLButtonElement;
+    this.godCardSaveBtn.type = 'button';
+    this.godCardSaveBtn.addEventListener('click', () => this.saveGodLeaderGodCards());
+    godSaveRow.appendChild(this.godCardSaveBtn);
+    this.godCardsSaveFooter.appendChild(godSaveRow);
+    this.godsMainRow.appendChild(this.godCardsSaveFooter);
+    this.godsPane.appendChild(this.godsMainRow);
+
+    this.rebuildGodLeaderFilterOptions();
+    this.refillGodAttachCardSelect();
+
+    this.inventoryPane.appendChild(el('div', 'ce-pane-title', 'Предметы инвентаря'));
+    const invTop = el('div', 'catalog-editor-row ce-inventory-toolbar');
+    this.inventorySearchInput = el('input', 'catalog-editor-input') as HTMLInputElement;
+    this.inventorySearchInput.type = 'search';
+    this.inventorySearchInput.placeholder = 'Поиск по id или имени…';
+    this.inventorySearchInput.addEventListener('input', () => this.refreshInventoryList());
+    invTop.appendChild(this.inventorySearchInput);
+    this.inventoryAddBtn = el('button', 'catalog-editor-btn', 'Добавить предмет') as HTMLButtonElement;
+    this.inventoryAddBtn.type = 'button';
+    this.inventoryAddBtn.addEventListener('click', () => this.openInventoryFormNew());
+    invTop.appendChild(this.inventoryAddBtn);
+    this.inventoryPane.appendChild(invTop);
+    this.inventoryListEl = el('div', 'catalog-editor-unit-list ce-inventory-list');
+    this.inventoryPane.appendChild(this.inventoryListEl);
+
+    this.inventoryFormWrap = el('div', 'ce-inventory-form catalog-editor-data-section');
+    this.inventoryFormWrap.appendChild(el('div', 'ce-field-label', 'Редактирование'));
+    const invIdRow = el('div', 'catalog-editor-row');
+    invIdRow.appendChild(el('label', '', 'Id'));
+    this.inventoryIdInput = el('input', 'catalog-editor-input') as HTMLInputElement;
+    this.inventoryIdInput.type = 'text';
+    invIdRow.appendChild(this.inventoryIdInput);
+    this.inventoryFormWrap.appendChild(invIdRow);
+    const invNameRow = el('div', 'catalog-editor-row');
+    invNameRow.appendChild(el('label', '', 'Имя'));
+    this.inventoryNameInput = el('input', 'catalog-editor-input') as HTMLInputElement;
+    invNameRow.appendChild(this.inventoryNameInput);
+    this.inventoryFormWrap.appendChild(invNameRow);
+    const invPtsRow = el('div', 'catalog-editor-row');
+    invPtsRow.appendChild(el('label', '', 'Очки'));
+    this.inventoryPointsInput = el('input', 'catalog-editor-input') as HTMLInputElement;
+    this.inventoryPointsInput.type = 'number';
+    invPtsRow.appendChild(this.inventoryPointsInput);
+    this.inventoryFormWrap.appendChild(invPtsRow);
+    const invMcRow = el('div', 'catalog-editor-row');
+    invMcRow.appendChild(el('label', '', 'Макс. копий у лидера'));
+    this.inventoryMaxCopiesInput = el('input', 'catalog-editor-input') as HTMLInputElement;
+    this.inventoryMaxCopiesInput.type = 'number';
+    this.inventoryMaxCopiesInput.title = 'Пусто — по умолчанию 99';
+    invMcRow.appendChild(this.inventoryMaxCopiesInput);
+    this.inventoryFormWrap.appendChild(invMcRow);
+    const invSpriteRow = el('div', 'catalog-editor-field ce-img-url-row');
+    invSpriteRow.appendChild(el('span', 'catalog-editor-field-label', 'Спрайт'));
+    const invSpriteControls = el('div', 'ce-img-url-row-controls');
+    this.inventorySpriteInput = el('input', 'catalog-editor-input') as HTMLInputElement;
+    this.inventorySpriteInput.placeholder = '/path-under-public.png';
+    invSpriteControls.appendChild(this.inventorySpriteInput);
+    const invSpriteFile = el('input', 'catalog-editor-input') as HTMLInputElement;
+    invSpriteFile.type = 'file';
+    invSpriteFile.accept = 'image/*';
+    invSpriteFile.addEventListener('change', () => {
+      const f = invSpriteFile.files?.[0];
+      if (!f) return;
+      void readImageFileAsDataUrl(f)
+        .then((dataUrl) => {
+          this.inventorySpriteInput.value = dataUrl;
+        })
+        .catch((e) => {
+          console.error(e);
+          this.applyError.textContent = 'Не удалось прочитать изображение';
+        });
+    });
+    invSpriteControls.appendChild(invSpriteFile);
+    invSpriteRow.appendChild(invSpriteControls);
+    this.inventoryFormWrap.appendChild(invSpriteRow);
+    this.inventoryFormWrap.appendChild(
+      el(
+        'p',
+        'catalog-editor-hint',
+        'Путь от корня сайта, например /httpssteam….jpg в public/. Файл можно вставить как data URL.',
+      ),
+    );
+    this.inventoryFormWrap.appendChild(el('div', 'ce-field-label', 'Только для лидеров'));
+    this.inventoryFormWrap.appendChild(
+      el(
+        'p',
+        'catalog-editor-hint',
+        'Если никого не отмечено — предмет доступен всем. Нажмите кнопку ниже, отметьте одного или нескольких лидеров и сохраните предмет.',
+      ),
+    );
+    this.inventoryLeaderPickerRoot = el('div', 'ce-inventory-leader-picker');
+    this.inventoryLeaderPickerToggle = el(
+      'button',
+      'ce-inventory-leader-picker__toggle catalog-editor-btn catalog-editor-btn-secondary',
+    ) as HTMLButtonElement;
+    this.inventoryLeaderPickerToggle.type = 'button';
+    this.inventoryLeaderPickerToggle.setAttribute('aria-expanded', 'false');
+    this.inventoryLeaderPickerLabelEl = el('span', 'ce-inventory-leader-picker__toggle-text', 'Все лидеры');
+    const chevron = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    chevron.setAttribute('class', 'ce-inventory-leader-picker__chevron');
+    chevron.setAttribute('width', '16');
+    chevron.setAttribute('height', '16');
+    chevron.setAttribute('viewBox', '0 0 24 24');
+    chevron.setAttribute('aria-hidden', 'true');
+    const chevronPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    chevronPath.setAttribute('fill', 'currentColor');
+    chevronPath.setAttribute('d', 'M7 10l5 5 5-5z');
+    chevron.appendChild(chevronPath);
+    this.inventoryLeaderPickerToggle.appendChild(this.inventoryLeaderPickerLabelEl);
+    this.inventoryLeaderPickerToggle.appendChild(chevron);
+    this.inventoryLeaderPickerToggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.inventoryLeaderPickerRoot.classList.toggle('ce-inventory-leader-picker--open');
+      const isOpen = this.inventoryLeaderPickerRoot.classList.contains('ce-inventory-leader-picker--open');
+      this.inventoryLeaderPickerToggle.setAttribute('aria-expanded', String(isOpen));
+    });
+    this.inventoryLeaderPickerPanel = el('div', 'ce-inventory-leader-picker__panel');
+    this.inventoryLeaderPickerPanel.setAttribute('role', 'group');
+    this.inventoryLeaderPickerPanel.setAttribute('aria-label', 'Лидеры для предмета');
+    this.inventoryLeaderPickerRoot.appendChild(this.inventoryLeaderPickerToggle);
+    this.inventoryLeaderPickerRoot.appendChild(this.inventoryLeaderPickerPanel);
+    document.addEventListener('click', this.onDocumentCloseDropdownPickers);
+    this.inventoryFormWrap.appendChild(this.inventoryLeaderPickerRoot);
+    const invBtnRow = el('div', 'catalog-editor-row');
+    this.inventoryDeleteBtn = el('button', 'catalog-editor-btn catalog-editor-btn-danger', 'Удалить') as HTMLButtonElement;
+    this.inventoryDeleteBtn.type = 'button';
+    this.inventoryDeleteBtn.addEventListener('click', () => this.deleteSelectedInventoryItem());
+    this.inventorySaveBtn = el('button', 'catalog-editor-btn', 'Сохранить') as HTMLButtonElement;
+    this.inventorySaveBtn.type = 'button';
+    this.inventorySaveBtn.addEventListener('click', () => void this.saveInventoryForm());
+    invBtnRow.appendChild(this.inventoryDeleteBtn);
+    invBtnRow.appendChild(this.inventorySaveBtn);
+    this.inventoryFormWrap.appendChild(invBtnRow);
+    this.inventoryPane.appendChild(this.inventoryFormWrap);
+
     this.body.appendChild(rootTabs);
     this.body.appendChild(leaderPane);
     this.body.appendChild(unitPane);
+    this.body.appendChild(this.godsPane);
+    this.body.appendChild(this.inventoryPane);
 
     this.buildLeaderModal();
     this.buildUnitModal();
@@ -1159,6 +1522,7 @@ export class CatalogEditorPanel {
     this.attacksContainer.innerHTML = '';
     this.attackRows = [];
     this.addAttackRow();
+    this.unitMercenaryCb.checked = false;
   }
 
   private openUnitFormCreate(preset?: { leaderId: string; factionId: string; domain: Domain }): void {
@@ -1173,6 +1537,9 @@ export class CatalogEditorPanel {
     this.unitStubFieldsWrap.hidden = false;
     this.clearEditor();
     this.resetUnitFormCardFields();
+    if (this.selectedFactionId === MERCENARY_FACTION_ID) {
+      this.unitMercenaryCb.checked = true;
+    }
     if (preset) {
       const L = getLeader(preset.leaderId);
       const fac = getFaction(preset.factionId);
@@ -1249,9 +1616,13 @@ export class CatalogEditorPanel {
     this.selectedUnitId = unitId;
     const def = getCatalogUnit(unitId);
     if (!def) return;
+    this.unitMercenaryCb.checked = def.mercenary === true;
     this.unitNameInput.value = def.card.name;
     this.loadCardIntoForm(def.card, unitId);
     this.applyError.textContent = '';
+
+    this.cardPairFaceIn.value = '';
+    this.cardPairBackIn.value = '';
 
     const hf = getHotspotsForUnit(unitId);
     if (hf) {
@@ -1291,17 +1662,57 @@ export class CatalogEditorPanel {
       const cloneId = this.unitCloneSelect.value;
       const cloneFrom = cloneId ? getCatalogUnit(cloneId) : undefined;
       const stubDef = createStubCatalogUnit(id, name, 0, cloneFrom);
+
+      const faceF = this.cardPairFaceIn.files?.[0];
+      const backF = this.cardPairBackIn.files?.[0];
+      if ((faceF && !backF) || (!faceF && backF)) {
+        alert('Для склейки нужны оба файла — лицо и оборот.');
+        return;
+      }
+
+      if (faceF && backF) {
+        try {
+          await this.applyKowOcrFromPairFiles(faceF, backF);
+        } catch (e) {
+          alert(e instanceof Error ? e.message : 'Ошибка OCR (Tesseract) по лицу и обороту');
+          return;
+        }
+      }
+
       const rawCard = this.readCardFromForm(stubDef.card);
       if (!rawCard) return;
+
+      let compositeApplied = false;
+      if (faceF && backF) {
+        try {
+          const mini = await this.applyFaceBackCompositeForUnit(
+            id,
+            rawCard.name,
+            [],
+            undefined,
+            { torKemadCard: rawCard },
+          );
+          rawCard.miniatureSprite = mini;
+          rawCard.sprite = undefined;
+          compositeApplied = true;
+        } catch (e) {
+          alert(e instanceof Error ? e.message : 'Ошибка склейки карточки (лицо + оборот)');
+          return;
+        }
+      }
+
       const cardResolved = await resolveCardImageUrlsForStorage(rawCard);
       const card = finalizeCardForUnitSave(id, cardResolved, 'newUnit');
-      setNewUnit(id, { id, points: 0, card });
+      const mercenary = this.unitMercenaryCb.checked;
+      setNewUnit(id, { id, points: 0, card, mercenary });
       this.selectedUnitId = id;
       if (this.unitCreatePresetLeaderId) {
         addRosterSlot(this.unitCreatePresetLeaderId, { unitId: id, maxCopies: 1 });
         this.unitCreatePresetLeaderId = null;
       }
-      await this.saveHotspotsAsync({ softIfNoImage: true });
+      if (!compositeApplied) {
+        await this.saveHotspotsAsync({ softIfNoImage: true });
+      }
       this.finishUnitForm();
       return;
     }
@@ -1325,11 +1736,11 @@ export class CatalogEditorPanel {
     const rosterUnitIds = leader.roster.map((s) => s.unitId);
     const dndState: { draggedUnitId: string | null } = { draggedUnitId: null };
 
-    const appendRow = (unitId: string, title: string, kind: 'mini' | 'slot', slotMax: number): void => {
+    const appendRow = (unitId: string, title: string, kind: 'mini' | 'slot'): void => {
       const def = getCatalogUnit(unitId);
       const nm = def?.card.name ?? unitId;
       const pts = rosterSpawnPoints(lid, unitId);
-      const sub = `${pts} pts · 0/${slotMax}`;
+      const sub = `${pts} pts`;
       const inp = document.createElement('input');
       inp.type = 'number';
       inp.className = 'ce-catalog-points-input catalog-editor-input';
@@ -1346,25 +1757,7 @@ export class CatalogEditorPanel {
       const editBtn = createPencilEditButton(() => {
         this.openUnitFormEdit(unitId);
       });
-      const actions: HTMLElement[] = [inp];
-      if (kind === 'slot') {
-        const maxInp = document.createElement('input');
-        maxInp.type = 'number';
-        maxInp.className = 'ce-catalog-maxcopies-input catalog-editor-input';
-        maxInp.value = String(slotMax);
-        maxInp.min = '1';
-        maxInp.step = '1';
-        maxInp.title = 'Максимум моделей этого юнита в армии под этим лидером';
-        maxInp.addEventListener('blur', () => {
-          commitCatalogLeaderMaxCopies(lid, unitId, maxInp.value);
-          this.refreshLeaderAttachedUnits();
-        });
-        maxInp.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-        });
-        actions.push(maxInp);
-      }
-      actions.push(editBtn);
+      const actions: HTMLElement[] = [inp, editBtn];
       const row = buildCatalogArmyStyleRow({
         sprite: def ? unitPanelThumbSrc(def.card) : undefined,
         name: title ? `${nm} — ${title}` : nm,
@@ -1406,14 +1799,14 @@ export class CatalogEditorPanel {
       this.leaderAttachedUnitsEl!.appendChild(row);
     };
 
-    appendRow(mini, 'миниатюра лидера', 'mini', LEADER_MINI_MAX_COPIES);
+    appendRow(mini, 'миниатюра лидера', 'mini');
 
     for (const s of leader.roster) {
       if (seen.has(s.unitId)) continue;
       seen.add(s.unitId);
       const extra =
         s.requiresUnitId != null ? ` · требует ${s.requiresUnitId}` : '';
-      appendRow(s.unitId, `ростер${extra}`, 'slot', s.maxCopies);
+      appendRow(s.unitId, `ростер${extra}`, 'slot');
     }
     this.leaderAttachedUnitsEl.title =
       rosterUnitIds.length > 1 ? 'Перетащите слот, чтобы изменить порядок юнитов у лидера' : '';
@@ -1548,10 +1941,6 @@ export class CatalogEditorPanel {
     this.lmPaneRoster.appendChild(this.leaderRosterListEl);
     const rosterAddRow = el('div', 'catalog-editor-row ce-modal-roster-add-row');
     this.leaderRosterUnitSel = el('select', 'catalog-editor-select') as HTMLSelectElement;
-    this.leaderRosterMaxCopies = el('input', 'catalog-editor-input') as HTMLInputElement;
-    this.leaderRosterMaxCopies.type = 'number';
-    this.leaderRosterMaxCopies.placeholder = 'Макс.';
-    this.leaderRosterMaxCopies.value = '1';
     this.leaderRosterPoints = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.leaderRosterPoints.type = 'number';
     this.leaderRosterPoints.placeholder = 'Очки (опц.)';
@@ -1566,7 +1955,6 @@ export class CatalogEditorPanel {
     addRosterBtn.addEventListener('click', () => this.addRosterSlotForModalLeader());
     rosterAddRow.appendChild(this.leaderRosterUnitSel);
     rosterAddRow.appendChild(this.leaderRosterPoints);
-    rosterAddRow.appendChild(this.leaderRosterMaxCopies);
     rosterAddRow.appendChild(this.leaderRosterRequiresUnitId);
     rosterAddRow.appendChild(addRosterBtn);
     this.lmPaneRoster.appendChild(rosterAddRow);
@@ -2156,6 +2544,417 @@ export class CatalogEditorPanel {
     this.refreshLeaderAttachedUnits();
   }
 
+  private closeInventoryLeaderPicker(): void {
+    this.inventoryLeaderPickerRoot?.classList.remove('ce-inventory-leader-picker--open');
+    this.inventoryLeaderPickerToggle?.setAttribute('aria-expanded', 'false');
+  }
+
+  private updateInventoryLeaderPickerSummary(): void {
+    const ids: string[] = [];
+    for (const cb of this.inventoryLeaderPickerPanel.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')) {
+      if (cb.checked && cb.dataset.leaderId) ids.push(cb.dataset.leaderId);
+    }
+    if (ids.length === 0) {
+      this.inventoryLeaderPickerLabelEl.textContent = 'Все лидеры';
+    } else if (ids.length === 1) {
+      const lid = ids[0];
+      const L = getLeader(lid);
+      this.inventoryLeaderPickerLabelEl.textContent = L ? `${L.name} (${lid})` : lid;
+    } else {
+      this.inventoryLeaderPickerLabelEl.textContent = `Выбрано лидеров: ${ids.length}`;
+    }
+  }
+
+  private rebuildInventoryLeaderPicker(selectedLeaderIds: Set<string>): void {
+    this.inventoryLeaderPickerPanel.innerHTML = '';
+    for (const lid of listAllMergedLeaderIds()) {
+      const row = el('label', 'ce-inventory-leader-picker__row');
+      const cb = el('input', '') as HTMLInputElement;
+      cb.type = 'checkbox';
+      cb.dataset.leaderId = lid;
+      cb.checked = selectedLeaderIds.has(lid);
+      cb.addEventListener('change', () => this.updateInventoryLeaderPickerSummary());
+      const L = getLeader(lid);
+      row.appendChild(cb);
+      row.appendChild(document.createTextNode(L ? `${L.name} (${lid})` : lid));
+      this.inventoryLeaderPickerPanel.appendChild(row);
+    }
+    this.updateInventoryLeaderPickerSummary();
+  }
+
+  private openInventoryFormNew(): void {
+    this.closeInventoryLeaderPicker();
+    this.inventoryFormIsNew = true;
+    this.selectedInventoryItemId = null;
+    this.inventoryIdInput.value = '';
+    this.inventoryIdInput.disabled = false;
+    this.inventoryNameInput.value = '';
+    this.inventoryPointsInput.value = '0';
+    this.inventoryMaxCopiesInput.value = '';
+    this.inventorySpriteInput.value = '';
+    this.rebuildInventoryLeaderPicker(new Set());
+    this.inventoryDeleteBtn.hidden = true;
+    if (this.applyError) this.applyError.textContent = '';
+  }
+
+  private openInventoryFormEdit(id: string): void {
+    const def = getMergedInventoryItem(id);
+    if (!def) return;
+    this.closeInventoryLeaderPicker();
+    this.inventoryFormIsNew = false;
+    this.selectedInventoryItemId = id;
+    this.inventoryIdInput.value = def.id;
+    this.inventoryIdInput.disabled = true;
+    this.inventoryNameInput.value = def.name;
+    this.inventoryPointsInput.value = String(def.points);
+    this.inventoryMaxCopiesInput.value = def.maxCopies != null ? String(def.maxCopies) : '';
+    this.inventorySpriteInput.value = def.sprite;
+    const only = def.onlyForLeaderIds;
+    this.rebuildInventoryLeaderPicker(new Set(only && only.length > 0 ? only : []));
+    this.inventoryDeleteBtn.hidden = false;
+    if (this.applyError) this.applyError.textContent = '';
+    this.refreshInventoryList();
+  }
+
+  private async saveInventoryForm(): Promise<void> {
+    if (this.applyError) this.applyError.textContent = '';
+    const id = this.inventoryIdInput.value.trim();
+    if (!id) {
+      if (this.applyError) this.applyError.textContent = 'Укажите id';
+      return;
+    }
+    if (this.inventoryFormIsNew && CATALOG_INVENTORY[id] && !listNewInventoryItemIds().includes(id)) {
+      if (this.applyError) this.applyError.textContent = 'Такой id уже есть в каталоге репозитория';
+      return;
+    }
+    const name = this.inventoryNameInput.value.trim() || id;
+    const points = numOrU(this.inventoryPointsInput.value) ?? 0;
+    let sprite = this.inventorySpriteInput.value.trim();
+    if (sprite.startsWith('blob:')) {
+      const resolved = await resolveImageUrlForStorage(sprite);
+      sprite = resolved ?? sprite;
+      this.inventorySpriteInput.value = sprite;
+    }
+    const mcRaw = this.inventoryMaxCopiesInput.value.trim();
+    const maxCopies = mcRaw === '' ? undefined : Math.max(1, Math.floor(numOrU(mcRaw) ?? 1));
+    const only: string[] = [];
+    for (const cb of this.inventoryLeaderPickerPanel.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')) {
+      if (cb.checked && cb.dataset.leaderId) only.push(cb.dataset.leaderId);
+    }
+    const onlyForLeaderIds = only.length > 0 ? only : undefined;
+    const def: InventoryItemDef = {
+      id,
+      name,
+      points,
+      sprite: sprite || '/',
+      maxCopies,
+      onlyForLeaderIds,
+    };
+
+    if (this.inventoryFormIsNew || listNewInventoryItemIds().includes(id)) {
+      setNewInventoryItem(id, def);
+    } else if (CATALOG_INVENTORY[id]) {
+      const base = CATALOG_INVENTORY[id];
+      const patch: Partial<InventoryItemDef> = {};
+      if (def.name !== base.name) patch.name = def.name;
+      if (def.points !== base.points) patch.points = def.points;
+      if (def.sprite !== base.sprite) patch.sprite = def.sprite;
+      if ((def.maxCopies ?? null) !== (base.maxCopies ?? null)) patch.maxCopies = def.maxCopies;
+      if (JSON.stringify(def.onlyForLeaderIds ?? []) !== JSON.stringify(base.onlyForLeaderIds ?? [])) {
+        patch.onlyForLeaderIds = def.onlyForLeaderIds;
+      }
+      if (Object.keys(patch).length === 0) setInventoryPatch(id, undefined);
+      else setInventoryPatch(id, patch);
+    } else {
+      setNewInventoryItem(id, def);
+    }
+    this.inventoryFormIsNew = false;
+    this.selectedInventoryItemId = id;
+    this.closeInventoryLeaderPicker();
+    this.refreshInventoryList();
+  }
+
+  private deleteSelectedInventoryItem(): void {
+    const id = this.selectedInventoryItemId ?? this.inventoryIdInput.value.trim();
+    if (!id) return;
+    if (!confirm(`Удалить предмет «${id}» из оверрайдов?`)) return;
+    removeInventoryItemEverywhere(id);
+    this.openInventoryFormNew();
+    this.refreshInventoryList();
+  }
+
+  private refreshInventoryList(): void {
+    if (!this.inventoryListEl) return;
+    this.inventoryListEl.innerHTML = '';
+    const q = (this.inventorySearchInput?.value ?? '').trim().toLowerCase();
+    for (const id of listAllInventoryItemIds()) {
+      const def = getMergedInventoryItem(id);
+      if (!def) continue;
+      const hay = `${id} ${def.name}`.toLowerCase();
+      if (q && !hay.includes(q)) continue;
+      const isNew = listNewInventoryItemIds().includes(id);
+      const row = el('div', 'catalog-editor-inventory-row');
+      row.dataset.itemId = id;
+      if (this.selectedInventoryItemId === id) row.classList.add('catalog-editor-inventory-row--active');
+      const thumb = el('div', 'army-unit-thumb');
+      const img = el('img', 'army-unit-thumb-img') as HTMLImageElement;
+      img.src = def.sprite;
+      img.alt = '';
+      thumb.appendChild(img);
+      const meta = el('div', 'army-unit-meta');
+      meta.appendChild(el('div', 'army-unit-name', `${def.name}${isNew ? ' (новый)' : ''}`));
+      meta.appendChild(
+        el('div', 'army-unit-sub', `${def.points} pts · max ${inventoryItemMaxCopies(def)}`),
+      );
+      row.appendChild(thumb);
+      row.appendChild(meta);
+      row.addEventListener('click', () => this.openInventoryFormEdit(id));
+      this.inventoryListEl.appendChild(row);
+    }
+  }
+
+  private godDraftDeckCopyTotal(): number {
+    let s = 0;
+    for (const id of this.godLeaderDraftCardIds) {
+      s += Math.max(1, Math.floor(this.godLeaderDraftCopies[id] ?? 1));
+    }
+    return s;
+  }
+
+  private loadGodLeaderDraftFromCatalog(): void {
+    const lid = this.godLeaderFilterSel?.value ?? '';
+    if (!lid) {
+      this.godLeaderDraftCardIds = new Set();
+      this.godLeaderDraftCopies = {};
+      return;
+    }
+    const ids = new Set<string>();
+    const cop: Record<string, number> = {};
+    for (const c of GOD_CARDS) {
+      const m = getMergedGodCard(c.id);
+      if (!m?.onlyForLeaderIds?.includes(lid)) continue;
+      ids.add(c.id);
+      cop[c.id] = effectiveGodCardCopiesForLeader(c.id, lid);
+    }
+    this.godLeaderDraftCardIds = ids;
+    this.godLeaderDraftCopies = cop;
+  }
+
+  private refillGodAttachCardSelect(): void {
+    if (!this.godAttachCardSel) return;
+    const prev = this.godAttachCardSel.value;
+    this.godAttachCardSel.replaceChildren();
+    this.godAttachCardSel.appendChild(new Option('Карта из библиотеки…', ''));
+    const lid = this.godLeaderFilterSel?.value ?? '';
+    const sorted = [...GOD_CARDS].sort((a, b) => a.title.localeCompare(b.title, 'ru'));
+    for (const c of sorted) {
+      if (lid && this.godLeaderDraftCardIds.has(c.id)) continue;
+      this.godAttachCardSel.appendChild(new Option(`${c.title} (${c.id})`, c.id));
+    }
+    const optVals = new Set(Array.from(this.godAttachCardSel.options).map((o) => o.value));
+    this.godAttachCardSel.value = prev && optVals.has(prev) ? prev : '';
+    if (this.godAttachCardBtn) this.godAttachCardBtn.disabled = !lid;
+  }
+
+  private attachGodCardFromLibrary(): void {
+    const lid = this.godLeaderFilterSel?.value ?? '';
+    if (!lid) {
+      alert('Выберите лидера');
+      return;
+    }
+    const cardId = this.godAttachCardSel?.value?.trim() ?? '';
+    if (!cardId) {
+      alert('Выберите карту в списке');
+      return;
+    }
+    if (this.godLeaderDraftCardIds.has(cardId)) {
+      alert('Эта карта уже в колоде');
+      return;
+    }
+    this.godLeaderDraftCardIds.add(cardId);
+    this.godLeaderDraftCopies[cardId] = 1;
+    this.refillGodAttachCardSelect();
+    this.syncGodLeaderFilterUi();
+    this.refreshGodCardsList();
+  }
+
+  private removeGodCardFromLeaderDraft(cardId: string): void {
+    this.godLeaderDraftCardIds.delete(cardId);
+    delete this.godLeaderDraftCopies[cardId];
+    this.refillGodAttachCardSelect();
+    this.syncGodLeaderFilterUi();
+    this.refreshGodCardsList();
+  }
+
+  private rebuildGodLeaderFilterOptions(): void {
+    const sel = this.godLeaderFilterSel;
+    if (!sel) return;
+    const prev = sel.value;
+    const domain = (this.godDomainFilterSel?.value ?? '') as Domain | '';
+    sel.replaceChildren();
+    sel.appendChild(new Option('— Лидер —', ''));
+    for (const id of listAllMergedLeaderIds()) {
+      const L = getLeader(id);
+      if (!L) continue;
+      if (domain) {
+        const fac = getFaction(L.factionId);
+        if (fac?.domain !== domain) continue;
+      }
+      sel.appendChild(new Option(L.name, id));
+    }
+    const optVals = new Set(Array.from(sel.options).map((o) => o.value));
+    sel.value = prev && optVals.has(prev) ? prev : '';
+    this.loadGodLeaderDraftFromCatalog();
+    this.refillGodAttachCardSelect();
+    this.syncGodLeaderFilterUi();
+  }
+
+  private syncGodLeaderFilterUi(): void {
+    const lid = this.godLeaderFilterSel?.value ?? '';
+    const showLeaderFields = Boolean(lid);
+    if (this.godLeaderDeckMaxRow) this.godLeaderDeckMaxRow.hidden = !showLeaderFields;
+    if (this.godCardsSaveFooter) this.godCardsSaveFooter.hidden = !showLeaderFields;
+    if (showLeaderFields && this.godLeaderDeckMaxInput) {
+      const max = getLeaderGodDeckMax(lid);
+      this.godLeaderDeckMaxInput.value = max !== undefined ? String(max) : '';
+      const total = this.godDraftDeckCopyTotal();
+      const cap = getLeaderGodDeckMax(lid);
+      if (this.godLeaderDeckMaxHint) {
+        if (cap !== undefined && total > cap) {
+          this.godLeaderDeckMaxHint.textContent = `Сумма копий (черновик): ${total} (превышает лимит ${cap})`;
+        } else {
+          this.godLeaderDeckMaxHint.textContent = `Сумма копий (черновик): ${total}`;
+        }
+      }
+    } else if (this.godLeaderDeckMaxHint) {
+      this.godLeaderDeckMaxHint.textContent = '';
+    }
+    if (this.godAttachCardBtn) this.godAttachCardBtn.disabled = !showLeaderFields;
+  }
+
+  /** Считает число копий из полей в строках списка перед сохранением. */
+  private syncGodDraftCopiesFromListInputs(): void {
+    if (!this.godCardsListEl) return;
+    for (const inp of this.godCardsListEl.querySelectorAll<HTMLInputElement>('input[data-god-copies-for]')) {
+      const id = inp.dataset.godCopiesFor;
+      if (!id || !this.godLeaderDraftCardIds.has(id)) continue;
+      const n = Math.max(1, Math.floor(numOr0(inp.value)) || 1);
+      this.godLeaderDraftCopies[id] = n;
+    }
+  }
+
+  private refreshGodCardsList(): void {
+    if (!this.godCardsListEl) return;
+    this.syncGodLeaderFilterUi();
+    this.godCardsListEl.innerHTML = '';
+    const filterLeader = this.godLeaderFilterSel?.value ?? '';
+    if (!filterLeader) {
+      if (this.godCardsSaveFooter) this.godCardsSaveFooter.hidden = true;
+      this.godCardsListEl.appendChild(
+        el(
+          'div',
+          'catalog-editor-hint',
+          'Выберите лидера — отобразится колода карт богов (можно добавить карты из библиотеки и сохранить).',
+        ),
+      );
+      return;
+    }
+    if (this.godCardsSaveFooter) this.godCardsSaveFooter.hidden = false;
+
+    const q = (this.godCardsSearchInput?.value ?? '').trim().toLowerCase();
+    const cardIds = [...this.godLeaderDraftCardIds].sort((a, b) => {
+      const ta = getMergedGodCard(a)?.title ?? a;
+      const tb = getMergedGodCard(b)?.title ?? b;
+      return ta.localeCompare(tb, 'ru');
+    });
+    let renderedRows = 0;
+    for (const cardId of cardIds) {
+      const def = getMergedGodCard(cardId);
+      if (!def) continue;
+      const hay = `${cardId} ${def.title}`.toLowerCase();
+      if (q && !hay.includes(q)) continue;
+      const row = el('div', 'catalog-editor-god-card-row');
+      row.dataset.cardId = cardId;
+      const thumb = el('div', 'ce-god-card-thumb');
+      applyGodCardSpriteCss(thumb, def);
+      const meta = el('div', 'army-unit-meta');
+      meta.appendChild(el('div', 'army-unit-name', def.title));
+      meta.appendChild(el('div', 'army-unit-sub', cardId));
+      const copiesWrap = el('div', 'ce-god-card-copies-wrap');
+      const copiesLab = el('label', 'ce-god-card-copies-inline-label');
+      copiesLab.htmlFor = `ce-god-copies-${cardId}`;
+      copiesLab.textContent = 'Сколько доступно';
+      const copiesInp = el('input', 'catalog-editor-input ce-god-card-copies-input') as HTMLInputElement;
+      copiesInp.type = 'number';
+      copiesInp.min = '1';
+      copiesInp.id = `ce-god-copies-${cardId}`;
+      copiesInp.dataset.godCopiesFor = cardId;
+      copiesInp.value = String(Math.max(1, Math.floor(this.godLeaderDraftCopies[cardId] ?? 1)));
+      copiesInp.title = 'Экземпляров в колоде (сохраните «Сохранить» внизу)';
+      copiesInp.addEventListener('change', () => {
+        const n = Math.max(1, Math.floor(numOr0(copiesInp.value)) || 1);
+        this.godLeaderDraftCopies[cardId] = n;
+        copiesInp.value = String(n);
+        this.syncGodLeaderFilterUi();
+      });
+      copiesInp.addEventListener('input', () => {
+        const n = Math.max(1, Math.floor(numOr0(copiesInp.value)) || 1);
+        if (copiesInp.value.trim() !== '') this.godLeaderDraftCopies[cardId] = n;
+        this.syncGodLeaderFilterUi();
+      });
+      copiesInp.addEventListener('click', (e) => e.stopPropagation());
+      copiesWrap.appendChild(copiesLab);
+      copiesWrap.appendChild(copiesInp);
+      row.appendChild(thumb);
+      row.appendChild(meta);
+      row.appendChild(copiesWrap);
+      const removeBtn = el(
+        'button',
+        'catalog-editor-btn catalog-editor-btn-danger ce-god-card-remove-btn',
+        '×',
+      ) as HTMLButtonElement;
+      removeBtn.type = 'button';
+      removeBtn.title = 'Убрать из колоды';
+      removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.removeGodCardFromLeaderDraft(cardId);
+      });
+      row.appendChild(removeBtn);
+      this.godCardsListEl.appendChild(row);
+      renderedRows += 1;
+    }
+    if (renderedRows === 0) {
+      this.godCardsListEl.appendChild(
+        el(
+          'div',
+          'catalog-editor-hint',
+          cardIds.length === 0
+            ? 'В колоде пока нет карт — добавьте из библиотеки выше.'
+            : 'Нет карт по этому запросу.',
+        ),
+      );
+    }
+  }
+
+  private saveGodLeaderGodCards(): void {
+    const lid = this.godLeaderFilterSel?.value ?? '';
+    if (!lid) {
+      alert('Выберите лидера');
+      return;
+    }
+    this.syncGodDraftCopiesFromListInputs();
+    const copies: Record<string, number> = { ...this.godLeaderDraftCopies };
+    applyLeaderGodCardLoadout(lid, this.godLeaderDraftCardIds, copies);
+    const raw = this.godLeaderDeckMaxInput?.value.trim() ?? '';
+    const dm = raw === '' ? undefined : Math.max(0, Math.floor(Number(raw)));
+    setLeaderGodDeckMax(lid, dm !== undefined && Number.isFinite(dm) ? dm : undefined);
+    this.loadGodLeaderDraftFromCatalog();
+    this.syncGodLeaderFilterUi();
+    this.refillGodAttachCardSelect();
+    this.refreshGodCardsList();
+    if (this.applyError) this.applyError.textContent = '';
+  }
+
   private refreshUnitLibraryList(): void {
     if (!this.unitListEl) return;
     this.unitListEl.innerHTML = '';
@@ -2174,9 +2973,12 @@ export class CatalogEditorPanel {
       const lid = this.selectedLeaderId;
       const L = lid ? getLeader(lid) : undefined;
       const onLeader = L && (L.catalogUnitId === id || L.roster.some((s) => s.unitId === id));
+      const baseSub = 'очки задаются у лидера (мини / ростер)';
       const sub = onLeader
         ? `${rosterSpawnPoints(lid!, id)} pts · у выбранного лидера`
-        : 'очки задаются у лидера (мини / ростер)';
+        : def?.mercenary
+          ? `наёмник · ${baseSub}`
+          : baseSub;
       const displayName = `${name}${isNew ? ' (новый)' : ''}`;
       const editBtn = createPencilEditButton(() => this.openUnitFormEdit(id));
       const row = buildCatalogArmyStyleRow({
@@ -2273,7 +3075,7 @@ export class CatalogEditorPanel {
         const basePts = 0;
         const pts = slot.points ?? basePts;
         const extra = slot.requiresUnitId != null ? ` · требует ${slot.requiresUnitId}` : '';
-        const sub = `${pts} pts · 0/${slot.maxCopies}${extra}`;
+        const sub = `${pts} pts${extra}`;
         const inp = document.createElement('input');
         inp.type = 'number';
         inp.className = 'ce-catalog-points-input catalog-editor-input';
@@ -2292,26 +3094,6 @@ export class CatalogEditorPanel {
           this.refreshLeaderRosterEditor();
         });
         inp.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-        });
-        const maxInp = document.createElement('input');
-        maxInp.type = 'number';
-        maxInp.className = 'ce-catalog-maxcopies-input catalog-editor-input';
-        maxInp.value = String(slot.maxCopies);
-        maxInp.min = '1';
-        maxInp.step = '1';
-        maxInp.title = 'Максимум моделей этого юнита в армии под этим лидером';
-        maxInp.addEventListener('blur', () => {
-          const v = numOrU(maxInp.value);
-          const idx = this.leaderModalPendingRoster.findIndex((s) => s.unitId === slot.unitId);
-          if (idx < 0) return;
-          const next = { ...this.leaderModalPendingRoster[idx] };
-          const mc = v === undefined || v < 1 ? 1 : Math.floor(v);
-          next.maxCopies = Math.max(1, mc);
-          this.leaderModalPendingRoster[idx] = next;
-          this.refreshLeaderRosterEditor();
-        });
-        maxInp.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
         });
         const editBtn = createPencilEditButton(() => {
@@ -2334,7 +3116,7 @@ export class CatalogEditorPanel {
           onMainClick: () => {
             this.openUnitFormEdit(slot.unitId);
           },
-          actions: [inp, maxInp, editBtn, rm],
+          actions: [inp, editBtn, rm],
         });
         this.leaderRosterListEl.appendChild(row);
       }
@@ -2356,7 +3138,7 @@ export class CatalogEditorPanel {
       const nm = def?.card.name ?? slot.unitId;
       const pts = rosterSpawnPoints(leader.id, slot.unitId);
       const extra = slot.requiresUnitId != null ? ` · требует ${slot.requiresUnitId}` : '';
-      const sub = `${pts} pts · 0/${slot.maxCopies}${extra}`;
+      const sub = `${pts} pts${extra}`;
       const removable = isCustomLeader || addedForLeader.has(slot.unitId);
       const inp = document.createElement('input');
       inp.type = 'number';
@@ -2372,24 +3154,10 @@ export class CatalogEditorPanel {
       inp.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
       });
-      const maxInp = document.createElement('input');
-      maxInp.type = 'number';
-      maxInp.className = 'ce-catalog-maxcopies-input catalog-editor-input';
-      maxInp.value = String(slot.maxCopies);
-      maxInp.min = '1';
-      maxInp.step = '1';
-      maxInp.title = 'Максимум моделей этого юнита в армии под этим лидером';
-      maxInp.addEventListener('blur', () => {
-        commitCatalogLeaderMaxCopies(leader.id, slot.unitId, maxInp.value);
-        this.refreshLeaderRosterEditor();
-      });
-      maxInp.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-      });
       const editBtn = createPencilEditButton(() => {
         this.openUnitFormEdit(slot.unitId);
       });
-      const actions: HTMLElement[] = [inp, maxInp, editBtn];
+      const actions: HTMLElement[] = [inp, editBtn];
       if (removable) {
         const rm = el('button', 'catalog-editor-icon-btn', '×') as HTMLButtonElement;
         rm.type = 'button';
@@ -2425,7 +3193,7 @@ export class CatalogEditorPanel {
     }
     const slot: RosterSlotDef = {
       unitId,
-      maxCopies: Math.max(1, numOr0(this.leaderRosterMaxCopies.value)),
+      maxCopies: 1,
       ...(numOrU(this.leaderRosterPoints.value) != null ? { points: numOrU(this.leaderRosterPoints.value) } : {}),
       ...(this.leaderRosterRequiresUnitId.value ? { requiresUnitId: this.leaderRosterRequiresUnitId.value } : {}),
     };
@@ -2503,6 +3271,12 @@ export class CatalogEditorPanel {
   }
 
   private openLeaderModal(mode: 'new' | 'edit', leaderId?: string): void {
+    if (mode === 'new' && this.selectedFactionId === MERCENARY_FACTION_ID) {
+      alert(
+        'У фракции «Наёмники» нет отдельных лидеров. Переключитесь на игровую фракцию, чтобы создать лидера.',
+      );
+      return;
+    }
     this.leaderModalIsNew = mode === 'new';
     this.leaderModalLeaderId = mode === 'edit' ? leaderId ?? null : null;
     this.leaderModalPendingRoster = [];
@@ -2708,6 +3482,8 @@ export class CatalogEditorPanel {
     this.hotspotImageUrl = '';
     this.hotspotImg.src = '';
     this.selectedRegionIndex = null;
+    this.cardPairFaceIn.value = '';
+    this.cardPairBackIn.value = '';
   }
 
   private applyHotspotFieldsToSelected(): void {
@@ -2781,6 +3557,45 @@ export class CatalogEditorPanel {
       'Применена только раскладка; дальность и кубики по зонам совпадают по порядку с прежними.';
   }
 
+  /** Пресет из списка → все юниты: статы с карточек, геометрия с пресета. */
+  private applyHotspotLayoutPresetToAllCatalogUnits(): void {
+    const presetId = this.hsPresetSelect.value;
+    if (!presetId || presetId === '__default__') {
+      this.hotspotHint.textContent =
+        'Выберите пресет раскладки в списке выше (не «По умолчанию»).';
+      return;
+    }
+    const preset = getCatalogOverrides().hotspotLayoutPresets?.find((p) => p.id === presetId);
+    if (!preset) {
+      this.hotspotHint.textContent = 'Пресет не найден.';
+      return;
+    }
+    if (
+      !confirm(
+        `Применить раскладку «${preset.name}» ко всем юнитам каталога?\nКубики и подписи — из полей карточки; координаты зон — из пресета.`,
+      )
+    ) {
+      return;
+    }
+    try {
+      const { applied, skipped } = applyHotspotLayoutPresetToAllUnits(presetId);
+      this.hotspotHint.textContent =
+        skipped.length > 0
+          ? `Готово: ${applied} юнитов. Пропущено: ${skipped.length} (см. консоль).`
+          : `Готово: ${applied} юнитов.`;
+      if (skipped.length) {
+        console.warn('[catalog editor] Пресет → все юниты: пропуски', skipped);
+      }
+      this.refreshHotspotPresetSelect();
+      window.dispatchEvent(new CustomEvent(CATALOG_OVERRIDES_CHANGED));
+      if (this.selectedUnitId) {
+        this.openUnitFormEdit(this.selectedUnitId);
+      }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : String(e));
+    }
+  }
+
   private saveHotspotLayoutPresetFromUi(): void {
     if (this.hotspotRegions.length === 0) {
       alert('Нет зон — нечего сохранять в пресет.');
@@ -2805,6 +3620,79 @@ export class CatalogEditorPanel {
     this.hsPresetSelect.value = preset.id;
   }
 
+  private syncHotspotUiFromHotspotFile(hf: HotspotFile): void {
+    this.hotspotRegions = hf.regions.map((r) => normalizeHotspotRegion(structuredClone(r)));
+    this.hotspotImageUrl = hf.image;
+    this.hotspotImageInput.value = hf.image;
+    this.hotspotImg.src = hf.image;
+    this.renderHotspotRects();
+    this.syncHotspotFieldsFromRegion();
+  }
+
+  /**
+   * OCR лицо+оборот (Tesseract rus+eng) → поля формы и первая строка атак.
+   */
+  private async applyKowOcrFromPairFiles(face: File, back: File): Promise<void> {
+    const { stats, firstAttack } = await runOcrOnFaceBackFiles(face, back);
+    if (stats.health != null) {
+      this.cardHealth.value = String(stats.health);
+      this.cardMaxHealth.value = String(stats.maxHealth ?? stats.health);
+    }
+    if (stats.walk != null) this.cardWalk.value = String(stats.walk);
+    if (stats.run != null) this.cardRun.value = String(stats.run);
+    if (stats.defenseWhite != null) this.cardDefW.value = String(stats.defenseWhite);
+    if (stats.defenseGreen != null) this.cardDefG.value = String(stats.defenseGreen);
+
+    this.attacksContainer.innerHTML = '';
+    this.attackRows = [];
+    if (firstAttack && firstAttack.name.trim().length > 0) {
+      this.addAttackRow(parsedAttackToAbility(firstAttack));
+    } else {
+      this.addAttackRow();
+    }
+  }
+
+  /**
+   * Склейка лицо+оборот в оверрайды хотспотов (как ingest-unit-card-pair.ts).
+   * Если задан `torKemadCard` — хотспоты по пресету a2 (`tornscapeKowHotspotPresetA2.ts`).
+   * @returns data URL миниатюры для поля карточки
+   */
+  private async applyFaceBackCompositeForUnit(
+    unitId: string,
+    cardName: string,
+    priorRegions: HotspotRegion[],
+    priorScrollLayout: { faceH: number; totalH: number } | undefined,
+    opts?: { torKemadCard?: UnitCardData },
+  ): Promise<string> {
+    const faceF = this.cardPairFaceIn.files?.[0];
+    const backF = this.cardPairBackIn.files?.[0];
+    if (!faceF || !backF) {
+      throw new Error('Нет файлов лицо/оборот');
+    }
+    const comp = await compositeUnitScrollFromFaceBackFiles(faceF, backF, { maxEdge: 4096 });
+    let regions: HotspotRegion[];
+    if (opts?.torKemadCard) {
+      regions = buildTornscapeScrollHotspotRegionsFromA2Preset(opts.torKemadCard).map((r) =>
+        normalizeHotspotRegion(structuredClone(r)),
+      );
+    } else {
+      regions = priorRegions.map((r) => normalizeHotspotRegion(structuredClone(r)));
+      regions = rescaleHotspotRegionsForScroll(regions, priorScrollLayout, comp.faceFullH, comp.totalH);
+    }
+    const file: HotspotFile = {
+      image: comp.compositeDataUrl,
+      title: cardName,
+      regions: regions.map((r) => stripRegionForSave(structuredClone(r))),
+      scrollLayout: { faceH: comp.faceFullH, totalH: comp.totalH },
+    };
+    setHotspotsForUnit(unitId, file);
+    clearCardSpriteFromUnitOverrides(unitId);
+    this.cardPairFaceIn.value = '';
+    this.cardPairBackIn.value = '';
+    this.syncHotspotUiFromHotspotFile(file);
+    return comp.miniatureDataUrl;
+  }
+
   private async applyUnitPatch(): Promise<void> {
     if (!this.selectedUnitId) {
       this.applyError.textContent = 'Выберите юнита';
@@ -2812,17 +3700,56 @@ export class CatalogEditorPanel {
     }
     const def = getCatalogUnit(this.selectedUnitId);
     if (!def) return;
+    const id = this.selectedUnitId;
+
+    const faceF = this.cardPairFaceIn.files?.[0];
+    const backF = this.cardPairBackIn.files?.[0];
+    if ((faceF && !backF) || (!faceF && backF)) {
+      this.applyError.textContent = 'Для склейки нужны оба файла — лицо и оборот.';
+      return;
+    }
+
+    if (faceF && backF) {
+      try {
+        await this.applyKowOcrFromPairFiles(faceF, backF);
+      } catch (e) {
+        this.applyError.textContent =
+          e instanceof Error ? e.message : 'Ошибка OCR (Tesseract) по лицу и обороту';
+        return;
+      }
+    }
+
     const cardRaw = this.readCardFromForm(def.card);
     if (!cardRaw) return;
+
+    if (faceF && backF) {
+      try {
+        const hf = getHotspotsForUnit(id);
+        const mini = await this.applyFaceBackCompositeForUnit(
+          id,
+          cardRaw.name,
+          (hf?.regions ?? []).map((r) => normalizeHotspotRegion(structuredClone(r))),
+          hf?.scrollLayout,
+          { torKemadCard: cardRaw },
+        );
+        cardRaw.miniatureSprite = mini;
+        cardRaw.sprite = undefined;
+      } catch (e) {
+        this.applyError.textContent =
+          e instanceof Error ? e.message : 'Ошибка склейки карточки (лицо + оборот)';
+        return;
+      }
+    }
+
     const cardResolved = await resolveCardImageUrlsForStorage(cardRaw);
-    const id = this.selectedUnitId;
     const storage = getCatalogOverrides().newUnits[id] ? 'newUnit' : 'patch';
     const card = finalizeCardForUnitSave(id, cardResolved, storage);
     card.catalogUnitId = def.card.catalogUnitId ?? this.selectedUnitId;
+    const mercenary = this.unitMercenaryCb.checked;
     if (getCatalogOverrides().newUnits[id]) {
-      setNewUnit(id, { ...def, card });
+      setNewUnit(id, { ...def, card, mercenary });
     } else {
-      setUnitPatch(id, { card });
+      setUnitPatch(id, { card, mercenary });
     }
     this.applyError.textContent = '';
   }

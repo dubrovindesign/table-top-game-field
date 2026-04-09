@@ -20,6 +20,16 @@ async function readJson(filePath) {
 }
 
 async function main() {
+  const inventoryPath = path.join(repoRoot, 'src', 'catalog', 'inventory.json');
+  let inventory = {};
+  try {
+    inventory = await readJson(inventoryPath);
+  } catch (e) {
+    if (e && typeof e === 'object' && 'code' in e && e.code === 'ENOENT') {
+      inventory = {};
+    } else throw e;
+  }
+
   const [factions, leaders] = await Promise.all([
     readJson(path.join(repoRoot, 'src', 'catalog', 'factions.json')),
     readJson(path.join(repoRoot, 'src', 'catalog', 'leaders.json')),
@@ -57,6 +67,7 @@ async function main() {
     leaders,
     units,
     hotspots,
+    inventory,
   };
 
   await fs.mkdir(outDir, { recursive: true });

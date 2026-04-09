@@ -8,14 +8,17 @@ import {
   BIG_MINI_VISUAL_SCALE,
   BIG_UNIT_HEALTH_UI_SCALE,
   bigMiniActivationToggleCenterWorld,
+  bigMiniBroomgarHungerCenterWorld,
   bigMiniHealthBadgeCenterWorld,
   LARGE_MINI_VISUAL_SCALE,
   LARGE_UNIT_HEALTH_UI_SCALE,
   largeMiniActivationToggleCenterWorld,
+  largeMiniBroomgarHungerCenterWorld,
   largeMiniHealthBadgeCenterWorld,
   HUGE_MINI_VISUAL_SCALE,
   HUGE_UNIT_HEALTH_UI_SCALE,
   hugeMiniActivationToggleCenterFromPivotWorld,
+  hugeMiniBroomgarHungerCenterFromPivotWorld,
   hugeMiniDrawPivotWorld,
   hugeMiniHealthBadgeCenterWorld,
   HEALTH_PLUS_MINUS_BUTTON_RADIUS_FRAC_OF_BADGE,
@@ -23,16 +26,20 @@ import {
   SMALL_UNIT_HEALTH_BADGE_EXPAND_WHEN_OPEN,
   SMALL_UNIT_HEALTH_BADGE_SCALE,
   smallUnitActivationToggleCenterWorldRad,
+  smallUnitBroomgarHungerCenterWorldRad,
   smallUnitHealthBadgeCenterWorldRad,
 } from './healthUi';
+import { broomgarHungerPhaseFillColor, type BroomgarHungerPhase } from './broomgarHunger';
 import {
   etherVortexCrystalBadgeHalfWorld,
   getEtherVortexBlendColor,
   type EtherVortexDomainId,
 } from './etherVortex';
 import {
+  getGodCardBackSpriteImageForCard,
   getGodCardById,
   getGodCardSpriteImage,
+  godCardBackSpriteSourcePixelsForCard,
   godCardSpriteSourcePixels,
   type GodTablePiece,
 } from './godCards';
@@ -49,6 +56,9 @@ const HEALTH_VALUE_FONT = '"Langar", cursive';
 /** God deck / discard / loose cards — half-extents in board/world space (scale with zoom). */
 export const GOD_TABLE_CARD_HW = Math.round(66 * 0.8);
 export const GOD_TABLE_CARD_HH = Math.round(93 * 0.8);
+/** Inventory item markers on the table — half-extents in world space (aligned with `INVENTORY_ITEM_HIT_R` in main). */
+export const INVENTORY_TABLE_MARKER_HW = 48;
+export const INVENTORY_TABLE_MARKER_HH = 48;
 /** Clockwise tilt for all god table cards (canvas °; positive = clockwise). */
 export const GOD_TABLE_CARD_ROT_CW_DEG = 10;
 /** Double-click flip duration (ms). */
@@ -179,6 +189,11 @@ export class Renderer {
   private bigMiniActivated: boolean[] = [];
   private largeMiniActivated: boolean[] = [];
   private hugeMiniActivated: boolean[] = [];
+  /** `null` = не брумгар / нет индикатора */
+  private unitBroomgarHungerPhase: Array<BroomgarHungerPhase | null> = [];
+  private bigMiniBroomgarHungerPhase: Array<BroomgarHungerPhase | null> = [];
+  private largeMiniBroomgarHungerPhase: Array<BroomgarHungerPhase | null> = [];
+  private hugeMiniBroomgarHungerPhase: Array<BroomgarHungerPhase | null> = [];
 
   private spriteImageCache = new Map<string, HTMLImageElement>();
   private spriteImageLoading = new Set<string>();
@@ -211,6 +226,19 @@ export class Renderer {
     durationMs: number;
     fromFaceUp: boolean;
   } | null = null;
+  /** Active shuffle animation for one god deck piece. */
+  private godDeckShuffleAnim: {
+    index: number;
+    startMs: number;
+    durationMs: number;
+  } | null = null;
+
+  /** Inventory item tokens (sprites from catalog). */
+  private inventoryMarkerPieces: Array<{ world: Point; spriteSrc: string | null }> = [];
+  private inventoryLooseDraggingIndex: number | null = null;
+  private inventoryLoosePreviewWorld: Point | null = null;
+  private selectedInventoryTablePieceIndex: number | null = null;
+  private readonly inventorySpriteImages = new Map<string, HTMLImageElement>();
 
   /** Other players' cursors in board/world space (same as hex layout). */
   private remoteBoardPointers: Array<{
@@ -405,6 +433,31 @@ export class Renderer {
     this.godPieceFlipAnim = anim ? { ...anim } : null;
   }
 
+  setGodDeckShuffleAnim(
+    anim: {
+      index: number;
+      startMs: number;
+      durationMs: number;
+    } | null,
+  ): void {
+    this.godDeckShuffleAnim = anim ? { ...anim } : null;
+  }
+
+  setInventoryTablePieces(
+    pieces: ReadonlyArray<{ world: Point; spriteSrc: string | null }>,
+    draggingIndex: number | null,
+    previewWorld: Point | null,
+    selectedPieceIndex: number | null = null,
+  ): void {
+    this.inventoryMarkerPieces = pieces.map((p) => ({
+      world: { ...p.world },
+      spriteSrc: p.spriteSrc,
+    }));
+    this.inventoryLooseDraggingIndex = draggingIndex;
+    this.inventoryLoosePreviewWorld = previewWorld ? { ...previewWorld } : null;
+    this.selectedInventoryTablePieceIndex = selectedPieceIndex;
+  }
+
   /** Board-space center of the ether crystal chip (same anchor as screen-fixed badge). */
   getEtherVortexCrystalBadgeBoard(center: Hex, vortexRotationDeg: number, offBoardWorld?: Point): { x: number; y: number } {
     const pivot = offBoardWorld ?? this.layout.hexToPixel(center);
@@ -476,6 +529,22 @@ export class Renderer {
 
   setHugeMiniActivated(values: boolean[]): void {
     this.hugeMiniActivated = [...values];
+  }
+
+  setUnitBroomgarHungerPhase(phases: Array<BroomgarHungerPhase | null>): void {
+    this.unitBroomgarHungerPhase = [...phases];
+  }
+
+  setBigMiniBroomgarHungerPhase(phases: Array<BroomgarHungerPhase | null>): void {
+    this.bigMiniBroomgarHungerPhase = [...phases];
+  }
+
+  setLargeMiniBroomgarHungerPhase(phases: Array<BroomgarHungerPhase | null>): void {
+    this.largeMiniBroomgarHungerPhase = [...phases];
+  }
+
+  setHugeMiniBroomgarHungerPhase(phases: Array<BroomgarHungerPhase | null>): void {
+    this.hugeMiniBroomgarHungerPhase = [...phases];
   }
 
   setBigMiniHealth(values: number[], openControlsBigMiniIndex: number | null): void {
@@ -727,6 +796,9 @@ export class Renderer {
 
     // Pass 9b: свободные карты богов
     this.drawGodLooseCards();
+
+    // Pass 9c: inventory item markers
+    this.drawInventoryTablePieces();
 
     // Selected miniature / terrain / vortex / god piece — поверх всех слоёв (понятное выделение)
     this.drawSelectedLiftPass();
@@ -1125,39 +1197,68 @@ export class Renderer {
     ctx.restore();
   }
 
-  private drawGodCardBackWorld(world: Point, stackCount: number): void {
+  private drawGodCardBackWorld(world: Point, stackCount: number, topCardId?: string | null): void {
     const { ctx } = this;
     const z = this.camera.zoom;
     const lw = 2 / z;
     const hw = GOD_TABLE_CARD_HW;
     const hh = GOD_TABLE_CARD_HH;
+    const topDef = topCardId ? getGodCardById(topCardId) : undefined;
     ctx.save();
     ctx.translate(world.x, world.y);
     this.applyGodTableCardVisualRotation(ctx);
     ctx.beginPath();
     ctx.roundRect(-hw, -hh, hw * 2, hh * 2, 4 / z);
-    const g = ctx.createLinearGradient(-hw, -hh, hw, hh);
-    g.addColorStop(0, '#5e35b1');
-    g.addColorStop(0.5, '#1a237e');
-    g.addColorStop(1, '#4527a0');
-    ctx.fillStyle = g;
-    ctx.fill();
+    ctx.save();
+    ctx.clip();
+    const sheet = getGodCardBackSpriteImageForCard(topDef);
+    if (sheet && sheet.complete && sheet.naturalWidth > 0) {
+      const { sx, sy, sw, sh } = godCardBackSpriteSourcePixelsForCard(
+        topDef,
+        sheet.naturalWidth,
+        sheet.naturalHeight,
+      );
+      const prevSmooth = ctx.imageSmoothingEnabled;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(sheet, sx, sy, sw, sh, -hw, -hh, hw * 2, hh * 2);
+      ctx.imageSmoothingEnabled = prevSmooth;
+    } else {
+      const g = ctx.createLinearGradient(-hw, -hh, hw, hh);
+      g.addColorStop(0, '#5e35b1');
+      g.addColorStop(0.5, '#1a237e');
+      g.addColorStop(1, '#4527a0');
+      ctx.fillStyle = g;
+      ctx.fillRect(-hw, -hh, hw * 2, hh * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.font = `${24 / z}px system-ui,sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('✦', 0, 0);
+    }
+    ctx.restore();
     ctx.strokeStyle = 'rgba(255,255,255,0.35)';
     ctx.lineWidth = lw;
     ctx.stroke();
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    if (stackCount <= 1) {
-      ctx.fillStyle = 'rgba(255,255,255,0.4)';
-      ctx.font = `${24 / z}px system-ui,sans-serif`;
-      ctx.fillText('✦', 0, 0);
-    } else {
-      ctx.fillStyle = 'rgba(255,255,255,0.92)';
-      ctx.font = `bold ${22 / z}px system-ui,sans-serif`;
-      ctx.fillText(String(stackCount), 0, -hh * 0.28);
-      ctx.font = `${14 / z}px system-ui,sans-serif`;
-      ctx.fillStyle = 'rgba(255,255,255,0.55)';
-      ctx.fillText('боги', 0, hh * 0.32);
+    if (stackCount > 1) {
+      const badgePad = 5 / z;
+      const badgeH = 17 / z;
+      const text = String(stackCount);
+      ctx.font = `bold ${12 / z}px system-ui,sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      const textW = ctx.measureText(text).width;
+      const badgeW = Math.max(16 / z, textW + badgePad * 2);
+      const bx = hw - badgeW - 4 / z;
+      const by = -hh + 4 / z;
+      ctx.fillStyle = 'rgba(12, 12, 18, 0.82)';
+      ctx.beginPath();
+      ctx.roundRect(bx, by, badgeW, badgeH, 4 / z);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+      ctx.lineWidth = 1 / z;
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.96)';
+      ctx.fillText(text, bx + badgePad, by + badgeH * 0.53);
     }
     ctx.restore();
   }
@@ -1208,7 +1309,7 @@ export class Renderer {
   private drawGodTablePieceWithFace(p: GodTablePiece, world: Point, faceUp: boolean): void {
     if (p.kind === 'single') {
       if (faceUp) this.drawGodCardFaceWorld(world, p.id, '?');
-      else this.drawGodCardBackWorld(world, 1);
+      else this.drawGodCardBackWorld(world, 1, p.id);
       return;
     }
     const n = p.ids.length;
@@ -1219,7 +1320,7 @@ export class Renderer {
       this.drawGodCardFaceWorld(world, topId, '?');
       this.drawGodDeckCountBadge(world, n);
     } else {
-      this.drawGodCardBackWorld(world, n);
+      this.drawGodCardBackWorld(world, n, topId);
     }
   }
 
@@ -1237,6 +1338,25 @@ export class Renderer {
         ctx.scale(scaleX, 1);
         ctx.translate(-world.x, -world.y);
         this.drawGodTablePieceWithFace(p, world, showFaceUp);
+        ctx.restore();
+        return;
+      }
+    }
+    const shuffle = this.godDeckShuffleAnim;
+    if (p.kind === 'deck' && shuffle && shuffle.index === pieceIndex) {
+      const elapsed = performance.now() - shuffle.startMs;
+      if (elapsed < shuffle.durationMs) {
+        const t = Math.min(1, elapsed / shuffle.durationMs);
+        const envelope = Math.sin(Math.PI * t);
+        const shakeX = Math.sin(t * Math.PI * 10) * 5 * envelope;
+        const shakeY = Math.cos(t * Math.PI * 12) * 1.75 * envelope;
+        const rot = Math.sin(t * Math.PI * 14) * 0.1 * envelope;
+        const { ctx } = this;
+        ctx.save();
+        ctx.translate(world.x + shakeX, world.y + shakeY);
+        ctx.rotate(rot);
+        ctx.translate(-world.x, -world.y);
+        this.drawGodTablePieceWithFace(p, world, p.faceUp);
         ctx.restore();
         return;
       }
@@ -1262,6 +1382,119 @@ export class Renderer {
         w = { x: remoteGod.drag.worldX!, y: remoteGod.drag.worldY! };
       }
       this.drawGodTablePiece(p, w, i);
+    }
+  }
+
+  private getInventorySpriteImage(url: string): HTMLImageElement | null {
+    let img = this.inventorySpriteImages.get(url);
+    if (img && img.complete && img.naturalWidth > 0) return img;
+    if (!this.inventorySpriteImages.has(url)) {
+      const im = new Image();
+      im.decoding = 'async';
+      im.onload = () => {
+        this.canvas.dispatchEvent(new CustomEvent('inventory-sprite-ready', { bubbles: false }));
+      };
+      im.onerror = () => {
+        this.canvas.dispatchEvent(new CustomEvent('inventory-sprite-ready', { bubbles: false }));
+      };
+      im.src = url;
+      this.inventorySpriteImages.set(url, im);
+      return null;
+    }
+    img = this.inventorySpriteImages.get(url);
+    return img && img.complete && img.naturalWidth > 0 ? img : null;
+  }
+
+  private drawOneInventoryMarkerPiece(index: number, useLift: boolean): void {
+    const entry = this.inventoryMarkerPieces[index];
+    if (!entry) return;
+    const { spriteSrc } = entry;
+    let world = entry.world;
+    if (this.inventoryLooseDraggingIndex === index && this.inventoryLoosePreviewWorld) {
+      world = this.inventoryLoosePreviewWorld;
+    }
+    const hw = INVENTORY_TABLE_MARKER_HW;
+    const hh = INVENTORY_TABLE_MARKER_HH;
+    const maxW = hw * 2;
+    const maxH = hh * 2;
+    const { ctx } = this;
+    const z = this.camera.zoom;
+    const drawInner = (): void => {
+      ctx.save();
+      ctx.translate(world.x, world.y);
+      this.applyGodTableCardVisualRotation(ctx);
+      if (spriteSrc) {
+        const sheet = this.getInventorySpriteImage(spriteSrc);
+        if (sheet && sheet.complete && sheet.naturalWidth > 0) {
+          const iw = sheet.naturalWidth;
+          const ih = sheet.naturalHeight;
+          const scale = Math.min(maxW / iw, maxH / ih);
+          const dw = iw * scale;
+          const dh = ih * scale;
+          const left = -dw / 2;
+          const top = -dh / 2;
+          const cornerR = Math.min(8 / z, 0.08 * Math.min(dw, dh));
+          ctx.beginPath();
+          ctx.roundRect(left, top, dw, dh, cornerR);
+          ctx.fillStyle = 'rgba(14, 16, 22, 0.96)';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+          ctx.lineWidth = 2 / z;
+          ctx.stroke();
+          ctx.save();
+          ctx.beginPath();
+          ctx.roundRect(left, top, dw, dh, cornerR);
+          ctx.clip();
+          const prevSmooth = ctx.imageSmoothingEnabled;
+          ctx.imageSmoothingEnabled = true;
+          ctx.drawImage(sheet, left, top, dw, dh);
+          ctx.imageSmoothingEnabled = prevSmooth;
+          ctx.restore();
+        } else {
+          ctx.beginPath();
+          ctx.roundRect(-hw, -hh, maxW, maxH, 6 / z);
+          ctx.fillStyle = 'rgba(22, 26, 32, 0.92)';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+          ctx.lineWidth = 2 / z;
+          ctx.stroke();
+          ctx.fillStyle = 'rgba(255,255,255,0.35)';
+          ctx.font = `${12 / z}px system-ui,sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('…', 0, 0);
+        }
+      } else {
+        ctx.beginPath();
+        ctx.roundRect(-hw, -hh, maxW, maxH, 6 / z);
+        ctx.fillStyle = 'rgba(22, 26, 32, 0.92)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.lineWidth = 2 / z;
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.font = `${12 / z}px system-ui,sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('?', 0, 0);
+      }
+      ctx.restore();
+    };
+    if (useLift) {
+      this.withTablePieceDragLift(world, drawInner);
+    } else {
+      drawInner();
+    }
+  }
+
+  private drawInventoryTablePieces(): void {
+    for (let i = 0; i < this.inventoryMarkerPieces.length; i++) {
+      if (i === this.inventoryLooseDraggingIndex && this.inventoryLoosePreviewWorld) continue;
+      if (i === this.selectedInventoryTablePieceIndex) continue;
+      this.drawOneInventoryMarkerPiece(i, false);
+    }
+    if (this.inventoryLooseDraggingIndex !== null && this.inventoryLoosePreviewWorld) {
+      this.drawOneInventoryMarkerPiece(this.inventoryLooseDraggingIndex, true);
     }
   }
 
@@ -1318,6 +1551,7 @@ export class Renderer {
       const tc = smallUnitActivationToggleCenterWorldRad(center, rotRadVisual, layout);
       this.drawActivationToggle(tc, tr, this.unitActivated[index] !== false);
     }
+    this.drawSmallBroomgarHungerIfAny(center, halfH, rotRadVisual, index);
 
     const markers = this.unitEffectMarkers[index];
     if (markers && markers.length > 0) {
@@ -1389,6 +1623,7 @@ export class Renderer {
             this.unitActivated[uIdx] !== false,
           );
         }
+        this.drawSmallBroomgarHungerIfAny(pv, halfH, rotRadVisual, uIdx);
         const dragMarkers = this.unitEffectMarkers[uIdx];
         if (dragMarkers && dragMarkers.length > 0) {
           this.drawEffectMarkers(pv, dragMarkers, halfH, 'small', rotRadVisual);
@@ -1438,6 +1673,7 @@ export class Renderer {
           const tc = smallUnitActivationToggleCenterWorldRad(pos, rotRadVisual, layout);
           this.drawActivationToggle(tc, tr, this.unitActivated[idx] !== false);
         }
+        this.drawSmallBroomgarHungerIfAny(pos, halfH, rotRadVisual, idx);
         const rMarkers = this.unitEffectMarkers[idx];
         if (rMarkers && rMarkers.length > 0) {
           this.drawEffectMarkers(pos, rMarkers, halfH, 'small', rotRadVisual);
@@ -1861,6 +2097,70 @@ export class Renderer {
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.32)';
     ctx.lineWidth = Math.max(1, 1.2 / this.camera.zoom);
     ctx.stroke();
+  }
+
+  private drawBroomgarHungerDisc(
+    centerWorld: Point,
+    radiusWorld: number,
+    phase: BroomgarHungerPhase,
+  ): void {
+    const { ctx } = this;
+    ctx.beginPath();
+    ctx.arc(centerWorld.x, centerWorld.y, radiusWorld, 0, Math.PI * 2);
+    ctx.fillStyle = broomgarHungerPhaseFillColor(phase);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+    ctx.lineWidth = Math.max(1, 1.1 / this.camera.zoom);
+    ctx.stroke();
+  }
+
+  private drawSmallBroomgarHungerIfAny(
+    center: Point,
+    halfH: number,
+    rotRadVisual: number,
+    index: number,
+  ): void {
+    const ph = this.unitBroomgarHungerPhase[index];
+    if (ph === null || ph === undefined) return;
+    const tr = halfH * 0.2175;
+    const tc = smallUnitBroomgarHungerCenterWorldRad(center, rotRadVisual, this.layout);
+    this.drawBroomgarHungerDisc(tc, tr, ph);
+  }
+
+  private drawBigBroomgarHungerIfAny(
+    pivotWorld: Point,
+    rotDegVisual: number,
+    index: number,
+    actRadiusWorld: number,
+  ): void {
+    const ph = this.bigMiniBroomgarHungerPhase[index];
+    if (ph === null || ph === undefined) return;
+    const tc = bigMiniBroomgarHungerCenterWorld(pivotWorld, rotDegVisual, this.layout);
+    this.drawBroomgarHungerDisc(tc, actRadiusWorld, ph);
+  }
+
+  private drawLargeBroomgarHungerIfAny(
+    pivotWorld: Point,
+    rotDegModel: number,
+    index: number,
+    actRadiusWorld: number,
+  ): void {
+    const ph = this.largeMiniBroomgarHungerPhase[index];
+    if (ph === null || ph === undefined) return;
+    const tc = largeMiniBroomgarHungerCenterWorld(pivotWorld, rotDegModel, this.layout);
+    this.drawBroomgarHungerDisc(tc, actRadiusWorld, ph);
+  }
+
+  private drawHugeBroomgarHungerIfAny(
+    pivotWorld: Point,
+    rotDegModel: number,
+    index: number,
+    actRadiusWorld: number,
+  ): void {
+    const ph = this.hugeMiniBroomgarHungerPhase[index];
+    if (ph === null || ph === undefined) return;
+    const tc = hugeMiniBroomgarHungerCenterFromPivotWorld(pivotWorld, rotDegModel, this.layout);
+    this.drawBroomgarHungerDisc(tc, actRadiusWorld, ph);
   }
 
   private drawHealthButton(center: Point, radius: number, label: '+' | '-'): void {
@@ -2987,6 +3287,7 @@ export class Renderer {
             bigActR,
             this.bigMiniActivated[i] !== false,
           );
+          this.drawBigBroomgarHungerIfAny(p, previewRotVisual, i, bigActR);
         });
         return;
       }
@@ -3056,6 +3357,7 @@ export class Renderer {
             hugeActR,
             this.hugeMiniActivated[i] !== false,
           );
+          this.drawHugeBroomgarHungerIfAny(p, previewRotModel, i, hugeActR);
         });
         return;
       }
@@ -3124,6 +3426,7 @@ export class Renderer {
             largeActR,
             this.largeMiniActivated[i] !== false,
           );
+          this.drawLargeBroomgarHungerIfAny(p, previewRotModel, i, largeActR);
         });
         return;
       }
@@ -3172,6 +3475,7 @@ export class Renderer {
             const tc = smallUnitActivationToggleCenterWorldRad(pv, rotRadVisual, layout);
             this.drawActivationToggle(tc, tr, this.unitActivated[i] !== false);
           }
+          this.drawSmallBroomgarHungerIfAny(pv, halfH, rotRadVisual, i);
           const dragMarkers = this.unitEffectMarkers[i];
           if (dragMarkers && dragMarkers.length > 0) {
             this.drawEffectMarkers(pv, dragMarkers, halfH, 'small', rotRadVisual);
@@ -3207,6 +3511,32 @@ export class Renderer {
         ctx.stroke();
         ctx.restore();
       }
+      return;
+    }
+
+    if (this.selectedInventoryTablePieceIndex !== null) {
+      const i = this.selectedInventoryTablePieceIndex;
+      if (!this.inventoryMarkerPieces[i]) return;
+      const lift =
+        this.inventoryLooseDraggingIndex === i && this.inventoryLoosePreviewWorld !== null;
+      this.drawOneInventoryMarkerPiece(i, lift);
+      const entry = this.inventoryMarkerPieces[i]!;
+      let world = entry.world;
+      if (this.inventoryLooseDraggingIndex === i && this.inventoryLoosePreviewWorld) {
+        world = this.inventoryLoosePreviewWorld;
+      }
+      const z = this.camera.zoom;
+      const hw = INVENTORY_TABLE_MARKER_HW * 1.08;
+      const hh = INVENTORY_TABLE_MARKER_HH * 1.08;
+      ctx.save();
+      ctx.translate(world.x, world.y);
+      this.applyGodTableCardVisualRotation(ctx);
+      ctx.beginPath();
+      ctx.roundRect(-hw, -hh, hw * 2, hh * 2, 6 / z);
+      ctx.strokeStyle = '#4caf50';
+      ctx.lineWidth = 3 / z;
+      ctx.stroke();
+      ctx.restore();
     }
   }
 
@@ -3294,6 +3624,7 @@ export class Renderer {
         bigActR,
         this.bigMiniActivated[index] !== false,
       );
+      this.drawBigBroomgarHungerIfAny(offBoard, rotDegVisual, index, bigActR);
       const bmMarkers = this.bigMiniEffectMarkers[index];
       if (bmMarkers && bmMarkers.length > 0) {
         this.drawEffectMarkers(offBoard, bmMarkers, badgeRadius, 'bigHexon', rotRadVisual);
@@ -3324,6 +3655,7 @@ export class Renderer {
         bigActR,
         this.bigMiniActivated[index] !== false,
       );
+      this.drawBigBroomgarHungerIfAny(p, rotDegVisual, index, bigActR);
       const bmMarkers = this.bigMiniEffectMarkers[index];
       if (bmMarkers && bmMarkers.length > 0) {
         this.drawEffectMarkers(p, bmMarkers, badgeRadius, 'bigHexon', rotRadVisual);
@@ -3404,6 +3736,7 @@ export class Renderer {
             bigActR,
             this.bigMiniActivated[bmIdx] !== false,
           );
+          this.drawBigBroomgarHungerIfAny(pv, previewRotVisual, bmIdx, bigActR);
         }
       });
     }
@@ -3460,6 +3793,7 @@ export class Renderer {
           bigActR,
           this.bigMiniActivated[idx] !== false,
         );
+        this.drawBigBroomgarHungerIfAny(p, previewRotVisual, idx, bigActR);
       });
       ctx.restore();
     }
@@ -3815,6 +4149,7 @@ export class Renderer {
       largeActR,
       this.largeMiniActivated[index] !== false,
     );
+    this.drawLargeBroomgarHungerIfAny(pivot, rotDegModel, index, largeActR);
     const markers = this.largeMiniEffectMarkers[index];
     if (markers && markers.length > 0) {
       this.drawEffectMarkers(pivot, markers, badgeRadius, 'largeTri', rotRadModel);
@@ -3889,6 +4224,12 @@ export class Renderer {
             largeActR,
             this.largeMiniActivated[this.draggingLargeMiniIndex] !== false,
           );
+          this.drawLargeBroomgarHungerIfAny(
+            p,
+            previewRotModel,
+            this.draggingLargeMiniIndex,
+            largeActR,
+          );
         }
       });
     }
@@ -3930,6 +4271,7 @@ export class Renderer {
           largeActR,
           this.largeMiniActivated[idx] !== false,
         );
+        this.drawLargeBroomgarHungerIfAny(p, previewRotModel, idx, largeActR);
       });
       ctx.restore();
     }
@@ -4069,6 +4411,7 @@ export class Renderer {
       hugeActR,
       this.hugeMiniActivated[index] !== false,
     );
+    this.drawHugeBroomgarHungerIfAny(pivot, rotDegModel, index, hugeActR);
     const markers = this.hugeMiniEffectMarkers[index];
     if (markers && markers.length > 0) {
       this.drawEffectMarkers(pivot, markers, badgeRadius, 'hugeTri', rotRadModel);
@@ -4162,6 +4505,12 @@ export class Renderer {
             hugeActR,
             this.hugeMiniActivated[this.draggingHugeMiniIndex] !== false,
           );
+          this.drawHugeBroomgarHungerIfAny(
+            p,
+            previewRotModel,
+            this.draggingHugeMiniIndex,
+            hugeActR,
+          );
         }
       });
     }
@@ -4214,6 +4563,7 @@ export class Renderer {
           hugeActR,
           this.hugeMiniActivated[idx] !== false,
         );
+        this.drawHugeBroomgarHungerIfAny(p, previewRotModel, idx, hugeActR);
       });
       ctx.restore();
     }

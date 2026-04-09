@@ -1,0 +1,111 @@
+{
+  "id": "engeln-servidim-dual-swords-hero",
+  "points": 42,
+  "card": {
+    "attacks": [
+      {
+        "name": "Удар мечом",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "electric",
+        "damage": 2,
+        "dice": {
+          "red": 3,
+          "green": 2,
+          "black": 1,
+          "white": 0
+        },
+        "modifiers": [
+          {
+            "kind": "text",
+            "label": "Молния"
+          },
+          {
+            "kind": "text",
+            "label": "Мультиатака: 2"
+          }
+        ]
+      },
+      {
+        "name": "Залп молнии",
+        "range": 2,
+        "attackRange": "ranged",
+        "damageType": "electric",
+        "damage": 1,
+        "dice": {
+          "red": 3,
+          "green": 0,
+          "black": 0,
+          "white": 0
+        },
+        "modifiers": [
+          {
+            "kind": "text",
+            "label": "Атака по цепи · Малая"
+          }
+        ]
+      }
+    ],
+    "catalogUnitId": "engeln-servidim-dual-swords-hero",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 2,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "creation"
+    ],
+    "exploration": {
+      "red": 1,
+      "green": 1,
+      "black": 0,
+      "white": 0
+    },
+    "explorationRange": 1,
+    "grabRange": 1,
+    "health": 7,
+    "keywords": [
+      "Ангельн",
+      "Живой",
+      "Человек",
+      "Воин",
+      "Меч",
+      "Полный лист"
+    ],
+    "maxHealth": 7,
+    "miniatureSprite": "/catalog-units/engeln-servidim-dual-swords-hero/miniature.jpg",
+    "name": "Сервидим Ангельна с двумя мечами",
+    "run": 8,
+    "size": "small",
+    "sprite": "/catalog-units/engeln-servidim-dual-swords-hero/image.jpg",
+    "walk": 5,
+    "flagSprite": "/engeln.webp",
+    "movementDistanceUnit": "hex",
+    "faithMarkers": {
+      "red": 1
+    },
+    "traits": [
+      {
+        "name": "Высокий полёт",
+        "description": "См. карту: расстановка и ходы 1–3."
+      },
+      {
+        "name": "Полёт — уровень 2",
+        "description": ""
+      },
+      {
+        "name": "Ветеран",
+        "description": ""
+      }
+    ]
+  }
+}

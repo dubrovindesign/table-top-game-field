@@ -1,0 +1,38 @@
+{
+  "image": "/catalog-units/krigmark-hundmeister/image.jpg",
+  "title": "Хундмейстер",
+  "scrollLayout": {
+    "faceH": 1419,
+    "totalH": 2476
+  },
+  "regions": [
+    {
+      "x": 0.045,
+      "y": 0.2303869143780291,
+      "w": 0.91,
+      "h": 0.03897092084006462,
+      "id": "attack_0",
+      "label": "Атака 1",
+      "red": 1,
+      "green": 1,
+      "black": 1,
+      "white": 0,
+      "range": 1,
+      "damage": 1
+    },
+    {
+      "x": 0.045,
+      "y": 0.2716502423263328,
+      "w": 0.91,
+      "h": 0.03897092084006462,
+      "id": "attack_1",
+      "label": "Атака 2",
+      "red": 1,
+      "green": 1,
+      "black": 0,
+      "white": 0,
+      "range": 1,
+      "damage": 1
+    }
+  ]
+}

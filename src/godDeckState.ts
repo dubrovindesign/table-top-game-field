@@ -2,7 +2,8 @@
  * Per-player god card piles (deck / hand / blind / discard) for tabletop play.
  */
 
-import { GOD_CARDS } from './godCards.ts';
+import type { GodTablePiece } from './godCards.ts';
+import { GOD_CARDS, godCardBaseId } from './godCards.ts';
 import type { PlayerSlot } from './multiplayer/protocol.ts';
 
 export type GodSlotPile = {
@@ -33,7 +34,7 @@ export const EMPTY_GOD_PILE: GodSlotPile = {
 const VALID_IDS = new Set(GOD_CARDS.map((c) => c.id));
 
 export function isValidGodCardId(id: string): boolean {
-  return VALID_IDS.has(id);
+  return VALID_IDS.has(godCardBaseId(id));
 }
 
 export function shuffleIds(ids: string[]): string[] {
@@ -61,6 +62,57 @@ export function clonePile(p: GodSlotPile): GodSlotPile {
 
 export function createInitialGodPiles(): [GodSlotPile, GodSlotPile] {
   return [clonePile(EMPTY_GOD_PILE), clonePile(EMPTY_GOD_PILE)];
+}
+
+/** Id всех карт богов, которые уже «вышли» из каталога армии (стол + оба слота колод/руки/сброса/слепой). */
+export function godCardIdsInPlay(
+  pieces: readonly GodTablePiece[],
+  piles: readonly [GodSlotPile, GodSlotPile],
+): Set<string> {
+  const s = new Set<string>();
+  for (const p of pieces) {
+    if (p.kind === 'single') s.add(p.id);
+    else for (const id of p.ids) s.add(id);
+  }
+  for (const pile of piles) {
+    for (const id of pile.deckIds) s.add(id);
+    for (const id of pile.handIds) s.add(id);
+    for (const id of pile.discardIds) s.add(id);
+    for (const id of pile.blindCardIds) s.add(id);
+  }
+  return s;
+}
+
+/**
+ * Панель армии читает id «занятых» карт через регистратор.
+ * Храним ссылку на `globalThis`: при разбиении бандла Vite может продублировать этот модуль,
+ * и тогда модульный `let` в одной копии не совпадает с регистрацией из `main`.
+ */
+const ARMY_ROSTER_GOD_IN_PLAY_KEY = '__hexArmyRosterGodCardIdsInPlay';
+
+export function registerArmyRosterGodCardIdsInPlay(fn: () => Set<string>): void {
+  (globalThis as unknown as Record<string, () => Set<string>>)[ARMY_ROSTER_GOD_IN_PLAY_KEY] = fn;
+}
+
+export function getArmyRosterGodCardIdsInPlay(): Set<string> {
+  const fn = (globalThis as unknown as Record<string, unknown>)[ARMY_ROSTER_GOD_IN_PLAY_KEY] as
+    | (() => Set<string>)
+    | undefined;
+  return fn ? fn() : new Set();
+}
+
+const ARMY_ROSTER_INVENTORY_IN_PLAY_KEY = '__hexArmyRosterInventoryItemIdsInPlay';
+
+export function registerArmyRosterInventoryItemIdsInPlay(fn: () => Set<string>): void {
+  (globalThis as unknown as Record<string, () => Set<string>>)[ARMY_ROSTER_INVENTORY_IN_PLAY_KEY] = fn;
+}
+
+/** Id предметов инвентаря, уже на столе (панель армии скрывает их из списка, как карты богов). */
+export function getArmyRosterInventoryItemIdsInPlay(): Set<string> {
+  const fn = (globalThis as unknown as Record<string, unknown>)[ARMY_ROSTER_INVENTORY_IN_PLAY_KEY] as
+    | (() => Set<string>)
+    | undefined;
+  return fn ? fn() : new Set();
 }
 
 /** Draw one card from top of deck (end of array) into hand. */

@@ -761,6 +761,330 @@
   border-color: rgba(120, 160, 220, 0.35);
 }
 
+.ce-pane--inventory {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(100, 160, 120, 0.22);
+  background: rgba(22, 36, 28, 0.3);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.catalog-editor-panel.ce-panel--inventory-mode .ce-pane--inventory {
+  border-color: rgba(120, 200, 140, 0.35);
+}
+
+.ce-pane--gods {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(140, 130, 90, 0.28);
+  background: rgba(32, 30, 22, 0.32);
+  min-height: 0;
+  overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.catalog-editor-panel.ce-panel--gods-mode .ce-pane--gods {
+  border-color: rgba(200, 180, 100, 0.38);
+}
+
+.ce-pane--gods > .ce-pane-title,
+.ce-pane--gods > .catalog-editor-row.ce-gods-toolbar,
+.ce-pane--gods > .ce-gods-deckmax-row,
+.ce-pane--gods > .ce-god-attach-row {
+  flex-shrink: 0;
+}
+
+.ce-gods-toolbar {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.ce-gods-toolbar .catalog-editor-input[type='search'] {
+  flex: 2 1 160px;
+  min-width: 140px;
+}
+
+.ce-gods-toolbar .catalog-editor-select {
+  flex: 1 1 140px;
+  min-width: 120px;
+}
+
+.ce-gods-deckmax-row {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.ce-gods-deckmax-label {
+  flex: 0 0 auto;
+  font-size: 0.88rem;
+  color: rgba(230, 230, 240, 0.88);
+}
+
+.ce-gods-deckmax-row .catalog-editor-input {
+  flex: 0 1 100px;
+  max-width: 120px;
+}
+
+.ce-gods-deckmax-hint {
+  flex: 1 1 200px;
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+/* Боги: список на всю ширину и всю свободную высоту панели (без max-height из unit/inventory list) */
+.ce-pane--gods > .ce-gods-stack {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.ce-gods-stack {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  gap: 0;
+  align-items: stretch;
+}
+
+.ce-pane--gods .ce-god-cards-list.catalog-editor-unit-list,
+.ce-pane--gods .ce-god-cards-list.ce-inventory-list {
+  max-height: none;
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.ce-gods-stack .ce-god-cards-list {
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.ce-god-cards-save-footer.ce-inventory-form {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  box-sizing: border-box;
+  padding-top: 10px;
+  margin-top: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ce-god-card-save-row {
+  justify-content: flex-end;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.ce-god-attach-row {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.ce-god-attach-label {
+  flex: 0 0 auto;
+  font-size: 0.88rem;
+  color: rgba(230, 230, 240, 0.88);
+}
+
+.ce-god-attach-row .catalog-editor-select {
+  flex: 1 1 200px;
+  min-width: 160px;
+}
+
+.catalog-editor-god-card-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+}
+
+.catalog-editor-god-card-row .ce-god-card-copies-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.catalog-editor-god-card-row .ce-god-card-copies-inline-label {
+  font-size: 0.78rem;
+  color: rgba(200, 200, 215, 0.9);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.catalog-editor-god-card-row .ce-god-card-copies-input {
+  width: 56px;
+  flex: 0 0 auto;
+  min-width: 48px;
+  padding: 5px 8px;
+}
+
+.catalog-editor-god-card-row .army-unit-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.catalog-editor-god-card-row .ce-god-card-remove-btn {
+  flex-shrink: 0;
+  min-width: 32px;
+  padding: 4px 8px;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.catalog-editor-god-card-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ce-god-card-thumb {
+  width: 38px;
+  height: 54px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ce-god-card-preview-row {
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.ce-god-card-meta-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.ce-god-card-preview-row .ce-god-card-thumb {
+  width: 56px;
+  height: 80px;
+}
+
+.ce-god-card-id,
+.ce-god-card-readonly {
+  font-size: 0.88rem;
+  color: #c9c9d4;
+  word-break: break-all;
+}
+
+.ce-god-card-id {
+  font-family: ui-monospace, monospace;
+  font-size: 0.82rem;
+}
+
+.ce-inventory-toolbar {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.ce-inventory-toolbar .catalog-editor-input[type='search'] {
+  flex: 1;
+  min-width: 0;
+}
+
+.ce-inventory-list {
+  flex: 1;
+  min-height: 100px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.catalog-editor-inventory-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.catalog-editor-inventory-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.catalog-editor-inventory-row--active {
+  background: rgba(120, 200, 140, 0.12);
+  outline: 1px solid rgba(120, 200, 140, 0.35);
+}
+
+.ce-inventory-leader-picker {
+  position: relative;
+  width: 100%;
+}
+
+.ce-inventory-leader-picker__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+}
+
+.ce-inventory-leader-picker__toggle-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ce-inventory-leader-picker__chevron {
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.ce-inventory-leader-picker--open .ce-inventory-leader-picker__chevron {
+  transform: rotate(180deg);
+}
+
+.ce-inventory-leader-picker__panel {
+  display: none;
+  margin-top: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.ce-inventory-leader-picker--open .ce-inventory-leader-picker__panel {
+  display: block;
+}
+
+.ce-inventory-leader-picker__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 0.85rem;
+  color: #ccc;
+  cursor: pointer;
+}
+
+.ce-inventory-leader-picker__row input {
+  flex-shrink: 0;
+}
+
+.ce-inventory-form {
+  flex-shrink: 0;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 .ce-pane--leaders > .ce-breadcrumbs,
 .ce-pane--leaders > .ce-domain-chips,
 .ce-pane--leaders > .catalog-editor-row {
@@ -801,6 +1125,31 @@
 .ce-img-url-row .catalog-editor-input[type='file'] {
   max-width: 160px;
   font-size: 0.75rem;
+}
+
+.ce-card-pair-upload-row .ce-card-pair-upload-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.ce-card-pair-file {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--ce-muted);
+}
+
+.ce-card-pair-file-lab {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.ce-card-pair-hint {
+  margin-top: 6px;
+  width: 100%;
 }
 
 .ce-unit-form-footer {
@@ -862,6 +1211,59 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* Unit form «Основное»: multi-column rows */
+.ce-unit-main-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: flex-end;
+}
+
+.ce-unit-main-row .catalog-editor-field {
+  flex: 1 1 0;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.ce-unit-main-row--name-size .ce-unit-main-field--grow {
+  flex: 2 1 140px;
+}
+
+.ce-unit-main-row--name-size .ce-unit-main-field--size {
+  flex: 0 1 120px;
+  min-width: 100px;
+}
+
+.ce-unit-main-row--movement .catalog-editor-field {
+  flex: 1 1 72px;
+  min-width: 72px;
+}
+
+.ce-unit-main-row--movement .ce-unit-main-field--move-unit {
+  flex: 1.4 1 130px;
+  min-width: 120px;
+}
+
+.ce-unit-main-row--defense {
+  align-items: flex-end;
+}
+
+.ce-unit-main-defense-heading {
+  flex: 0 0 auto;
+  padding-bottom: 2px;
+  min-width: 4.5rem;
+}
+
+.ce-unit-main-row--defense .catalog-editor-field {
+  flex: 1 1 120px;
+  min-width: 100px;
+}
+
+.ce-unit-main-row--domains .catalog-editor-field {
+  flex: 1 1 200px;
+  min-width: min(100%, 200px);
 }
 
 .ce-leader-roster-section {

@@ -1,0 +1,48 @@
+{
+  "id": "castilla-khoakin-de-esperando",
+  "points": 0,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "castilla-khoakin-de-esperando",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 1,
+      "green": 2
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "destruction"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 5,
+    "keywords": [
+      "Кастилия"
+    ],
+    "maxHealth": 5,
+    "miniatureSprite": "/catalog-units/castilla-khoakin-de-esperando/miniature.jpg",
+    "name": "Хоакин де Эсперандо Капитан Таргеры",
+    "run": 6,
+    "size": "small",
+    "sprite": "/catalog-units/castilla-khoakin-de-esperando/image.jpg",
+    "walk": 4,
+    "faithMarkers": {
+      "red": 1
+    },
+    "flagSprite": "/castilla.webp"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "broomgar-zurbag-myasnik",
+  "points": 12,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "broomgar-zurbag-myasnik",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 0,
+      "green": 2
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "destruction"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 4,
+    "keywords": [
+      "Орда брумгаров"
+    ],
+    "maxHealth": 4,
+    "miniatureSprite": "/catalog-units/broomgar-zurbag-myasnik/miniature.jpg",
+    "name": "Зурбаг Мясник",
+    "run": 6,
+    "size": "small",
+    "sprite": "/catalog-units/broomgar-zurbag-myasnik/image.jpg",
+    "walk": 3,
+    "faithMarkers": {
+      "red": 1
+    },
+    "flagSprite": "/broomgar_horde.webp"
+  }
+}

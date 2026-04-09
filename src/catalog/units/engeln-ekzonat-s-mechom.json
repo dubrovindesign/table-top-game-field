@@ -1,0 +1,81 @@
+{
+  "id": "engeln-ekzonat-s-mechom",
+  "points": 24,
+  "card": {
+    "attacks": [
+      {
+        "name": "Удар мечом",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 2,
+        "dice": {
+          "red": 2,
+          "green": 2,
+          "black": 1,
+          "white": 0
+        },
+        "modifiers": [
+          {
+            "kind": "text",
+            "label": "Парирование"
+          }
+        ]
+      },
+      {
+        "name": "Удар щитом",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 1,
+        "dice": {
+          "red": 2,
+          "green": 1,
+          "black": 0,
+          "white": 0
+        }
+      }
+    ],
+    "catalogUnitId": "engeln-ekzonat-s-mechom",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 1,
+      "green": 0
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "creation"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 6,
+    "keywords": [
+      "Ангельн"
+    ],
+    "maxHealth": 6,
+    "miniatureSprite": "/catalog-units/engeln-ekzonat-s-mechom/miniature.jpg",
+    "name": "Экзонат Ангельна с мечом",
+    "run": 6,
+    "size": "small",
+    "sprite": "/catalog-units/engeln-ekzonat-s-mechom/image.jpg",
+    "walk": 3,
+    "flagSprite": "/engeln.webp",
+    "faithMarkers": {
+      "red": 1
+    }
+  }
+}

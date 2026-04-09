@@ -1,0 +1,75 @@
+{
+  "id": "engeln-klirik-istselyayushchey-dlani",
+  "points": 18,
+  "card": {
+    "attacks": [
+      {
+        "name": "Исцеление",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "mental",
+        "damage": 0,
+        "dice": {
+          "red": 3,
+          "green": 1,
+          "black": 1,
+          "white": 0
+        }
+      },
+      {
+        "name": "Удар булавой",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 1,
+        "dice": {
+          "red": 1,
+          "green": 1,
+          "black": 1,
+          "white": 0
+        }
+      }
+    ],
+    "catalogUnitId": "engeln-klirik-istselyayushchey-dlani",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 1,
+      "green": 0
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "creation"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 5,
+    "keywords": [
+      "Ангельн"
+    ],
+    "maxHealth": 5,
+    "miniatureSprite": "/catalog-units/engeln-klirik-istselyayushchey-dlani/miniature.jpg",
+    "name": "Клирик Исцеляющей Длани",
+    "run": 6,
+    "size": "small",
+    "sprite": "/catalog-units/engeln-klirik-istselyayushchey-dlani/image.jpg",
+    "walk": 3,
+    "flagSprite": "/engeln.webp",
+    "faithMarkers": {
+      "red": 1
+    }
+  }
+}

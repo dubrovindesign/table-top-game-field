@@ -1,0 +1,103 @@
+{
+  "id": "priory_of_hope-sanador-strazhey-poberezhya",
+  "points": 28,
+  "card": {
+    "attacks": [
+      {
+        "name": "Перевязка",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 0,
+        "dice": {
+          "red": 3,
+          "black": 1,
+          "green": 1
+        }
+      },
+      {
+        "name": "Выстрел из пистоля",
+        "range": 3,
+        "attackRange": "ranged",
+        "damageType": "physical",
+        "damage": 2,
+        "dice": {
+          "red": 1,
+          "black": 2,
+          "green": 1
+        }
+      },
+      {
+        "name": "Удар кинжалом",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 2,
+        "dice": {
+          "red": 1,
+          "black": 1,
+          "green": 1
+        }
+      }
+    ],
+    "catalogUnitId": "priory_of_hope-sanador-strazhey-poberezhya",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 2,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "creation"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 5,
+    "keywords": [
+      "Приорат Надежды",
+      "Гвардеец",
+      "Целитель",
+      "Пистолет"
+    ],
+    "maxHealth": 5,
+    "miniatureSprite": "/catalog-units/priory_of_hope-sanador-strazhey-poberezhya/miniature.jpg",
+    "name": "Санадор Стражей Побережья",
+    "run": 5,
+    "size": "small",
+    "sprite": "/catalog-units/priory_of_hope-sanador-strazhey-poberezhya/image.jpg",
+    "walk": 3,
+    "movementDistanceUnit": "hex",
+    "faithMarkers": {
+      "red": 1
+    },
+    "traits": [
+      {
+        "name": "Медпакет",
+        "description": "Союзник в пределах 3 гексов теряет маркер кровотечения в конце активации санадора."
+      },
+      {
+        "name": "Защитное звено",
+        "description": "+1 белый куб от дистанционных атак за каждого союзника с ключевыми словами «Гвардеец» и «Щит» в соседних гексах (не более 2)."
+      },
+      {
+        "name": "Ветеран",
+        "description": "Бросает 2 белых куба при прохождении теста на панику."
+      }
+    ],
+    "flagSprite": "/priory_of_hope.webp"
+  }
+}

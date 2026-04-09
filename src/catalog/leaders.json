@@ -6,34 +6,14 @@
     "catalogUnitId": "Bram'mn-the-Wise",
     "roster": [
       {
-        "unitId": "Blade-Dancer",
-        "maxCopies": 1,
-        "points": 27
-      },
-      {
-        "unitId": "Dryadint-Archer",
-        "maxCopies": 1,
-        "points": 27
-      },
-      {
-        "unitId": "Dryadint-Warrior",
-        "maxCopies": 1,
-        "points": 20
-      },
-      {
         "unitId": "Great-Aent-Sentry",
         "maxCopies": 2,
         "points": 75
       },
       {
-        "unitId": "Silent-Blade",
-        "maxCopies": 2,
-        "points": 28
-      },
-      {
-        "unitId": "Spirit-of-Keld",
-        "maxCopies": 1,
-        "points": 29
+        "unitId": "Undergrowth-Barkbeast",
+        "maxCopies": 3,
+        "points": 33
       },
       {
         "unitId": "defender_seedlings",
@@ -41,15 +21,89 @@
         "points": 16
       },
       {
-        "unitId": "Na'atly-Wild-Huntress",
+        "unitId": "Alraune-Blackthorn-seed",
+        "maxCopies": 3,
+        "points": 4
+      },
+      {
+        "unitId": "Dryadint-Warrior",
+        "maxCopies": 1,
+        "points": 20
+      },
+      {
+        "unitId": "Dryadint-Archer",
+        "maxCopies": 1,
+        "points": 27
+      },
+      {
+        "unitId": "Dryadint-centaur",
+        "maxCopies": 2,
+        "points": 32
+      },
+      {
+        "unitId": "Spirit-of-Keld",
+        "maxCopies": 1,
+        "points": 29
+      },
+      {
+        "unitId": "Dryadint-Archer",
+        "maxCopies": 1,
+        "points": 38
+      },
+      {
+        "unitId": "Dryadint-Warrior",
         "maxCopies": 1,
         "points": 40
       },
       {
-        "unitId": "virmgling",
-        "maxCopies": 4,
-        "points": 12,
-        "requiresUnitId": "Na'atly-Wild-Huntress"
+        "unitId": "Blade-Dancer",
+        "maxCopies": 1,
+        "points": 42
+      },
+      {
+        "unitId": "merc-kow-mr03",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr05",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr06",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "Dryadint-Warrior",
+        "maxCopies": 1,
+        "points": 42
+      },
+      {
+        "unitId": "merc-kow-mr01",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "Blade-Dancer",
+        "maxCopies": 1,
+        "points": 27
+      },
+      {
+        "unitId": "Silent-Blade",
+        "maxCopies": 2,
+        "points": 28
       },
       {
         "unitId": "Keld Predator",
@@ -65,6 +119,56 @@
         "unitId": "Keld-Predator-with-bow",
         "maxCopies": 2,
         "points": 34
+      },
+      {
+        "unitId": "Undergrowth-Barkbeast",
+        "maxCopies": 3,
+        "points": 50
+      },
+      {
+        "unitId": "Great-Aent-Sentry",
+        "maxCopies": 2,
+        "points": 60
+      },
+      {
+        "unitId": "krigmark-kristof-koller",
+        "maxCopies": 1,
+        "points": 21
+      },
+      {
+        "unitId": "Na'atly-Wild-Huntress",
+        "maxCopies": 1,
+        "points": 40
+      },
+      {
+        "unitId": "Syld-Protector-blackthorn",
+        "maxCopies": 1,
+        "points": 36
+      },
+      {
+        "unitId": "Syld-Seeder-Blackthorn",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "Syld-Avenger-with-glaive-blackthorn",
+        "maxCopies": 1,
+        "points": 37
+      },
+      {
+        "unitId": "Syld-Voice-of-Blackthorn",
+        "maxCopies": 1,
+        "points": 48
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 1,
+        "points": 10
       }
     ],
     "points": 40
@@ -76,34 +180,39 @@
     "catalogUnitId": "Drago-Mort-DeaMor",
     "roster": [
       {
+        "unitId": "merc-kow-mr05",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr06",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "krigmark-kristof-koller",
+        "maxCopies": 1,
+        "points": 21
+      },
+      {
         "unitId": "Alraune-Blackthorn-seed",
         "maxCopies": 3,
         "points": 3
       },
       {
-        "unitId": "Blackthorn-Predator",
-        "maxCopies": 2,
-        "points": 27
-      },
-      {
-        "unitId": "Blackthorn-Predator-with-bow",
-        "maxCopies": 2,
-        "points": 33
-      },
-      {
-        "unitId": "Blackthorn-Predator-with-glave",
-        "maxCopies": 2,
-        "points": 31
-      },
-      {
-        "unitId": "DalHiar-Blackthorn-Hermit",
-        "maxCopies": 1,
-        "points": 50
+        "unitId": "Defender-of-Seedlings-blackthorn",
+        "maxCopies": 4,
+        "points": 15
       },
       {
         "unitId": "Silent-Blade-blackthorn-card",
         "maxCopies": 2,
         "points": 26
+      },
+      {
+        "unitId": "Blackthorn-Predator",
+        "maxCopies": 2,
+        "points": 27
       },
       {
         "unitId": "Dryadint-centaur",
@@ -116,18 +225,18 @@
         "points": 31
       },
       {
-        "unitId": "Syld-Seeder-Blackthorn",
-        "maxCopies": 3,
-        "points": 32
-      },
-      {
         "unitId": "Syld-Protector-blackthorn",
         "maxCopies": 3,
         "points": 33
       },
       {
+        "unitId": "Syld-Seeder-Blackthorn",
+        "maxCopies": 3,
+        "points": 32
+      },
+      {
         "unitId": "Syld-Avenger-with-glaive-blackthorn",
-        "maxCopies": 2,
+        "maxCopies": 3,
         "points": 34
       },
       {
@@ -136,9 +245,29 @@
         "points": 45
       },
       {
-        "unitId": "Defender-of-Seedlings-blackthorn",
-        "maxCopies": 4,
-        "points": 15
+        "unitId": "DalHiar-Blackthorn-Hermit",
+        "maxCopies": 1,
+        "points": 50
+      },
+      {
+        "unitId": "Blackthorn-Predator-with-glave",
+        "maxCopies": 2,
+        "points": 31
+      },
+      {
+        "unitId": "Blackthorn-Predator-with-bow",
+        "maxCopies": 2,
+        "points": 33
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 1,
+        "points": 10
       }
     ],
     "points": 55
@@ -150,14 +279,24 @@
     "catalogUnitId": "Kellantra",
     "roster": [
       {
-        "unitId": "Blade-Dancer",
-        "maxCopies": 3,
-        "points": 27
+        "unitId": "Great-Aent-Sentry",
+        "maxCopies": 1,
+        "points": 75
       },
       {
-        "unitId": "Dryadint-Archer",
-        "maxCopies": 4,
-        "points": 27
+        "unitId": "Undergrowth-Barkbeast",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "defender_seedlings",
+        "maxCopies": 1,
+        "points": 16
+      },
+      {
+        "unitId": "Alraune-Blackthorn-seed",
+        "maxCopies": 3,
+        "points": 4
       },
       {
         "unitId": "Dryadint-Warrior",
@@ -165,9 +304,14 @@
         "points": 20
       },
       {
-        "unitId": "Silent-Blade",
-        "maxCopies": 1,
-        "points": 28
+        "unitId": "Dryadint-Archer",
+        "maxCopies": 4,
+        "points": 27
+      },
+      {
+        "unitId": "Dryadint-centaur",
+        "maxCopies": 3,
+        "points": 32
       },
       {
         "unitId": "Spirit-of-Keld",
@@ -175,9 +319,114 @@
         "points": 29
       },
       {
-        "unitId": "defender_seedlings",
+        "unitId": "Dryadint-Archer",
         "maxCopies": 1,
-        "points": 16
+        "points": 38
+      },
+      {
+        "unitId": "Dryadint-Warrior",
+        "maxCopies": 1,
+        "points": 40
+      },
+      {
+        "unitId": "Blade-Dancer",
+        "maxCopies": 1,
+        "points": 42
+      },
+      {
+        "unitId": "merc-kow-mr03",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr05",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr06",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "Dryadint-Warrior",
+        "maxCopies": 1,
+        "points": 42
+      },
+      {
+        "unitId": "merc-kow-mr01",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "Blade-Dancer",
+        "maxCopies": 3,
+        "points": 27
+      },
+      {
+        "unitId": "Silent-Blade",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "Keld Predator",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "Keld-Predator-with-glaive",
+        "maxCopies": 1,
+        "points": 32
+      },
+      {
+        "unitId": "Keld-Predator-with-bow",
+        "maxCopies": 1,
+        "points": 34
+      },
+      {
+        "unitId": "Bram'mn-the-Wise",
+        "maxCopies": 1,
+        "points": 40
+      },
+      {
+        "unitId": "Undergrowth-Barkbeast",
+        "maxCopies": 2,
+        "points": 50
+      },
+      {
+        "unitId": "Great-Aent-Sentry",
+        "maxCopies": 1,
+        "points": 60
+      },
+      {
+        "unitId": "krigmark-kristof-koller",
+        "maxCopies": 1,
+        "points": 21
+      },
+      {
+        "unitId": "Na'atly-Wild-Huntress",
+        "maxCopies": 1,
+        "points": 40
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 1,
+        "points": 10
       }
     ],
     "points": 28
@@ -189,9 +438,109 @@
     "catalogUnitId": "Na'atly-Wild-Huntress",
     "roster": [
       {
+        "unitId": "Undergrowth-Barkbeast",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "Alraune-Blackthorn-seed",
+        "maxCopies": 3,
+        "points": 4
+      },
+      {
+        "unitId": "Dryadint-Warrior",
+        "maxCopies": 4,
+        "points": 20
+      },
+      {
+        "unitId": "Dryadint-Archer",
+        "maxCopies": 5,
+        "points": 27
+      },
+      {
+        "unitId": "Dryadint-centaur",
+        "maxCopies": 4,
+        "points": 32
+      },
+      {
+        "unitId": "Spirit-of-Keld",
+        "maxCopies": 3,
+        "points": 29
+      },
+      {
+        "unitId": "Dryadint-Archer",
+        "maxCopies": 2,
+        "points": 38
+      },
+      {
+        "unitId": "Dryadint-Warrior",
+        "maxCopies": 2,
+        "points": 40
+      },
+      {
+        "unitId": "merc-kow-mr05",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr06",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "Dryadint-Warrior",
+        "maxCopies": 2,
+        "points": 42
+      },
+      {
+        "unitId": "Blade-Dancer",
+        "maxCopies": 2,
+        "points": 27
+      },
+      {
+        "unitId": "Silent-Blade",
+        "maxCopies": 3,
+        "points": 28
+      },
+      {
+        "unitId": "Keld Predator",
+        "maxCopies": 2,
+        "points": 28
+      },
+      {
+        "unitId": "Keld-Predator-with-glaive",
+        "maxCopies": 2,
+        "points": 32
+      },
+      {
+        "unitId": "Keld-Predator-with-bow",
+        "maxCopies": 3,
+        "points": 34
+      },
+      {
+        "unitId": "Undergrowth-Barkbeast",
+        "maxCopies": 1,
+        "points": 50
+      },
+      {
         "unitId": "virmgling",
         "maxCopies": 4,
         "points": 12
+      },
+      {
+        "unitId": "krigmark-kristof-koller",
+        "maxCopies": 1,
+        "points": 21
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 1,
+        "points": 10
       }
     ],
     "points": 40
@@ -203,9 +552,29 @@
     "catalogUnitId": "kellantra-with-lindwurm",
     "roster": [
       {
+        "unitId": "Great-Aent-Sentry",
+        "maxCopies": 1,
+        "points": 75
+      },
+      {
+        "unitId": "Undergrowth-Barkbeast",
+        "maxCopies": 2,
+        "points": 33
+      },
+      {
         "unitId": "defender_seedlings",
         "maxCopies": 3,
         "points": 16
+      },
+      {
+        "unitId": "Alraune-Blackthorn-seed",
+        "maxCopies": 3,
+        "points": 4
+      },
+      {
+        "unitId": "Dryadint-Warrior",
+        "maxCopies": 4,
+        "points": 20
       },
       {
         "unitId": "Dryadint-Archer",
@@ -213,9 +582,64 @@
         "points": 27
       },
       {
+        "unitId": "Dryadint-centaur",
+        "maxCopies": 3,
+        "points": 32
+      },
+      {
+        "unitId": "Spirit-of-Keld",
+        "maxCopies": 2,
+        "points": 29
+      },
+      {
+        "unitId": "Dryadint-Archer",
+        "maxCopies": 1,
+        "points": 38
+      },
+      {
         "unitId": "Dryadint-Warrior",
-        "maxCopies": 4,
-        "points": 20
+        "maxCopies": 2,
+        "points": 40
+      },
+      {
+        "unitId": "Blade-Dancer",
+        "maxCopies": 1,
+        "points": 42
+      },
+      {
+        "unitId": "merc-kow-mr03",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr05",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr06",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "Dryadint-Warrior",
+        "maxCopies": 2,
+        "points": 42
+      },
+      {
+        "unitId": "merc-kow-mr01",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
       },
       {
         "unitId": "Blade-Dancer",
@@ -228,16 +652,3137 @@
         "points": 28
       },
       {
-        "unitId": "Spirit-of-Keld",
+        "unitId": "Keld Predator",
         "maxCopies": 2,
-        "points": 29
+        "points": 28
+      },
+      {
+        "unitId": "Keld-Predator-with-glaive",
+        "maxCopies": 1,
+        "points": 32
+      },
+      {
+        "unitId": "Keld-Predator-with-bow",
+        "maxCopies": 1,
+        "points": 34
+      },
+      {
+        "unitId": "Bram'mn-the-Wise",
+        "maxCopies": 1,
+        "points": 40
+      },
+      {
+        "unitId": "Undergrowth-Barkbeast",
+        "maxCopies": 2,
+        "points": 50
       },
       {
         "unitId": "Great-Aent-Sentry",
         "maxCopies": 1,
-        "points": 75
+        "points": 60
+      },
+      {
+        "unitId": "krigmark-kristof-koller",
+        "maxCopies": 1,
+        "points": 21
+      },
+      {
+        "unitId": "Na'atly-Wild-Huntress",
+        "maxCopies": 1,
+        "points": 40
+      },
+      {
+        "unitId": "Syld-Protector-blackthorn",
+        "maxCopies": 1,
+        "points": 36
+      },
+      {
+        "unitId": "Syld-Seeder-Blackthorn",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "Syld-Avenger-with-glaive-blackthorn",
+        "maxCopies": 1,
+        "points": 37
+      },
+      {
+        "unitId": "Syld-Voice-of-Blackthorn",
+        "maxCopies": 1,
+        "points": 48
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 1,
+        "points": 10
       }
     ],
     "points": 70
+  },
+  {
+    "id": "krigmark-gottfried-goed-kriglingen",
+    "name": "Готфрид «Гёц» фон Криглихинген",
+    "factionId": "krigmark",
+    "catalogUnitId": "krigmark-gottfried-goed-kriglingen",
+    "points": 60,
+    "roster": [
+      {
+        "unitId": "krigmark-war-abomination",
+        "maxCopies": 2,
+        "points": 50
+      },
+      {
+        "unitId": "krigmark-doomed-grenadier",
+        "maxCopies": 3,
+        "points": 22
+      },
+      {
+        "unitId": "krigmark-necro-alchemist",
+        "maxCopies": 2,
+        "points": 17
+      },
+      {
+        "unitId": "krigmark-field-medic",
+        "maxCopies": 2,
+        "points": 21
+      },
+      {
+        "unitId": "krigmark-immortal",
+        "maxCopies": 3,
+        "points": 33
+      },
+      {
+        "unitId": "krigmark-line-mace",
+        "maxCopies": 4,
+        "points": 20
+      },
+      {
+        "unitId": "krigmark-death-bringer",
+        "maxCopies": 3,
+        "points": 45
+      },
+      {
+        "unitId": "krigmark-heavy-crossbow",
+        "maxCopies": 2,
+        "points": 55
+      },
+      {
+        "unitId": "krigmark-returned-mod-i",
+        "maxCopies": 4,
+        "points": 10
+      },
+      {
+        "unitId": "merc-kow-mr03",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr05",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr06",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr01",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "krigmark-shock-mace",
+        "maxCopies": 2,
+        "points": 40
+      },
+      {
+        "unitId": "krigmark-shock-launcher",
+        "maxCopies": 2,
+        "points": 45
+      },
+      {
+        "unitId": "krigmark-shock-crossbow",
+        "maxCopies": 2,
+        "points": 50
+      },
+      {
+        "unitId": "krigmark-dalmar-schulz",
+        "maxCopies": 1,
+        "points": 34
+      },
+      {
+        "unitId": "krigmark-kristof-koller",
+        "maxCopies": 1,
+        "points": 21
+      },
+      {
+        "unitId": "krigmark-yagdzombie",
+        "maxCopies": 3,
+        "points": 16
+      },
+      {
+        "unitId": "krigmark-stormtrooper-gubitel",
+        "maxCopies": 4,
+        "points": 27
+      },
+      {
+        "unitId": "krigmark-stormtrooper-gubitel",
+        "maxCopies": 4,
+        "points": 23
+      },
+      {
+        "unitId": "krigmark-feldwebel-stormtroopers",
+        "maxCopies": 2,
+        "points": 30
+      },
+      {
+        "unitId": "krigmark-feldwebel-reapers",
+        "maxCopies": 2,
+        "points": 27
+      },
+      {
+        "unitId": "krigmark-stormtrooper-assault-carbine",
+        "maxCopies": 4,
+        "points": 26
+      },
+      {
+        "unitId": "krigmark-hundmeister",
+        "maxCopies": 2,
+        "points": 18
+      },
+      {
+        "unitId": "krigmark-wolf-baldauf",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "krigmark-verena-baldauf",
+        "maxCopies": 1,
+        "points": 60
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 2,
+        "points": 10
+      }
+    ]
+  },
+  {
+    "id": "krigmark-gottfried-goed-iron-hand",
+    "name": "Готфрид, Железная Длань",
+    "factionId": "krigmark",
+    "catalogUnitId": "krigmark-gottfried-goed-iron-hand",
+    "points": 32,
+    "roster": [
+      {
+        "unitId": "krigmark-war-abomination",
+        "maxCopies": 1,
+        "points": 50
+      },
+      {
+        "unitId": "krigmark-doomed-grenadier",
+        "maxCopies": 3,
+        "points": 22
+      },
+      {
+        "unitId": "krigmark-necro-alchemist",
+        "maxCopies": 2,
+        "points": 17
+      },
+      {
+        "unitId": "krigmark-field-medic",
+        "maxCopies": 2,
+        "points": 21
+      },
+      {
+        "unitId": "krigmark-immortal",
+        "maxCopies": 3,
+        "points": 33
+      },
+      {
+        "unitId": "krigmark-line-mace",
+        "maxCopies": 5,
+        "points": 20
+      },
+      {
+        "unitId": "krigmark-death-bringer",
+        "maxCopies": 3,
+        "points": 45
+      },
+      {
+        "unitId": "krigmark-heavy-crossbow",
+        "maxCopies": 2,
+        "points": 55
+      },
+      {
+        "unitId": "krigmark-returned-mod-i",
+        "maxCopies": 1,
+        "points": 10
+      },
+      {
+        "unitId": "merc-kow-mr03",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr05",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr06",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr01",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "krigmark-shock-mace",
+        "maxCopies": 3,
+        "points": 40
+      },
+      {
+        "unitId": "krigmark-shock-launcher",
+        "maxCopies": 2,
+        "points": 45
+      },
+      {
+        "unitId": "krigmark-shock-crossbow",
+        "maxCopies": 3,
+        "points": 50
+      },
+      {
+        "unitId": "krigmark-dalmar-schulz",
+        "maxCopies": 1,
+        "points": 34
+      },
+      {
+        "unitId": "krigmark-kristof-koller",
+        "maxCopies": 1,
+        "points": 21
+      },
+      {
+        "unitId": "krigmark-yagdzombie",
+        "maxCopies": 3,
+        "points": 16
+      },
+      {
+        "unitId": "krigmark-stormtrooper-gubitel",
+        "maxCopies": 2,
+        "points": 27
+      },
+      {
+        "unitId": "krigmark-stormtrooper-gubitel",
+        "maxCopies": 2,
+        "points": 23
+      },
+      {
+        "unitId": "krigmark-feldwebel-stormtroopers",
+        "maxCopies": 1,
+        "points": 30
+      },
+      {
+        "unitId": "krigmark-feldwebel-reapers",
+        "maxCopies": 1,
+        "points": 27
+      },
+      {
+        "unitId": "krigmark-stormtrooper-assault-carbine",
+        "maxCopies": 2,
+        "points": 26
+      },
+      {
+        "unitId": "krigmark-hundmeister",
+        "maxCopies": 2,
+        "points": 18
+      },
+      {
+        "unitId": "krigmark-wolf-baldauf",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "krigmark-verena-baldauf",
+        "maxCopies": 1,
+        "points": 60
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 2,
+        "points": 10
+      }
+    ]
+  },
+  {
+    "id": "krigmark-dalmar-shultz-starshiy-inzhener",
+    "name": "Дальмар Шульц Старший Инженер",
+    "factionId": "krigmark",
+    "catalogUnitId": "krigmark-dalmar-shultz-starshiy-inzhener",
+    "points": 34,
+    "roster": [
+      {
+        "unitId": "krigmark-war-abomination",
+        "maxCopies": 1,
+        "points": 50
+      },
+      {
+        "unitId": "krigmark-doomed-grenadier",
+        "maxCopies": 4,
+        "points": 22
+      },
+      {
+        "unitId": "krigmark-necro-alchemist",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "krigmark-field-medic",
+        "maxCopies": 2,
+        "points": 21
+      },
+      {
+        "unitId": "krigmark-immortal",
+        "maxCopies": 2,
+        "points": 33
+      },
+      {
+        "unitId": "krigmark-line-mace",
+        "maxCopies": 4,
+        "points": 20
+      },
+      {
+        "unitId": "krigmark-death-bringer",
+        "maxCopies": 2,
+        "points": 45
+      },
+      {
+        "unitId": "krigmark-heavy-crossbow",
+        "maxCopies": 3,
+        "points": 55
+      },
+      {
+        "unitId": "krigmark-returned-mod-i",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr05",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr06",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "krigmark-shock-launcher",
+        "maxCopies": 2,
+        "points": 45
+      },
+      {
+        "unitId": "krigmark-shock-crossbow",
+        "maxCopies": 3,
+        "points": 50
+      },
+      {
+        "unitId": "krigmark-kofer-mod-a",
+        "maxCopies": 2,
+        "points": 8
+      },
+      {
+        "unitId": "krigmark-kofer-mod-c",
+        "maxCopies": 2,
+        "points": 6
+      },
+      {
+        "unitId": "krigmark-kristof-koller",
+        "maxCopies": 1,
+        "points": 21
+      },
+      {
+        "unitId": "krigmark-yagdzombie",
+        "maxCopies": 2,
+        "points": 16
+      },
+      {
+        "unitId": "krigmark-kofer-mod-b",
+        "maxCopies": 2,
+        "points": 12
+      },
+      {
+        "unitId": "krigmark-stormtrooper-gubitel",
+        "maxCopies": 2,
+        "points": 27
+      },
+      {
+        "unitId": "krigmark-stormtrooper-gubitel",
+        "maxCopies": 2,
+        "points": 23
+      },
+      {
+        "unitId": "krigmark-stormtrooper-assault-carbine",
+        "maxCopies": 2,
+        "points": 26
+      },
+      {
+        "unitId": "krigmark-hundmeister",
+        "maxCopies": 1,
+        "points": 18
+      },
+      {
+        "unitId": "krigmark-wolf-baldauf",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "krigmark-verena-baldauf",
+        "maxCopies": 1,
+        "points": 60
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 3,
+        "points": 10
+      }
+    ]
+  },
+  {
+    "id": "castilla-leader-torquemad-prelat",
+    "name": "Торкемад, Прелат Чистоты",
+    "factionId": "castilla",
+    "catalogUnitId": "castilla-leader-torquemad-prelat",
+    "points": 60,
+    "roster": [
+      {
+        "unitId": "castilla-okhotnik-na-svyatykh",
+        "maxCopies": 3,
+        "points": 28
+      },
+      {
+        "unitId": "castilla-sukkub-porokov",
+        "maxCopies": 2,
+        "points": 30
+      },
+      {
+        "unitId": "castilla-oderzhimyy-naezdnik-i",
+        "maxCopies": 2,
+        "points": 40
+      },
+      {
+        "unitId": "castilla-gonchaya-bezdny",
+        "maxCopies": 2,
+        "points": 25
+      },
+      {
+        "unitId": "castilla-gvardeets-alebardist",
+        "maxCopies": 4,
+        "points": 20
+      },
+      {
+        "unitId": "castilla-dyavol-nalyotchik",
+        "maxCopies": 2,
+        "points": 15
+      },
+      {
+        "unitId": "castilla-ofitser-gvardii",
+        "maxCopies": 2,
+        "points": 20
+      },
+      {
+        "unitId": "castilla-ognemetchik-drakoniego-plameni",
+        "maxCopies": 3,
+        "points": 26
+      },
+      {
+        "unitId": "castilla-gvardeets-mushketer",
+        "maxCopies": 3,
+        "points": 42
+      },
+      {
+        "unitId": "castilla-bezlikiy-vladyka-nenavisti",
+        "maxCopies": 1,
+        "points": 70
+      },
+      {
+        "unitId": "merc-kow-mr03",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr05",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr06",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "castilla-flammalero-sekira",
+        "maxCopies": 2,
+        "points": 40
+      },
+      {
+        "unitId": "castilla-flammalero-topory",
+        "maxCopies": 2,
+        "points": 35
+      },
+      {
+        "unitId": "castilla-flammalero-mortira",
+        "maxCopies": 2,
+        "points": 50
+      },
+      {
+        "unitId": "merc-kow-mr01",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "castilla-monakh-gabrielit",
+        "maxCopies": 3,
+        "points": 18
+      },
+      {
+        "unitId": "castilla-osadnaya-mortira",
+        "maxCopies": 1,
+        "points": 50
+      },
+      {
+        "unitId": "castilla-ochistitel",
+        "maxCopies": 2,
+        "points": 14
+      },
+      {
+        "unitId": "castilla-khoakin-de-esperando",
+        "maxCopies": 1,
+        "points": 25
+      },
+      {
+        "unitId": "castilla-oderzhimyy-dvuruchnaya-sekira",
+        "maxCopies": 2,
+        "points": 46
+      },
+      {
+        "unitId": "castilla-oderzhimyy-naezdnik-mortira",
+        "maxCopies": 2,
+        "points": 51
+      },
+      {
+        "unitId": "castilla-razrushitel-molot",
+        "maxCopies": 1,
+        "points": 44
+      },
+      {
+        "unitId": "castilla-razrushitel-tyazhelyy-ognemetchik",
+        "maxCopies": 1,
+        "points": 58
+      },
+      {
+        "unitId": "castilla-kattimp",
+        "maxCopies": 2,
+        "points": 6
+      },
+      {
+        "unitId": "castilla-kattimp-s-pistoletom",
+        "maxCopies": 2,
+        "points": 8
+      },
+      {
+        "unitId": "ab-ns-chasm-marauder_trident",
+        "maxCopies": 2,
+        "points": 17
+      },
+      {
+        "unitId": "castilla-kattimp",
+        "maxCopies": 2,
+        "points": 6
+      },
+      {
+        "unitId": "castilla-kattimp-s-pistoletom",
+        "maxCopies": 2,
+        "points": 7
+      },
+      {
+        "unitId": "castilla-sukkub-porokov",
+        "maxCopies": 1,
+        "points": 36
+      },
+      {
+        "unitId": "castilla-leader-carlos-torres",
+        "maxCopies": 1,
+        "points": 38
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "castilla-razrushitel-tyazhelyy-ognemetchik",
+        "maxCopies": 1,
+        "points": 31
+      },
+      {
+        "unitId": "castilla-gvardeets-mushketer",
+        "maxCopies": 1,
+        "points": 25
+      },
+      {
+        "unitId": "castilla-monakh-gabrielit",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "castilla-gvardeets-alebardist",
+        "maxCopies": 1,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-devring-olverton",
+        "maxCopies": 1,
+        "points": 23
+      },
+      {
+        "unitId": "castilla-gvardeets-alebardist",
+        "maxCopies": 1,
+        "points": 23
+      },
+      {
+        "unitId": "castilla-ognemetchik-drakoniego-plameni",
+        "maxCopies": 1,
+        "points": 29
+      },
+      {
+        "unitId": "castilla-torkemad-revnitel-chistoty",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "castilla-flammalero-topory",
+        "maxCopies": 1,
+        "points": 28
+      }
+    ]
+  },
+  {
+    "id": "castilla-leader-torquemad-revnitel",
+    "name": "Торкемад, Ревнитель Чистоты",
+    "factionId": "castilla",
+    "catalogUnitId": "castilla-leader-torquemad-revnitel",
+    "points": 36,
+    "roster": [
+      {
+        "unitId": "castilla-okhotnik-na-svyatykh",
+        "maxCopies": 4,
+        "points": 28
+      },
+      {
+        "unitId": "castilla-sukkub-porokov",
+        "maxCopies": 1,
+        "points": 30
+      },
+      {
+        "unitId": "castilla-oderzhimyy-naezdnik-i",
+        "maxCopies": 2,
+        "points": 40
+      },
+      {
+        "unitId": "castilla-gonchaya-bezdny",
+        "maxCopies": 1,
+        "points": 25
+      },
+      {
+        "unitId": "castilla-gvardeets-alebardist",
+        "maxCopies": 5,
+        "points": 20
+      },
+      {
+        "unitId": "castilla-dyavol-nalyotchik",
+        "maxCopies": 1,
+        "points": 15
+      },
+      {
+        "unitId": "castilla-ofitser-gvardii",
+        "maxCopies": 2,
+        "points": 20
+      },
+      {
+        "unitId": "castilla-ognemetchik-drakoniego-plameni",
+        "maxCopies": 3,
+        "points": 26
+      },
+      {
+        "unitId": "castilla-gvardeets-mushketer",
+        "maxCopies": 3,
+        "points": 42
+      },
+      {
+        "unitId": "merc-kow-mr03",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr05",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr06",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "castilla-flammalero-sekira",
+        "maxCopies": 3,
+        "points": 40
+      },
+      {
+        "unitId": "castilla-flammalero-topory",
+        "maxCopies": 3,
+        "points": 35
+      },
+      {
+        "unitId": "castilla-flammalero-mortira",
+        "maxCopies": 2,
+        "points": 50
+      },
+      {
+        "unitId": "merc-kow-mr01",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "castilla-monakh-gabrielit",
+        "maxCopies": 1,
+        "points": 18
+      },
+      {
+        "unitId": "castilla-osadnaya-mortira",
+        "maxCopies": 1,
+        "points": 50
+      },
+      {
+        "unitId": "castilla-ochistitel",
+        "maxCopies": 1,
+        "points": 14
+      },
+      {
+        "unitId": "castilla-khoakin-de-esperando",
+        "maxCopies": 1,
+        "points": 25
+      },
+      {
+        "unitId": "castilla-oderzhimyy-dvuruchnaya-sekira",
+        "maxCopies": 2,
+        "points": 46
+      },
+      {
+        "unitId": "castilla-oderzhimyy-naezdnik-mortira",
+        "maxCopies": 2,
+        "points": 51
+      },
+      {
+        "unitId": "castilla-razrushitel-molot",
+        "maxCopies": 1,
+        "points": 44
+      },
+      {
+        "unitId": "castilla-razrushitel-tyazhelyy-ognemetchik",
+        "maxCopies": 1,
+        "points": 58
+      },
+      {
+        "unitId": "castilla-kattimp",
+        "maxCopies": 1,
+        "points": 6
+      },
+      {
+        "unitId": "castilla-kattimp-s-pistoletom",
+        "maxCopies": 1,
+        "points": 8
+      },
+      {
+        "unitId": "ab-ns-chasm-marauder_trident",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "castilla-kattimp",
+        "maxCopies": 1,
+        "points": 6
+      },
+      {
+        "unitId": "castilla-kattimp-s-pistoletom",
+        "maxCopies": 1,
+        "points": 7
+      },
+      {
+        "unitId": "castilla-sukkub-porokov",
+        "maxCopies": 1,
+        "points": 36
+      },
+      {
+        "unitId": "castilla-leader-carlos-torres",
+        "maxCopies": 1,
+        "points": 38
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "castilla-razrushitel-tyazhelyy-ognemetchik",
+        "maxCopies": 1,
+        "points": 31
+      },
+      {
+        "unitId": "castilla-gvardeets-mushketer",
+        "maxCopies": 1,
+        "points": 25
+      },
+      {
+        "unitId": "castilla-monakh-gabrielit",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "castilla-gvardeets-alebardist",
+        "maxCopies": 1,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-devring-olverton",
+        "maxCopies": 1,
+        "points": 23
+      },
+      {
+        "unitId": "castilla-gvardeets-alebardist",
+        "maxCopies": 1,
+        "points": 23
+      },
+      {
+        "unitId": "castilla-ognemetchik-drakoniego-plameni",
+        "maxCopies": 1,
+        "points": 29
+      },
+      {
+        "unitId": "castilla-torkemad-revnitel-chistoty",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "castilla-flammalero-topory",
+        "maxCopies": 1,
+        "points": 28
+      }
+    ]
+  },
+  {
+    "id": "castilla-leader-carlos-torres",
+    "name": "Карлос Торрес",
+    "factionId": "castilla",
+    "catalogUnitId": "castilla-leader-carlos-torres",
+    "points": 38,
+    "roster": [
+      {
+        "unitId": "castilla-okhotnik-na-svyatykh",
+        "maxCopies": 2,
+        "points": 28
+      },
+      {
+        "unitId": "castilla-gvardeets-alebardist",
+        "maxCopies": 4,
+        "points": 20
+      },
+      {
+        "unitId": "castilla-ofitser-gvardii",
+        "maxCopies": 2,
+        "points": 20
+      },
+      {
+        "unitId": "castilla-ognemetchik-drakoniego-plameni",
+        "maxCopies": 3,
+        "points": 26
+      },
+      {
+        "unitId": "castilla-gvardeets-mushketer",
+        "maxCopies": 3,
+        "points": 42
+      },
+      {
+        "unitId": "merc-kow-mr03",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr05",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr06",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr01",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "castilla-monakh-gabrielit",
+        "maxCopies": 3,
+        "points": 18
+      },
+      {
+        "unitId": "castilla-osadnaya-mortira",
+        "maxCopies": 1,
+        "points": 50
+      },
+      {
+        "unitId": "castilla-ochistitel",
+        "maxCopies": 1,
+        "points": 14
+      },
+      {
+        "unitId": "castilla-khoakin-de-esperando",
+        "maxCopies": 1,
+        "points": 25
+      },
+      {
+        "unitId": "castilla-razrushitel-molot",
+        "maxCopies": 1,
+        "points": 44
+      },
+      {
+        "unitId": "castilla-razrushitel-tyazhelyy-ognemetchik",
+        "maxCopies": 1,
+        "points": 58
+      },
+      {
+        "unitId": "castilla-oderzhimyy-dvuruchnaya-sekira",
+        "maxCopies": 2,
+        "points": 43
+      },
+      {
+        "unitId": "castilla-oderzhimyy-naezdnik-mortira",
+        "maxCopies": 2,
+        "points": 48
+      },
+      {
+        "unitId": "castilla-oderzhimyy-naezdnik-i",
+        "maxCopies": 2,
+        "points": 38
+      },
+      {
+        "unitId": "castilla-flammalero-sekira",
+        "maxCopies": 2,
+        "points": 37
+      },
+      {
+        "unitId": "castilla-flammalero-topory",
+        "maxCopies": 2,
+        "points": 33
+      },
+      {
+        "unitId": "castilla-flammalero-mortira",
+        "maxCopies": 2,
+        "points": 47
+      },
+      {
+        "unitId": "castilla-leader-torquemad-revnitel",
+        "maxCopies": 1,
+        "points": 38
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "castilla-razrushitel-tyazhelyy-ognemetchik",
+        "maxCopies": 1,
+        "points": 31
+      },
+      {
+        "unitId": "castilla-gvardeets-mushketer",
+        "maxCopies": 1,
+        "points": 25
+      },
+      {
+        "unitId": "castilla-monakh-gabrielit",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "castilla-gvardeets-alebardist",
+        "maxCopies": 3,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-devring-olverton",
+        "maxCopies": 1,
+        "points": 23
+      },
+      {
+        "unitId": "castilla-gvardeets-alebardist",
+        "maxCopies": 3,
+        "points": 23
+      },
+      {
+        "unitId": "castilla-ognemetchik-drakoniego-plameni",
+        "maxCopies": 1,
+        "points": 29
+      },
+      {
+        "unitId": "castilla-torkemad-revnitel-chistoty",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "castilla-flammalero-topory",
+        "maxCopies": 1,
+        "points": 28
+      }
+    ]
+  },
+  {
+    "id": "castilla-leader-salvador-yerro",
+    "name": "Сальвадор Йерро",
+    "factionId": "castilla",
+    "catalogUnitId": "castilla-leader-salvador-yerro",
+    "points": 30,
+    "roster": [
+      {
+        "unitId": "castilla-oderzhimyy-naezdnik-i",
+        "maxCopies": 1,
+        "points": 40
+      },
+      {
+        "unitId": "castilla-gvardeets-alebardist",
+        "maxCopies": 2,
+        "points": 20
+      },
+      {
+        "unitId": "castilla-ofitser-gvardii",
+        "maxCopies": 1,
+        "points": 20
+      },
+      {
+        "unitId": "castilla-ognemetchik-drakoniego-plameni",
+        "maxCopies": 1,
+        "points": 26
+      },
+      {
+        "unitId": "castilla-gvardeets-mushketer",
+        "maxCopies": 2,
+        "points": 42
+      },
+      {
+        "unitId": "merc-kow-mr03",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr05",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr06",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "castilla-flammalero-sekira",
+        "maxCopies": 3,
+        "points": 40
+      },
+      {
+        "unitId": "castilla-flammalero-topory",
+        "maxCopies": 3,
+        "points": 35
+      },
+      {
+        "unitId": "castilla-flammalero-mortira",
+        "maxCopies": 2,
+        "points": 50
+      },
+      {
+        "unitId": "merc-kow-mr01",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "castilla-monakh-gabrielit",
+        "maxCopies": 1,
+        "points": 18
+      },
+      {
+        "unitId": "castilla-ochistitel",
+        "maxCopies": 1,
+        "points": 14
+      },
+      {
+        "unitId": "castilla-oderzhimyy-dvuruchnaya-sekira",
+        "maxCopies": 1,
+        "points": 46
+      },
+      {
+        "unitId": "castilla-oderzhimyy-naezdnik-mortira",
+        "maxCopies": 1,
+        "points": 51
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "castilla-okhotnik-na-svyatykh",
+        "maxCopies": 2,
+        "points": 26
+      },
+      {
+        "unitId": "castilla-razrushitel-tyazhelyy-ognemetchik",
+        "maxCopies": 2,
+        "points": 31
+      },
+      {
+        "unitId": "castilla-gvardeets-mushketer",
+        "maxCopies": 2,
+        "points": 25
+      },
+      {
+        "unitId": "castilla-monakh-gabrielit",
+        "maxCopies": 4,
+        "points": 10
+      },
+      {
+        "unitId": "castilla-gvardeets-alebardist",
+        "maxCopies": 2,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-devring-olverton",
+        "maxCopies": 1,
+        "points": 23
+      },
+      {
+        "unitId": "castilla-gvardeets-alebardist",
+        "maxCopies": 2,
+        "points": 23
+      },
+      {
+        "unitId": "castilla-ognemetchik-drakoniego-plameni",
+        "maxCopies": 2,
+        "points": 29
+      },
+      {
+        "unitId": "castilla-torkemad-revnitel-chistoty",
+        "maxCopies": 2,
+        "points": 28
+      },
+      {
+        "unitId": "castilla-flammalero-topory",
+        "maxCopies": 2,
+        "points": 28
+      }
+    ]
+  },
+  {
+    "id": "chasm-bezlikiy-vladyka-nenavisti",
+    "name": "Безликий, Владыка Ненависти",
+    "factionId": "chasm",
+    "catalogUnitId": "castilla-bezlikiy-vladyka-nenavisti",
+    "points": 70,
+    "roster": [
+      {
+        "unitId": "castilla-sukkub-porokov",
+        "maxCopies": 4,
+        "points": 30
+      },
+      {
+        "unitId": "castilla-gonchaya-bezdny",
+        "maxCopies": 4,
+        "points": 25
+      },
+      {
+        "unitId": "castilla-dyavol-nalyotchik",
+        "maxCopies": 7,
+        "points": 15
+      },
+      {
+        "unitId": "merc-kow-mr03",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr01",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "castilla-razrushitel-molot",
+        "maxCopies": 2,
+        "points": 44
+      },
+      {
+        "unitId": "castilla-razrushitel-tyazhelyy-ognemetchik",
+        "maxCopies": 2,
+        "points": 58
+      },
+      {
+        "unitId": "castilla-kattimp",
+        "maxCopies": 3,
+        "points": 6
+      },
+      {
+        "unitId": "castilla-kattimp-s-pistoletom",
+        "maxCopies": 3,
+        "points": 8
+      },
+      {
+        "unitId": "ab-ns-chasm-inkubus_sword",
+        "maxCopies": 2,
+        "points": 36
+      },
+      {
+        "unitId": "ab-ns-chasm-inkubus_flail",
+        "maxCopies": 2,
+        "points": 37
+      },
+      {
+        "unitId": "ab-ns-chasm-marauder_trident",
+        "maxCopies": 7,
+        "points": 17
+      },
+      {
+        "unitId": "castilla-kattimp",
+        "maxCopies": 3,
+        "points": 6
+      },
+      {
+        "unitId": "castilla-kattimp-s-pistoletom",
+        "maxCopies": 3,
+        "points": 7
+      },
+      {
+        "unitId": "ab-ns-chasm-drazzgl",
+        "maxCopies": 1,
+        "points": 20
+      },
+      {
+        "unitId": "ab-ns-chasm-garkrand_unit",
+        "maxCopies": 1,
+        "points": 40
+      },
+      {
+        "unitId": "castilla-sukkub-porokov",
+        "maxCopies": 3,
+        "points": 36
+      },
+      {
+        "unitId": "ab-ns-chasm-inkubus_raider_glaive",
+        "maxCopies": 2,
+        "points": 41
+      },
+      {
+        "unitId": "ab-ns-chasm-inkubus_raider_sword",
+        "maxCopies": 2,
+        "points": 42
+      },
+      {
+        "unitId": "ab-ns-chasm-abgorr_unit",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "ab-ns-chasm-chazz_unit",
+        "maxCopies": 1,
+        "points": 13
+      },
+      {
+        "unitId": "ab-ns-chasm-valafar",
+        "maxCopies": 1,
+        "points": 40
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 1,
+        "points": 10
+      }
+    ]
+  },
+  {
+    "id": "chasm-garkrand-sotnik-chetvertogo-kruga",
+    "name": "Гаркранд, Сотник Четвертого круга",
+    "factionId": "chasm",
+    "catalogUnitId": "chasm-garkrand-sotnik-chetvertogo-kruga",
+    "points": 40,
+    "roster": [
+      {
+        "unitId": "castilla-sukkub-porokov",
+        "maxCopies": 3,
+        "points": 30
+      },
+      {
+        "unitId": "castilla-gonchaya-bezdny",
+        "maxCopies": 3,
+        "points": 25
+      },
+      {
+        "unitId": "castilla-dyavol-nalyotchik",
+        "maxCopies": 4,
+        "points": 15
+      },
+      {
+        "unitId": "castilla-bezlikiy-vladyka-nenavisti",
+        "maxCopies": 1,
+        "points": 70
+      },
+      {
+        "unitId": "merc-kow-mr03",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr01",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "castilla-razrushitel-molot",
+        "maxCopies": 2,
+        "points": 44
+      },
+      {
+        "unitId": "castilla-razrushitel-tyazhelyy-ognemetchik",
+        "maxCopies": 2,
+        "points": 58
+      },
+      {
+        "unitId": "castilla-kattimp",
+        "maxCopies": 3,
+        "points": 6
+      },
+      {
+        "unitId": "castilla-kattimp-s-pistoletom",
+        "maxCopies": 3,
+        "points": 8
+      },
+      {
+        "unitId": "ab-ns-chasm-inkubus_sword",
+        "maxCopies": 3,
+        "points": 36
+      },
+      {
+        "unitId": "ab-ns-chasm-inkubus_flail",
+        "maxCopies": 3,
+        "points": 37
+      },
+      {
+        "unitId": "ab-ns-chasm-marauder_trident",
+        "maxCopies": 4,
+        "points": 17
+      },
+      {
+        "unitId": "castilla-kattimp",
+        "maxCopies": 3,
+        "points": 6
+      },
+      {
+        "unitId": "castilla-kattimp-s-pistoletom",
+        "maxCopies": 3,
+        "points": 7
+      },
+      {
+        "unitId": "ab-ns-chasm-drazzgl",
+        "maxCopies": 1,
+        "points": 20
+      },
+      {
+        "unitId": "castilla-sukkub-porokov",
+        "maxCopies": 2,
+        "points": 36
+      },
+      {
+        "unitId": "ab-ns-chasm-inkubus_raider_glaive",
+        "maxCopies": 2,
+        "points": 41
+      },
+      {
+        "unitId": "ab-ns-chasm-inkubus_raider_sword",
+        "maxCopies": 2,
+        "points": 42
+      },
+      {
+        "unitId": "ab-ns-chasm-chazz_unit",
+        "maxCopies": 1,
+        "points": 13
+      },
+      {
+        "unitId": "ab-ns-chasm-valafar",
+        "maxCopies": 1,
+        "points": 40
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 1,
+        "points": 10
+      }
+    ]
+  },
+  {
+    "id": "chasm-abgorr-neotrazimyy-istyazatel",
+    "name": "Абгорр, Неотразимый Истязатель",
+    "factionId": "chasm",
+    "catalogUnitId": "chasm-abgorr-neotrazimyy-istyazatel",
+    "points": 45,
+    "roster": [
+      {
+        "unitId": "castilla-sukkub-porokov",
+        "maxCopies": 2,
+        "points": 30
+      },
+      {
+        "unitId": "castilla-gonchaya-bezdny",
+        "maxCopies": 1,
+        "points": 25
+      },
+      {
+        "unitId": "castilla-dyavol-nalyotchik",
+        "maxCopies": 2,
+        "points": 15
+      },
+      {
+        "unitId": "castilla-bezlikiy-vladyka-nenavisti",
+        "maxCopies": 1,
+        "points": 70
+      },
+      {
+        "unitId": "merc-kow-mr03",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr01",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "castilla-razrushitel-molot",
+        "maxCopies": 1,
+        "points": 44
+      },
+      {
+        "unitId": "castilla-razrushitel-tyazhelyy-ognemetchik",
+        "maxCopies": 1,
+        "points": 58
+      },
+      {
+        "unitId": "castilla-kattimp",
+        "maxCopies": 3,
+        "points": 6
+      },
+      {
+        "unitId": "castilla-kattimp-s-pistoletom",
+        "maxCopies": 3,
+        "points": 8
+      },
+      {
+        "unitId": "ab-ns-chasm-inkubus_sword",
+        "maxCopies": 2,
+        "points": 36
+      },
+      {
+        "unitId": "ab-ns-chasm-inkubus_flail",
+        "maxCopies": 2,
+        "points": 37
+      },
+      {
+        "unitId": "ab-ns-chasm-marauder_trident",
+        "maxCopies": 2,
+        "points": 17
+      },
+      {
+        "unitId": "castilla-kattimp",
+        "maxCopies": 3,
+        "points": 6
+      },
+      {
+        "unitId": "castilla-kattimp-s-pistoletom",
+        "maxCopies": 3,
+        "points": 7
+      },
+      {
+        "unitId": "ab-ns-chasm-drazzgl",
+        "maxCopies": 1,
+        "points": 20
+      },
+      {
+        "unitId": "ab-ns-chasm-garkrand_unit",
+        "maxCopies": 1,
+        "points": 40
+      },
+      {
+        "unitId": "castilla-sukkub-porokov",
+        "maxCopies": 2,
+        "points": 36
+      },
+      {
+        "unitId": "ab-ns-chasm-inkubus_raider_glaive",
+        "maxCopies": 3,
+        "points": 41
+      },
+      {
+        "unitId": "ab-ns-chasm-inkubus_raider_sword",
+        "maxCopies": 3,
+        "points": 42
+      },
+      {
+        "unitId": "ab-ns-chasm-chazz_unit",
+        "maxCopies": 1,
+        "points": 13
+      },
+      {
+        "unitId": "ab-ns-chasm-valafar",
+        "maxCopies": 1,
+        "points": 40
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 1,
+        "points": 10
+      }
+    ]
+  },
+  {
+    "id": "chasm-chazz-otpriysk-neotrazimogo",
+    "name": "Чазз, Отпрыск Неотразимого",
+    "factionId": "chasm",
+    "catalogUnitId": "chasm-chazz-otpriysk-neotrazimogo",
+    "points": 13,
+    "roster": [
+      {
+        "unitId": "castilla-dyavol-nalyotchik",
+        "maxCopies": 3,
+        "points": 15
+      },
+      {
+        "unitId": "castilla-kattimp",
+        "maxCopies": 6,
+        "points": 6
+      },
+      {
+        "unitId": "castilla-kattimp-s-pistoletom",
+        "maxCopies": 6,
+        "points": 8
+      },
+      {
+        "unitId": "ab-ns-chasm-marauder_trident",
+        "maxCopies": 3,
+        "points": 17
+      },
+      {
+        "unitId": "castilla-kattimp",
+        "maxCopies": 6,
+        "points": 6
+      },
+      {
+        "unitId": "castilla-kattimp-s-pistoletom",
+        "maxCopies": 6,
+        "points": 7
+      },
+      {
+        "unitId": "ab-ns-chasm-drazzgl",
+        "maxCopies": 1,
+        "points": 20
+      }
+    ]
+  },
+  {
+    "id": "broomgar-kurosh-khan",
+    "name": "Курош хан",
+    "factionId": "broomgar_horde",
+    "catalogUnitId": "broomgar-kurosh-khan",
+    "points": 50,
+    "roster": [
+      {
+        "unitId": "merc-kow-mr03",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr01",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "broomgar-kotel-sup-bul-ragvy",
+        "maxCopies": 2,
+        "points": 3
+      },
+      {
+        "unitId": "broomgar-kotel-ryba-ognevik",
+        "maxCopies": 2,
+        "points": 3
+      },
+      {
+        "unitId": "broomgar-kotel-kolbasy-burtaga",
+        "maxCopies": 2,
+        "points": 4
+      },
+      {
+        "unitId": "broomgar-shaktan-trezubets",
+        "maxCopies": 2,
+        "points": 55
+      },
+      {
+        "unitId": "broomgar-shaktan-ruchnitsa",
+        "maxCopies": 2,
+        "points": 50
+      },
+      {
+        "unitId": "broomgar-daychin-znamenosets",
+        "maxCopies": 1,
+        "points": 27
+      },
+      {
+        "unitId": "broomgar-daychin-bulava",
+        "maxCopies": 2,
+        "points": 35
+      },
+      {
+        "unitId": "broomgar-daychin-tesaki",
+        "maxCopies": 3,
+        "points": 30
+      },
+      {
+        "unitId": "broomgar-yargachin-bulava",
+        "maxCopies": 2,
+        "points": 40
+      },
+      {
+        "unitId": "broomgar-tsereg-tesak",
+        "maxCopies": 2,
+        "points": 25
+      },
+      {
+        "unitId": "broomgar-mutsereg-sekira",
+        "maxCopies": 2,
+        "points": 31
+      },
+      {
+        "unitId": "broomgar-mutsereg-topory",
+        "maxCopies": 3,
+        "points": 30
+      },
+      {
+        "unitId": "broomgar-gakhay-rogatina",
+        "maxCopies": 3,
+        "points": 20
+      },
+      {
+        "unitId": "broomgar-gakhay-bumerang",
+        "maxCopies": 2,
+        "points": 23
+      },
+      {
+        "unitId": "broomgar-zurbag-myasnik",
+        "maxCopies": 3,
+        "points": 12
+      },
+      {
+        "unitId": "broomgar-bibar-batyr-bombarda",
+        "maxCopies": 1,
+        "points": 46
+      },
+      {
+        "unitId": "broomgar-bibar-batyr-topory",
+        "maxCopies": 1,
+        "points": 36
+      },
+      {
+        "unitId": "broomgar-gakhay-prasha",
+        "maxCopies": 2,
+        "points": 22
+      },
+      {
+        "unitId": "broomgar-tsereg-bulava",
+        "maxCopies": 2,
+        "points": 26
+      },
+      {
+        "unitId": "broomgar-yargachin-mech",
+        "maxCopies": 2,
+        "points": 39
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "broomgar-zurbag-razoritel",
+        "maxCopies": 3,
+        "points": 15
+      },
+      {
+        "unitId": "broomgar-zurbag-pokoritel",
+        "maxCopies": 3,
+        "points": 20
+      },
+      {
+        "unitId": "broomgar-grrokh-ten-shaktana",
+        "maxCopies": 1,
+        "points": 25
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 1,
+        "points": 10
+      }
+    ]
+  },
+  {
+    "id": "engeln-richard-serdtse-leogriffa",
+    "name": "Ричард, Сердце Леогриффа",
+    "factionId": "engeln",
+    "catalogUnitId": "engeln-richard-serdtse-leogriffa",
+    "points": 65,
+    "roster": [
+      {
+        "unitId": "engeln-mechitsa-angelyna",
+        "maxCopies": 4,
+        "points": 20
+      },
+      {
+        "unitId": "engeln-master-mecha",
+        "maxCopies": 3,
+        "points": 21
+      },
+      {
+        "unitId": "engeln-klirik-istselyayushchey-dlani",
+        "maxCopies": 3,
+        "points": 28
+      },
+      {
+        "unitId": "engeln-pochotnyy-shchitonosets",
+        "maxCopies": 2,
+        "points": 30
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-ranger_archer",
+        "maxCopies": 3,
+        "points": 27
+      },
+      {
+        "unitId": "engeln-plut-tenevogo-shaga",
+        "maxCopies": 3,
+        "points": 28
+      },
+      {
+        "unitId": "engeln-rytsar-lvinnoy-kavalerii",
+        "maxCopies": 2,
+        "points": 42
+      },
+      {
+        "unitId": "engeln-magistr-bashni-vozduha",
+        "maxCopies": 2,
+        "points": 58
+      },
+      {
+        "unitId": "engeln-psar-angelyna",
+        "maxCopies": 2,
+        "points": 15
+      },
+      {
+        "unitId": "merc-kow-mr03",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr05",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr06",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr01",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "engeln-opolchenets-s-mechom",
+        "maxCopies": 3,
+        "points": 11
+      },
+      {
+        "unitId": "engeln-opolchenets-so-shlemom",
+        "maxCopies": 1,
+        "points": 12
+      },
+      {
+        "unitId": "engeln-opolchenets-s-arbaletom",
+        "maxCopies": 2,
+        "points": 21
+      },
+      {
+        "unitId": "engeln-ekzonat-s-kopiom",
+        "maxCopies": 3,
+        "points": 32
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-ranger_swordsman",
+        "maxCopies": 3,
+        "points": 26
+      },
+      {
+        "unitId": "engeln-ekzonat-s-mechom",
+        "maxCopies": 3,
+        "points": 35
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-rob_liberated_ogrid",
+        "maxCopies": 1,
+        "points": 34
+      },
+      {
+        "unitId": "engeln-burevestnik-angelyna",
+        "maxCopies": 3,
+        "points": 30
+      },
+      {
+        "unitId": "engeln-strelok-angelyna",
+        "maxCopies": 3,
+        "points": 33
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-stingray_captain",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "engeln-provodnik-molniy-bashni-vozduha",
+        "maxCopies": 1,
+        "points": 62
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "engeln-osadnyy-golem-angelyna",
+        "maxCopies": 1,
+        "points": 100
+      },
+      {
+        "unitId": "engeln-ekzo-rytsar-mechami",
+        "maxCopies": 2,
+        "points": 25
+      },
+      {
+        "unitId": "engeln-ekzo-rytsar-kopiom",
+        "maxCopies": 2,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-ekzo-rytsar-shchit-mech",
+        "maxCopies": 2,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-ekzo-rytsar-dvuruchnyy-mech",
+        "maxCopies": 2,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-devring-olverton",
+        "maxCopies": 1,
+        "points": 23
+      },
+      {
+        "unitId": "engeln-kondensator-molniy",
+        "maxCopies": 3,
+        "points": 3
+      },
+      {
+        "unitId": "engeln-ekzo-rytsar-tyazhelyy-grozomet",
+        "maxCopies": 1,
+        "points": 50
+      },
+      {
+        "unitId": "engeln-servidim-shield-sword",
+        "maxCopies": 1,
+        "points": 43
+      },
+      {
+        "unitId": "engeln-servidim-dual-swords",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "engeln-servidim-grozomet",
+        "maxCopies": 1,
+        "points": 47
+      }
+    ]
+  },
+  {
+    "id": "engeln-richard-pervyy-rytsar",
+    "name": "Ричард, Первый Рыцарь",
+    "factionId": "engeln",
+    "catalogUnitId": "engeln-richard-pervyy-rytsar",
+    "points": 30,
+    "roster": [
+      {
+        "unitId": "engeln-mechitsa-angelyna",
+        "maxCopies": 5,
+        "points": 20
+      },
+      {
+        "unitId": "engeln-master-mecha",
+        "maxCopies": 3,
+        "points": 21
+      },
+      {
+        "unitId": "engeln-klirik-istselyayushchey-dlani",
+        "maxCopies": 2,
+        "points": 28
+      },
+      {
+        "unitId": "engeln-pochotnyy-shchitonosets",
+        "maxCopies": 2,
+        "points": 30
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-ranger_archer",
+        "maxCopies": 2,
+        "points": 27
+      },
+      {
+        "unitId": "engeln-plut-tenevogo-shaga",
+        "maxCopies": 2,
+        "points": 28
+      },
+      {
+        "unitId": "engeln-rytsar-lvinnoy-kavalerii",
+        "maxCopies": 1,
+        "points": 42
+      },
+      {
+        "unitId": "engeln-magistr-bashni-vozduha",
+        "maxCopies": 2,
+        "points": 58
+      },
+      {
+        "unitId": "engeln-psar-angelyna",
+        "maxCopies": 3,
+        "points": 15
+      },
+      {
+        "unitId": "merc-kow-mr03",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr05",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr06",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr01",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "engeln-opolchenets-s-mechom",
+        "maxCopies": 3,
+        "points": 11
+      },
+      {
+        "unitId": "engeln-opolchenets-so-shlemom",
+        "maxCopies": 1,
+        "points": 12
+      },
+      {
+        "unitId": "engeln-opolchenets-s-arbaletom",
+        "maxCopies": 2,
+        "points": 21
+      },
+      {
+        "unitId": "engeln-ekzonat-s-kopiom",
+        "maxCopies": 3,
+        "points": 32
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-ranger_swordsman",
+        "maxCopies": 2,
+        "points": 26
+      },
+      {
+        "unitId": "engeln-ekzonat-s-mechom",
+        "maxCopies": 3,
+        "points": 35
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-rob_liberated_ogrid",
+        "maxCopies": 1,
+        "points": 34
+      },
+      {
+        "unitId": "engeln-burevestnik-angelyna",
+        "maxCopies": 3,
+        "points": 30
+      },
+      {
+        "unitId": "engeln-strelok-angelyna",
+        "maxCopies": 3,
+        "points": 33
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-stingray_captain",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "engeln-provodnik-molniy-bashni-vozduha",
+        "maxCopies": 1,
+        "points": 62
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "engeln-osadnyy-golem-angelyna",
+        "maxCopies": 1,
+        "points": 100
+      },
+      {
+        "unitId": "engeln-ekzo-rytsar-mechami",
+        "maxCopies": 1,
+        "points": 25
+      },
+      {
+        "unitId": "engeln-ekzo-rytsar-kopiom",
+        "maxCopies": 1,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-ekzo-rytsar-shchit-mech",
+        "maxCopies": 1,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-ekzo-rytsar-dvuruchnyy-mech",
+        "maxCopies": 1,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-devring-olverton",
+        "maxCopies": 1,
+        "points": 23
+      },
+      {
+        "unitId": "engeln-kondensator-molniy",
+        "maxCopies": 2,
+        "points": 3
+      },
+      {
+        "unitId": "engeln-ekzo-rytsar-tyazhelyy-grozomet",
+        "maxCopies": 1,
+        "points": 50
+      }
+    ]
+  },
+  {
+    "id": "engeln-braylon-osveshchayuschiy-put",
+    "name": "Брэйлон, Освещающий Путь",
+    "factionId": "engeln",
+    "catalogUnitId": "engeln-braylon-osveshchayuschiy-put",
+    "points": 30,
+    "roster": [
+      {
+        "unitId": "engeln-klirik-istselyayushchey-dlani",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "engeln-rytsar-lvinnoy-kavalerii",
+        "maxCopies": 1,
+        "points": 42
+      },
+      {
+        "unitId": "merc-kow-mr03",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr05",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr06",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr01",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "engeln-opolchenets-s-mechom",
+        "maxCopies": 1,
+        "points": 11
+      },
+      {
+        "unitId": "engeln-opolchenets-so-shlemom",
+        "maxCopies": 1,
+        "points": 12
+      },
+      {
+        "unitId": "engeln-opolchenets-s-arbaletom",
+        "maxCopies": 1,
+        "points": 21
+      },
+      {
+        "unitId": "engeln-burevestnik-angelyna",
+        "maxCopies": 2,
+        "points": 30
+      },
+      {
+        "unitId": "engeln-provodnik-molniy-bashni-vozduha",
+        "maxCopies": 2,
+        "points": 62
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "engeln-osadnyy-golem-angelyna",
+        "maxCopies": 1,
+        "points": 100
+      },
+      {
+        "unitId": "engeln-ekzo-rytsar-mechami",
+        "maxCopies": 3,
+        "points": 25
+      },
+      {
+        "unitId": "engeln-ekzo-rytsar-kopiom",
+        "maxCopies": 3,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-ekzo-rytsar-shchit-mech",
+        "maxCopies": 3,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-ekzo-rytsar-dvuruchnyy-mech",
+        "maxCopies": 2,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-ekzonat-s-mechom",
+        "maxCopies": 2,
+        "points": 33
+      },
+      {
+        "unitId": "engeln-ekzonat-s-kopiom",
+        "maxCopies": 2,
+        "points": 30
+      },
+      {
+        "unitId": "engeln-devring-olverton",
+        "maxCopies": 1,
+        "points": 23
+      },
+      {
+        "unitId": "engeln-kondensator-molniy",
+        "maxCopies": 3,
+        "points": 3
+      },
+      {
+        "unitId": "engeln-ekzo-rytsar-tyazhelyy-grozomet",
+        "maxCopies": 2,
+        "points": 50
+      },
+      {
+        "unitId": "engeln-servidim-shield-sword",
+        "maxCopies": 2,
+        "points": 43
+      },
+      {
+        "unitId": "engeln-servidim-dual-swords",
+        "maxCopies": 2,
+        "points": 41
+      },
+      {
+        "unitId": "engeln-servidim-grozomet",
+        "maxCopies": 2,
+        "points": 47
+      }
+    ]
+  },
+  {
+    "id": "engeln-iris-iz-yorvika",
+    "name": "Айрис из Йорвика",
+    "factionId": "engeln",
+    "catalogUnitId": "engeln-iris-iz-yorvika",
+    "points": 45,
+    "roster": [
+      {
+        "unitId": "engeln-klirik-istselyayushchey-dlani",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "engeln-rytsar-lvinnoy-kavalerii",
+        "maxCopies": 1,
+        "points": 42
+      },
+      {
+        "unitId": "merc-kow-mr03",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr05",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr06",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr01",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "engeln-opolchenets-s-mechom",
+        "maxCopies": 1,
+        "points": 11
+      },
+      {
+        "unitId": "engeln-opolchenets-so-shlemom",
+        "maxCopies": 1,
+        "points": 12
+      },
+      {
+        "unitId": "engeln-opolchenets-s-arbaletom",
+        "maxCopies": 1,
+        "points": 21
+      },
+      {
+        "unitId": "engeln-ekzonat-s-kopiom",
+        "maxCopies": 1,
+        "points": 32
+      },
+      {
+        "unitId": "engeln-ekzonat-s-mechom",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "engeln-burevestnik-angelyna",
+        "maxCopies": 1,
+        "points": 30
+      },
+      {
+        "unitId": "engeln-provodnik-molniy-bashni-vozduha",
+        "maxCopies": 2,
+        "points": 62
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "engeln-osadnyy-golem-angelyna",
+        "maxCopies": 1,
+        "points": 100
+      },
+      {
+        "unitId": "engeln-ekzo-rytsar-mechami",
+        "maxCopies": 2,
+        "points": 25
+      },
+      {
+        "unitId": "engeln-ekzo-rytsar-kopiom",
+        "maxCopies": 2,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-ekzo-rytsar-shchit-mech",
+        "maxCopies": 2,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-ekzo-rytsar-dvuruchnyy-mech",
+        "maxCopies": 2,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-devring-olverton",
+        "maxCopies": 1,
+        "points": 23
+      },
+      {
+        "unitId": "engeln-kondensator-molniy",
+        "maxCopies": 3,
+        "points": 3
+      },
+      {
+        "unitId": "engeln-ekzo-rytsar-tyazhelyy-grozomet",
+        "maxCopies": 2,
+        "points": 50
+      },
+      {
+        "unitId": "engeln-servidim-shield-sword",
+        "maxCopies": 3,
+        "points": 43
+      },
+      {
+        "unitId": "engeln-servidim-dual-swords",
+        "maxCopies": 3,
+        "points": 41
+      },
+      {
+        "unitId": "engeln-servidim-grozomet",
+        "maxCopies": 3,
+        "points": 47
+      }
+    ]
+  },
+  {
+    "id": "priory_of_hope-ricardo-ferran-roar-of-the-sea",
+    "name": "Рикардо Ферран, Рокот Моря",
+    "factionId": "priory_of_hope",
+    "catalogUnitId": "priory_of_hope-ricardo-ferran-roar-of-the-sea",
+    "points": 55,
+    "roster": [
+      {
+        "unitId": "ab-ns-prioryofhope-ranger_archer",
+        "maxCopies": 1,
+        "points": 27
+      },
+      {
+        "unitId": "engeln-plut-tenevogo-shaga",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "merc-kow-mr03",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr05",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr06",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr01",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-gerrilyas_halberd",
+        "maxCopies": 2,
+        "points": 20
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-tolero_s_rider_pistol",
+        "maxCopies": 3,
+        "points": 42
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-tolero_s_rider",
+        "maxCopies": 3,
+        "points": 40
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-field_cannon",
+        "maxCopies": 2,
+        "points": 50
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-ranger_swordsman",
+        "maxCopies": 1,
+        "points": 26
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-officer_priory_of_hope",
+        "maxCopies": 2,
+        "points": 20
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-rob_liberated_ogrid",
+        "maxCopies": 1,
+        "points": 34
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-gerrilyas_musketeer",
+        "maxCopies": 2,
+        "points": 40
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-stingray_seeman_2",
+        "maxCopies": 2,
+        "points": 14
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-stingray_seeman_1",
+        "maxCopies": 2,
+        "points": 12
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-stingray_captain",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "priory_of_hope-strazh-poberezhya-s-kulverinoy",
+        "maxCopies": 2,
+        "points": 44
+      },
+      {
+        "unitId": "priory_of_hope-strazh-poberezhya-so-sdvoennym-mushketom",
+        "maxCopies": 2,
+        "points": 37
+      },
+      {
+        "unitId": "priory_of_hope-strazh-poberezhya-so-shturmovym-mushketom",
+        "maxCopies": 2,
+        "points": 32
+      },
+      {
+        "unitId": "priory_of_hope-strazh-poberezhya-s-alebardoy",
+        "maxCopies": 3,
+        "points": 23
+      },
+      {
+        "unitId": "priory_of_hope-strazh-poberezhya-s-bulavoy",
+        "maxCopies": 3,
+        "points": 24
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-hoakin_de_esperando_rebel",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "priory_of_hope-brigadir-strazhey-poberezhya",
+        "maxCopies": 2,
+        "points": 23
+      },
+      {
+        "unitId": "priory_of_hope-iskatel-strazhey-poberezhya",
+        "maxCopies": 2,
+        "points": 26
+      },
+      {
+        "unitId": "priory_of_hope-sanador-strazhey-poberezhya",
+        "maxCopies": 2,
+        "points": 21
+      }
+    ]
+  },
+  {
+    "id": "priory_of_hope-ricardo-ferran-lighthouse-keeper",
+    "name": "Рикардо Ферран, Хранитель Маяка",
+    "factionId": "priory_of_hope",
+    "catalogUnitId": "priory_of_hope-ricardo-ferran-lighthouse-keeper",
+    "points": 30,
+    "roster": [
+      {
+        "unitId": "ab-ns-prioryofhope-ranger_archer",
+        "maxCopies": 1,
+        "points": 27
+      },
+      {
+        "unitId": "engeln-plut-tenevogo-shaga",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "merc-kow-mr03",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr05",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr06",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr01",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-gerrilyas_halberd",
+        "maxCopies": 3,
+        "points": 20
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-tolero_s_rider_pistol",
+        "maxCopies": 2,
+        "points": 42
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-tolero_s_rider",
+        "maxCopies": 2,
+        "points": 40
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-field_cannon",
+        "maxCopies": 2,
+        "points": 50
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-ranger_swordsman",
+        "maxCopies": 1,
+        "points": 26
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-officer_priory_of_hope",
+        "maxCopies": 2,
+        "points": 20
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-rob_liberated_ogrid",
+        "maxCopies": 1,
+        "points": 34
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-gerrilyas_musketeer",
+        "maxCopies": 2,
+        "points": 40
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-stingray_seeman_2",
+        "maxCopies": 2,
+        "points": 14
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-stingray_seeman_1",
+        "maxCopies": 2,
+        "points": 12
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-stingray_captain",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "priory_of_hope-strazh-poberezhya-s-kulverinoy",
+        "maxCopies": 2,
+        "points": 44
+      },
+      {
+        "unitId": "priory_of_hope-strazh-poberezhya-so-sdvoennym-mushketom",
+        "maxCopies": 2,
+        "points": 37
+      },
+      {
+        "unitId": "priory_of_hope-strazh-poberezhya-so-shturmovym-mushketom",
+        "maxCopies": 2,
+        "points": 32
+      },
+      {
+        "unitId": "priory_of_hope-strazh-poberezhya-s-alebardoy",
+        "maxCopies": 3,
+        "points": 23
+      },
+      {
+        "unitId": "priory_of_hope-strazh-poberezhya-s-bulavoy",
+        "maxCopies": 3,
+        "points": 24
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-hoakin_de_esperando_rebel",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "priory_of_hope-brigadir-strazhey-poberezhya",
+        "maxCopies": 2,
+        "points": 23
+      },
+      {
+        "unitId": "priory_of_hope-iskatel-strazhey-poberezhya",
+        "maxCopies": 2,
+        "points": 26
+      },
+      {
+        "unitId": "priory_of_hope-sanador-strazhey-poberezhya",
+        "maxCopies": 2,
+        "points": 21
+      }
+    ]
+  },
+  {
+    "id": "priory_of_hope-khoakin-de-esperando",
+    "name": "Хоакин де Эсперандо",
+    "factionId": "priory_of_hope",
+    "catalogUnitId": "priory_of_hope-khoakin-de-esperando",
+    "points": 42,
+    "roster": [
+      {
+        "unitId": "ab-ns-prioryofhope-ranger_archer",
+        "maxCopies": 2,
+        "points": 27
+      },
+      {
+        "unitId": "engeln-plut-tenevogo-shaga",
+        "maxCopies": 2,
+        "points": 28
+      },
+      {
+        "unitId": "merc-kow-mr03",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "merc-kow-mr04",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "merc-kow-mr05",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr06",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "merc-kow-mr01",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "merc-kow-mr02",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-gerrilyas_halberd",
+        "maxCopies": 5,
+        "points": 20
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-tolero_s_rider_pistol",
+        "maxCopies": 2,
+        "points": 42
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-tolero_s_rider",
+        "maxCopies": 2,
+        "points": 40
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-field_cannon",
+        "maxCopies": 2,
+        "points": 50
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-ranger_swordsman",
+        "maxCopies": 2,
+        "points": 26
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-officer_priory_of_hope",
+        "maxCopies": 2,
+        "points": 20
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-rob_liberated_ogrid",
+        "maxCopies": 1,
+        "points": 34
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-gerrilyas_musketeer",
+        "maxCopies": 4,
+        "points": 40
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-stingray_seeman_2",
+        "maxCopies": 4,
+        "points": 14
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-stingray_seeman_1",
+        "maxCopies": 2,
+        "points": 12
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-stingray_captain",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "priory_of_hope-strazh-poberezhya-s-kulverinoy",
+        "maxCopies": 1,
+        "points": 44
+      },
+      {
+        "unitId": "priory_of_hope-strazh-poberezhya-so-sdvoennym-mushketom",
+        "maxCopies": 1,
+        "points": 37
+      },
+      {
+        "unitId": "priory_of_hope-strazh-poberezhya-so-shturmovym-mushketom",
+        "maxCopies": 1,
+        "points": 32
+      },
+      {
+        "unitId": "priory_of_hope-strazh-poberezhya-s-alebardoy",
+        "maxCopies": 2,
+        "points": 23
+      },
+      {
+        "unitId": "priory_of_hope-strazh-poberezhya-s-bulavoy",
+        "maxCopies": 2,
+        "points": 24
+      },
+      {
+        "unitId": "priory_of_hope-ricardo-ferran-lighthouse-keeper",
+        "maxCopies": 1,
+        "points": 30
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "ab-ns-prioryofhope-mul",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "priory_of_hope-brigadir-strazhey-poberezhya",
+        "maxCopies": 1,
+        "points": 23
+      },
+      {
+        "unitId": "priory_of_hope-iskatel-strazhey-poberezhya",
+        "maxCopies": 1,
+        "points": 26
+      },
+      {
+        "unitId": "priory_of_hope-sanador-strazhey-poberezhya",
+        "maxCopies": 1,
+        "points": 21
+      }
+    ]
   }
 ]

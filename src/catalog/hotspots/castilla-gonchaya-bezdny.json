@@ -1,0 +1,55 @@
+{
+  "image": "/catalog-units/castilla-gonchaya-bezdny/image.jpg",
+  "title": "Гончая Бездны",
+  "regions": [
+    {
+      "x": 0.045,
+      "y": 0.230363196125908,
+      "w": 0.91,
+      "h": 0.03896690879741727,
+      "id": "attack_0",
+      "label": "Укус зверя (Мультиатака: 3)",
+      "red": 3,
+      "green": 1,
+      "black": 1,
+      "white": 0,
+      "range": 1,
+      "rangeUnit": "hexon",
+      "damage": 2
+    },
+    {
+      "x": 0.045,
+      "y": 0.2664648910411623,
+      "w": 0.44,
+      "h": 0.03151735270379338,
+      "id": "concentration",
+      "label": "Концентрация",
+      "red": 1,
+      "green": 0,
+      "black": 0,
+      "white": 0,
+      "range": 0,
+      "rangeUnit": "hex",
+      "damage": 0
+    },
+    {
+      "x": 0.515,
+      "y": 0.2664648910411623,
+      "w": 0.44,
+      "h": 0.03151735270379338,
+      "id": "defense_bonus",
+      "label": "Защита +1",
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 1,
+      "range": 0,
+      "rangeUnit": "hex",
+      "damage": 0
+    }
+  ],
+  "scrollLayout": {
+    "faceH": 1420,
+    "totalH": 2478
+  }
+}

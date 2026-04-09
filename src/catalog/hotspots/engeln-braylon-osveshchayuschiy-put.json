@@ -1,0 +1,39 @@
+{
+  "image": "/catalog-units/engeln-braylon-osveshchayuschiy-put/image.jpg",
+  "title": "Брэйлон, Освещающий Путь",
+  "regions": [
+    {
+      "id": "attack_0",
+      "label": "Удар мечом",
+      "x": 0.042,
+      "y": 0.3026,
+      "w": 0.916,
+      "h": 0.0332,
+      "range": 1,
+      "rangeUnit": "hex",
+      "damage": 3,
+      "red": 2,
+      "green": 2,
+      "black": 2,
+      "white": 0
+    },
+    {
+      "id": "attack_1",
+      "label": "Разряд молнии",
+      "x": 0.042,
+      "y": 0.345,
+      "w": 0.916,
+      "h": 0.0332,
+      "range": 2,
+      "rangeUnit": "hex",
+      "damage": 2,
+      "red": 3,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    }
+  ],
+  "scrollLayout": {
+    "scaleY": 0.5731608730800324
+  }
+}

@@ -3,11 +3,21 @@
  * Merged with static `CATALOG_UNITS` / `LEADERS` in `armyCatalog.ts`.
  */
 
-import { CATALOG_UNITS, LEADERS } from './index';
+import { CATALOG_INVENTORY, CATALOG_UNITS, LEADERS } from './index';
 import { getStaticHotspotForUnit } from './staticHotspots';
-import type { CatalogUnitDef, LeaderDef, RosterSlotDef } from './types';
-import type { HotspotFile, HotspotLayoutBox, HotspotLayoutPreset } from './hotspotTypes';
+import type { CatalogUnitDef, InventoryItemDef, LeaderDef, RosterSlotDef } from './types';
+import type {
+  HotspotFile,
+  HotspotLayoutBox,
+  HotspotLayoutPreset,
+  HotspotRegion,
+} from './hotspotTypes';
+import {
+  applyHotspotLayoutPresetBoxesToSemanticRegions,
+  buildTornscapeHotspotSemanticRegions,
+} from './tornscapeScrollHotspots';
 import type { UnitCardData } from '../unitCard';
+import { GOD_CARDS, getGodCardById, godCardBaseId, type GodCardDef } from '../godCards';
 
 export const CATALOG_OVERRIDES_STORAGE_KEY = 'hexBoard_catalogOverrides_v1';
 
@@ -18,6 +28,14 @@ export type LeaderPointsPatch = Partial<Pick<LeaderDef, 'points'>>;
 export type RosterSlotFieldPatch = Partial<
   Pick<RosterSlotDef, 'points' | 'maxCopies' | 'requiresUnitId'>
 >;
+
+export type GodCardPatch = Partial<Pick<GodCardDef, 'onlyForLeaderIds'>> & {
+  /**
+   * Сколько экземпляров карты в колоде для лидера (по умолчанию 1).
+   * 0 — карта не попадает в панель армии для этого лидера, даже если он в `onlyForLeaderIds`.
+   */
+  copiesByLeader?: Record<string, number>;
+};
 
 export type CatalogOverridesV1 = {
   version: 1;
@@ -41,6 +59,15 @@ export type CatalogOverridesV1 = {
   unitOrder: string[];
   /** Пользовательский порядок слотов ростера по лидеру (unitId[]). */
   leaderRosterOrder: Record<string, string[]>;
+  newInventoryItems: Record<string, InventoryItemDef>;
+  inventoryPatches: Record<string, Partial<InventoryItemDef>>;
+  hiddenInventoryIds: string[];
+  /** Порядок id предметов в редакторе (как unitOrder). */
+  inventoryOrder: string[];
+  /** Статические карты богов (`godCards.ts`): ограничение по лидерам. */
+  godCardPatches: Record<string, GodCardPatch>;
+  /** Максимальный размер колоды карт богов для лидера (справочно в редакторе; можно учитывать в правилах позже). */
+  leaderGodDeckMax: Record<string, number>;
 };
 
 function emptyOverrides(): CatalogOverridesV1 {
@@ -59,6 +86,12 @@ function emptyOverrides(): CatalogOverridesV1 {
     defaultHotspotLayoutPresetId: null,
     unitOrder: [],
     leaderRosterOrder: {},
+    newInventoryItems: {},
+    inventoryPatches: {},
+    hiddenInventoryIds: [],
+    inventoryOrder: [],
+    godCardPatches: {},
+    leaderGodDeckMax: {},
   };
 }
 
@@ -157,6 +190,32 @@ export function loadCatalogOverridesFromStorage(): CatalogOverridesV1 {
               ]),
             )
           : {},
+      newInventoryItems:
+        o.newInventoryItems && typeof o.newInventoryItems === 'object'
+          ? (o.newInventoryItems as Record<string, InventoryItemDef>)
+          : {},
+      inventoryPatches:
+        o.inventoryPatches && typeof o.inventoryPatches === 'object'
+          ? (o.inventoryPatches as Record<string, Partial<InventoryItemDef>>)
+          : {},
+      hiddenInventoryIds: Array.isArray(o.hiddenInventoryIds)
+        ? o.hiddenInventoryIds.filter((id): id is string => typeof id === 'string')
+        : [],
+      inventoryOrder: Array.isArray(o.inventoryOrder)
+        ? o.inventoryOrder.filter((id): id is string => typeof id === 'string')
+        : [],
+      godCardPatches:
+        o.godCardPatches && typeof o.godCardPatches === 'object'
+          ? (o.godCardPatches as Record<string, GodCardPatch>)
+          : {},
+      leaderGodDeckMax:
+        o.leaderGodDeckMax && typeof o.leaderGodDeckMax === 'object'
+          ? Object.fromEntries(
+              Object.entries(o.leaderGodDeckMax).filter(
+                ([k, v]) => typeof k === 'string' && typeof v === 'number' && Number.isFinite(v) && v >= 0,
+              ),
+            )
+          : {},
     };
   } catch {
     return emptyOverrides();
@@ -251,6 +310,32 @@ export function importCatalogOverridesJson(text: string): { ok: true } | { ok: f
               ]),
             )
           : {},
+      newInventoryItems:
+        o.newInventoryItems && typeof o.newInventoryItems === 'object'
+          ? (o.newInventoryItems as Record<string, InventoryItemDef>)
+          : {},
+      inventoryPatches:
+        o.inventoryPatches && typeof o.inventoryPatches === 'object'
+          ? (o.inventoryPatches as Record<string, Partial<InventoryItemDef>>)
+          : {},
+      hiddenInventoryIds: Array.isArray(o.hiddenInventoryIds)
+        ? o.hiddenInventoryIds.filter((id): id is string => typeof id === 'string')
+        : [],
+      inventoryOrder: Array.isArray(o.inventoryOrder)
+        ? o.inventoryOrder.filter((id): id is string => typeof id === 'string')
+        : [],
+      godCardPatches:
+        o.godCardPatches && typeof o.godCardPatches === 'object'
+          ? (o.godCardPatches as Record<string, GodCardPatch>)
+          : {},
+      leaderGodDeckMax:
+        o.leaderGodDeckMax && typeof o.leaderGodDeckMax === 'object'
+          ? Object.fromEntries(
+              Object.entries(o.leaderGodDeckMax).filter(
+                ([k, v]) => typeof k === 'string' && typeof v === 'number' && Number.isFinite(v) && v >= 0,
+              ),
+            )
+          : {},
     };
     saveCatalogOverrides(merged);
     return { ok: true };
@@ -312,6 +397,188 @@ function deepMerge<T extends object>(base: T, patch: Partial<T>): T {
 
 function mergeCatalogUnitDef(base: CatalogUnitDef, patch: Partial<CatalogUnitDef>): CatalogUnitDef {
   return deepMerge(base, patch);
+}
+
+function mergeInventoryItemDef(base: InventoryItemDef, patch: Partial<InventoryItemDef>): InventoryItemDef {
+  return deepMerge(base, patch);
+}
+
+function mergeGodCardDef(base: GodCardDef, patch: GodCardPatch): GodCardDef {
+  const out: GodCardDef = { ...base };
+  if (patch.onlyForLeaderIds !== undefined) {
+    out.onlyForLeaderIds =
+      patch.onlyForLeaderIds.length > 0 ? [...patch.onlyForLeaderIds] : undefined;
+  }
+  return out;
+}
+
+/** Статическая карта бога + `godCardPatches` из оверрайдов. */
+export function getMergedGodCard(cardId: string): GodCardDef | undefined {
+  const base = getGodCardById(cardId);
+  if (!base) return undefined;
+  const o = getCatalogOverrides();
+  const patch = o.godCardPatches[cardId];
+  if (!patch || Object.keys(patch).length === 0) return structuredClone(base);
+  return mergeGodCardDef(structuredClone(base), patch);
+}
+
+/** Сколько экземпляров карты `cardId` (базовый id) в колоде для лидера. */
+export function effectiveGodCardCopiesForLeader(cardId: string, leaderId: string): number {
+  const baseId = godCardBaseId(cardId);
+  const raw = getCatalogOverrides().godCardPatches[baseId]?.copiesByLeader?.[leaderId];
+  if (raw === undefined) return 1;
+  return Math.max(0, Math.floor(raw));
+}
+
+/**
+ * Сумма экземпляров карт богов в колоде лидера (по данным оверрайдов и `onlyForLeaderIds`).
+ */
+export function godDeckCopyTotalForLeader(leaderId: string): number {
+  let sum = 0;
+  for (const c of GOD_CARDS) {
+    const m = getMergedGodCard(c.id);
+    if (!m) continue;
+    const only = m.onlyForLeaderIds;
+    if (!only || only.length === 0 || !only.includes(leaderId)) continue;
+    sum += effectiveGodCardCopiesForLeader(c.id, leaderId);
+  }
+  return sum;
+}
+
+export function getLeaderGodDeckMax(leaderId: string): number | undefined {
+  const v = getCatalogOverrides().leaderGodDeckMax[leaderId];
+  return typeof v === 'number' && Number.isFinite(v) && v >= 0 ? Math.floor(v) : undefined;
+}
+
+export function setLeaderGodDeckMax(leaderId: string, maxCards: number | undefined): void {
+  const o = structuredClone(getCatalogOverrides());
+  if (maxCards === undefined || !Number.isFinite(maxCards) || maxCards < 0) {
+    delete o.leaderGodDeckMax[leaderId];
+  } else {
+    o.leaderGodDeckMax[leaderId] = Math.floor(maxCards);
+  }
+  saveCatalogOverrides(o);
+}
+
+/**
+ * Карты богов для панели армии: `onlyForLeaderIds` + `copiesByLeader`.
+ * Нет поля или пустой массив — карта никому не показывается.
+ * Несколько копий одной карты — id `base__gc0`, `base__gc1`, …
+ */
+export function godCardsForLeader(leaderId: string): GodCardDef[] {
+  const out: GodCardDef[] = [];
+  for (const c of GOD_CARDS) {
+    const m = getMergedGodCard(c.id);
+    if (!m) continue;
+    const only = m.onlyForLeaderIds;
+    if (!only || only.length === 0) continue;
+    if (!only.includes(leaderId)) continue;
+    const copies = effectiveGodCardCopiesForLeader(c.id, leaderId);
+    if (copies === 0) continue;
+    for (let i = 0; i < copies; i++) {
+      const instanceId = copies === 1 ? c.id : `${c.id}__gc${i}`;
+      out.push(instanceId === c.id ? { ...m } : { ...m, id: instanceId });
+    }
+  }
+  return out;
+}
+
+function sortedIdsKey(ids: readonly string[]): string {
+  return [...ids].sort().join('\0');
+}
+
+function normalizeGodCardCopiesRecord(cb: Record<string, number>): Record<string, number> | undefined {
+  const out: Record<string, number> = {};
+  for (const [k, v] of Object.entries(cb)) {
+    const n = Math.max(0, Math.floor(v));
+    if (n === 0) out[k] = 0;
+    else if (n !== 1) out[k] = n;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
+/**
+ * Применить набор карт богов для одного лидера (редактор каталога).
+ * Обновляет `onlyForLeaderIds` и `copiesByLeader` у всех карт за один проход.
+ */
+export function applyLeaderGodCardLoadout(
+  leaderId: string,
+  assignedCardIds: ReadonlySet<string>,
+  copies: Readonly<Record<string, number>>,
+): void {
+  const o = structuredClone(getCatalogOverrides());
+  for (const c of GOD_CARDS) {
+    const cardId = c.id;
+    const base = getGodCardById(cardId)!;
+    const p = o.godCardPatches[cardId];
+    let only: string[];
+    if (p?.onlyForLeaderIds !== undefined) {
+      only = [...p.onlyForLeaderIds];
+    } else {
+      only = base.onlyForLeaderIds ? [...base.onlyForLeaderIds] : [];
+    }
+    const leaders = new Set(only);
+    if (assignedCardIds.has(cardId)) leaders.add(leaderId);
+    else leaders.delete(leaderId);
+    const nextOnly = [...leaders];
+
+    let cb: Record<string, number> = p?.copiesByLeader ? { ...p.copiesByLeader } : {};
+    if (assignedCardIds.has(cardId)) {
+      const n = Math.max(0, Math.floor(copies[cardId] ?? 1));
+      if (n <= 1) delete cb[leaderId];
+      else cb[leaderId] = n;
+    } else {
+      delete cb[leaderId];
+    }
+    const normCb = normalizeGodCardCopiesRecord(cb);
+
+    const baseOnly = base.onlyForLeaderIds ?? [];
+    const onlyMatchesBase = sortedIdsKey(nextOnly) === sortedIdsKey([...baseOnly]);
+
+    const finalPatch: GodCardPatch = {};
+    if (!onlyMatchesBase) {
+      finalPatch.onlyForLeaderIds = nextOnly.length > 0 ? nextOnly : [];
+    }
+    if (normCb) {
+      finalPatch.copiesByLeader = normCb;
+    }
+
+    if (Object.keys(finalPatch).length === 0) {
+      delete o.godCardPatches[cardId];
+    } else {
+      o.godCardPatches[cardId] = finalPatch;
+    }
+  }
+  saveCatalogOverrides(o);
+}
+
+/**
+ * Effective inventory item: static `CATALOG_INVENTORY`, `newInventoryItems`, then `inventoryPatches`.
+ */
+export function getMergedInventoryItem(itemId: string): InventoryItemDef | undefined {
+  const o = getCatalogOverrides();
+  const nu = o.newInventoryItems[itemId];
+  if (nu) {
+    let def = structuredClone(nu);
+    const patch = o.inventoryPatches[itemId];
+    if (patch && Object.keys(patch).length > 0) {
+      def = mergeInventoryItemDef(def, patch);
+    }
+    def.id = itemId;
+    return def;
+  }
+  if (o.hiddenInventoryIds.includes(itemId)) {
+    return undefined;
+  }
+  const staticI = CATALOG_INVENTORY[itemId];
+  if (!staticI) return undefined;
+  let def = structuredClone(staticI);
+  const patch = o.inventoryPatches[itemId];
+  if (patch && Object.keys(patch).length > 0) {
+    def = mergeInventoryItemDef(def, patch);
+  }
+  def.id = itemId;
+  return def;
 }
 
 /**
@@ -501,6 +768,70 @@ export function setHotspotsForUnit(unitId: string, file: HotspotFile | undefined
     o.hotspots[unitId] = file;
   }
   saveCatalogOverrides(o);
+}
+
+/**
+ * Подставить сохранённый пресет раскладки (x,y,w,h) всем юнитам:
+ * кубики, дальность, подписи — из данных карточки; координаты — из пресета.
+ * Совпадение по числу зон **или** пресет из двух прямоугольников (защита + полоса атаки).
+ */
+export function applyHotspotLayoutPresetToAllUnits(
+  presetId: string,
+  options?: { attackStripeGap?: number },
+): { applied: number; skipped: { unitId: string; reason: string }[] } {
+  const snapshot = getCatalogOverrides();
+  const preset = snapshot.hotspotLayoutPresets?.find((p) => p.id === presetId);
+  if (!preset?.regions?.length) {
+    throw new Error('Пресет не найден или не содержит прямоугольников');
+  }
+  const boxes = preset.regions;
+  const unitIds = listAllUnitIds();
+  const o = structuredClone(snapshot);
+  const skipped: { unitId: string; reason: string }[] = [];
+  let applied = 0;
+
+  for (const unitId of unitIds) {
+    const def = getMergedCatalogUnit(unitId);
+    if (!def?.card) {
+      skipped.push({ unitId, reason: 'нет карточки' });
+      continue;
+    }
+    const semantic = buildTornscapeHotspotSemanticRegions(def.card);
+    let regions: HotspotRegion[];
+    try {
+      regions = applyHotspotLayoutPresetBoxesToSemanticRegions(semantic, boxes, options);
+    } catch (e) {
+      skipped.push({
+        unitId,
+        reason: e instanceof Error ? e.message : String(e),
+      });
+      continue;
+    }
+
+    const overrideH = snapshot.hotspots[unitId];
+    const staticH = getStaticHotspotForUnit(unitId);
+    const image =
+      overrideH?.image?.trim() ||
+      staticH?.image?.trim() ||
+      def.card.sprite?.trim() ||
+      '';
+    if (!image) {
+      skipped.push({ unitId, reason: 'нет URL картинки (sprite / хотспот)' });
+      continue;
+    }
+
+    o.hotspots[unitId] = {
+      ...(staticH ?? {}),
+      ...(overrideH ?? {}),
+      image,
+      title: def.card.name,
+      regions,
+    };
+    applied++;
+  }
+
+  saveCatalogOverrides(o);
+  return { applied, skipped };
 }
 
 export function setUnitPatch(unitId: string, patch: Partial<CatalogUnitDef> | undefined): void {
@@ -695,6 +1026,105 @@ export function setLeaderRosterOrder(leaderId: string, unitIds: string[]): void 
 
 export function listNewLeaderIds(): string[] {
   return Object.keys(getCatalogOverrides().newLeaders);
+}
+
+/** Default cap per leader when `maxCopies` omitted in data. */
+export const DEFAULT_INVENTORY_MAX_COPIES = 99;
+
+export function listNewInventoryItemIds(): string[] {
+  return Object.keys(getCatalogOverrides().newInventoryItems);
+}
+
+export function listAllInventoryItemIds(): string[] {
+  const o = getCatalogOverrides();
+  const staticIds = Object.keys(CATALOG_INVENTORY).filter((id) => !o.hiddenInventoryIds.includes(id));
+  const ids = Array.from(new Set([...staticIds, ...Object.keys(o.newInventoryItems)])).sort();
+  if (!o.inventoryOrder.length) return ids;
+  const rank = new Map<string, number>();
+  for (let i = 0; i < o.inventoryOrder.length; i += 1) rank.set(o.inventoryOrder[i], i);
+  return [...ids].sort((a, b) => {
+    const ra = rank.get(a);
+    const rb = rank.get(b);
+    if (ra == null && rb == null) return a.localeCompare(b);
+    if (ra == null) return 1;
+    if (rb == null) return -1;
+    return ra - rb;
+  });
+}
+
+export function setInventoryLibraryOrder(itemIds: string[]): void {
+  const o = structuredClone(getCatalogOverrides());
+  const visible = new Set(listAllInventoryItemIds());
+  o.inventoryOrder = Array.from(new Set(itemIds.filter((id) => visible.has(id))));
+  saveCatalogOverrides(o);
+}
+
+export function setNewInventoryItem(itemId: string, def: InventoryItemDef | undefined): void {
+  const o = structuredClone(getCatalogOverrides());
+  if (def === undefined) {
+    delete o.newInventoryItems[itemId];
+  } else {
+    o.newInventoryItems[itemId] = def;
+    o.hiddenInventoryIds = o.hiddenInventoryIds.filter((id) => id !== itemId);
+  }
+  saveCatalogOverrides(o);
+}
+
+export function setInventoryPatch(itemId: string, patch: Partial<InventoryItemDef> | undefined): void {
+  const o = structuredClone(getCatalogOverrides());
+  if (patch === undefined || Object.keys(patch).length === 0) {
+    delete o.inventoryPatches[itemId];
+  } else {
+    o.inventoryPatches[itemId] = patch;
+  }
+  saveCatalogOverrides(o);
+}
+
+export function setGodCardPatch(cardId: string, patch: GodCardPatch | undefined): void {
+  const o = structuredClone(getCatalogOverrides());
+  if (patch === undefined || Object.keys(patch).length === 0) {
+    delete o.godCardPatches[cardId];
+  } else {
+    o.godCardPatches[cardId] = patch;
+  }
+  saveCatalogOverrides(o);
+}
+
+export function setInventoryHidden(itemId: string, hidden: boolean): void {
+  const o = structuredClone(getCatalogOverrides());
+  if (hidden) {
+    if (!o.hiddenInventoryIds.includes(itemId)) o.hiddenInventoryIds.push(itemId);
+  } else {
+    o.hiddenInventoryIds = o.hiddenInventoryIds.filter((id) => id !== itemId);
+  }
+  saveCatalogOverrides(o);
+}
+
+export function removeInventoryItemEverywhere(itemId: string): void {
+  const o = structuredClone(getCatalogOverrides());
+  delete o.newInventoryItems[itemId];
+  delete o.inventoryPatches[itemId];
+  o.inventoryOrder = (o.inventoryOrder ?? []).filter((id) => id !== itemId);
+  if (CATALOG_INVENTORY[itemId]) {
+    if (!o.hiddenInventoryIds.includes(itemId)) o.hiddenInventoryIds.push(itemId);
+  } else {
+    o.hiddenInventoryIds = o.hiddenInventoryIds.filter((id) => id !== itemId);
+  }
+  saveCatalogOverrides(o);
+}
+
+export function createStubInventoryItem(
+  id: string,
+  name: string,
+  points: number,
+  sprite: string,
+): InventoryItemDef {
+  return {
+    id,
+    name,
+    points,
+    sprite: sprite || '/',
+  };
 }
 
 export function removeUnitEverywhere(unitId: string): void {

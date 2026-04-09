@@ -1,0 +1,39 @@
+{
+  "image": "/catalog-units/engeln-ekzo-rytsar-kopiom/image.jpg",
+  "title": "Экзо-рыцарь Ангельна с копьём",
+  "regions": [
+    {
+      "id": "attack_0",
+      "label": "Удар копьём",
+      "x": 0.042,
+      "y": 0.3026,
+      "w": 0.916,
+      "h": 0.0332,
+      "range": 2,
+      "rangeUnit": "hex",
+      "damage": 3,
+      "red": 2,
+      "green": 2,
+      "black": 2,
+      "white": 1
+    },
+    {
+      "id": "attack_1",
+      "label": "Удар молнией",
+      "x": 0.042,
+      "y": 0.345,
+      "w": 0.916,
+      "h": 0.0332,
+      "range": 2,
+      "rangeUnit": "hex",
+      "damage": 2,
+      "red": 2,
+      "green": 1,
+      "black": 0,
+      "white": 0
+    }
+  ],
+  "scrollLayout": {
+    "scaleY": 0.5731608730800324
+  }
+}

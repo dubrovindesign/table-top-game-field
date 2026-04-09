@@ -1,0 +1,107 @@
+{
+  "id": "engeln-braylon-osveshchayuschiy-put",
+  "points": 30,
+  "card": {
+    "attacks": [
+      {
+        "name": "Удар мечом",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "electric",
+        "damage": 3,
+        "dice": {
+          "red": 2,
+          "green": 2,
+          "black": 2,
+          "white": 0
+        },
+        "modifiers": [
+          {
+            "kind": "text",
+            "label": "Молния"
+          }
+        ]
+      },
+      {
+        "name": "Разряд молнии",
+        "range": 2,
+        "attackRange": "ranged",
+        "damageType": "electric",
+        "damage": 2,
+        "dice": {
+          "red": 3,
+          "green": 0,
+          "black": 0,
+          "white": 0
+        },
+        "modifiers": [
+          {
+            "kind": "text",
+            "label": "Цепь"
+          }
+        ]
+      }
+    ],
+    "catalogUnitId": "engeln-braylon-osveshchayuschiy-put",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 2,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "creation"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 6,
+    "keywords": [
+      "Ангельн",
+      "Живой",
+      "Человек",
+      "Воин",
+      "Персонаж",
+      "Клирик",
+      "Меч"
+    ],
+    "maxHealth": 6,
+    "miniatureSprite": "/catalog-units/engeln-braylon-osveshchayuschiy-put/miniature.jpg",
+    "name": "Брэйлон, Освещающий Путь",
+    "run": 5,
+    "size": "small",
+    "sprite": "/catalog-units/engeln-braylon-osveshchayuschiy-put/image.jpg",
+    "walk": 3,
+    "flagSprite": "/engeln.webp",
+    "faithMarkers": {
+      "red": 1
+    },
+    "traits": [
+      {
+        "name": "Изгнать зло",
+        "description": "См. карточку: фокус и метка врага."
+      },
+      {
+        "name": "Генератор Молний",
+        "description": ""
+      },
+      {
+        "name": "Ветеран",
+        "description": ""
+      }
+    ]
+  }
+}

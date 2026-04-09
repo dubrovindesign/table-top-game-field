@@ -1,0 +1,38 @@
+{
+  "image": "/catalog-units/castilla-sukkub-porokov/image.jpg",
+  "title": "Суккуб Пороков",
+  "regions": [
+    {
+      "x": 0.045,
+      "y": 0.230363196125908,
+      "w": 0.91,
+      "h": 0.03896690879741727,
+      "id": "attack_0",
+      "label": "Удар плетью",
+      "red": 4,
+      "green": 1,
+      "black": 2,
+      "white": 0,
+      "range": 3,
+      "damage": 1
+    },
+    {
+      "x": 0.045,
+      "y": 0.27162227602905564,
+      "w": 0.91,
+      "h": 0.03896690879741727,
+      "id": "attack_1",
+      "label": "Ментальный приказ (Малое смещение: 1 гекс)",
+      "red": 2,
+      "green": 1,
+      "black": 2,
+      "white": 0,
+      "range": 3,
+      "damage": 2
+    }
+  ],
+  "scrollLayout": {
+    "faceH": 1420,
+    "totalH": 2478
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "broomgar-shaktan-trezubets",
+  "points": 55,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "broomgar-shaktan-trezubets",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 2,
+      "green": 2
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "destruction"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 12,
+    "keywords": [
+      "Орда брумгаров"
+    ],
+    "maxHealth": 12,
+    "miniatureSprite": "/catalog-units/broomgar-shaktan-trezubets/miniature.jpg",
+    "name": "Шактан с Трезубцем",
+    "run": 6,
+    "size": "small",
+    "sprite": "/catalog-units/broomgar-shaktan-trezubets/image.jpg",
+    "walk": 3,
+    "faithMarkers": {
+      "red": 1
+    },
+    "flagSprite": "/broomgar_horde.webp"
+  }
+}

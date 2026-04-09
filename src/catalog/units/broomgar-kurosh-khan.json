@@ -1,0 +1,48 @@
+{
+  "id": "broomgar-kurosh-khan",
+  "points": 50,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "broomgar-kurosh-khan",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 1,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "destruction"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 14,
+    "keywords": [
+      "Орда брумгаров"
+    ],
+    "maxHealth": 14,
+    "miniatureSprite": "/catalog-units/broomgar-kurosh-khan/miniature.jpg",
+    "name": "Курош хан",
+    "run": 6,
+    "size": "large",
+    "sprite": "/catalog-units/broomgar-kurosh-khan/image.jpg",
+    "walk": 3,
+    "faithMarkers": {
+      "red": 2
+    },
+    "flagSprite": "/broomgar_horde.webp"
+  }
+}

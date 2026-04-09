@@ -1,0 +1,55 @@
+{
+  "image": "/catalog-units/priory_of_hope-iskatel-strazhey-poberezhya/image.jpg",
+  "title": "Искатель Стражей Побережья",
+  "regions": [
+    {
+      "x": 0.045,
+      "y": 0.29804365400161686,
+      "w": 0.91,
+      "h": 0.02178011317704123,
+      "id": "attack_0",
+      "label": "Выстрел",
+      "red": 2,
+      "green": 1,
+      "black": 2,
+      "white": 0,
+      "range": 3,
+      "rangeUnit": "hex",
+      "damage": 2
+    },
+    {
+      "x": 0.045,
+      "y": 0.3255553759094584,
+      "w": 0.91,
+      "h": 0.02178011317704123,
+      "id": "attack_1",
+      "label": "Выстрел дробью",
+      "red": 3,
+      "green": 1,
+      "black": 1,
+      "white": 0,
+      "range": 2,
+      "rangeUnit": "hex",
+      "damage": 1
+    },
+    {
+      "x": 0.045,
+      "y": 0.35306709781729995,
+      "w": 0.91,
+      "h": 0.02178011317704123,
+      "id": "attack_2",
+      "label": "Удар кинжалом",
+      "red": 1,
+      "green": 1,
+      "black": 1,
+      "white": 0,
+      "range": 1,
+      "rangeUnit": "hex",
+      "damage": 2
+    }
+  ],
+  "scrollLayout": {
+    "faceH": 1418,
+    "totalH": 2474
+  }
+}

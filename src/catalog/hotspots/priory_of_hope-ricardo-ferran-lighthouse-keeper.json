@@ -1,0 +1,36 @@
+{
+  "image": "/catalog-units/priory_of_hope-ricardo-ferran-lighthouse-keeper/image.jpg",
+  "title": "Рикардо Ферран, Хранитель Маяка",
+  "regions": [
+    {
+      "x": 0.045,
+      "y": 0.52,
+      "w": 0.91,
+      "h": 0.038,
+      "id": "attack_0",
+      "label": "Удар булавой",
+      "red": 2,
+      "green": 1,
+      "black": 2,
+      "white": 0,
+      "range": 1,
+      "rangeUnit": "hex",
+      "damage": 2
+    },
+    {
+      "x": 0.045,
+      "y": 0.568,
+      "w": 0.91,
+      "h": 0.038,
+      "id": "attack_1",
+      "label": "Выстрел дробью",
+      "red": 3,
+      "green": 1,
+      "black": 2,
+      "white": 0,
+      "range": 2,
+      "rangeUnit": "hex",
+      "damage": 1
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "id": "engeln-malyy-golem-torgvara",
+  "points": 6,
+  "card": {
+    "attacks": [
+      {
+        "name": "Удар кулаком",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 2,
+        "dice": {
+          "red": 1,
+          "green": 1,
+          "black": 0,
+          "white": 0
+        }
+      }
+    ],
+    "catalogUnitId": "engeln-malyy-golem-torgvara",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 2,
+      "green": 0
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "creation"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 4,
+    "keywords": [
+      "Ангельн",
+      "Голем"
+    ],
+    "maxHealth": 4,
+    "miniatureSprite": "/catalog-units/engeln-malyy-golem-torgvara/miniature.jpg",
+    "name": "Малый Голем Торгвара",
+    "run": 5,
+    "size": "small",
+    "sprite": "/catalog-units/engeln-malyy-golem-torgvara/image.jpg",
+    "walk": 3,
+    "flagSprite": "/engeln.webp",
+    "faithMarkers": {
+      "red": 1
+    },
+    "traits": [
+      {
+        "name": "Связь с осадным големом",
+        "description": "См. карточку."
+      }
+    ]
+  }
+}

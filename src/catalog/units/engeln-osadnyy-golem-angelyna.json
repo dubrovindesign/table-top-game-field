@@ -1,0 +1,98 @@
+{
+  "id": "engeln-osadnyy-golem-angelyna",
+  "points": 100,
+  "card": {
+    "attacks": [
+      {
+        "name": "Удар кулаком",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 10,
+        "dice": {
+          "red": 2,
+          "green": 0,
+          "black": 0,
+          "white": 0
+        },
+        "modifiers": [
+          {
+            "kind": "text",
+            "label": "Бронебойный 2"
+          }
+        ]
+      },
+      {
+        "name": "Сломать преграду",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 3,
+        "dice": {
+          "red": 3,
+          "green": 0,
+          "black": 0,
+          "white": 0
+        }
+      }
+    ],
+    "catalogUnitId": "engeln-osadnyy-golem-angelyna",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 3,
+      "green": 0
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "creation"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 40,
+    "keywords": [
+      "Ангельн",
+      "Голем",
+      "Машина"
+    ],
+    "maxHealth": 40,
+    "miniatureSprite": "/catalog-units/engeln-osadnyy-golem-angelyna/miniature.jpg",
+    "name": "Осадный Голем Ангельна",
+    "run": 1,
+    "size": "huge",
+    "sprite": "/catalog-units/engeln-osadnyy-golem-angelyna/image.jpg",
+    "walk": 1,
+    "flagSprite": "/engeln.webp",
+    "movementDistanceUnit": "hexon",
+    "faithMarkers": {
+      "red": 1
+    },
+    "traits": [
+      {
+        "name": "Высокая платформа",
+        "description": ""
+      },
+      {
+        "name": "Исполин",
+        "description": ""
+      },
+      {
+        "name": "Неповоротливый",
+        "description": ""
+      }
+    ]
+  }
+}

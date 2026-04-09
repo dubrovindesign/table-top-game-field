@@ -3,6 +3,7 @@
  */
 
 import {
+  applyGodCardBackSpriteCss,
   applyGodCardSpriteCss,
   getGodCardById,
   godCardAriaLabel,
@@ -20,6 +21,8 @@ export type GodBlindZoneLayout = {
   cards: Array<{ left: number; top: number; width: number; height: number }>;
   /** Толщина рамки зоны в CSS px (масштабируется с зумом камеры). */
   borderScreenPx: number;
+  /** Текущий зум камеры для масштабирования DOM-декора (радиусы/тени/рамки). */
+  zoom: number;
 };
 
 export type GodBlindZoneDockOptions = {
@@ -63,6 +66,8 @@ export class GodHandBlindDock {
   private dragKind: 'blind' | null = null;
   private dragBlindIndex = -1;
   private dragPointerId = -1;
+  private ghostHalfW = 70;
+  private ghostHalfH = 48;
   private lastVm: GodBlindZoneViewModel | null = null;
   private lastMineLayout: GodBlindZoneLayout | null = null;
 
@@ -114,6 +119,10 @@ export class GodHandBlindDock {
     layout: GodBlindZoneLayout,
   ): void {
     applyBounds(wrap, layout.container);
+    const zoom = Number.isFinite(layout.zoom) ? Math.max(0.05, layout.zoom) : 1;
+    wrap.style.setProperty('--god-blind-zoom', zoom.toFixed(4));
+    const zoneRadiusPx = Math.max(4, Math.round(layout.container.height * 0.18));
+    wrap.style.setProperty('--god-blind-zone-radius', `${zoneRadiusPx}px`);
     const bw = Math.max(0, Math.round(layout.borderScreenPx));
     zone.style.borderStyle = 'solid';
     zone.style.borderColor = GOD_BLIND_ZONE_BORDER_COLOR;
@@ -131,6 +140,8 @@ export class GodHandBlindDock {
       el.style.width = `${Math.round(c.width)}px`;
       el.style.height = `${Math.round(c.height)}px`;
       el.style.boxSizing = 'border-box';
+      const cardRadiusPx = Math.max(3, Math.round(c.height * 0.105));
+      el.style.setProperty('--god-blind-card-radius', `${cardRadiusPx}px`);
       el.style.setProperty('--god-blind-card-w', `${c.width}px`);
       el.style.setProperty('--god-blind-card-h', `${c.height}px`);
     }
@@ -191,7 +202,7 @@ export class GodHandBlindDock {
 
   private makeBackCard(extraCls: string): HTMLElement {
     const d = el('div', `god-dock-card god-dock-card--back ${extraCls}`);
-    d.appendChild(el('div', 'god-dock-back-mark', '✦'));
+    applyGodCardBackSpriteCss(d);
     return d;
   }
 
@@ -218,16 +229,27 @@ export class GodHandBlindDock {
     this.dragPointerId = e.pointerId;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
 
+    const source = e.currentTarget as HTMLElement;
     const id = vm.myBlindCardIds[blindIndex]!;
+    const ghostCard = this.makeFaceCard(id, 'god-dock-card--ghost');
+    const srcRect = source.getBoundingClientRect();
+    const ghostW = Math.max(1, Math.round(srcRect.width));
+    const ghostH = Math.max(1, Math.round(srcRect.height));
+    this.ghostHalfW = ghostW / 2;
+    this.ghostHalfH = ghostH / 2;
+    ghostCard.style.width = `${ghostW}px`;
+    ghostCard.style.height = `${ghostH}px`;
+    ghostCard.style.minHeight = `${ghostH}px`;
+    ghostCard.style.maxHeight = `${ghostH}px`;
     this.ghost.replaceChildren();
-    this.ghost.appendChild(this.makeFaceCard(id, 'god-dock-card--ghost'));
+    this.ghost.appendChild(ghostCard);
     this.ghost.style.display = 'block';
     this.positionGhost(e.clientX, e.clientY);
   }
 
   private positionGhost(clientX: number, clientY: number): void {
-    this.ghost.style.left = `${clientX - 70}px`;
-    this.ghost.style.top = `${clientY - 48}px`;
+    this.ghost.style.left = `${clientX - this.ghostHalfW}px`;
+    this.ghost.style.top = `${clientY - this.ghostHalfH}px`;
   }
 
   private onWindowPointerMove = (e: PointerEvent): void => {
@@ -252,6 +274,8 @@ export class GodHandBlindDock {
     this.dragKind = null;
     this.dragBlindIndex = -1;
     this.dragPointerId = -1;
+    this.ghostHalfW = 70;
+    this.ghostHalfH = 48;
     this.ghost.style.display = 'none';
     this.ghost.replaceChildren();
   }

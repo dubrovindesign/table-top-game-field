@@ -1,0 +1,38 @@
+{
+  "image": "/catalog-units/castilla-okhotnik-na-svyatykh/image.jpg",
+  "title": "Охотник на Святых",
+  "regions": [
+    {
+      "x": 0.045,
+      "y": 0.230363196125908,
+      "w": 0.91,
+      "h": 0.03896690879741727,
+      "id": "attack_0",
+      "label": "Удар мечом (Парирование)",
+      "red": 3,
+      "green": 2,
+      "black": 2,
+      "white": 0,
+      "range": 1,
+      "damage": 2
+    },
+    {
+      "x": 0.045,
+      "y": 0.2716222760290556,
+      "w": 0.91,
+      "h": 0.03896690879741727,
+      "id": "attack_1",
+      "label": "Выстрел из арбалета",
+      "red": 1,
+      "green": 2,
+      "black": 2,
+      "white": 0,
+      "range": 2,
+      "damage": 2
+    }
+  ],
+  "scrollLayout": {
+    "faceH": 1420,
+    "totalH": 2478
+  }
+}

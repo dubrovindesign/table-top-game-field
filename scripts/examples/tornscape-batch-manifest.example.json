@@ -1,0 +1,8 @@
+[
+  {
+    "unitId": "engeln-example-slug",
+    "face": "creation/engeln/unit_a_front.webp",
+    "back": "creation/engeln/unit_a_back.webp",
+    "skip": false
+  }
+]

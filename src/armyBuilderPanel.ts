@@ -6,21 +6,31 @@ import {
   ARMY_POINTS_CAP,
   FACTIONS,
   getCatalogUnit,
+  godCardsForLeader,
   leadersForFaction,
   LEADER_MINI_MAX_COPIES,
+  listInventoryItemsForLeader,
+  listMercenaryUnitIds,
   listRosterRows,
+  MERCENARY_FACTION_ID,
   type LeaderDef,
   type RosterRowView,
 } from './armyCatalog';
+import type { CatalogUnitDef } from './catalog/types';
 import { CATALOG_OVERRIDES_CHANGED } from './catalog/catalogOverrides';
+import type { InventoryItemDef } from './catalog/types';
 
 const ARMY_CAP_OPTIONS = [200, 300, 400] as const;
 import {
+  getArmyRosterGodCardIdsInPlay,
+  getArmyRosterInventoryItemIdsInPlay,
+} from './godDeckState.ts';
+import {
   applyGodCardSpriteCss,
   godCardAriaLabel,
-  godCardsForFaction,
   type GodCardDef,
 } from './godCards';
+import { applyArmyUnitThumbClip } from './armyThumbShapes';
 import { DOMAIN_LABELS, UnitCard, unitPanelThumbSrc, type DiceRequest } from './unitCard';
 
 const DND_MIME = 'application/x-army-unit';
@@ -28,13 +38,50 @@ const DND_MIME = 'application/x-army-unit';
 /** Масштаб превью карты бога в панели армии (inline style — не зависит от кэша старого CSS). */
 const GOD_CARD_ARMY_PREVIEW_SCALE = 2.05;
 
+/** Одна строка каталога = визуально уникальная карта (одинаковые название + стоимость). */
+function godCardArmyUniquenessKey(c: GodCardDef): string {
+  return `${c.title}\0${c.crystalCost ?? ''}`;
+}
+
+function groupGodCardsForArmyCatalog(cards: GodCardDef[]): GodCardDef[][] {
+  const map = new Map<string, GodCardDef[]>();
+  for (const c of cards) {
+    const k = godCardArmyUniquenessKey(c);
+    let arr = map.get(k);
+    if (!arr) {
+      arr = [];
+      map.set(k, arr);
+    }
+    arr.push(c);
+  }
+  for (const arr of map.values()) {
+    arr.sort((a, b) => a.id.localeCompare(b.id));
+  }
+  return [...map.values()].sort((a, b) => a[0]!.id.localeCompare(b[0]!.id));
+}
+
+function pickAvailableGodCardId(group: readonly GodCardDef[], inPlay: ReadonlySet<string>): string | null {
+  for (const d of group) {
+    if (!inPlay.has(d.id)) return d.id;
+  }
+  return null;
+}
+
+function applyInventoryCardSpriteCss(el: HTMLElement, spriteUrl: string): void {
+  el.style.backgroundImage = `url("${spriteUrl}")`;
+  el.style.backgroundRepeat = 'no-repeat';
+  el.style.backgroundSize = 'cover';
+  el.style.backgroundPosition = 'center center';
+}
+
 type ArmyMainTab = 'roster' | 'gods' | 'inventory';
 type SelectedArmyCardSource = 'leader' | 'roster';
 
 export type ArmyDragPayload =
   | { kind: 'troop'; leaderId: string; unitId: string }
   | { kind: 'leader'; leaderId: string; unitId: string }
-  | { kind: 'god'; cardId: string };
+  | { kind: 'god'; cardId: string }
+  | { kind: 'inventory'; leaderId: string; itemId: string };
 
 export type ArmyPanelOptions = {
   getAltKeyHeld?: () => boolean;
@@ -80,11 +127,16 @@ export class ArmyBuilderPanel {
   private rosterPanel: HTMLElement;
   private godsPanel: HTMLElement;
   private inventoryPanel: HTMLElement;
+  private inventorySection: HTMLElement;
+  private inventoryCatalogEl: HTMLElement;
   private mainTabButtons = new Map<ArmyMainTab, HTMLButtonElement>();
   private selectedMainTab: ArmyMainTab = 'roster';
   private godPreviewFloater: HTMLElement;
   private godPreviewAnchorEl: HTMLElement | null = null;
   private godPreviewListenersActive = false;
+  private inventoryPreviewFloater: HTMLElement;
+  private inventoryPreviewAnchorEl: HTMLElement | null = null;
+  private inventoryPreviewListenersActive = false;
   private open = false;
   private selectedFactionId: string;
   private selectedLeaderId: string;
@@ -249,8 +301,10 @@ export class ArmyBuilderPanel {
     this.inventoryPanel.setAttribute('role', 'tabpanel');
     this.inventoryPanel.setAttribute('aria-labelledby', 'army-main-tab-inventory');
     this.inventoryPanel.hidden = true;
-    const invPlaceholder = el('div', 'army-inventory-placeholder', 'Инвентарь скоро появится здесь.');
-    this.inventoryPanel.appendChild(invPlaceholder);
+    this.inventorySection = el('div', 'army-god-section army-god-section--in-tab');
+    this.inventoryCatalogEl = el('div', 'army-god-catalog');
+    this.inventorySection.appendChild(this.inventoryCatalogEl);
+    this.inventoryPanel.appendChild(this.inventorySection);
 
     this.tabPanelsWrap.appendChild(this.rosterPanel);
     this.tabPanelsWrap.appendChild(this.godsPanel);
@@ -274,6 +328,11 @@ export class ArmyBuilderPanel {
     this.godPreviewFloater.setAttribute('aria-hidden', 'true');
     this.root.appendChild(this.godPreviewFloater);
 
+    this.inventoryPreviewFloater = el('div', 'army-god-preview-floater');
+    this.inventoryPreviewFloater.hidden = true;
+    this.inventoryPreviewFloater.setAttribute('aria-hidden', 'true');
+    this.root.appendChild(this.inventoryPreviewFloater);
+
     this.selectedRosterCard = new UnitCard(this.root, 'army-catalog-selected');
     if (opts.onDiceRequest) {
       this.selectedRosterCard.onDiceRequest = opts.onDiceRequest;
@@ -284,6 +343,7 @@ export class ArmyBuilderPanel {
     this.searchInput.addEventListener('input', () => this.renderList());
     this.renderList();
     this.renderGodSection();
+    this.renderInventorySection();
 
     window.addEventListener('keydown', this.boundKey);
     document.addEventListener('click', this.boundDocClick);
@@ -311,6 +371,7 @@ export class ArmyBuilderPanel {
 
   private selectMainTab(tab: ArmyMainTab): void {
     if (tab !== 'gods') this.closeGodCardPreview();
+    if (tab !== 'inventory') this.closeInventoryCardPreview();
     if (tab !== 'roster') this.clearSelectedCard();
     this.selectedMainTab = tab;
     this.syncMainTabUi();
@@ -330,7 +391,8 @@ export class ArmyBuilderPanel {
   }
 
   dispose(): void {
-    this.detachGodPreviewListeners();
+    this.closeGodCardPreview();
+    this.closeInventoryCardPreview();
     window.removeEventListener('keydown', this.boundKey);
     document.removeEventListener('click', this.boundDocClick);
     window.removeEventListener(CATALOG_OVERRIDES_CHANGED, this.boundCatalogOverridesChanged);
@@ -353,15 +415,26 @@ export class ArmyBuilderPanel {
     );
   }
 
+  /** Current army points cap (200 / 300 / 400). */
+  getArmyPointsCap(): number {
+    return this.armyPointsCap;
+  }
+
   refresh(): void {
     this.updatePointsBar();
     this.renderLeaders();
     this.renderList();
     this.renderGodSection();
+    this.renderInventorySection();
   }
 
   private onGlobalKey(e: KeyboardEvent): void {
     if (e.key !== 'Escape') return;
+    if (!this.inventoryPreviewFloater.hidden) {
+      this.closeInventoryCardPreview();
+      e.preventDefault();
+      return;
+    }
     if (!this.godPreviewFloater.hidden) {
       this.closeGodCardPreview();
       e.preventDefault();
@@ -415,6 +488,7 @@ export class ArmyBuilderPanel {
     if (!v) {
       this.clearSelectedCard();
       this.closeGodCardPreview();
+      this.closeInventoryCardPreview();
     }
     if (v) this.refresh();
   }
@@ -446,6 +520,7 @@ export class ArmyBuilderPanel {
   }
 
   private openGodCardPreview(c: GodCardDef, anchor: HTMLElement): void {
+    this.closeInventoryCardPreview();
     this.godPreviewAnchorEl = anchor;
     applyGodCardSpriteCss(this.godPreviewFloater, c);
     this.godPreviewFloater.setAttribute('aria-label', godCardAriaLabel(c));
@@ -469,6 +544,74 @@ export class ArmyBuilderPanel {
     this.godPreviewFloater.style.height = '';
     this.godPreviewFloater.style.transform = '';
     this.godPreviewFloater.style.transformOrigin = '';
+  }
+
+  private pointerInInventoryPreviewFloater(clientX: number, clientY: number): boolean {
+    if (this.inventoryPreviewFloater.hidden) return false;
+    const r = this.inventoryPreviewFloater.getBoundingClientRect();
+    return clientX >= r.left && clientX < r.right && clientY >= r.top && clientY < r.bottom;
+  }
+
+  private boundInventoryPreviewOutside = (e: PointerEvent): void => {
+    if (this.inventoryPreviewFloater.hidden) return;
+    if (this.pointerInInventoryPreviewFloater(e.clientX, e.clientY)) return;
+    this.closeInventoryCardPreview();
+  };
+
+  private boundInventoryPreviewScroll = (): void => this.syncInventoryPreviewPosition();
+  private boundInventoryPreviewResize = (): void => this.syncInventoryPreviewPosition();
+
+  private syncInventoryPreviewPosition(): void {
+    if (!this.inventoryPreviewAnchorEl) return;
+    const r = this.inventoryPreviewAnchorEl.getBoundingClientRect();
+    const el = this.inventoryPreviewFloater;
+    el.style.left = `${r.left}px`;
+    el.style.top = `${r.top}px`;
+    el.style.width = `${r.width}px`;
+    el.style.height = `${r.height}px`;
+  }
+
+  private attachInventoryPreviewListeners(): void {
+    if (this.inventoryPreviewListenersActive) return;
+    this.inventoryPreviewListenersActive = true;
+    this.inventoryCatalogEl.addEventListener('scroll', this.boundInventoryPreviewScroll, { passive: true });
+    window.addEventListener('resize', this.boundInventoryPreviewResize);
+    document.addEventListener('pointerdown', this.boundInventoryPreviewOutside, true);
+  }
+
+  private detachInventoryPreviewListeners(): void {
+    if (!this.inventoryPreviewListenersActive) return;
+    this.inventoryPreviewListenersActive = false;
+    this.inventoryCatalogEl.removeEventListener('scroll', this.boundInventoryPreviewScroll);
+    window.removeEventListener('resize', this.boundInventoryPreviewResize);
+    document.removeEventListener('pointerdown', this.boundInventoryPreviewOutside, true);
+  }
+
+  private openInventoryCardPreview(def: InventoryItemDef, anchor: HTMLElement): void {
+    this.closeGodCardPreview();
+    this.inventoryPreviewAnchorEl = anchor;
+    applyInventoryCardSpriteCss(this.inventoryPreviewFloater, def.sprite);
+    this.inventoryPreviewFloater.setAttribute('aria-label', def.name);
+    this.inventoryPreviewFloater.hidden = false;
+    this.inventoryPreviewFloater.setAttribute('aria-hidden', 'false');
+    this.inventoryPreviewFloater.style.transformOrigin = 'center center';
+    this.inventoryPreviewFloater.style.transform = `scale(${GOD_CARD_ARMY_PREVIEW_SCALE})`;
+    this.syncInventoryPreviewPosition();
+    this.attachInventoryPreviewListeners();
+  }
+
+  private closeInventoryCardPreview(): void {
+    this.detachInventoryPreviewListeners();
+    this.inventoryPreviewAnchorEl = null;
+    if (this.inventoryPreviewFloater.hidden) return;
+    this.inventoryPreviewFloater.hidden = true;
+    this.inventoryPreviewFloater.setAttribute('aria-hidden', 'true');
+    this.inventoryPreviewFloater.style.left = '';
+    this.inventoryPreviewFloater.style.top = '';
+    this.inventoryPreviewFloater.style.width = '';
+    this.inventoryPreviewFloater.style.height = '';
+    this.inventoryPreviewFloater.style.transform = '';
+    this.inventoryPreviewFloater.style.transformOrigin = '';
   }
 
   private buildFactionTabs(): void {
@@ -506,6 +649,7 @@ export class ArmyBuilderPanel {
     this.renderLeaders();
     this.renderList();
     this.renderGodSection();
+    this.renderInventorySection();
   }
 
   private selectLeader(leaderId: string): void {
@@ -518,6 +662,8 @@ export class ArmyBuilderPanel {
     }
     this.syncLeaderRowActiveClass();
     this.renderList();
+    this.renderGodSection();
+    this.renderInventorySection();
   }
 
   private syncLeaderRowActiveClass(): void {
@@ -529,6 +675,16 @@ export class ArmyBuilderPanel {
 
   private renderLeaders(): void {
     this.leadersListEl.replaceChildren();
+    if (this.selectedFactionId === MERCENARY_FACTION_ID) {
+      this.leadersListEl.appendChild(
+        el(
+          'div',
+          'army-list-empty',
+          'Наёмники не привязаны к отдельным лидерам. Выберите лидера в своей фракции и набирайте наёмников в ростере — доступность и лимиты задаются у каждого лидера.',
+        ),
+      );
+      return;
+    }
     const leaders = leadersForFaction(this.selectedFactionId);
     for (const l of leaders) {
       this.leadersListEl.appendChild(this.makeLeaderRow(l));
@@ -559,6 +715,7 @@ export class ArmyBuilderPanel {
       img.alt = '';
       thumb.appendChild(img);
     }
+    applyArmyUnitThumbClip(thumb, def?.card?.size);
 
     const meta = el('div', 'army-unit-meta');
     const name = el('div', 'army-unit-name', l.name);
@@ -665,6 +822,41 @@ export class ArmyBuilderPanel {
     this.updatePointsBar();
     this.syncLeaderRowActiveClass();
     this.listEl.replaceChildren();
+    if (this.selectedFactionId === MERCENARY_FACTION_ID) {
+      const q = this.searchInput.value.trim().toLowerCase();
+      const mercIds = listMercenaryUnitIds();
+      let shown = 0;
+      for (const unitId of mercIds) {
+        const def = getCatalogUnit(unitId);
+        if (!def) continue;
+        const kw = def.card.keywords?.join(' ') ?? '';
+        const hay = `${def.card.name} ${kw}`.toLowerCase();
+        if (q && !hay.includes(q)) continue;
+        this.listEl.appendChild(this.makeMercenaryBrowseRow(def));
+        shown += 1;
+      }
+      if (shown === 0) {
+        this.listEl.appendChild(
+          el(
+            'div',
+            'army-list-empty',
+            mercIds.length === 0
+              ? 'Нет юнитов с флагом «Наёмник» в каталоге. Отметьте их в редакторе каталога.'
+              : 'Нет юнитов по фильтру',
+          ),
+        );
+      }
+      if (
+        this.selectedCardSource === 'roster' &&
+        this.selectedCardUnitId &&
+        !mercIds.includes(this.selectedCardUnitId)
+      ) {
+        this.clearSelectedCard();
+      } else {
+        this.syncRosterSelectionUi();
+      }
+      return;
+    }
     if (!this.selectedLeaderId) return;
 
     const rows = listRosterRows(this.selectedLeaderId, this.searchInput.value, this.opts.getUsedCount);
@@ -702,6 +894,7 @@ export class ArmyBuilderPanel {
       img.alt = '';
       thumb.appendChild(img);
     }
+    applyArmyUnitThumbClip(thumb, row.card.size);
 
     const meta = el('div', 'army-unit-meta');
     const name = el('div', 'army-unit-name', row.name);
@@ -761,28 +954,97 @@ export class ArmyBuilderPanel {
     return wrap;
   }
 
+  /** Справочник наёмников: без перетаскивания — набор только через ростер лидера фракции. */
+  private makeMercenaryBrowseRow(def: CatalogUnitDef): HTMLElement {
+    const wrap = el('div', 'army-unit-row army-unit-row--merc-browse');
+    wrap.dataset.unitId = def.id;
+    wrap.draggable = false;
+    wrap.title =
+      'Наёмники выставляются на стол из ростера выбранного лидера своей фракции (лимиты и доступность — в слотах ростера).';
+
+    const thumb = el('div', 'army-unit-thumb');
+    const troopThumb = unitPanelThumbSrc(def.card);
+    if (troopThumb) {
+      const img = el('img', 'army-unit-thumb-img');
+      img.src = troopThumb;
+      img.alt = '';
+      thumb.appendChild(img);
+    }
+    applyArmyUnitThumbClip(thumb, def.card.size);
+
+    const meta = el('div', 'army-unit-meta');
+    const name = el('div', 'army-unit-name', def.card.name);
+    const sub = el('div', 'army-unit-sub');
+    sub.textContent = `справочник · база ${def.points} pts`;
+
+    meta.appendChild(name);
+    meta.appendChild(sub);
+    wrap.appendChild(thumb);
+    wrap.appendChild(meta);
+    wrap.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.selectRosterUnit(def.id);
+    });
+
+    return wrap;
+  }
+
   private renderGodSection(): void {
     this.closeGodCardPreview();
+    this.closeInventoryCardPreview();
     this.godCatalogEl.replaceChildren();
-    for (const c of godCardsForFaction(this.selectedFactionId)) {
-      this.godCatalogEl.appendChild(this.makeGodCardRow(c));
+    const leaderId = this.selectedLeaderId;
+    if (!leaderId) {
+      this.godCatalogEl.appendChild(
+        el('div', 'army-list-empty', 'Выберите лидера, чтобы увидеть доступные карты богов'),
+      );
+      return;
+    }
+    const inPlay = getArmyRosterGodCardIdsInPlay();
+    const cards = godCardsForLeader(leaderId);
+    const groups = groupGodCardsForArmyCatalog(cards);
+    for (const group of groups) {
+      this.godCatalogEl.appendChild(this.makeGodCardGroupRow(group, inPlay));
+    }
+    if (this.godCatalogEl.children.length === 0) {
+      this.godCatalogEl.appendChild(
+        el('div', 'army-list-empty', 'Нет карт богов для этого лидера'),
+      );
     }
   }
 
-  private makeGodCardRow(c: GodCardDef): HTMLElement {
+  private makeGodCardGroupRow(group: GodCardDef[], inPlay: ReadonlySet<string>): HTMLElement {
+    const total = group.length;
+    const used = group.reduce((n, d) => n + (inPlay.has(d.id) ? 1 : 0), 0);
+    const remaining = total - used;
+    const representative = group[0]!;
+    const canDrag = remaining > 0;
+
     const wrap = el('div', 'army-god-catalog-item');
+    if (!canDrag) wrap.classList.add('army-god-catalog-item--depleted');
     wrap.tabIndex = 0;
     wrap.setAttribute('role', 'button');
-    wrap.dataset.godCardId = c.id;
-    wrap.setAttribute('aria-label', godCardAriaLabel(c));
-    wrap.title = 'Нажмите — превью · перетащите на стол';
+    wrap.dataset.godCardId = representative.id;
+    wrap.setAttribute(
+      'aria-label',
+      `${godCardAriaLabel(representative)} · доступно ${remaining} из ${total}`,
+    );
+    wrap.title = canDrag
+      ? 'Нажмите — превью · перетащите на стол'
+      : 'Все копии уже на столе · нажмите для превью';
 
+    const thumbWrap = el('div', 'army-god-thumb-wrap');
     const thumb = el('div', 'army-god-thumb');
-    applyGodCardSpriteCss(thumb, c);
+    applyGodCardSpriteCss(thumb, representative);
     /** DnD только на миниатюре: при `draggable` на всём ряду браузер часто не шлёт `click` после одного нажатия. */
-    thumb.draggable = true;
+    thumb.draggable = canDrag;
 
-    wrap.appendChild(thumb);
+    const badge = el('div', 'army-god-avail-badge', String(remaining));
+    badge.setAttribute('aria-hidden', 'true');
+
+    thumbWrap.appendChild(thumb);
+    thumbWrap.appendChild(badge);
+    wrap.appendChild(thumbWrap);
 
     let dragStartedForThisRow = false;
     let tapDownX = 0;
@@ -805,12 +1067,22 @@ export class ArmyBuilderPanel {
     });
 
     thumb.addEventListener('dragstart', (e) => {
+      const id = pickAvailableGodCardId(group, inPlay);
+      if (!id) {
+        e.preventDefault();
+        return;
+      }
       dragStartedForThisRow = true;
-      const payload: ArmyDragPayload = { kind: 'god', cardId: c.id };
+      const payload: ArmyDragPayload = { kind: 'god', cardId: id };
       const json = JSON.stringify(payload);
       e.dataTransfer?.setData(DND_MIME, json);
       e.dataTransfer?.setData('text/plain', json);
       e.dataTransfer!.effectAllowed = 'copy';
+    });
+
+    /** После drop на стол список должен обновиться; rAF — после применения состояния в main. */
+    thumb.addEventListener('dragend', () => {
+      requestAnimationFrame(() => this.refresh());
     });
 
     wrap.addEventListener('pointerup', (e) => {
@@ -823,14 +1095,17 @@ export class ArmyBuilderPanel {
         this.opts.onTouchArmPayload &&
         (e.pointerType === 'touch' || e.pointerType === 'pen')
       ) {
-        this.opts.onTouchArmPayload(JSON.stringify({ kind: 'god', cardId: c.id }));
+        const id = pickAvailableGodCardId(group, inPlay);
+        if (id) {
+          this.opts.onTouchArmPayload(JSON.stringify({ kind: 'god', cardId: id }));
+        }
         suppressNextClickForRow = true;
         e.stopPropagation();
         return;
       }
       suppressNextClickForRow = true;
       e.stopPropagation();
-      this.openGodCardPreview(c, wrap);
+      this.openGodCardPreview(representative, wrap);
     });
 
     wrap.addEventListener('click', (e) => {
@@ -840,13 +1115,125 @@ export class ArmyBuilderPanel {
         return;
       }
       if (dragStartedForThisRow) return;
-      this.openGodCardPreview(c, wrap);
+      this.openGodCardPreview(representative, wrap);
     });
 
     wrap.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        this.openGodCardPreview(c, wrap);
+        this.openGodCardPreview(representative, wrap);
+      }
+    });
+
+    return wrap;
+  }
+
+  private renderInventorySection(): void {
+    this.closeInventoryCardPreview();
+    this.inventoryCatalogEl.replaceChildren();
+    const leaderId = this.selectedLeaderId;
+    if (!leaderId) return;
+    const inPlay = getArmyRosterInventoryItemIdsInPlay();
+    const items = listInventoryItemsForLeader(leaderId);
+    for (const def of items) {
+      if (inPlay.has(def.id)) continue;
+      this.inventoryCatalogEl.appendChild(this.makeInventoryCardRow(def, leaderId));
+    }
+    if (this.inventoryCatalogEl.children.length === 0) {
+      this.inventoryCatalogEl.appendChild(
+        el(
+          'div',
+          'army-list-empty',
+          items.length === 0
+            ? 'Нет предметов для этого лидера'
+            : 'Все доступные предметы уже на столе',
+        ),
+      );
+    }
+  }
+
+  private makeInventoryCardRow(def: InventoryItemDef, leaderId: string): HTMLElement {
+    const wrap = el('div', 'army-god-catalog-item');
+    wrap.tabIndex = 0;
+    wrap.setAttribute('role', 'button');
+    wrap.dataset.inventoryItemId = def.id;
+    wrap.setAttribute('aria-label', def.name);
+    wrap.title = 'Нажмите — превью · перетащите на стол';
+
+    const thumb = el('div', 'army-god-thumb');
+    applyInventoryCardSpriteCss(thumb, def.sprite);
+    thumb.draggable = true;
+
+    wrap.appendChild(thumb);
+
+    let dragStartedForThisRow = false;
+    let tapDownX = 0;
+    let tapDownY = 0;
+    let suppressNextClickForRow = false;
+
+    const TAP_MOVE_THRESHOLD_PX = 10;
+
+    wrap.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      dragStartedForThisRow = false;
+      suppressNextClickForRow = false;
+      tapDownX = e.clientX;
+      tapDownY = e.clientY;
+    });
+
+    wrap.addEventListener('pointercancel', () => {
+      dragStartedForThisRow = false;
+    });
+
+    thumb.addEventListener('dragstart', (e) => {
+      dragStartedForThisRow = true;
+      const payload: ArmyDragPayload = { kind: 'inventory', leaderId, itemId: def.id };
+      const json = JSON.stringify(payload);
+      e.dataTransfer?.setData(DND_MIME, json);
+      e.dataTransfer?.setData('text/plain', json);
+      e.dataTransfer!.effectAllowed = 'copy';
+    });
+
+    thumb.addEventListener('dragend', () => {
+      requestAnimationFrame(() => this.refresh());
+    });
+
+    wrap.addEventListener('pointerup', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (dragStartedForThisRow) return;
+      const dx = e.clientX - tapDownX;
+      const dy = e.clientY - tapDownY;
+      if (dx * dx + dy * dy > TAP_MOVE_THRESHOLD_PX * TAP_MOVE_THRESHOLD_PX) return;
+      if (
+        this.opts.onTouchArmPayload &&
+        (e.pointerType === 'touch' || e.pointerType === 'pen')
+      ) {
+        this.opts.onTouchArmPayload(
+          JSON.stringify({ kind: 'inventory', leaderId, itemId: def.id } as ArmyDragPayload),
+        );
+        suppressNextClickForRow = true;
+        e.stopPropagation();
+        return;
+      }
+      suppressNextClickForRow = true;
+      e.stopPropagation();
+      this.openInventoryCardPreview(def, wrap);
+    });
+
+    wrap.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (suppressNextClickForRow) {
+        suppressNextClickForRow = false;
+        return;
+      }
+      if (dragStartedForThisRow) return;
+      this.openInventoryCardPreview(def, wrap);
+    });
+
+    wrap.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        this.openInventoryCardPreview(def, wrap);
       }
     });
 

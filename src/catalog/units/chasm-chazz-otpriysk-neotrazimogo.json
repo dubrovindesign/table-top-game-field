@@ -1,0 +1,26 @@
+{
+  "id": "chasm-chazz-otpriysk-neotrazimogo",
+  "points": 13,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "chasm-chazz-otpriysk-neotrazimogo",
+    "concentration": { "black": 0, "green": 0, "red": 0, "white": 0 },
+    "defense": { "white": 1, "green": 1 },
+    "defenseReaction": { "green": 0, "white": 1 },
+    "domains": ["destruction"],
+    "exploration": { "black": 0, "green": 0, "red": 0, "white": 0 },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 8,
+    "keywords": ["Бездна"],
+    "maxHealth": 8,
+    "name": "Чазз, Отпрыск Неотразимого",
+    "run": 4,
+    "size": "small",
+    "walk": 3,
+    "faithMarkers": { "red": 1 },
+    "flagSprite": "/chasm.webp",
+    "sprite": "/catalog-units/chasm-chazz-otpriysk-neotrazimogo/image.jpg",
+    "miniatureSprite": "/catalog-units/chasm-chazz-otpriysk-neotrazimogo/miniature.jpg"
+  }
+}

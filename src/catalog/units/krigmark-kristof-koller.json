@@ -1,0 +1,48 @@
+{
+  "id": "krigmark-kristof-koller",
+  "points": 0,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "krigmark-kristof-koller",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 1,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "death"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 5,
+    "keywords": [
+      "Кригмарк"
+    ],
+    "maxHealth": 5,
+    "miniatureSprite": "/catalog-units/krigmark-kristof-koller/miniature.jpg",
+    "name": "Кристоф Коллер (Познавший Жизнь)",
+    "run": 6,
+    "size": "small",
+    "sprite": "/catalog-units/krigmark-kristof-koller/image.jpg",
+    "walk": 3,
+    "faithMarkers": {
+      "red": 1
+    },
+    "flagSprite": "/krigmark.webp"
+  }
+}

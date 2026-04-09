@@ -40,6 +40,11 @@ export interface HotspotFile {
   title?: string;
   referenceSize?: { w: number; h: number };
   regions: HotspotRegion[];
+  /**
+   * Krig scroll cards: координаты зон заданы на полном склеенном изображении;
+   * `faceH/totalH` — используется скриптом сборки для идемпотентного пересчёта.
+   */
+  scrollLayout?: { faceH: number; totalH: number };
 }
 
 /** Геометрия зоны (доли 0–1) — только раскладка для пресетов (без дальности и кубиков). */

@@ -1,0 +1,81 @@
+{
+  "id": "engeln-plut-tenevogo-shaga",
+  "points": 18,
+  "card": {
+    "attacks": [
+      {
+        "name": "Удар кинжалом",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 2,
+        "dice": {
+          "red": 1,
+          "green": 5,
+          "black": 3,
+          "white": 0
+        }
+      },
+      {
+        "name": "Метание ножа",
+        "range": 2,
+        "attackRange": "ranged",
+        "damageType": "physical",
+        "damage": 1,
+        "dice": {
+          "red": 1,
+          "green": 1,
+          "black": 1,
+          "white": 0
+        }
+      }
+    ],
+    "catalogUnitId": "engeln-plut-tenevogo-shaga",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 1,
+      "green": 0
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "creation"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 5,
+    "keywords": [
+      "Ангельн"
+    ],
+    "maxHealth": 5,
+    "miniatureSprite": "/catalog-units/engeln-plut-tenevogo-shaga/miniature.jpg",
+    "name": "Плут Теневого Шага",
+    "run": 6,
+    "size": "small",
+    "sprite": "/catalog-units/engeln-plut-tenevogo-shaga/image.jpg",
+    "walk": 3,
+    "flagSprite": "/engeln.webp",
+    "faithMarkers": {
+      "red": 1
+    },
+    "traits": [
+      {
+        "name": "Покров Теней",
+        "description": "Теневой шаг."
+      }
+    ]
+  }
+}

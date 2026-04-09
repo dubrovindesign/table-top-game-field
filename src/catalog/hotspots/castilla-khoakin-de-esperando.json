@@ -1,0 +1,38 @@
+{
+  "image": "/catalog-units/castilla-khoakin-de-esperando/image.jpg",
+  "title": "Хоакин де Эсперандо",
+  "regions": [
+    {
+      "x": 0.045,
+      "y": 0.230363196125908,
+      "w": 0.91,
+      "h": 0.03896690879741727,
+      "id": "attack_0",
+      "label": "Удар мечом (Парирование)",
+      "red": 3,
+      "green": 2,
+      "black": 2,
+      "white": 0,
+      "range": 1,
+      "damage": 3
+    },
+    {
+      "x": 0.045,
+      "y": 0.2716222760290556,
+      "w": 0.91,
+      "h": 0.03896690879741727,
+      "id": "attack_1",
+      "label": "Круговая атака",
+      "red": 2,
+      "green": 2,
+      "black": 2,
+      "white": 0,
+      "range": 1,
+      "damage": 3
+    }
+  ],
+  "scrollLayout": {
+    "faceH": 1420,
+    "totalH": 2478
+  }
+}

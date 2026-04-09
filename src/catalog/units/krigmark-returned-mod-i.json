@@ -1,0 +1,48 @@
+{
+  "id": "krigmark-returned-mod-i",
+  "points": 10,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "krigmark-returned-mod-i",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 1,
+      "green": 0
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "death"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 6,
+    "keywords": [
+      "Кригмарк"
+    ],
+    "maxHealth": 6,
+    "miniatureSprite": "/catalog-units/krigmark-returned-mod-i/miniature.jpg",
+    "name": "Возвратившийся (модификация I)",
+    "run": 4,
+    "size": "small",
+    "sprite": "/catalog-units/krigmark-returned-mod-i/image.jpg",
+    "walk": 2,
+    "faithMarkers": {
+      "red": 1
+    },
+    "flagSprite": "/krigmark.webp"
+  }
+}

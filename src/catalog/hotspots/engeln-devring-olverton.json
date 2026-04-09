@@ -1,0 +1,24 @@
+{
+  "image": "/catalog-units/engeln-devring-olverton/image.jpg",
+  "title": "Девринг Олвертон",
+  "regions": [
+    {
+      "id": "attack_0",
+      "label": "Атака",
+      "x": 0.042,
+      "y": 0.528,
+      "w": 0.916,
+      "h": 0.058,
+      "range": 1,
+      "rangeUnit": "hex",
+      "damage": 2,
+      "red": 2,
+      "green": 2,
+      "black": 1,
+      "white": 0
+    }
+  ],
+  "scrollLayout": {
+    "scaleY": 1
+  }
+}

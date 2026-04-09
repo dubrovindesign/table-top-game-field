@@ -1,0 +1,36 @@
+{
+  "image": "/catalog-units/priory_of_hope-strazh-poberezhya-s-bulavoy/image.jpg",
+  "title": "Страж Побережья с булавой",
+  "regions": [
+    {
+      "x": 0.045,
+      "y": 0.52,
+      "w": 0.91,
+      "h": 0.038,
+      "id": "attack_0",
+      "label": "Удар булавой",
+      "red": 3,
+      "green": 1,
+      "black": 1,
+      "white": 0,
+      "range": 1,
+      "rangeUnit": "hex",
+      "damage": 3
+    },
+    {
+      "x": 0.045,
+      "y": 0.568,
+      "w": 0.91,
+      "h": 0.038,
+      "id": "attack_1",
+      "label": "Удар щитом",
+      "red": 2,
+      "green": 1,
+      "black": 0,
+      "white": 0,
+      "range": 1,
+      "rangeUnit": "hex",
+      "damage": 2
+    }
+  ]
+}

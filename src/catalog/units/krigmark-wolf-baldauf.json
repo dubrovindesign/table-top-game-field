@@ -1,0 +1,48 @@
+{
+  "id": "krigmark-wolf-baldauf",
+  "points": 45,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "krigmark-wolf-baldauf",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 3,
+      "green": 0
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "death"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 7,
+    "faithMarkers": {
+      "red": 1
+    },
+    "keywords": [
+      "Кригмарк"
+    ],
+    "maxHealth": 7,
+    "miniatureSprite": "/catalog-units/krigmark-wolf-baldauf/miniature.jpg",
+    "name": "Вольф Бальдауф",
+    "run": 7,
+    "size": "small",
+    "sprite": "/catalog-units/krigmark-wolf-baldauf/image.jpg",
+    "walk": 4,
+    "flagSprite": "/krigmark.webp"
+  }
+}

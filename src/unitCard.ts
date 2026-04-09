@@ -551,7 +551,8 @@ export class UnitCard {
 
     const catalogUnitId = options?.catalogUnitId ?? data.catalogUnitId;
     const hf = catalogUnitId ? getHotspotsForUnit(catalogUnitId) : undefined;
-    const willImageMode = !!(hf?.image && hf.regions.length > 0);
+    /** Достаточно пути к арту в каталоге; пустые `regions` — только картинка без зон (как у новых юнитов). */
+    const willImageMode = !!(hf?.image?.trim());
     const dockedKey = !anchorScreen
       ? `${willImageMode ? 'img' : 'stat'}-${catalogUnitId ?? 'noid'}-${data.name}-${data.size}`
       : null;
@@ -580,7 +581,7 @@ export class UnitCard {
 
     if (catalogUnitId) {
       const hf2 = getHotspotsForUnit(catalogUnitId);
-      if (hf2?.image && hf2.regions.length > 0) {
+      if (hf2?.image?.trim()) {
         this.container.classList.add('unit-card-image-mode');
         this.renderImageCard(data, hf2, anchorScreen);
         if (!anchorScreen) {

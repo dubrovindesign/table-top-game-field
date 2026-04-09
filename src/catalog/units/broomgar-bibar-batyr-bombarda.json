@@ -1,0 +1,48 @@
+{
+  "id": "broomgar-bibar-batyr-bombarda",
+  "points": 46,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "broomgar-bibar-batyr-bombarda",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 1,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "destruction"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 12,
+    "keywords": [
+      "Орда брумгаров"
+    ],
+    "maxHealth": 12,
+    "miniatureSprite": "/catalog-units/broomgar-bibar-batyr-bombarda/miniature.jpg",
+    "name": "Бибар-Батыр с Бомбардой",
+    "run": 6,
+    "size": "small",
+    "sprite": "/catalog-units/broomgar-bibar-batyr-bombarda/image.jpg",
+    "walk": 3,
+    "faithMarkers": {
+      "red": 1
+    },
+    "flagSprite": "/broomgar_horde.webp"
+  }
+}

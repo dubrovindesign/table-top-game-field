@@ -1,0 +1,38 @@
+{
+  "image": "/catalog-units/krigmark-okopny-zhnets/image.jpg",
+  "title": "Окопный жнец",
+  "scrollLayout": {
+    "faceH": 1418,
+    "totalH": 1388
+  },
+  "regions": [
+    {
+      "x": 0.045,
+      "y": 0.41068876080691646,
+      "w": 0.91,
+      "h": 0.06946974063400577,
+      "id": "attack_0",
+      "label": "Атака 1",
+      "red": 1,
+      "green": 1,
+      "black": 1,
+      "white": 0,
+      "range": 1,
+      "damage": 1
+    },
+    {
+      "x": 0.045,
+      "y": 0.4842449567723343,
+      "w": 0.91,
+      "h": 0.06946974063400577,
+      "id": "attack_1",
+      "label": "Атака 2",
+      "red": 1,
+      "green": 1,
+      "black": 0,
+      "white": 0,
+      "range": 1,
+      "damage": 1
+    }
+  ]
+}

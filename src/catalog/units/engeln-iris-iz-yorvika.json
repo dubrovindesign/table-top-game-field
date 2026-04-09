@@ -1,0 +1,95 @@
+{
+  "id": "engeln-iris-iz-yorvika",
+  "points": 48,
+  "card": {
+    "attacks": [
+      {
+        "name": "Удар копьём",
+        "range": 2,
+        "attackRange": "melee",
+        "damageType": "electric",
+        "damage": 3,
+        "dice": {
+          "red": 2,
+          "green": 2,
+          "black": 2,
+          "white": 2
+        },
+        "modifiers": [
+          {
+            "kind": "text",
+            "label": "Оглушение"
+          }
+        ]
+      },
+      {
+        "name": "Залп молнии",
+        "range": 2,
+        "attackRange": "ranged",
+        "damageType": "electric",
+        "damage": 2,
+        "dice": {
+          "red": 3,
+          "green": 0,
+          "black": 2,
+          "white": 0
+        },
+        "modifiers": [
+          {
+            "kind": "text",
+            "label": "Атака по цепи · Малая"
+          }
+        ]
+      }
+    ],
+    "catalogUnitId": "engeln-iris-iz-yorvika",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 3,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "creation"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 7,
+    "keywords": [
+      "Ангельн",
+      "Герой"
+    ],
+    "maxHealth": 7,
+    "miniatureSprite": "/catalog-units/engeln-iris-iz-yorvika/miniature.jpg",
+    "name": "Айрис из Йорвика, Дочь Грозы",
+    "run": 8,
+    "size": "small",
+    "sprite": "/catalog-units/engeln-iris-iz-yorvika/image.jpg",
+    "walk": 5,
+    "flagSprite": "/engeln.webp",
+    "movementDistanceUnit": "hex",
+    "faithMarkers": {
+      "red": 1
+    },
+    "traits": [
+      {
+        "name": "Дочь Грозы",
+        "description": ""
+      }
+    ]
+  }
+}

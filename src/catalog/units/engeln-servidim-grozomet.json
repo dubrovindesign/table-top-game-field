@@ -1,0 +1,85 @@
+{
+  "id": "engeln-servidim-grozomet",
+  "points": 36,
+  "card": {
+    "attacks": [
+      {
+        "name": "Залп молний",
+        "range": 3,
+        "attackRange": "ranged",
+        "damageType": "electric",
+        "damage": 2,
+        "dice": {
+          "red": 2,
+          "green": 2,
+          "black": 1,
+          "white": 0
+        },
+        "modifiers": [
+          {
+            "kind": "text",
+            "label": "Атака по цепи · Малая"
+          }
+        ]
+      },
+      {
+        "name": "Удар прикладом",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 2,
+        "dice": {
+          "red": 1,
+          "green": 2,
+          "black": 1,
+          "white": 0
+        }
+      }
+    ],
+    "catalogUnitId": "engeln-servidim-grozomet",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 2,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "creation"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 7,
+    "keywords": [
+      "Ангельн",
+      "Стрелок",
+      "Грозомёт",
+      "Боевой лист"
+    ],
+    "maxHealth": 7,
+    "miniatureSprite": "/catalog-units/engeln-servidim-grozomet/miniature.jpg",
+    "name": "Сервидим Ангельна с грозомётом",
+    "run": 8,
+    "size": "small",
+    "sprite": "/catalog-units/engeln-servidim-grozomet/image.jpg",
+    "walk": 5,
+    "flagSprite": "/engeln.webp",
+    "movementDistanceUnit": "hex",
+    "faithMarkers": {
+      "red": 1
+    }
+  }
+}

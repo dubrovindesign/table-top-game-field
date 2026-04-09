@@ -1,0 +1,26 @@
+{
+  "id": "chasm-abgorr-neotrazimyy-istyazatel",
+  "points": 45,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "chasm-abgorr-neotrazimyy-istyazatel",
+    "concentration": { "black": 0, "green": 0, "red": 0, "white": 0 },
+    "defense": { "white": 1, "green": 1 },
+    "defenseReaction": { "green": 0, "white": 1 },
+    "domains": ["destruction"],
+    "exploration": { "black": 0, "green": 0, "red": 0, "white": 0 },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 12,
+    "keywords": ["Бездна"],
+    "maxHealth": 12,
+    "name": "Абгорр, Неотразимый Истязатель",
+    "run": 3,
+    "size": "large",
+    "walk": 2,
+    "faithMarkers": { "red": 2 },
+    "flagSprite": "/chasm.webp",
+    "sprite": "/catalog-units/chasm-abgorr-neotrazimyy-istyazatel/image.jpg",
+    "miniatureSprite": "/catalog-units/chasm-abgorr-neotrazimyy-istyazatel/miniature.jpg"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "krigmark-war-abomination",
+  "points": 50,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "krigmark-war-abomination",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 1,
+      "green": 0
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "death"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 20,
+    "keywords": [
+      "Кригмарк"
+    ],
+    "maxHealth": 20,
+    "miniatureSprite": "/catalog-units/krigmark-war-abomination/miniature.jpg",
+    "name": "Абоминация войны",
+    "run": 2,
+    "size": "large",
+    "sprite": "/catalog-units/krigmark-war-abomination/image.jpg",
+    "walk": 1,
+    "faithMarkers": {
+      "red": 2
+    },
+    "flagSprite": "/krigmark.webp"
+  }
+}

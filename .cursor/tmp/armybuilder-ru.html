@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta name="current-locale" content="ru">
+    <title>Tornscape Roster Builder - Создание и управление ростерами</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Tornscape Roster Builder - профессиональный инструмент для создания и управления ростерами. Создавайте, редактируйте и делитесь ростерами для ваших игр.">
+    <meta name="keywords" content="roster builder, tornscape, roster, game, strategy, management">
+    <meta name="author" content="Tornscape Roster Builder">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Tornscape Roster Builder">
+    <meta property="og:description" content="Создавайте и управляйте ростерами для ваших игр">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://armybuilder.torn-world.com/ru">
+    <meta property="og:image" content="/images/img/logo.webp">
+    <meta property="og:site_name" content="Tornscape Roster Builder">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Tornscape Roster Builder">
+    <meta name="twitter:description" content="Создавайте и управляйте ростерами для ваших игр">
+    <meta name="twitter:image" content="/images/img/logo.webp">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://armybuilder.torn-world.com/ru">
+
+    <!-- Language alternates -->
+    <link rel="alternate" hreflang="ru" href="https://armybuilder.torn-world.com/ru">
+    <link rel="alternate" hreflang="en" href="">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+      {"@context":"https://schema.org","@type":"Organization","name":"Tornscape Roster Builder","url":"https://armybuilder.torn-world.com/","logo":"https://armybuilder.torn-world.com/images/img/logo.webp","description":"Профессиональный инструмент для создания и управления ростерами","sameAs":[]}
+    </script>
+    <script type="application/ld+json">
+      {"@context":"https://schema.org","@type":"WebSite","name":"Tornscape Roster Builder","url":"https://armybuilder.torn-world.com/","description":"Создавайте и управляйте ростерами для ваших игр","potentialAction":{"@type":"SearchAction","target":"https://armybuilder.torn-world.com/search?q={search_term_string}","query-input":"required name=search_term_string"}}
+    </script>
+
+    <script>
+//<![CDATA[
+window.gon={};gon.current_user_id=null;gon.roster={"id":null,"faction_id":null,"domain_id":null,"roster_format_id":null,"name":"Безымянный отряд","status":0,"points_overall":null,"points_left":null,"tags":null,"structure":{"max_points":0,"domain":null,"faction":null,"hero":null,"units":[],"spells":[],"equipment":[],"point_cost":0,"overmaxed":false},"created_at":null,"updated_at":null,"user_id":null,"public":false,"archived":false};gon.structure={"max_points":0,"domain":null,"faction":null,"hero":null,"units":[],"spells":[],"equipment":[],"point_cost":0,"overmaxed":false};
+//]]>
+</script>
+
+    <meta name="csrf-param" content="authenticity_token" />
+<meta name="csrf-token" content="PNQfS81_Fwgk8j-dCGB-kC6EcpBOwxyH_w2_2EmZmMshReF5aZYbD3dcXMmKBlFZ-QvUU1mH7kFRsnGAujU77g" />
+    
+    <meta name="sentry-dsn" content="https://cc0c287668c8433fa59f1b5cee29a4a5@app.glitchtip.com/19515">
+    <meta name="sentry-environment" content="production">
+      <link rel="stylesheet" href="/assets/select_hero-97afb3584e7044a9c1cff3b533be52232653a0b2721e2ea1b066915bbb771ebf.css" data-turbo-track="reload" />
+  <link rel="stylesheet" href="/assets/select_units-c3259f8b63ea77c550fd6934bcb6e7bb5f47f38b27ae1d5679cd9f7fb427ba70.css" data-turbo-track="reload" />
+  <link rel="stylesheet" href="/assets/select_spells-69fe8b6f721357ca1a500a58ad521bfbca3ec8fc529464018d6c7ec54817f02f.css" data-turbo-track="reload" />
+  <link rel="stylesheet" href="/assets/select_equipment-42c15ebe9df29e9fad300874e988a987a8c2d70ae7317095e611898b17fee3c2.css" data-turbo-track="reload" />
+
+
+    
+
+    <link rel="stylesheet" href="/assets/application-5a71d0e5d84d4cdec94ccc37ce11fe6aa2124c0123ce81ee802f40b76e09afe1.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+    <script src="/assets/application-b2b8f9913b8abc0f77c138370e09c68943dfa9f98db00b70fb82c87b9be07792.js"></script>
+    <script src="/assets/menu-d10c87a07547fa398074bfdca3c261768ca15edf9f019957e8a684fb107640eb.js"></script>
+    <script src="/assets/avatar_crop-8bd93bb2100e0fd884e239c05c290925b286299a019211966dcfb70c9321f9dc.js"></script>
+    <meta name="action-cable-url" content="/cable" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+  </head>
+
+  <body>
+    <div class="container">
+      <nav class="usermenu usermenu--guest ">
+  <div class="container-fluid">
+      
+  <div class="usermunu__info">
+    <a class="button button_icon button_plain" data-turbolinks="false" href="/ru/users/sign_in">
+      <img src="/images/img/user.png" alt="" class="icon">
+      Войти
+</a></div>
+
+  <div class="logo mb-2 mobile-nav__logo">
+  <a href="/ru">
+    <img src="/images/img/logo.webp" srcset="/images/img/logo.webp 180w, /images/img/logo-360.webp 360w" sizes="180px" alt="" class="logo__image mobile-none">
+    <img src="/images/img/mobile-logo.webp" srcset="/images/img/mobile-logo-200.webp 200w, /images/img/mobile-logo-400.webp 400w, /images/img/mobile-logo-800.webp 800w" sizes="(max-width: 480px) 120px, 200px" alt="" class="logo__image mobile-image">
+</a></div>
+
+  <a class="button button_wide w-mobile-a mr-modile-1 mb-modile-0 mb-2 mobile-nav__text-button mobile-nav__build" data-turbolinks="false" href="/ru/rosters/new">Собрать новый</a>
+<a class="button button_wide w-mobile-a mr-modile-1 mb-modile-0 mb-2 mobile-nav__text-button mobile-nav__open" href="/ru/rosters">Открыть</a>
+
+  <button class="button button_icon locale-toggle mobile-nav__icon-button mobile-nav__locale" type="button">
+  <a href="/en">
+    <img src="/images/img/en1.png" alt="" class="icon" />
+  </a>
+</button>
+
+  <button class="button button_icon mobile-toggle mobile-nav__icon-button mobile-nav__menu" type="button">
+  <img src="/images/img/mobile_more.png" class="icon">
+</button>
+
+  <div id="roster_stat" class=""></div>
+
+  </div>
+</nav>
+
+      <div class="main">
+        <div class="main__content">
+          <!-- Потом перенести в приложение! -->
+          <header id="breadcrumbs">
+          </header>
+          
+<div id="roster">
+  <select-structure
+    :roster='roster'
+    :structure='structure'
+  ></select-structure>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="/vite/assets/roster-BCHKXcre.js" crossorigin="anonymous" type="module"></script><link rel="modulepreload" href="/vite/assets/LocaleSwitcher-gJar3OcI.js" as="script" crossorigin="anonymous">
+<link rel="modulepreload" href="/vite/assets/roster-gwRN3bMh.js" as="script" crossorigin="anonymous">
+<link rel="modulepreload" href="/vite/assets/RedeemModal-CdZQCNJN.js" as="script" crossorigin="anonymous"><link rel="stylesheet" href="/vite/assets/roster-C3AXcFY-.css" media="screen" />
+<link rel="stylesheet" href="/vite/assets/style-Djc3cX8I.css" media="screen" />
+<link rel="stylesheet" href="/vite/assets/LocaleSwitcher-CBoOTp03.css" media="screen" />
+<link rel="stylesheet" href="/vite/assets/RedeemModal-BhuQ74Yw.css" media="screen" />
+    <!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+   (function(m,e,t,r,i,k,a){
+      m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+      m[i].l=1*new Date();
+      for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+      k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+   })(window, document,'script','https://mc.yandex.ru/metrika/tag.js', 'ym');
+
+   ym(97064205, 'init', {webvisor:true, clickmap:true, accurateTrackBounce:true, trackLinks:true});
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/97064205" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+
+  </body>
+</html>

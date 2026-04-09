@@ -1,0 +1,68 @@
+{
+  "id": "engeln-boevoy-pes",
+  "points": 6,
+  "card": {
+    "attacks": [
+      {
+        "name": "Укус зверя",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 2,
+        "dice": {
+          "red": 1,
+          "green": 2,
+          "black": 1,
+          "white": 0
+        }
+      }
+    ],
+    "catalogUnitId": "engeln-boevoy-pes",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 1,
+      "white": 0
+    },
+    "defense": {
+      "white": 1,
+      "green": 0
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "creation"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 2,
+    "keywords": [
+      "Ангельн"
+    ],
+    "maxHealth": 2,
+    "miniatureSprite": "/catalog-units/engeln-boevoy-pes/miniature.jpg",
+    "name": "Боевой Пёс",
+    "run": 7,
+    "size": "small",
+    "sprite": "/catalog-units/engeln-boevoy-pes/image.jpg",
+    "walk": 4,
+    "flagSprite": "/engeln.webp",
+    "faithMarkers": {
+      "red": 1
+    },
+    "traits": [
+      {
+        "name": "Пёс псаря",
+        "description": "Работает в связке с псарём Ангельна."
+      }
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "castilla-ognemetchik-drakoniego-plameni",
+  "points": 0,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "castilla-ognemetchik-drakoniego-plameni",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 1,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "destruction"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 5,
+    "keywords": [
+      "Кастилия"
+    ],
+    "maxHealth": 5,
+    "miniatureSprite": "/catalog-units/castilla-ognemetchik-drakoniego-plameni/miniature.jpg",
+    "name": "Огнеметчик Драконьего Пламени",
+    "run": 5,
+    "size": "small",
+    "sprite": "/catalog-units/castilla-ognemetchik-drakoniego-plameni/image.jpg",
+    "walk": 3,
+    "faithMarkers": {
+      "red": 1
+    },
+    "flagSprite": "/castilla.webp"
+  }
+}

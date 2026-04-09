@@ -3,13 +3,14 @@
  * (see `scripts/build-catalog-bundle.mjs`, run from Vite `buildStart` / dev server).
  */
 
-import type { CatalogUnitDef, FactionDef, LeaderDef } from './types';
+import type { CatalogUnitDef, FactionDef, InventoryItemDef, LeaderDef } from './types';
 import type { HotspotFile } from './hotspotTypes';
 import { setStaticHotspots } from './staticHotspots';
 
 export let FACTIONS: FactionDef[] = [];
 export let LEADERS: LeaderDef[] = [];
 export let CATALOG_UNITS: Record<string, CatalogUnitDef> = {};
+export let CATALOG_INVENTORY: Record<string, InventoryItemDef> = {};
 
 let loadPromise: Promise<void> | null = null;
 
@@ -19,6 +20,7 @@ type CatalogBundleV1 = {
   leaders: LeaderDef[];
   units: Record<string, CatalogUnitDef>;
   hotspots: Record<string, HotspotFile>;
+  inventory?: Record<string, InventoryItemDef>;
 };
 
 export function loadCatalogBundle(): Promise<void> {
@@ -37,6 +39,7 @@ export function loadCatalogBundle(): Promise<void> {
     FACTIONS = data.factions;
     LEADERS = data.leaders;
     CATALOG_UNITS = data.units;
+    CATALOG_INVENTORY = data.inventory ?? {};
     setStaticHotspots(data.hotspots ?? {});
   })();
   return loadPromise;

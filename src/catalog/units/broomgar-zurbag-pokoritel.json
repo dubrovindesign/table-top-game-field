@@ -1,0 +1,48 @@
+{
+  "id": "broomgar-zurbag-pokoritel",
+  "points": 20,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "broomgar-zurbag-pokoritel",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 2,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "destruction"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 7,
+    "keywords": [
+      "Орда брумгаров"
+    ],
+    "maxHealth": 7,
+    "miniatureSprite": "/catalog-units/broomgar-zurbag-pokoritel/miniature.jpg",
+    "name": "Зурбаг Покоритель",
+    "run": 6,
+    "size": "small",
+    "sprite": "/catalog-units/broomgar-zurbag-pokoritel/image.jpg",
+    "walk": 3,
+    "faithMarkers": {
+      "red": 1
+    },
+    "flagSprite": "/broomgar_horde.webp"
+  }
+}

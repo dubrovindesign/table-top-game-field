@@ -1,0 +1,46 @@
+{
+  "id": "merc-kow-mr06",
+  "mercenary": true,
+  "points": 0,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "merc-kow-mr06",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 1,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "life"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 5,
+    "keywords": [
+      "Наёмник"
+    ],
+    "maxHealth": 5,
+    "miniatureSprite": "/catalog-units/merc-kow-mr06/miniature.jpg",
+    "name": "Алдвин Мортенсон, Летописец",
+    "run": 6,
+    "size": "small",
+    "sprite": "/catalog-units/merc-kow-mr06/image.jpg",
+    "walk": 3,
+    "flagSprite": "/mercenaries.webp"
+  }
+}

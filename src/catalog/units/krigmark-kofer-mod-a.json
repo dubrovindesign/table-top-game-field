@@ -1,0 +1,45 @@
+{
+  "id": "krigmark-kofer-mod-a",
+  "points": 8,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "krigmark-kofer-mod-a",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 2,
+      "green": 0
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "death"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 3,
+    "keywords": [
+      "Кригмарк"
+    ],
+    "maxHealth": 3,
+    "miniatureSprite": "/catalog-units/krigmark-kofer-mod-a/miniature.jpg",
+    "name": "Кёфер (модификация A)",
+    "run": 6,
+    "size": "small",
+    "sprite": "/catalog-units/krigmark-kofer-mod-a/image.jpg",
+    "walk": 3,
+    "flagSprite": "/krigmark.webp"
+  }
+}

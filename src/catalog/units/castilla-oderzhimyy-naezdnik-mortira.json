@@ -1,0 +1,48 @@
+{
+  "id": "castilla-oderzhimyy-naezdnik-mortira",
+  "points": 0,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "castilla-oderzhimyy-naezdnik-mortira",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 1,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "destruction"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 14,
+    "keywords": [
+      "Кастилия"
+    ],
+    "maxHealth": 14,
+    "miniatureSprite": "/catalog-units/castilla-oderzhimyy-naezdnik-mortira/miniature.jpg",
+    "name": "Одержимый Наездник с ручной мортирой",
+    "run": 4,
+    "size": "large",
+    "sprite": "/catalog-units/castilla-oderzhimyy-naezdnik-mortira/image.jpg",
+    "walk": 2,
+    "faithMarkers": {
+      "red": 2
+    },
+    "flagSprite": "/castilla.webp"
+  }
+}

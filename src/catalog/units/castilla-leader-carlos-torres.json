@@ -1,0 +1,26 @@
+{
+  "id": "castilla-leader-carlos-torres",
+  "points": 38,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "castilla-leader-carlos-torres",
+    "concentration": { "black": 0, "green": 0, "red": 0, "white": 0 },
+    "defense": { "white": 1, "green": 1 },
+    "defenseReaction": { "green": 0, "white": 1 },
+    "domains": ["destruction"],
+    "exploration": { "black": 0, "green": 0, "red": 0, "white": 0 },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 10,
+    "keywords": ["Кастилия"],
+    "maxHealth": 10,
+    "name": "Карлос Торрес",
+    "run": 3,
+    "size": "large",
+    "walk": 2,
+    "faithMarkers": { "red": 1 },
+    "flagSprite": "/castilla.webp",
+    "sprite": "/catalog-units/castilla-leader-carlos-torres/image.jpg",
+    "miniatureSprite": "/catalog-units/castilla-leader-carlos-torres/miniature.jpg"
+  }
+}

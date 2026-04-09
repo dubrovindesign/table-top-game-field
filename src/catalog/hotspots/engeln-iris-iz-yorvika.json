@@ -1,0 +1,40 @@
+{
+  "image": "/catalog-units/engeln-iris-iz-yorvika/image.jpg",
+  "title": "Айрис из Йорвика, Дочь Грозы",
+  "regions": [
+    {
+      "id": "attack_0",
+      "label": "Удар копьём",
+      "x": 0.042,
+      "y": 0.3026289409862571,
+      "w": 0.916,
+      "h": 0.03324333063864188,
+      "range": 2,
+      "rangeUnit": "hex",
+      "damage": 3,
+      "red": 2,
+      "green": 2,
+      "black": 2,
+      "white": 2
+    },
+    {
+      "id": "attack_1",
+      "label": "Залп молнии",
+      "x": 0.042,
+      "y": 0.34504284559417947,
+      "w": 0.916,
+      "h": 0.03324333063864188,
+      "range": 2,
+      "rangeUnit": "hex",
+      "damage": 2,
+      "red": 3,
+      "green": 0,
+      "black": 2,
+      "white": 0
+    }
+  ],
+  "scrollLayout": {
+    "faceH": 1418,
+    "totalH": 2474
+  }
+}

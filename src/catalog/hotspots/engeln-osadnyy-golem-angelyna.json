@@ -1,0 +1,39 @@
+{
+  "image": "/catalog-units/engeln-osadnyy-golem-angelyna/image.jpg",
+  "title": "Осадный Голем Ангельна",
+  "regions": [
+    {
+      "id": "attack_0",
+      "label": "Удар кулаком",
+      "x": 0.042,
+      "y": 0.3025,
+      "w": 0.916,
+      "h": 0.0332,
+      "range": 1,
+      "rangeUnit": "hex",
+      "damage": 10,
+      "red": 2,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    {
+      "id": "attack_1",
+      "label": "Сломать преграду",
+      "x": 0.042,
+      "y": 0.3449,
+      "w": 0.916,
+      "h": 0.0332,
+      "range": 1,
+      "rangeUnit": "hex",
+      "damage": 3,
+      "red": 3,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    }
+  ],
+  "scrollLayout": {
+    "scaleY": 0.5729632945389436
+  }
+}

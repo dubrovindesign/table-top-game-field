@@ -1,0 +1,76 @@
+{
+  "id": "priory_of_hope-strazh-poberezhya-s-bulavoy",
+  "points": 23,
+  "card": {
+    "attacks": [
+      {
+        "name": "Удар булавой",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 3,
+        "dice": {
+          "red": 3,
+          "black": 1,
+          "green": 1
+        }
+      },
+      {
+        "name": "Удар щитом",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 2,
+        "dice": {
+          "red": 2,
+          "green": 1
+        }
+      }
+    ],
+    "catalogUnitId": "priory_of_hope-strazh-poberezhya-s-bulavoy",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 3,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "creation"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 5,
+    "keywords": [
+      "Приорат Надежды",
+      "Гвардеец",
+      "Булава",
+      "Щит"
+    ],
+    "maxHealth": 5,
+    "miniatureSprite": "/catalog-units/priory_of_hope-strazh-poberezhya-s-bulavoy/miniature.jpg",
+    "name": "Страж Побережья с булавой",
+    "run": 5,
+    "size": "small",
+    "sprite": "/catalog-units/priory_of_hope-strazh-poberezhya-s-bulavoy/image.jpg",
+    "walk": 3,
+    "movementDistanceUnit": "hex",
+    "faithMarkers": {
+      "red": 1
+    },
+    "flagSprite": "/priory_of_hope.webp"
+  }
+}

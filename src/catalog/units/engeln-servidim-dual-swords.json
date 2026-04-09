@@ -1,0 +1,95 @@
+{
+  "id": "engeln-servidim-dual-swords",
+  "points": 36,
+  "card": {
+    "attacks": [
+      {
+        "name": "Удар мечом",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "electric",
+        "damage": 2,
+        "dice": {
+          "red": 3,
+          "green": 2,
+          "black": 1,
+          "white": 0
+        },
+        "modifiers": [
+          {
+            "kind": "text",
+            "label": "Молния"
+          },
+          {
+            "kind": "text",
+            "label": "Мультиатака: 2"
+          }
+        ]
+      },
+      {
+        "name": "Залп молнии",
+        "range": 2,
+        "attackRange": "ranged",
+        "damageType": "electric",
+        "damage": 1,
+        "dice": {
+          "red": 3,
+          "green": 0,
+          "black": 0,
+          "white": 0
+        },
+        "modifiers": [
+          {
+            "kind": "text",
+            "label": "Атака по цепи · Малая"
+          }
+        ]
+      }
+    ],
+    "catalogUnitId": "engeln-servidim-dual-swords",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 2,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "creation"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 7,
+    "keywords": [
+      "Ангельн",
+      "Воин",
+      "Меч",
+      "Боевой лист"
+    ],
+    "maxHealth": 7,
+    "miniatureSprite": "/catalog-units/engeln-servidim-dual-swords/miniature.jpg",
+    "name": "Сервидим Ангельна с двумя мечами",
+    "run": 8,
+    "size": "small",
+    "sprite": "/catalog-units/engeln-servidim-dual-swords/image.jpg",
+    "walk": 5,
+    "flagSprite": "/engeln.webp",
+    "movementDistanceUnit": "hex",
+    "faithMarkers": {
+      "red": 1
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "image": "/catalog-units/engeln-iris-jorvik-soar/image.jpg",
+  "title": "Айрис из Йорвика",
+  "regions": [
+    {
+      "id": "attack_0",
+      "label": "Удар копьём",
+      "x": 0.042,
+      "y": 0.528,
+      "w": 0.916,
+      "h": 0.058,
+      "range": 2,
+      "rangeUnit": "hex",
+      "damage": 3,
+      "red": 2,
+      "green": 2,
+      "black": 2,
+      "white": 2
+    },
+    {
+      "id": "attack_1",
+      "label": "Залп молнии",
+      "x": 0.042,
+      "y": 0.602,
+      "w": 0.916,
+      "h": 0.058,
+      "range": 2,
+      "rangeUnit": "hex",
+      "damage": 2,
+      "red": 3,
+      "green": 0,
+      "black": 2,
+      "white": 0
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "id": "krigmark-shock-crossbow",
+  "points": 50,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "krigmark-shock-crossbow",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 2,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "death"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 9,
+    "keywords": [
+      "Кригмарк"
+    ],
+    "maxHealth": 9,
+    "miniatureSprite": "/catalog-units/krigmark-shock-crossbow/miniature.jpg",
+    "name": "Штоссрягер (со стреломётом)",
+    "run": 5,
+    "size": "big",
+    "sprite": "/catalog-units/krigmark-shock-crossbow/image.jpg",
+    "walk": 3,
+    "faithMarkers": {
+      "red": 2
+    },
+    "flagSprite": "/krigmark.webp"
+  }
+}

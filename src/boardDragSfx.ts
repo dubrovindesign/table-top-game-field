@@ -5,10 +5,14 @@
  */
 
 const LIFT_SRC = '/sfx/openbottle.mp3';
+const SHUFFLE_SRC = '/sfx/shufflecards.mp3';
 
 const liftAudio = new Audio(LIFT_SRC);
 liftAudio.preload = 'auto';
 liftAudio.volume = 0.1125;
+const shuffleAudio = new Audio(SHUFFLE_SRC);
+shuffleAudio.preload = 'auto';
+shuffleAudio.volume = 0.35;
 
 let ctx: AudioContext | null = null;
 
@@ -93,4 +97,9 @@ export function playBoardDragLift(): void {
 
 export function playBoardDragDrop(): void {
   resumeAndRun(playDropInternal);
+}
+
+export function playGodDeckShuffle(): void {
+  shuffleAudio.currentTime = 0;
+  void shuffleAudio.play().catch(() => {});
 }

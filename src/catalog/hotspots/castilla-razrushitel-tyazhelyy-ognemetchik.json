@@ -1,0 +1,40 @@
+{
+  "image": "/catalog-units/castilla-razrushitel-tyazhelyy-ognemetchik/image.jpg",
+  "title": "Разрушитель Бездны с тяжёлым огнемётом",
+  "regions": [
+    {
+      "x": 0.045,
+      "y": 0.2303869143780291,
+      "w": 0.91,
+      "h": 0.03897092084006462,
+      "id": "attack_0",
+      "label": "Поток огня (площадь, Штурмовое)",
+      "red": 5,
+      "green": 0,
+      "black": 2,
+      "white": 0,
+      "range": 1,
+      "rangeUnit": "hexon",
+      "damage": 2
+    },
+    {
+      "x": 0.045,
+      "y": 0.2716502423263328,
+      "w": 0.91,
+      "h": 0.03897092084006462,
+      "id": "attack_1",
+      "label": "Огненный залп (регион)",
+      "red": 3,
+      "green": 0,
+      "black": 2,
+      "white": 0,
+      "range": 2,
+      "rangeUnit": "hexon",
+      "damage": 2
+    }
+  ],
+  "scrollLayout": {
+    "faceH": 1419,
+    "totalH": 2476
+  }
+}

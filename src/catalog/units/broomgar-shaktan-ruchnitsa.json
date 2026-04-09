@@ -1,0 +1,48 @@
+{
+  "id": "broomgar-shaktan-ruchnitsa",
+  "points": 50,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "broomgar-shaktan-ruchnitsa",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 3,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "destruction"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 12,
+    "keywords": [
+      "Орда брумгаров"
+    ],
+    "maxHealth": 12,
+    "miniatureSprite": "/catalog-units/broomgar-shaktan-ruchnitsa/miniature.jpg",
+    "name": "Шактан с Ручницей",
+    "run": 6,
+    "size": "small",
+    "sprite": "/catalog-units/broomgar-shaktan-ruchnitsa/image.jpg",
+    "walk": 3,
+    "faithMarkers": {
+      "red": 1
+    },
+    "flagSprite": "/broomgar_horde.webp"
+  }
+}

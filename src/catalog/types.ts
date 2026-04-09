@@ -44,5 +44,25 @@ export type LeaderDef = {
 export type CatalogUnitDef = {
   id: string;
   points: number;
+  /**
+   * Наёмник: учёт в «фракции» наёмников в панели армии и редакторе.
+   * Доступность и лимиты по-прежнему задаются слотами ростера у лидеров.
+   */
+  mercenary?: boolean;
   card: UnitCardData;
+};
+
+/** Gear / items taken to the table; points count toward the army cap. */
+export type InventoryItemDef = {
+  id: string;
+  name: string;
+  points: number;
+  /** Path under site root (`public/`), e.g. `/inventory/foo.png`. */
+  sprite: string;
+  /**
+   * If non-empty, only these leaders may take the item; if absent or empty, all leaders.
+   */
+  onlyForLeaderIds?: string[];
+  /** Max copies per leader in army loadout (default applied in merge helpers). */
+  maxCopies?: number;
 };

@@ -1,0 +1,48 @@
+{
+  "id": "krigmark-okopny-zhnets",
+  "points": 23,
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "krigmark-okopny-zhnets",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 1,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "death"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "health": 5,
+    "faithMarkers": {
+      "red": 1
+    },
+    "keywords": [
+      "Кригмарк"
+    ],
+    "maxHealth": 5,
+    "miniatureSprite": "/catalog-units/krigmark-okopny-zhnets/miniature.jpg",
+    "name": "Окопный жнец",
+    "run": 6,
+    "size": "small",
+    "sprite": "/catalog-units/krigmark-okopny-zhnets/image.jpg",
+    "walk": 3,
+    "flagSprite": "/krigmark.webp"
+  }
+}

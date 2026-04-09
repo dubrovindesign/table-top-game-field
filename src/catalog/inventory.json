@@ -1,0 +1,184 @@
+{
+  "inv-sheet-01": {
+    "id": "inv-sheet-01",
+    "name": "Доспех «Благословение Опсора»",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-01.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-02": {
+    "id": "inv-sheet-02",
+    "name": "Укреплённый Львиный Щит",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-02.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-03": {
+    "id": "inv-sheet-03",
+    "name": "Меч «Молниеносец»",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-03.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-04": {
+    "id": "inv-sheet-04",
+    "name": "Прислужник из Бездны",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-04.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-05": {
+    "id": "inv-sheet-05",
+    "name": "Защитная Печать Пламени",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-05.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-06": {
+    "id": "inv-sheet-06",
+    "name": "Посох «Сердце Пламени»",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-06.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-07": {
+    "id": "inv-sheet-07",
+    "name": "Секира «Жатва Леса»",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-07.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-08": {
+    "id": "inv-sheet-08",
+    "name": "Метка Дикой Ярости",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-08.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-09": {
+    "id": "inv-sheet-09",
+    "name": "Амулет «Благословение Леса»",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-09.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-10": {
+    "id": "inv-sheet-10",
+    "name": "Меч «Чемпион Десписа»",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-10.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-11": {
+    "id": "inv-sheet-11",
+    "name": "Бронебойные Снаряды",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-11.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-12": {
+    "id": "inv-sheet-12",
+    "name": "Укреплённый Некро-конь",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-12.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-13": {
+    "id": "inv-sheet-13",
+    "name": "Зелье Исцеления Ран",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-13.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-14": {
+    "id": "inv-sheet-14",
+    "name": "Печать Крыльев Бездны",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-14.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-15": {
+    "id": "inv-sheet-15",
+    "name": "Зелье Мороза",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-15.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-16": {
+    "id": "inv-sheet-16",
+    "name": "Противоядие",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-16.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-17": {
+    "id": "inv-sheet-17",
+    "name": "Согревающее Зелье",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-17.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-18": {
+    "id": "inv-sheet-18",
+    "name": "Зелье Воли",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-18.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-19": {
+    "id": "inv-sheet-19",
+    "name": "Зелье Ясности",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-19.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-20": {
+    "id": "inv-sheet-20",
+    "name": "Печать Истовой Веры",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-20.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-21": {
+    "id": "inv-sheet-21",
+    "name": "Эфирный Компас Экспедитора",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-21.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-22": {
+    "id": "inv-sheet-22",
+    "name": "Кольцо Покрова",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-22.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-23": {
+    "id": "inv-sheet-23",
+    "name": "Карты Судьбы",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-23.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-24": {
+    "id": "inv-sheet-24",
+    "name": "Амулет Божественного Взора",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-24.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-25": {
+    "id": "inv-sheet-25",
+    "name": "Пояс Силы",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-25.jpg",
+    "maxCopies": 99
+  },
+  "inv-sheet-26": {
+    "id": "inv-sheet-26",
+    "name": "Граната Хаоса",
+    "points": 0,
+    "sprite": "/inventory/inv-sheet-26.jpg",
+    "maxCopies": 99
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "id": "engeln-iris-jorvik-soar",
+  "points": 48,
+  "card": {
+    "attacks": [
+      {
+        "name": "Удар копьём",
+        "range": 2,
+        "attackRange": "melee",
+        "damageType": "electric",
+        "damage": 3,
+        "dice": {
+          "red": 2,
+          "green": 2,
+          "black": 2,
+          "white": 2
+        }
+      },
+      {
+        "name": "Залп молнии",
+        "range": 2,
+        "attackRange": "ranged",
+        "damageType": "electric",
+        "damage": 2,
+        "dice": {
+          "red": 3,
+          "green": 0,
+          "black": 2,
+          "white": 0
+        }
+      }
+    ],
+    "catalogUnitId": "engeln-iris-jorvik-soar",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "white": 3,
+      "green": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "creation"
+    ],
+    "exploration": {
+      "red": 1,
+      "green": 1,
+      "black": 0,
+      "white": 0
+    },
+    "explorationRange": 1,
+    "grabRange": 1,
+    "health": 7,
+    "keywords": [
+      "Ангельн",
+      "Персонаж",
+      "Воин",
+      "Древковое",
+      "Щит",
+      "Полный лист",
+      "Налёт"
+    ],
+    "maxHealth": 7,
+    "miniatureSprite": "/catalog-units/engeln-iris-jorvik-soar/miniature.jpg",
+    "name": "Айрис из Йорвика",
+    "run": 8,
+    "size": "small",
+    "sprite": "/catalog-units/engeln-iris-jorvik-soar/image.jpg",
+    "walk": 5,
+    "flagSprite": "/engeln.webp",
+    "movementDistanceUnit": "hex",
+    "faithMarkers": {
+      "red": 1
+    },
+    "traits": [
+      {
+        "name": "Дочь Грозы",
+        "description": ""
+      },
+      {
+        "name": "Налёт",
+        "description": "См. карту: движение — атака — движение."
+      },
+      {
+        "name": "Высокий полёт",
+        "description": ""
+      },
+      {
+        "name": "Полёт — уровень 2",
+        "description": ""
+      },
+      {
+        "name": "Ветеран",
+        "description": ""
+      }
+    ]
+  }
+}

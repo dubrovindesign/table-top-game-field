@@ -1,0 +1,40 @@
+{
+  "image": "/catalog-units/krigmark-death-bringer/image.jpg",
+  "title": "Несущий Смерть",
+  "regions": [
+    {
+      "x": 0.045,
+      "y": 0.230363196125908,
+      "w": 0.91,
+      "h": 0.03896690879741727,
+      "id": "attack_0",
+      "label": "Выстрел бронебойный",
+      "red": 1,
+      "green": 1,
+      "black": 1,
+      "white": 0,
+      "range": 5,
+      "rangeUnit": "hex",
+      "damage": 3
+    },
+    {
+      "x": 0.045,
+      "y": 0.27162227602905564,
+      "w": 0.91,
+      "h": 0.03896690879741727,
+      "id": "attack_1",
+      "label": "Выстрел ядовитый",
+      "red": 1,
+      "green": 1,
+      "black": 1,
+      "white": 0,
+      "range": 5,
+      "rangeUnit": "hex",
+      "damage": 3
+    }
+  ],
+  "scrollLayout": {
+    "faceH": 1420,
+    "totalH": 2478
+  }
+}
