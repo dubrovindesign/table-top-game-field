@@ -291,7 +291,10 @@ function resizeCanvas(): void {
 }
 resizeCanvas();
 
-function mountTopTurnPanel(parent: HTMLElement): {
+function mountTopTurnPanel(
+  parent: HTMLElement,
+  opts?: { onAdvanceTurn?: () => void },
+): {
   localWalletMount: HTMLElement;
   opponentWalletMount: HTMLElement;
 } {
@@ -339,6 +342,7 @@ function mountTopTurnPanel(parent: HTMLElement): {
     syncTurnUi();
     endTurnButton.hidden = true;
     turnButton.setAttribute('aria-expanded', 'false');
+    opts?.onAdvanceTurn?.();
   });
 
   center.appendChild(turnButton);
@@ -1943,10 +1947,6 @@ function moveBlindCardToTableFromZone(
   armyBuilderPanel.refresh();
 }
 
-const topTurnPanel = mountTopTurnPanel(document.body);
-new CrystalWallet(topTurnPanel.localWalletMount, { variant: 'local' });
-new CrystalWallet(topTurnPanel.opponentWalletMount, { variant: 'opponent' });
-
 armyBuilderPanel = new ArmyBuilderPanel(document.body, {
   getAltKeyHeld: () => altModActive(),
   getUsedCount: (leaderId, unitId) => countRosterCopies(leaderId, unitId),
@@ -1982,6 +1982,30 @@ function scheduleRender(): void {
   needsRender = true;
   notifyBoardEditLocal();
 }
+
+/** После «Завершить ход» все маркеры активации снова жёлтые (юнит может активироваться). */
+function resetActivationsForNewTurn(): void {
+  for (const u of units) {
+    u.activated = true;
+  }
+  for (const m of bigMiniatures) {
+    m.activated = true;
+  }
+  for (const m of largeMiniatures) {
+    m.activated = true;
+  }
+  for (const m of hugeMiniatures) {
+    m.activated = true;
+  }
+  pushPieceRotationsToRenderer();
+  scheduleRender();
+}
+
+const topTurnPanel = mountTopTurnPanel(document.body, {
+  onAdvanceTurn: resetActivationsForNewTurn,
+});
+new CrystalWallet(topTurnPanel.localWalletMount, { variant: 'local' });
+new CrystalWallet(topTurnPanel.opponentWalletMount, { variant: 'opponent' });
 
 canvas.addEventListener('hex-cells-svg-ready', () => scheduleRender());
 

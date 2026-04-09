@@ -176,12 +176,14 @@ export function createVoicePeer(opts: VoicePeerOptions) {
   /**
    * Guest (slot 1): after mic is enabled post-handshake, send a new offer so the host
    * completes SDP/ICE (host previously ignored incoming offers; guest also ignored answers).
+   * Also used after a full local teardown (mic off): pc is recreated via ensurePc() so
+   * a new offer reaches the host; previously we bailed when pc was null and never reconnected.
    */
   async function guestRenegotiateAfterMic(): Promise<void> {
     if (opts.localPlayerSlot !== 1) return;
     if (!localStream || !opts.hasRemotePlayer()) return;
-    const p = pc;
-    if (!p || p.signalingState !== 'stable') return;
+    const p = ensurePc();
+    if (p.signalingState !== 'stable') return;
     await syncMicToSender();
     const offer = await p.createOffer({ iceRestart: true });
     await p.setLocalDescription(offer);
