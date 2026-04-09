@@ -267,6 +267,22 @@ export class Renderer {
     ctx.restore();
   }
 
+  /** Uniform scale around world pivot while dragging (visual only). */
+  private withTablePieceDragLift(pivot: Point, draw: () => void): void {
+    const s = this.config.tablePieceDragLiftScale;
+    if (s <= 1) {
+      draw();
+      return;
+    }
+    const { ctx } = this;
+    ctx.save();
+    ctx.translate(pivot.x, pivot.y);
+    ctx.scale(s, s);
+    ctx.translate(-pivot.x, -pivot.y);
+    draw();
+    ctx.restore();
+  }
+
   setHoveredHex(hex: Hex | null): void {
     this.hoveredHex = hex;
   }
@@ -1331,107 +1347,104 @@ export class Renderer {
         this.draggingUnitIndex === this.selectedUnitIndex
       )
     ) {
-      const rotDegModel = this.unitRotationDeg[this.draggingUnitIndex] ?? 0;
+      const uIdx = this.draggingUnitIndex;
+      const pv = this.dragPreviewPosition;
+      const rotDegModel = this.unitRotationDeg[uIdx] ?? 0;
       const rotRadModel = (rotDegModel * Math.PI) / 180;
       const rotRadVisual =
         ((rotDegModel + this.config.oppositeSeatUnitRotationCorrectionDeg) * Math.PI) / 180;
       const sprite = this.getSpriteImage(
-        this.unitSpriteSrcs[this.draggingUnitIndex] ?? null,
+        this.unitSpriteSrcs[uIdx] ?? null,
       );
-      this.drawSmallUnitInHex(this.dragPreviewPosition, rotRadModel, sprite, () => {
-        ctx.save();
-        ctx.translate(this.dragPreviewPosition!.x, this.dragPreviewPosition!.y);
-        ctx.rotate(rotRadModel);
-        const offs = [0, 1, 2, 3, 4, 5].map((i) => layout.hexCornerOffset(i));
-        ctx.beginPath();
-        this.roundHexPathLocal(ctx, offs, this.smallUnitHexCornerRadius());
-        ctx.fillStyle = config.unitFillColor;
-        ctx.fill();
-        ctx.strokeStyle = config.unitStrokeColor;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.restore();
-      });
-      this.drawHealthBadgeAt(
-        this.dragPreviewPosition,
-        halfH,
-        this.unitHealthValues[this.draggingUnitIndex] ?? 0,
-        this.openHealthControlsUnitIndex === this.draggingUnitIndex,
-        SMALL_UNIT_HEALTH_BADGE_SCALE,
-        'insideHexSmallUnit',
-        rotRadVisual,
-      );
-      {
-        const tr = halfH * 0.2175;
-        const tc = smallUnitActivationToggleCenterWorldRad(
-          this.dragPreviewPosition!,
-          rotRadVisual,
-          layout,
-        );
-        this.drawActivationToggle(
-          tc,
-          tr,
-          this.unitActivated[this.draggingUnitIndex] !== false,
-        );
-      }
-      const dragMarkers = this.unitEffectMarkers[this.draggingUnitIndex];
-      if (dragMarkers && dragMarkers.length > 0) {
-        this.drawEffectMarkers(
-          this.dragPreviewPosition,
-          dragMarkers,
+      this.withTablePieceDragLift(pv, () => {
+        this.drawSmallUnitInHex(pv, rotRadModel, sprite, () => {
+          ctx.save();
+          ctx.translate(pv.x, pv.y);
+          ctx.rotate(rotRadModel);
+          const offs = [0, 1, 2, 3, 4, 5].map((i) => layout.hexCornerOffset(i));
+          ctx.beginPath();
+          this.roundHexPathLocal(ctx, offs, this.smallUnitHexCornerRadius());
+          ctx.fillStyle = config.unitFillColor;
+          ctx.fill();
+          ctx.strokeStyle = config.unitStrokeColor;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.restore();
+        });
+        this.drawHealthBadgeAt(
+          pv,
           halfH,
-          'small',
+          this.unitHealthValues[uIdx] ?? 0,
+          this.openHealthControlsUnitIndex === uIdx,
+          SMALL_UNIT_HEALTH_BADGE_SCALE,
+          'insideHexSmallUnit',
           rotRadVisual,
         );
-      }
+        {
+          const tr = halfH * 0.2175;
+          const tc = smallUnitActivationToggleCenterWorldRad(pv, rotRadVisual, layout);
+          this.drawActivationToggle(
+            tc,
+            tr,
+            this.unitActivated[uIdx] !== false,
+          );
+        }
+        const dragMarkers = this.unitEffectMarkers[uIdx];
+        if (dragMarkers && dragMarkers.length > 0) {
+          this.drawEffectMarkers(pv, dragMarkers, halfH, 'small', rotRadVisual);
+        }
+      });
     }
 
     for (const rp of this.remotePeerTableDrags) {
       const d = rp.drag;
       if (d.kind !== 'unit' || d.index === null || d.worldX === null || d.worldY === null) continue;
       if (d.index < 0 || d.index >= this.unitHexes.length) continue;
+      const idx = d.index;
       const pos = { x: d.worldX, y: d.worldY };
-      const rotDegModel = this.unitRotationDeg[d.index] ?? 0;
+      const rotDegModel = this.unitRotationDeg[idx] ?? 0;
       const rotRadModel = (rotDegModel * Math.PI) / 180;
       const rotRadVisual =
         ((rotDegModel + this.config.oppositeSeatUnitRotationCorrectionDeg) * Math.PI) / 180;
-      const sprite = this.getSpriteImage(this.unitSpriteSrcs[d.index] ?? null);
-      ctx.save();
-      ctx.globalAlpha = 0.72;
-      this.drawSmallUnitInHex(pos, rotRadModel, sprite, () => {
+      const sprite = this.getSpriteImage(this.unitSpriteSrcs[idx] ?? null);
+      this.withTablePieceDragLift(pos, () => {
         ctx.save();
-        ctx.translate(pos.x, pos.y);
-        ctx.rotate(rotRadModel);
-        const offs = [0, 1, 2, 3, 4, 5].map((i) => layout.hexCornerOffset(i));
-        ctx.beginPath();
-        this.roundHexPathLocal(ctx, offs, this.smallUnitHexCornerRadius());
-        ctx.fillStyle = config.unitFillColor;
-        ctx.fill();
-        ctx.strokeStyle = config.unitStrokeColor;
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        ctx.globalAlpha = 0.72;
+        this.drawSmallUnitInHex(pos, rotRadModel, sprite, () => {
+          ctx.save();
+          ctx.translate(pos.x, pos.y);
+          ctx.rotate(rotRadModel);
+          const offs = [0, 1, 2, 3, 4, 5].map((i) => layout.hexCornerOffset(i));
+          ctx.beginPath();
+          this.roundHexPathLocal(ctx, offs, this.smallUnitHexCornerRadius());
+          ctx.fillStyle = config.unitFillColor;
+          ctx.fill();
+          ctx.strokeStyle = config.unitStrokeColor;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.restore();
+        });
+        this.drawHealthBadgeAt(
+          pos,
+          halfH,
+          this.unitHealthValues[idx] ?? 0,
+          false,
+          SMALL_UNIT_HEALTH_BADGE_SCALE,
+          'insideHexSmallUnit',
+          rotRadVisual,
+        );
+        {
+          const tr = halfH * 0.2175;
+          const tc = smallUnitActivationToggleCenterWorldRad(pos, rotRadVisual, layout);
+          this.drawActivationToggle(tc, tr, this.unitActivated[idx] !== false);
+        }
+        const rMarkers = this.unitEffectMarkers[idx];
+        if (rMarkers && rMarkers.length > 0) {
+          this.drawEffectMarkers(pos, rMarkers, halfH, 'small', rotRadVisual);
+        }
         ctx.restore();
+        this.strokeHexAtCenterRotated(pos, rotRadModel, rp.color, 2.4);
       });
-      this.drawHealthBadgeAt(
-        pos,
-        halfH,
-        this.unitHealthValues[d.index] ?? 0,
-        false,
-        SMALL_UNIT_HEALTH_BADGE_SCALE,
-        'insideHexSmallUnit',
-        rotRadVisual,
-      );
-      {
-        const tr = halfH * 0.2175;
-        const tc = smallUnitActivationToggleCenterWorldRad(pos, rotRadVisual, layout);
-        this.drawActivationToggle(tc, tr, this.unitActivated[d.index] !== false);
-      }
-      const rMarkers = this.unitEffectMarkers[d.index];
-      if (rMarkers && rMarkers.length > 0) {
-        this.drawEffectMarkers(pos, rMarkers, halfH, 'small', rotRadVisual);
-      }
-      ctx.restore();
-      this.strokeHexAtCenterRotated(pos, rotRadModel, rp.color, 2.4);
     }
   }
 
@@ -2587,9 +2600,12 @@ export class Renderer {
         const blend = draggedEntry ? getEtherVortexBlendColor(draggedEntry.domain) : null;
         const previewRotDeg = draggedEntry?.rotationDeg ?? 0;
         const rotRad = (previewRotDeg * Math.PI) / 180;
-        this.drawTerrainStyleHexonAtWorldPivot(this.etherVortexPreviewWorld, rotRad, {
-          domainBlendColor: blend,
-          imageSrc: etherImgSrc,
+        const pv = this.etherVortexPreviewWorld;
+        this.withTablePieceDragLift(pv, () => {
+          this.drawTerrainStyleHexonAtWorldPivot(pv, rotRad, {
+            domainBlendColor: blend,
+            imageSrc: etherImgSrc,
+          });
         });
       }
     }
@@ -2601,12 +2617,15 @@ export class Renderer {
       if (!entry) continue;
       const rotRad = (entry.rotationDeg * Math.PI) / 180;
       const { ctx } = this;
+      const p = { x: d.worldX, y: d.worldY };
       ctx.save();
       ctx.globalAlpha = 0.72;
       const blend = getEtherVortexBlendColor(entry.domain);
-      this.drawTerrainStyleHexonAtWorldPivot({ x: d.worldX, y: d.worldY }, rotRad, {
-        domainBlendColor: blend,
-        imageSrc: etherImgSrc,
+      this.withTablePieceDragLift(p, () => {
+        this.drawTerrainStyleHexonAtWorldPivot(p, rotRad, {
+          domainBlendColor: blend,
+          imageSrc: etherImgSrc,
+        });
       });
       ctx.restore();
     }
@@ -2634,28 +2653,38 @@ export class Renderer {
             ? { x: remoteEther.drag.worldX!, y: remoteEther.drag.worldY! }
             : (v.offBoardWorld ?? layout.hexToPixel(v.center));
       const world = this.etherVortexBadgeWorldFromPivot(pivot, v.rotationDeg);
-      ctx.save();
-      ctx.translate(world.x, world.y);
-      ctx.rotate(Math.PI / 4);
-      ctx.fillStyle = '#1e88e5';
-      ctx.strokeStyle = '#1565c0';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.rect(-half, -half, half * 2, half * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.rotate(-Math.PI / 4);
-      ctx.fillStyle = '#ffffff';
-      const fontPx = Math.max(15, Math.min(20, half * 1.02));
-      ctx.font = `bold ${fontPx}px "Segoe UI", system-ui, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      const fixDeg = this.config.oppositeSeatUnitRotationCorrectionDeg;
-      if (fixDeg !== 0) {
-        ctx.rotate((-fixDeg * Math.PI) / 180);
+      const liftEtherBadge =
+        (this.draggingEtherVortexIndex === vi && this.etherVortexPreviewWorld) ||
+        remoteEther;
+      const drawCrystalBadge = (): void => {
+        ctx.save();
+        ctx.translate(world.x, world.y);
+        ctx.rotate(Math.PI / 4);
+        ctx.fillStyle = '#1e88e5';
+        ctx.strokeStyle = '#1565c0';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.rect(-half, -half, half * 2, half * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.rotate(-Math.PI / 4);
+        ctx.fillStyle = '#ffffff';
+        const fontPx = Math.max(15, Math.min(20, half * 1.02));
+        ctx.font = `bold ${fontPx}px "Segoe UI", system-ui, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const fixDeg = this.config.oppositeSeatUnitRotationCorrectionDeg;
+        if (fixDeg !== 0) {
+          ctx.rotate((-fixDeg * Math.PI) / 180);
+        }
+        ctx.fillText(String(v.etherCrystals), 0, 0);
+        ctx.restore();
+      };
+      if (liftEtherBadge) {
+        this.withTablePieceDragLift(pivot, drawCrystalBadge);
+      } else {
+        drawCrystalBadge();
       }
-      ctx.fillText(String(v.etherCrystals), 0, 0);
-      ctx.restore();
     }
   }
 
@@ -2742,6 +2771,13 @@ export class Renderer {
   private drawSelectedLiftPass(): void {
     const { ctx, layout, config } = this;
     const etherImgSrc = config.etherVortexImageSrc ?? config.terrainImageSrc;
+    /** Same silhouette as `drawTerrainStyleHexonAtWorldPivot` (scale 1); ring hugs art like big-minis, not fixed 1.08 gap. */
+    const terrainVortexSelStrokeW = 3;
+    const terrainVortexRingScale = this.miniatureSelectionRingPathScale(
+      1,
+      this.bigMiniHexonBoundsLocal(layout),
+      terrainVortexSelStrokeW,
+    );
 
     if (this.selectedTerrainIndex !== null) {
       const index = this.selectedTerrainIndex;
@@ -2752,7 +2788,13 @@ export class Renderer {
         this.drawTerrainStyleHexonAtWorldPivot(this.terrainPreviewWorld, rotRad, {
           domainBlendColor: null,
         });
-        this.drawBigMiniRingAtPoint(this.terrainPreviewWorld, 1.08, '#4caf50', 3, previewRotDeg);
+        this.drawBigMiniRingAtPoint(
+          this.terrainPreviewWorld,
+          terrainVortexRingScale,
+          '#4caf50',
+          terrainVortexSelStrokeW,
+          previewRotDeg,
+        );
         return;
       }
       if (this.isPeerDraggingEntity('terrain', index)) return;
@@ -2764,9 +2806,9 @@ export class Renderer {
       const pivot = offBoard ?? layout.hexToPixel(center);
       this.drawTerrainStyleHexonAtWorldPivot(pivot, rotRad, { domainBlendColor: null });
       if (offBoard) {
-        this.drawBigMiniRingAtPoint(offBoard, 1.08, '#4caf50', 3, rotDeg);
+        this.drawBigMiniRingAtPoint(offBoard, terrainVortexRingScale, '#4caf50', terrainVortexSelStrokeW, rotDeg);
       } else {
-        this.drawBigMiniRing(center, 1.08, '#4caf50', 3, rotDeg);
+        this.drawBigMiniRing(center, terrainVortexRingScale, '#4caf50', terrainVortexSelStrokeW, rotDeg);
       }
       return;
     }
@@ -2778,21 +2820,6 @@ export class Renderer {
       const rotDeg = entry.rotationDeg;
       const rotRad = (rotDeg * Math.PI) / 180;
       const blend = getEtherVortexBlendColor(entry.domain);
-      if (
-        this.draggingEtherVortexIndex === index &&
-        this.etherVortexPreviewWorld
-      ) {
-        this.drawTerrainStyleHexonAtWorldPivot(this.etherVortexPreviewWorld, rotRad, {
-          domainBlendColor: blend,
-          imageSrc: etherImgSrc,
-        });
-      } else {
-        const pivot = entry.offBoardWorld ?? layout.hexToPixel(entry.center);
-        this.drawTerrainStyleHexonAtWorldPivot(pivot, rotRad, {
-          domainBlendColor: blend,
-          imageSrc: etherImgSrc,
-        });
-      }
       const v = entry;
       const vi = index;
       const remoteEther = this.remotePeerTableDrags.find(
@@ -2802,46 +2829,106 @@ export class Renderer {
           p.drag.worldX !== null &&
           p.drag.worldY !== null,
       );
-      const badgePivot =
-        this.draggingEtherVortexIndex === vi && this.etherVortexPreviewWorld
-          ? this.etherVortexPreviewWorld
-          : remoteEther
-            ? { x: remoteEther.drag.worldX!, y: remoteEther.drag.worldY! }
-            : (v.offBoardWorld ?? layout.hexToPixel(v.center));
+
+      if (this.draggingEtherVortexIndex === index && this.etherVortexPreviewWorld) {
+        const pv = this.etherVortexPreviewWorld;
+        const half = etherVortexCrystalBadgeHalfWorld(layout);
+        const world = this.etherVortexBadgeWorldFromPivot(pv, v.rotationDeg);
+        this.withTablePieceDragLift(pv, () => {
+          this.drawTerrainStyleHexonAtWorldPivot(pv, rotRad, {
+            domainBlendColor: blend,
+            imageSrc: etherImgSrc,
+          });
+          ctx.save();
+          ctx.translate(world.x, world.y);
+          ctx.rotate(Math.PI / 4);
+          ctx.fillStyle = '#1e88e5';
+          ctx.strokeStyle = '#1565c0';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.rect(-half, -half, half * 2, half * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.rotate(-Math.PI / 4);
+          ctx.fillStyle = '#ffffff';
+          const fontPx = Math.max(15, Math.min(20, half * 1.02));
+          ctx.font = `bold ${fontPx}px "Segoe UI", system-ui, sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          const fixDeg = this.config.oppositeSeatUnitRotationCorrectionDeg;
+          if (fixDeg !== 0) {
+            ctx.rotate((-fixDeg * Math.PI) / 180);
+          }
+          ctx.fillText(String(v.etherCrystals), 0, 0);
+          ctx.restore();
+          this.drawBigMiniRingAtPoint(
+            pv,
+            terrainVortexRingScale,
+            '#4caf50',
+            terrainVortexSelStrokeW,
+            rotDeg,
+          );
+        });
+        return;
+      }
+
+      const placePivot = entry.offBoardWorld ?? layout.hexToPixel(entry.center);
+      this.drawTerrainStyleHexonAtWorldPivot(placePivot, rotRad, {
+        domainBlendColor: blend,
+        imageSrc: etherImgSrc,
+      });
+
+      const badgePivot = remoteEther
+        ? { x: remoteEther.drag.worldX!, y: remoteEther.drag.worldY! }
+        : (v.offBoardWorld ?? layout.hexToPixel(v.center));
       const half = etherVortexCrystalBadgeHalfWorld(layout);
       const world = this.etherVortexBadgeWorldFromPivot(badgePivot, v.rotationDeg);
-      ctx.save();
-      ctx.translate(world.x, world.y);
-      ctx.rotate(Math.PI / 4);
-      ctx.fillStyle = '#1e88e5';
-      ctx.strokeStyle = '#1565c0';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.rect(-half, -half, half * 2, half * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.rotate(-Math.PI / 4);
-      ctx.fillStyle = '#ffffff';
-      const fontPx = Math.max(15, Math.min(20, half * 1.02));
-      ctx.font = `bold ${fontPx}px "Segoe UI", system-ui, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      const fixDeg = this.config.oppositeSeatUnitRotationCorrectionDeg;
-      if (fixDeg !== 0) {
-        ctx.rotate((-fixDeg * Math.PI) / 180);
-      }
-      ctx.fillText(String(v.etherCrystals), 0, 0);
-      ctx.restore();
-
-      if (
-        this.draggingEtherVortexIndex === index &&
-        this.etherVortexPreviewWorld
-      ) {
-        this.drawBigMiniRingAtPoint(this.etherVortexPreviewWorld, 1.08, '#4caf50', 3, rotDeg);
-      } else if (entry.offBoardWorld) {
-        this.drawBigMiniRingAtPoint(entry.offBoardWorld, 1.08, '#4caf50', 3, rotDeg);
+      const drawSelEtherCrystalBadge = (): void => {
+        ctx.save();
+        ctx.translate(world.x, world.y);
+        ctx.rotate(Math.PI / 4);
+        ctx.fillStyle = '#1e88e5';
+        ctx.strokeStyle = '#1565c0';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.rect(-half, -half, half * 2, half * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.rotate(-Math.PI / 4);
+        ctx.fillStyle = '#ffffff';
+        const fontPx = Math.max(15, Math.min(20, half * 1.02));
+        ctx.font = `bold ${fontPx}px "Segoe UI", system-ui, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const fixDeg = this.config.oppositeSeatUnitRotationCorrectionDeg;
+        if (fixDeg !== 0) {
+          ctx.rotate((-fixDeg * Math.PI) / 180);
+        }
+        ctx.fillText(String(v.etherCrystals), 0, 0);
+        ctx.restore();
+      };
+      if (remoteEther) {
+        this.withTablePieceDragLift(badgePivot, drawSelEtherCrystalBadge);
       } else {
-        this.drawBigMiniRing(entry.center, 1.08, '#4caf50', 3, rotDeg);
+        drawSelEtherCrystalBadge();
+      }
+
+      if (entry.offBoardWorld) {
+        this.drawBigMiniRingAtPoint(
+          entry.offBoardWorld,
+          terrainVortexRingScale,
+          '#4caf50',
+          terrainVortexSelStrokeW,
+          rotDeg,
+        );
+      } else {
+        this.drawBigMiniRing(
+          entry.center,
+          terrainVortexRingScale,
+          '#4caf50',
+          terrainVortexSelStrokeW,
+          rotDeg,
+        );
       }
       return;
     }
@@ -2855,53 +2942,52 @@ export class Renderer {
       const badgeRadius = baseRadius * BIG_MINI_VISUAL_SCALE;
       const bigActR = baseRadius * BIG_MINI_VISUAL_SCALE * 0.22;
       if (this.draggingBigMiniIndex === i && this.bigMiniPreviewPosition) {
+        const p = this.bigMiniPreviewPosition;
         const previewRotModel = this.bigMiniRotationDeg[i] ?? 0;
         const previewRotVisual =
           previewRotModel + this.config.oppositeSeatUnitRotationCorrectionDeg;
-        this.drawBigMiniHexonAtPoint(
-          this.bigMiniPreviewPosition,
-          baseRadius,
-          config.bigMiniPreviewColor,
-          previewRotModel,
-          this.bigMiniSpriteSrcs[i] ?? null,
-        );
-        ctx.globalAlpha = 0.6;
-        this.drawBigMiniRingAtPoint(
-          this.bigMiniPreviewPosition,
-          ringPreviewInner,
-          config.bigMiniSymbolColor,
-          2,
-          previewRotModel,
-        );
-        ctx.globalAlpha = 1.0;
-        this.drawHealthBadgeAt(
-          this.bigMiniPreviewPosition,
-          badgeRadius,
-          this.bigMiniHealthValues[i] ?? 0,
-          this.openHealthControlsBigMiniIndex === i,
-          BIG_UNIT_HEALTH_UI_SCALE,
-          'insideHexBigUnitBottom',
-          (previewRotVisual * Math.PI) / 180,
-        );
-        const dragBmMarkers = this.bigMiniEffectMarkers[i];
-        if (dragBmMarkers && dragBmMarkers.length > 0) {
-          this.drawEffectMarkers(
-            this.bigMiniPreviewPosition,
-            dragBmMarkers,
+        this.withTablePieceDragLift(p, () => {
+          this.drawBigMiniHexonAtPoint(
+            p,
+            baseRadius,
+            config.bigMiniPreviewColor,
+            previewRotModel,
+            this.bigMiniSpriteSrcs[i] ?? null,
+          );
+          ctx.globalAlpha = 0.6;
+          this.drawBigMiniRingAtPoint(
+            p,
+            ringPreviewInner,
+            config.bigMiniSymbolColor,
+            2,
+            previewRotModel,
+          );
+          ctx.globalAlpha = 1.0;
+          this.drawHealthBadgeAt(
+            p,
             badgeRadius,
-            'bigHexon',
+            this.bigMiniHealthValues[i] ?? 0,
+            this.openHealthControlsBigMiniIndex === i,
+            BIG_UNIT_HEALTH_UI_SCALE,
+            'insideHexBigUnitBottom',
             (previewRotVisual * Math.PI) / 180,
           );
-        }
-        this.drawActivationToggle(
-          bigMiniActivationToggleCenterWorld(
-            this.bigMiniPreviewPosition,
-            previewRotVisual,
-            lay,
-          ),
-          bigActR,
-          this.bigMiniActivated[i] !== false,
-        );
+          const dragBmMarkers = this.bigMiniEffectMarkers[i];
+          if (dragBmMarkers && dragBmMarkers.length > 0) {
+            this.drawEffectMarkers(
+              p,
+              dragBmMarkers,
+              badgeRadius,
+              'bigHexon',
+              (previewRotVisual * Math.PI) / 180,
+            );
+          }
+          this.drawActivationToggle(
+            bigMiniActivationToggleCenterWorld(p, previewRotVisual, lay),
+            bigActR,
+            this.bigMiniActivated[i] !== false,
+          );
+        });
         return;
       }
       this.drawBigMiniPlacedAtIndex(i, true);
@@ -2929,46 +3015,48 @@ export class Renderer {
         const previewRotModel = this.hugeMiniRotationDeg[i] ?? 0;
         const previewRotRadModel = (previewRotModel * Math.PI) / 180;
         const p = this.hugeMiniPreviewPosition;
-        this.drawHugeMiniShapeAtPoint(
-          p,
-          layout,
-          config.hugeMiniPreviewColor,
-          previewRotModel,
-          this.hugeMiniSpriteSrcs[i] ?? null,
-          this.hugeMiniSpriteOffsetsLocal[i] ?? { x: 0, y: 0 },
-          this.hugeMiniSpriteRotationDegLocal[i] ?? 0,
-        );
-        ctx.globalAlpha = 0.6;
-        this.drawShapeRingAtPoint(
-          p,
-          cells,
-          layout,
-          hugePreviewRingPathScale,
-          config.bigMiniSymbolColor,
-          2,
-          previewRotModel,
-          undefined,
-          true,
-        );
-        ctx.globalAlpha = 1.0;
-        this.drawHealthBadgeAt(
-          p,
-          badgeRadius,
-          this.hugeMiniHealthValues[i] ?? 0,
-          this.openHealthControlsHugeMiniIndex === i,
-          HUGE_UNIT_HEALTH_UI_SCALE,
-          'insideHexHugeUnit',
-          previewRotRadModel,
-        );
-        const dragMarkers = this.hugeMiniEffectMarkers[i];
-        if (dragMarkers && dragMarkers.length > 0) {
-          this.drawEffectMarkers(p, dragMarkers, badgeRadius, 'hugeTri', previewRotRadModel);
-        }
-        this.drawActivationToggle(
-          hugeMiniActivationToggleCenterFromPivotWorld(p, previewRotModel, layout),
-          hugeActR,
-          this.hugeMiniActivated[i] !== false,
-        );
+        this.withTablePieceDragLift(p, () => {
+          this.drawHugeMiniShapeAtPoint(
+            p,
+            layout,
+            config.hugeMiniPreviewColor,
+            previewRotModel,
+            this.hugeMiniSpriteSrcs[i] ?? null,
+            this.hugeMiniSpriteOffsetsLocal[i] ?? { x: 0, y: 0 },
+            this.hugeMiniSpriteRotationDegLocal[i] ?? 0,
+          );
+          ctx.globalAlpha = 0.6;
+          this.drawShapeRingAtPoint(
+            p,
+            cells,
+            layout,
+            hugePreviewRingPathScale,
+            config.bigMiniSymbolColor,
+            2,
+            previewRotModel,
+            undefined,
+            true,
+          );
+          ctx.globalAlpha = 1.0;
+          this.drawHealthBadgeAt(
+            p,
+            badgeRadius,
+            this.hugeMiniHealthValues[i] ?? 0,
+            this.openHealthControlsHugeMiniIndex === i,
+            HUGE_UNIT_HEALTH_UI_SCALE,
+            'insideHexHugeUnit',
+            previewRotRadModel,
+          );
+          const dragMarkers = this.hugeMiniEffectMarkers[i];
+          if (dragMarkers && dragMarkers.length > 0) {
+            this.drawEffectMarkers(p, dragMarkers, badgeRadius, 'hugeTri', previewRotRadModel);
+          }
+          this.drawActivationToggle(
+            hugeMiniActivationToggleCenterFromPivotWorld(p, previewRotModel, layout),
+            hugeActR,
+            this.hugeMiniActivated[i] !== false,
+          );
+        });
         return;
       }
       this.drawHugeMiniPlacedAtIndex(i, true);
@@ -2994,47 +3082,49 @@ export class Renderer {
         const p = this.largeMiniPreviewPosition;
         const boxW = bounds.maxX - bounds.minX;
         const boxH = bounds.maxY - bounds.minY;
-        this.drawLargeMiniShapeAtPoint(
-          p,
-          cells,
-          bounds,
-          boxW,
-          boxH,
-          config.largeMiniPreviewColor,
-          previewRotModel,
-          null,
-          largeLocalOrigin,
-        );
-        ctx.globalAlpha = 0.6;
-        this.drawShapeRingAtPoint(
-          p,
-          cells,
-          layout,
-          0.62 * LARGE_MINI_VISUAL_SCALE,
-          config.bigMiniSymbolColor,
-          2,
-          previewRotModel,
-          largeLocalOrigin,
-        );
-        ctx.globalAlpha = 1.0;
-        this.drawHealthBadgeAt(
-          p,
-          badgeRadius,
-          this.largeMiniHealthValues[i] ?? 0,
-          this.openHealthControlsLargeMiniIndex === i,
-          LARGE_UNIT_HEALTH_UI_SCALE,
-          'insideHexLargeUnit',
-          previewRotRadModel,
-        );
-        const dragMarkers = this.largeMiniEffectMarkers[i];
-        if (dragMarkers && dragMarkers.length > 0) {
-          this.drawEffectMarkers(p, dragMarkers, badgeRadius, 'largeTri', previewRotRadModel);
-        }
-        this.drawActivationToggle(
-          largeMiniActivationToggleCenterWorld(p, previewRotModel, layout),
-          largeActR,
-          this.largeMiniActivated[i] !== false,
-        );
+        this.withTablePieceDragLift(p, () => {
+          this.drawLargeMiniShapeAtPoint(
+            p,
+            cells,
+            bounds,
+            boxW,
+            boxH,
+            config.largeMiniPreviewColor,
+            previewRotModel,
+            null,
+            largeLocalOrigin,
+          );
+          ctx.globalAlpha = 0.6;
+          this.drawShapeRingAtPoint(
+            p,
+            cells,
+            layout,
+            0.62 * LARGE_MINI_VISUAL_SCALE,
+            config.bigMiniSymbolColor,
+            2,
+            previewRotModel,
+            largeLocalOrigin,
+          );
+          ctx.globalAlpha = 1.0;
+          this.drawHealthBadgeAt(
+            p,
+            badgeRadius,
+            this.largeMiniHealthValues[i] ?? 0,
+            this.openHealthControlsLargeMiniIndex === i,
+            LARGE_UNIT_HEALTH_UI_SCALE,
+            'insideHexLargeUnit',
+            previewRotRadModel,
+          );
+          const dragMarkers = this.largeMiniEffectMarkers[i];
+          if (dragMarkers && dragMarkers.length > 0) {
+            this.drawEffectMarkers(p, dragMarkers, badgeRadius, 'largeTri', previewRotRadModel);
+          }
+          this.drawActivationToggle(
+            largeMiniActivationToggleCenterWorld(p, previewRotModel, layout),
+            largeActR,
+            this.largeMiniActivated[i] !== false,
+          );
+        });
         return;
       }
       this.drawLargeMiniPlacedAtIndex(i, true);
@@ -3046,54 +3136,47 @@ export class Renderer {
       if (this.isPeerDraggingEntity('unit', i)) return;
       const { halfH } = this.hexHalfExtentFromLayout();
       if (this.draggingUnitIndex === i && this.dragPreviewPosition) {
+        const pv = this.dragPreviewPosition;
         const rotDegModel = this.unitRotationDeg[i] ?? 0;
         const rotRadModel = (rotDegModel * Math.PI) / 180;
         const rotRadVisual =
           ((rotDegModel + this.config.oppositeSeatUnitRotationCorrectionDeg) * Math.PI) / 180;
         const sprite = this.getSpriteImage(this.unitSpriteSrcs[i] ?? null);
-        this.drawSmallUnitInHex(this.dragPreviewPosition, rotRadModel, sprite, () => {
-          ctx.save();
-          ctx.translate(this.dragPreviewPosition!.x, this.dragPreviewPosition!.y);
-          ctx.rotate(rotRadModel);
-          const offs = [0, 1, 2, 3, 4, 5].map((j) => layout.hexCornerOffset(j));
-          ctx.beginPath();
-          this.roundHexPathLocal(ctx, offs, this.smallUnitHexCornerRadius());
-          ctx.fillStyle = config.unitFillColor;
-          ctx.fill();
-          ctx.strokeStyle = config.unitStrokeColor;
-          ctx.lineWidth = 2;
-          ctx.stroke();
-          ctx.restore();
-        });
-        this.strokeHexAtCenterRotated(this.dragPreviewPosition, rotRadModel, '#4caf50', 2.5);
-        this.drawHealthBadgeAt(
-          this.dragPreviewPosition,
-          halfH,
-          this.unitHealthValues[i] ?? 0,
-          this.openHealthControlsUnitIndex === i,
-          SMALL_UNIT_HEALTH_BADGE_SCALE,
-          'insideHexSmallUnit',
-          rotRadVisual,
-        );
-        {
-          const tr = halfH * 0.2175;
-          const tc = smallUnitActivationToggleCenterWorldRad(
-            this.dragPreviewPosition!,
-            rotRadVisual,
-            layout,
-          );
-          this.drawActivationToggle(tc, tr, this.unitActivated[i] !== false);
-        }
-        const dragMarkers = this.unitEffectMarkers[i];
-        if (dragMarkers && dragMarkers.length > 0) {
-          this.drawEffectMarkers(
-            this.dragPreviewPosition,
-            dragMarkers,
+        this.withTablePieceDragLift(pv, () => {
+          this.drawSmallUnitInHex(pv, rotRadModel, sprite, () => {
+            ctx.save();
+            ctx.translate(pv.x, pv.y);
+            ctx.rotate(rotRadModel);
+            const offs = [0, 1, 2, 3, 4, 5].map((j) => layout.hexCornerOffset(j));
+            ctx.beginPath();
+            this.roundHexPathLocal(ctx, offs, this.smallUnitHexCornerRadius());
+            ctx.fillStyle = config.unitFillColor;
+            ctx.fill();
+            ctx.strokeStyle = config.unitStrokeColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.restore();
+          });
+          this.strokeHexAtCenterRotated(pv, rotRadModel, '#4caf50', 2.5);
+          this.drawHealthBadgeAt(
+            pv,
             halfH,
-            'small',
+            this.unitHealthValues[i] ?? 0,
+            this.openHealthControlsUnitIndex === i,
+            SMALL_UNIT_HEALTH_BADGE_SCALE,
+            'insideHexSmallUnit',
             rotRadVisual,
           );
-        }
+          {
+            const tr = halfH * 0.2175;
+            const tc = smallUnitActivationToggleCenterWorldRad(pv, rotRadVisual, layout);
+            this.drawActivationToggle(tc, tr, this.unitActivated[i] !== false);
+          }
+          const dragMarkers = this.unitEffectMarkers[i];
+          if (dragMarkers && dragMarkers.length > 0) {
+            this.drawEffectMarkers(pv, dragMarkers, halfH, 'small', rotRadVisual);
+          }
+        });
         return;
       }
       this.drawUnitPlacedAtIndex(i, true);
@@ -3273,112 +3356,111 @@ export class Renderer {
         this.draggingBigMiniIndex === this.selectedBigMiniIndex
       )
     ) {
+      const pv = this.bigMiniPreviewPosition;
+      const bmIdx = this.draggingBigMiniIndex;
       const previewRotModel =
-        this.draggingBigMiniIndex !== null
-          ? (this.bigMiniRotationDeg[this.draggingBigMiniIndex] ?? 0)
-          : 0;
+        bmIdx !== null ? (this.bigMiniRotationDeg[bmIdx] ?? 0) : 0;
       const previewRotVisual =
         previewRotModel + this.config.oppositeSeatUnitRotationCorrectionDeg;
-      this.drawBigMiniHexonAtPoint(
-        this.bigMiniPreviewPosition,
-        baseRadius,
-        config.bigMiniPreviewColor,
-        previewRotModel,
-        this.draggingBigMiniIndex !== null
-          ? (this.bigMiniSpriteSrcs[this.draggingBigMiniIndex] ?? null)
-          : null,
-      );
-      ctx.globalAlpha = 0.6;
-      this.drawBigMiniRingAtPoint(
-        this.bigMiniPreviewPosition,
-        ringPreviewInner,
-        config.bigMiniSymbolColor,
-        2,
-        previewRotModel,
-      );
-      ctx.globalAlpha = 1.0;
-      if (this.draggingBigMiniIndex !== null) {
-        this.drawHealthBadgeAt(
-          this.bigMiniPreviewPosition,
-          badgeRadius,
-          this.bigMiniHealthValues[this.draggingBigMiniIndex] ?? 0,
-          this.openHealthControlsBigMiniIndex === this.draggingBigMiniIndex,
-          BIG_UNIT_HEALTH_UI_SCALE,
-          'insideHexBigUnitBottom',
-          (previewRotVisual * Math.PI) / 180,
+      this.withTablePieceDragLift(pv, () => {
+        this.drawBigMiniHexonAtPoint(
+          pv,
+          baseRadius,
+          config.bigMiniPreviewColor,
+          previewRotModel,
+          bmIdx !== null ? (this.bigMiniSpriteSrcs[bmIdx] ?? null) : null,
         );
-        const dragBmMarkers = this.bigMiniEffectMarkers[this.draggingBigMiniIndex];
-        if (dragBmMarkers && dragBmMarkers.length > 0) {
-          this.drawEffectMarkers(
-            this.bigMiniPreviewPosition,
-            dragBmMarkers,
+        ctx.globalAlpha = 0.6;
+        this.drawBigMiniRingAtPoint(
+          pv,
+          ringPreviewInner,
+          config.bigMiniSymbolColor,
+          2,
+          previewRotModel,
+        );
+        ctx.globalAlpha = 1.0;
+        if (bmIdx !== null) {
+          this.drawHealthBadgeAt(
+            pv,
             badgeRadius,
-            'bigHexon',
+            this.bigMiniHealthValues[bmIdx] ?? 0,
+            this.openHealthControlsBigMiniIndex === bmIdx,
+            BIG_UNIT_HEALTH_UI_SCALE,
+            'insideHexBigUnitBottom',
             (previewRotVisual * Math.PI) / 180,
           );
+          const dragBmMarkers = this.bigMiniEffectMarkers[bmIdx];
+          if (dragBmMarkers && dragBmMarkers.length > 0) {
+            this.drawEffectMarkers(
+              pv,
+              dragBmMarkers,
+              badgeRadius,
+              'bigHexon',
+              (previewRotVisual * Math.PI) / 180,
+            );
+          }
+          this.drawActivationToggle(
+            bigMiniActivationToggleCenterWorld(pv, previewRotVisual, layout),
+            bigActR,
+            this.bigMiniActivated[bmIdx] !== false,
+          );
         }
-        this.drawActivationToggle(
-          bigMiniActivationToggleCenterWorld(
-            this.bigMiniPreviewPosition,
-            previewRotVisual,
-            layout,
-          ),
-          bigActR,
-          this.bigMiniActivated[this.draggingBigMiniIndex] !== false,
-        );
-      }
+      });
     }
 
     for (const rp of this.remotePeerTableDrags) {
       const d = rp.drag;
       if (d.kind !== 'big' || d.index === null || d.worldX === null || d.worldY === null) continue;
       if (d.index < 0 || d.index >= this.bigMiniCenters.length) continue;
-      const previewRotModel = this.bigMiniRotationDeg[d.index] ?? 0;
+      const idx = d.index;
+      const previewRotModel = this.bigMiniRotationDeg[idx] ?? 0;
       const previewRotVisual =
         previewRotModel + this.config.oppositeSeatUnitRotationCorrectionDeg;
       const p = { x: d.worldX, y: d.worldY };
       ctx.save();
-      ctx.globalAlpha = 0.72;
-      this.drawBigMiniHexonAtPoint(
-        p,
-        baseRadius,
-        config.bigMiniPreviewColor,
-        previewRotModel,
-        this.bigMiniSpriteSrcs[d.index] ?? null,
-      );
-      ctx.globalAlpha = 0.55;
-      this.drawBigMiniRingAtPoint(
-        p,
-        ringPreviewInner,
-        rp.color,
-        2.5,
-        previewRotModel,
-      );
-      ctx.globalAlpha = 1;
-      this.drawHealthBadgeAt(
-        p,
-        badgeRadius,
-        this.bigMiniHealthValues[d.index] ?? 0,
-        false,
-        BIG_UNIT_HEALTH_UI_SCALE,
-        'insideHexBigUnitBottom',
-        (previewRotVisual * Math.PI) / 180,
-      );
-      const rBm = this.bigMiniEffectMarkers[d.index];
-      if (rBm && rBm.length > 0) {
-        this.drawEffectMarkers(
+      this.withTablePieceDragLift(p, () => {
+        ctx.globalAlpha = 0.72;
+        this.drawBigMiniHexonAtPoint(
           p,
-          rBm,
+          baseRadius,
+          config.bigMiniPreviewColor,
+          previewRotModel,
+          this.bigMiniSpriteSrcs[idx] ?? null,
+        );
+        ctx.globalAlpha = 0.55;
+        this.drawBigMiniRingAtPoint(
+          p,
+          ringPreviewInner,
+          rp.color,
+          2.5,
+          previewRotModel,
+        );
+        ctx.globalAlpha = 1;
+        this.drawHealthBadgeAt(
+          p,
           badgeRadius,
-          'bigHexon',
+          this.bigMiniHealthValues[idx] ?? 0,
+          false,
+          BIG_UNIT_HEALTH_UI_SCALE,
+          'insideHexBigUnitBottom',
           (previewRotVisual * Math.PI) / 180,
         );
-      }
-      this.drawActivationToggle(
-        bigMiniActivationToggleCenterWorld(p, previewRotVisual, layout),
-        bigActR,
-        this.bigMiniActivated[d.index] !== false,
-      );
+        const rBm = this.bigMiniEffectMarkers[idx];
+        if (rBm && rBm.length > 0) {
+          this.drawEffectMarkers(
+            p,
+            rBm,
+            badgeRadius,
+            'bigHexon',
+            (previewRotVisual * Math.PI) / 180,
+          );
+        }
+        this.drawActivationToggle(
+          bigMiniActivationToggleCenterWorld(p, previewRotVisual, layout),
+          bigActR,
+          this.bigMiniActivated[idx] !== false,
+        );
+      });
       ctx.restore();
     }
   }
@@ -3773,77 +3855,82 @@ export class Renderer {
         ? (this.largeMiniRotationDeg[this.draggingLargeMiniIndex] ?? 0) : 0;
       const previewRotRadModel = (previewRotModel * Math.PI) / 180;
       const p = this.largeMiniPreviewPosition;
-      this.drawLargeMiniShapeAtPoint(
-        p, cells, bounds, boxW, boxH,
-        config.largeMiniPreviewColor, previewRotModel, null,
-        largeLocalOrigin,
-      );
-      ctx.globalAlpha = 0.6;
-      this.drawShapeRingAtPoint(
-        p, cells, layout,
-        0.62 * LARGE_MINI_VISUAL_SCALE, config.bigMiniSymbolColor, 2, previewRotModel, largeLocalOrigin,
-      );
-      ctx.globalAlpha = 1.0;
-      if (this.draggingLargeMiniIndex !== null) {
-        this.drawHealthBadgeAt(
-          p, badgeRadius,
-          this.largeMiniHealthValues[this.draggingLargeMiniIndex] ?? 0,
-          this.openHealthControlsLargeMiniIndex === this.draggingLargeMiniIndex,
-          LARGE_UNIT_HEALTH_UI_SCALE, 'insideHexLargeUnit', previewRotRadModel,
+      this.withTablePieceDragLift(p, () => {
+        this.drawLargeMiniShapeAtPoint(
+          p, cells, bounds, boxW, boxH,
+          config.largeMiniPreviewColor, previewRotModel, null,
+          largeLocalOrigin,
         );
-        const dragMarkers = this.largeMiniEffectMarkers[this.draggingLargeMiniIndex];
-        if (dragMarkers && dragMarkers.length > 0) {
-          this.drawEffectMarkers(
-            p,
-            dragMarkers,
-            badgeRadius,
-            'largeTri',
-            previewRotRadModel,
+        ctx.globalAlpha = 0.6;
+        this.drawShapeRingAtPoint(
+          p, cells, layout,
+          0.62 * LARGE_MINI_VISUAL_SCALE, config.bigMiniSymbolColor, 2, previewRotModel, largeLocalOrigin,
+        );
+        ctx.globalAlpha = 1.0;
+        if (this.draggingLargeMiniIndex !== null) {
+          this.drawHealthBadgeAt(
+            p, badgeRadius,
+            this.largeMiniHealthValues[this.draggingLargeMiniIndex] ?? 0,
+            this.openHealthControlsLargeMiniIndex === this.draggingLargeMiniIndex,
+            LARGE_UNIT_HEALTH_UI_SCALE, 'insideHexLargeUnit', previewRotRadModel,
+          );
+          const dragMarkers = this.largeMiniEffectMarkers[this.draggingLargeMiniIndex];
+          if (dragMarkers && dragMarkers.length > 0) {
+            this.drawEffectMarkers(
+              p,
+              dragMarkers,
+              badgeRadius,
+              'largeTri',
+              previewRotRadModel,
+            );
+          }
+          this.drawActivationToggle(
+            largeMiniActivationToggleCenterWorld(p, previewRotModel, layout),
+            largeActR,
+            this.largeMiniActivated[this.draggingLargeMiniIndex] !== false,
           );
         }
-        this.drawActivationToggle(
-          largeMiniActivationToggleCenterWorld(p, previewRotModel, layout),
-          largeActR,
-          this.largeMiniActivated[this.draggingLargeMiniIndex] !== false,
-        );
-      }
+      });
     }
 
     for (const rp of this.remotePeerTableDrags) {
       const d = rp.drag;
       if (d.kind !== 'large' || d.index === null || d.worldX === null || d.worldY === null) continue;
       if (d.index < 0 || d.index >= this.largeMiniAnchors.length) continue;
-      const previewRotModel = this.largeMiniRotationDeg[d.index] ?? 0;
+      const idx = d.index;
+      const previewRotModel = this.largeMiniRotationDeg[idx] ?? 0;
       const previewRotRadModel = (previewRotModel * Math.PI) / 180;
       const p = { x: d.worldX, y: d.worldY };
       ctx.save();
-      ctx.globalAlpha = 0.72;
-      this.drawLargeMiniShapeAtPoint(
-        p, cells, bounds, boxW, boxH,
-        config.largeMiniPreviewColor, previewRotModel, null,
-        largeLocalOrigin,
-      );
-      ctx.globalAlpha = 0.5;
-      this.drawShapeRingAtPoint(
-        p, cells, layout,
-        0.62 * LARGE_MINI_VISUAL_SCALE, rp.color, 2.2, previewRotModel, largeLocalOrigin,
-      );
-      ctx.globalAlpha = 1;
-      this.drawHealthBadgeAt(
-        p, badgeRadius,
-        this.largeMiniHealthValues[d.index] ?? 0,
-        false,
-        LARGE_UNIT_HEALTH_UI_SCALE, 'insideHexLargeUnit', previewRotRadModel,
-      );
-      const rLm = this.largeMiniEffectMarkers[d.index];
-      if (rLm && rLm.length > 0) {
-        this.drawEffectMarkers(p, rLm, badgeRadius, 'largeTri', previewRotRadModel);
-      }
-      this.drawActivationToggle(
-        largeMiniActivationToggleCenterWorld(p, previewRotModel, layout),
-        largeActR,
-        this.largeMiniActivated[d.index] !== false,
-      );
+      this.withTablePieceDragLift(p, () => {
+        ctx.globalAlpha = 0.72;
+        this.drawLargeMiniShapeAtPoint(
+          p, cells, bounds, boxW, boxH,
+          config.largeMiniPreviewColor, previewRotModel, null,
+          largeLocalOrigin,
+        );
+        ctx.globalAlpha = 0.5;
+        this.drawShapeRingAtPoint(
+          p, cells, layout,
+          0.62 * LARGE_MINI_VISUAL_SCALE, rp.color, 2.2, previewRotModel, largeLocalOrigin,
+        );
+        ctx.globalAlpha = 1;
+        this.drawHealthBadgeAt(
+          p, badgeRadius,
+          this.largeMiniHealthValues[idx] ?? 0,
+          false,
+          LARGE_UNIT_HEALTH_UI_SCALE, 'insideHexLargeUnit', previewRotRadModel,
+        );
+        const rLm = this.largeMiniEffectMarkers[idx];
+        if (rLm && rLm.length > 0) {
+          this.drawEffectMarkers(p, rLm, badgeRadius, 'largeTri', previewRotRadModel);
+        }
+        this.drawActivationToggle(
+          largeMiniActivationToggleCenterWorld(p, previewRotModel, layout),
+          largeActR,
+          this.largeMiniActivated[idx] !== false,
+        );
+      });
       ctx.restore();
     }
   }
@@ -4024,105 +4111,110 @@ export class Renderer {
         ? (this.hugeMiniRotationDeg[this.draggingHugeMiniIndex] ?? 0) : 0;
       const previewRotRadModel = (previewRotModel * Math.PI) / 180;
       const p = this.hugeMiniPreviewPosition;
-      this.drawHugeMiniShapeAtPoint(
-        p,
-        layout,
-        config.hugeMiniPreviewColor,
-        previewRotModel,
-        this.draggingHugeMiniIndex !== null
-          ? (this.hugeMiniSpriteSrcs[this.draggingHugeMiniIndex] ?? null)
-          : null,
-        this.draggingHugeMiniIndex !== null
-          ? (this.hugeMiniSpriteOffsetsLocal[this.draggingHugeMiniIndex] ?? { x: 0, y: 0 })
-          : { x: 0, y: 0 },
-        this.draggingHugeMiniIndex !== null
-          ? (this.hugeMiniSpriteRotationDegLocal[this.draggingHugeMiniIndex] ?? 0)
-          : 0,
-      );
-      ctx.globalAlpha = 0.6;
-      this.drawShapeRingAtPoint(
-        p,
-        cells,
-        layout,
-        hugePreviewRingPathScale,
-        config.bigMiniSymbolColor,
-        2,
-        previewRotModel,
-        undefined,
-        true,
-      );
-      ctx.globalAlpha = 1.0;
-      if (this.draggingHugeMiniIndex !== null) {
-        this.drawHealthBadgeAt(
-          p, badgeRadius,
-          this.hugeMiniHealthValues[this.draggingHugeMiniIndex] ?? 0,
-          this.openHealthControlsHugeMiniIndex === this.draggingHugeMiniIndex,
-          HUGE_UNIT_HEALTH_UI_SCALE, 'insideHexHugeUnit', previewRotRadModel,
+      this.withTablePieceDragLift(p, () => {
+        this.drawHugeMiniShapeAtPoint(
+          p,
+          layout,
+          config.hugeMiniPreviewColor,
+          previewRotModel,
+          this.draggingHugeMiniIndex !== null
+            ? (this.hugeMiniSpriteSrcs[this.draggingHugeMiniIndex] ?? null)
+            : null,
+          this.draggingHugeMiniIndex !== null
+            ? (this.hugeMiniSpriteOffsetsLocal[this.draggingHugeMiniIndex] ?? { x: 0, y: 0 })
+            : { x: 0, y: 0 },
+          this.draggingHugeMiniIndex !== null
+            ? (this.hugeMiniSpriteRotationDegLocal[this.draggingHugeMiniIndex] ?? 0)
+            : 0,
         );
-        const dragMarkers = this.hugeMiniEffectMarkers[this.draggingHugeMiniIndex];
-        if (dragMarkers && dragMarkers.length > 0) {
-          this.drawEffectMarkers(
-            p,
-            dragMarkers,
-            badgeRadius,
-            'hugeTri',
-            previewRotRadModel,
+        ctx.globalAlpha = 0.6;
+        this.drawShapeRingAtPoint(
+          p,
+          cells,
+          layout,
+          hugePreviewRingPathScale,
+          config.bigMiniSymbolColor,
+          2,
+          previewRotModel,
+          undefined,
+          true,
+        );
+        ctx.globalAlpha = 1.0;
+        if (this.draggingHugeMiniIndex !== null) {
+          this.drawHealthBadgeAt(
+            p, badgeRadius,
+            this.hugeMiniHealthValues[this.draggingHugeMiniIndex] ?? 0,
+            this.openHealthControlsHugeMiniIndex === this.draggingHugeMiniIndex,
+            HUGE_UNIT_HEALTH_UI_SCALE, 'insideHexHugeUnit', previewRotRadModel,
+          );
+          const dragMarkers = this.hugeMiniEffectMarkers[this.draggingHugeMiniIndex];
+          if (dragMarkers && dragMarkers.length > 0) {
+            this.drawEffectMarkers(
+              p,
+              dragMarkers,
+              badgeRadius,
+              'hugeTri',
+              previewRotRadModel,
+            );
+          }
+          this.drawActivationToggle(
+            hugeMiniActivationToggleCenterFromPivotWorld(p, previewRotModel, layout),
+            hugeActR,
+            this.hugeMiniActivated[this.draggingHugeMiniIndex] !== false,
           );
         }
-        this.drawActivationToggle(
-          hugeMiniActivationToggleCenterFromPivotWorld(p, previewRotModel, layout),
-          hugeActR,
-          this.hugeMiniActivated[this.draggingHugeMiniIndex] !== false,
-        );
-      }
+      });
     }
 
     for (const rp of this.remotePeerTableDrags) {
       const d = rp.drag;
       if (d.kind !== 'huge' || d.index === null || d.worldX === null || d.worldY === null) continue;
       if (d.index < 0 || d.index >= this.hugeMiniAnchors.length) continue;
-      const previewRotModel = this.hugeMiniRotationDeg[d.index] ?? 0;
+      const idx = d.index;
+      const previewRotModel = this.hugeMiniRotationDeg[idx] ?? 0;
       const previewRotRadModel = (previewRotModel * Math.PI) / 180;
       const p = { x: d.worldX, y: d.worldY };
       ctx.save();
-      ctx.globalAlpha = 0.72;
-      this.drawHugeMiniShapeAtPoint(
-        p,
-        layout,
-        config.hugeMiniPreviewColor,
-        previewRotModel,
-        this.hugeMiniSpriteSrcs[d.index] ?? null,
-        this.hugeMiniSpriteOffsetsLocal[d.index] ?? { x: 0, y: 0 },
-        this.hugeMiniSpriteRotationDegLocal[d.index] ?? 0,
-      );
-      ctx.globalAlpha = 0.5;
-      this.drawShapeRingAtPoint(
-        p,
-        cells,
-        layout,
-        hugePreviewRingPathScale,
-        rp.color,
-        2.2,
-        previewRotModel,
-        undefined,
-        true,
-      );
-      ctx.globalAlpha = 1;
-      this.drawHealthBadgeAt(
-        p, badgeRadius,
-        this.hugeMiniHealthValues[d.index] ?? 0,
-        false,
-        HUGE_UNIT_HEALTH_UI_SCALE, 'insideHexHugeUnit', previewRotRadModel,
-      );
-      const rHm = this.hugeMiniEffectMarkers[d.index];
-      if (rHm && rHm.length > 0) {
-        this.drawEffectMarkers(p, rHm, badgeRadius, 'hugeTri', previewRotRadModel);
-      }
-      this.drawActivationToggle(
-        hugeMiniActivationToggleCenterFromPivotWorld(p, previewRotModel, layout),
-        hugeActR,
-        this.hugeMiniActivated[d.index] !== false,
-      );
+      this.withTablePieceDragLift(p, () => {
+        ctx.globalAlpha = 0.72;
+        this.drawHugeMiniShapeAtPoint(
+          p,
+          layout,
+          config.hugeMiniPreviewColor,
+          previewRotModel,
+          this.hugeMiniSpriteSrcs[idx] ?? null,
+          this.hugeMiniSpriteOffsetsLocal[idx] ?? { x: 0, y: 0 },
+          this.hugeMiniSpriteRotationDegLocal[idx] ?? 0,
+        );
+        ctx.globalAlpha = 0.5;
+        this.drawShapeRingAtPoint(
+          p,
+          cells,
+          layout,
+          hugePreviewRingPathScale,
+          rp.color,
+          2.2,
+          previewRotModel,
+          undefined,
+          true,
+        );
+        ctx.globalAlpha = 1;
+        this.drawHealthBadgeAt(
+          p, badgeRadius,
+          this.hugeMiniHealthValues[idx] ?? 0,
+          false,
+          HUGE_UNIT_HEALTH_UI_SCALE, 'insideHexHugeUnit', previewRotRadModel,
+        );
+        const rHm = this.hugeMiniEffectMarkers[idx];
+        if (rHm && rHm.length > 0) {
+          this.drawEffectMarkers(p, rHm, badgeRadius, 'hugeTri', previewRotRadModel);
+        }
+        this.drawActivationToggle(
+          hugeMiniActivationToggleCenterFromPivotWorld(p, previewRotModel, layout),
+          hugeActR,
+          this.hugeMiniActivated[idx] !== false,
+        );
+      });
       ctx.restore();
     }
   }

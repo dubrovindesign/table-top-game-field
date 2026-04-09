@@ -59,6 +59,11 @@ export interface RenderConfig {
   largeMiniPreviewColor: string;
   hugeMiniFillColor: string;
   hugeMiniPreviewColor: string;
+  /**
+   * Uniform scale around drag preview pivot while moving table pieces (units, big/large/huge, ether vortex).
+   * 1 = disabled. Applied only in the renderer, not to game coordinates.
+   */
+  tablePieceDragLiftScale: number;
 }
 
 export const defaultRenderConfig: RenderConfig = {
@@ -105,4 +110,5 @@ export const defaultRenderConfig: RenderConfig = {
   largeMiniPreviewColor: 'rgba(156, 39, 176, 0.25)',
   hugeMiniFillColor: 'rgba(233, 30, 99, 0.40)',
   hugeMiniPreviewColor: 'rgba(233, 30, 99, 0.25)',
+  tablePieceDragLiftScale: 1.1,
 };

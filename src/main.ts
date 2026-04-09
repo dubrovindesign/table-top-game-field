@@ -109,6 +109,7 @@ import { mountAppMoreMenu } from './appMoreMenu.ts';
 import { getWheelBehavior, mountAppSettingsToolbar } from './appSettings.ts';
 import { createPwaInstallMenuFlow } from './pwaInstallUi.ts';
 import './style.css';
+import { playBoardDragDrop, playBoardDragLift } from './boardDragSfx';
 import { loadCatalogBundle } from './catalog/index.ts';
 
 await loadCatalogBundle();
@@ -2214,6 +2215,7 @@ function commitBoardDragStateAsPointerUpAt(clientX: number, clientY: number): vo
     unitCard.setPassthrough(false);
     renderer.setDragState(null, null, null);
     endedMiniatureDrag = true;
+    playBoardDragDrop();
   }
   if (draggingBigMiniIndex !== null) {
     const dropWorld = screenToBoardWorld(clientX, clientY);
@@ -2231,6 +2233,7 @@ function commitBoardDragStateAsPointerUpAt(clientX: number, clientY: number): vo
     renderer.setBigMiniatures(bigMiniatures.map((m) => m.center), null, null, null,
       bigMiniatures.map((m) => m.offBoardWorld));
     endedMiniatureDrag = true;
+    playBoardDragDrop();
   }
   if (draggingLargeMiniIndex !== null) {
     const dropHex = hexAtScreen(clientX, clientY);
@@ -2245,6 +2248,7 @@ function commitBoardDragStateAsPointerUpAt(clientX: number, clientY: number): vo
     largeMiniDragOverAnchor = null;
     unitCard.setPassthrough(false);
     endedMiniatureDrag = true;
+    playBoardDragDrop();
   }
   if (draggingHugeMiniIndex !== null) {
     const idx = draggingHugeMiniIndex;
@@ -2266,6 +2270,7 @@ function commitBoardDragStateAsPointerUpAt(clientX: number, clientY: number): vo
     hugeMiniDragOverAnchor = null;
     unitCard.setPassthrough(false);
     endedMiniatureDrag = true;
+    playBoardDragDrop();
   }
   if (isDraggingTerrain && draggingTerrainIndex !== null) {
     const dropWorld = screenToBoardWorld(clientX, clientY);
@@ -2282,6 +2287,7 @@ function commitBoardDragStateAsPointerUpAt(clientX: number, clientY: number): vo
     terrainPreviewWorld = null;
     terrainDragOverCenter = null;
     renderer.setTerrain(terrains, null, false, null, null, selectedTerrainIndex, terrainOffBoardWorlds);
+    playBoardDragDrop();
   }
   if (isDraggingEtherVortex && draggingEtherVortexIndex !== null) {
     const dropWorld = screenToBoardWorld(clientX, clientY);
@@ -2299,6 +2305,7 @@ function commitBoardDragStateAsPointerUpAt(clientX: number, clientY: number): vo
     etherVortexDragOverCenter = null;
     renderer.setEtherVortexDrag(null, null, null);
     renderer.setEtherVortexes(etherVortexes, selectedEtherVortexIndex);
+    playBoardDragDrop();
   }
   if (endedMiniatureDrag) {
     clearSelectionAfterMiniatureDragEnd();
@@ -3308,6 +3315,7 @@ function tryPromoteUnitDragFromPending(e: ClientXY, pointerId?: number): void {
   dragPreviewPosition = screenToBoardWorld(e.clientX, e.clientY);
   renderer.setDragState(draggingUnitIndex, dragOverHex, dragPreviewPosition);
   captureBoardDragPointer(pointerId);
+  playBoardDragLift();
   scheduleRender();
 }
 
@@ -3330,6 +3338,7 @@ function tryPromoteBigMiniDragFromPending(e: ClientXY, pointerId?: number): void
     bigMiniDragOverCenter,
   );
   captureBoardDragPointer(pointerId);
+  playBoardDragLift();
   scheduleRender();
 }
 
@@ -3356,6 +3365,7 @@ function tryPromoteTerrainDragFromPending(e: ClientXY, pointerId?: number): void
     terrainOffBoardWorlds,
   );
   captureBoardDragPointer(pointerId);
+  playBoardDragLift();
   scheduleRender();
 }
 
@@ -3373,6 +3383,7 @@ function tryPromoteLargeMiniDragFromPending(e: ClientXY, pointerId?: number): vo
   const hex = hexAtScreen(e.clientX, e.clientY);
   largeMiniDragOverAnchor = hex ? bestLargeMiniAnchorForPointer(hex, largeMiniPreviewPosition, idx) : null;
   captureBoardDragPointer(pointerId);
+  playBoardDragLift();
   scheduleRender();
 }
 
@@ -3389,6 +3400,7 @@ function tryPromoteHugeMiniDragFromPending(e: ClientXY, pointerId?: number): voi
   hugeMiniPreviewPosition = screenToBoardWorld(e.clientX, e.clientY);
   hugeMiniDragOverAnchor = null;
   captureBoardDragPointer(pointerId);
+  playBoardDragLift();
   scheduleRender();
 }
 
@@ -3407,6 +3419,7 @@ function tryPromoteEtherVortexDragFromPending(e: ClientXY, pointerId?: number): 
   etherVortexDragOverCenter = nearestHexonCenterFromWorld(etherVortexPreviewWorld);
   renderer.setEtherVortexDrag(draggingEtherVortexIndex, etherVortexPreviewWorld, etherVortexDragOverCenter);
   captureBoardDragPointer(pointerId);
+  playBoardDragLift();
   scheduleRender();
 }
 
@@ -3471,6 +3484,7 @@ function tryPromoteGodLooseDrag(e: ClientXY): void {
 
   godDragWholeGodDeck = false;
   godLooseDragPreviewWorld = previewW;
+  playBoardDragLift();
   scheduleRender();
 }
 
@@ -4923,6 +4937,7 @@ function finishGodLooseDragIfActive(e: MouseEvent | PointerEvent): void {
         godLooseDragPending = false;
         godLooseDragPendingIndex = null;
         godDragWholeGodDeck = false;
+        playBoardDragDrop();
         scheduleRender();
         return;
       }
@@ -4949,6 +4964,7 @@ function finishGodLooseDragIfActive(e: MouseEvent | PointerEvent): void {
         godTablePieces[idx] = withGodPieceWorld(entry, w);
       }
     }
+    playBoardDragDrop();
     isDraggingGodLoose = false;
     godDraggingLooseIndex = null;
     godLooseDragPreviewWorld = null;
@@ -5634,6 +5650,7 @@ function onWindowPointerUpOrCancel(e: PointerEvent): void {
     unitCard.setPassthrough(false);
     renderer.setDragState(null, null, null);
     clearSelectionAfterMiniatureDragEnd();
+    playBoardDragDrop();
     scheduleRender();
   }
   if (e.button === 0 && draggingBigMiniIndex !== null) {
@@ -5654,6 +5671,7 @@ function onWindowPointerUpOrCancel(e: PointerEvent): void {
     renderer.setBigMiniatures(bigMiniatures.map((m) => m.center), null, null, null,
       bigMiniatures.map((m) => m.offBoardWorld));
     clearSelectionAfterMiniatureDragEnd();
+    playBoardDragDrop();
     scheduleRender();
   }
   if (e.button === 0 && draggingLargeMiniIndex !== null) {
@@ -5669,6 +5687,7 @@ function onWindowPointerUpOrCancel(e: PointerEvent): void {
     largeMiniDragOverAnchor = null;
     unitCard.setPassthrough(false);
     clearSelectionAfterMiniatureDragEnd();
+    playBoardDragDrop();
     scheduleRender();
   }
   if (e.button === 0 && draggingHugeMiniIndex !== null) {
@@ -5691,6 +5710,7 @@ function onWindowPointerUpOrCancel(e: PointerEvent): void {
     hugeMiniDragOverAnchor = null;
     unitCard.setPassthrough(false);
     clearSelectionAfterMiniatureDragEnd();
+    playBoardDragDrop();
     scheduleRender();
   }
   if (e.button === 0 && isDraggingTerrain) {
@@ -5710,6 +5730,7 @@ function onWindowPointerUpOrCancel(e: PointerEvent): void {
     terrainPreviewWorld = null;
     terrainDragOverCenter = null;
     renderer.setTerrain(terrains, null, false, null, null, selectedTerrainIndex, terrainOffBoardWorlds);
+    playBoardDragDrop();
     scheduleRender();
   }
   if (e.button === 0 && isDraggingEtherVortex) {
@@ -5730,6 +5751,7 @@ function onWindowPointerUpOrCancel(e: PointerEvent): void {
     etherVortexDragOverCenter = null;
     renderer.setEtherVortexDrag(null, null, null);
     renderer.setEtherVortexes(etherVortexes, selectedEtherVortexIndex);
+    playBoardDragDrop();
     scheduleRender();
   }
   isPanning = false;
