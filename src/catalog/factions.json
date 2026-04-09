@@ -1,11 +1,56 @@
 [
-  { "id": "castilla", "name": "Кастилия", "domain": "destruction", "panelIconSrc": "/castilla.webp" },
-  { "id": "chasm", "name": "Бездна", "domain": "destruction", "panelIconSrc": "/chasm.webp" },
-  { "id": "broomgar_horde", "name": "Орда Брумгаров", "domain": "destruction", "panelIconSrc": "/broomgar_horde.webp" },
-  { "id": "engeln", "name": "Ангельн", "domain": "creation", "panelIconSrc": "/engeln.webp" },
-  { "id": "priory_of_hope", "name": "Приорат Надежды", "domain": "creation", "panelIconSrc": "/priory_of_hope.webp" },
-  { "id": "blackthorn", "name": "Великий Терновник", "domain": "death", "panelIconSrc": "/blackthorn.webp" },
-  { "id": "krigmark", "name": "Кригмарк", "domain": "death", "panelIconSrc": "/krigmark.webp" },
-  { "id": "keld", "name": "Кельд", "domain": "life", "panelIconSrc": "/keld.webp" },
-  { "id": "mercenaries", "name": "Наёмники", "domain": "life", "panelIconSrc": "/mercenaries.webp" }
+  {
+    "id": "blackthorn",
+    "name": "Великий Терновник",
+    "domain": "death",
+    "panelIconSrc": "/blackthorn.webp"
+  },
+  {
+    "id": "broomgar_horde",
+    "name": "Орда Брумгаров",
+    "domain": "destruction",
+    "panelIconSrc": "/broomgar_horde.webp"
+  },
+  {
+    "id": "castilla",
+    "name": "Кастилия",
+    "domain": "destruction",
+    "panelIconSrc": "/castilla.webp"
+  },
+  {
+    "id": "chasm",
+    "name": "Бездна",
+    "domain": "destruction",
+    "panelIconSrc": "/chasm.webp"
+  },
+  {
+    "id": "engeln",
+    "name": "Ангельн",
+    "domain": "creation",
+    "panelIconSrc": "/engeln.webp"
+  },
+  {
+    "id": "keld",
+    "name": "Кельд",
+    "domain": "life",
+    "panelIconSrc": "/keld.webp"
+  },
+  {
+    "id": "krigmark",
+    "name": "Кригмарк",
+    "domain": "death",
+    "panelIconSrc": "/krigmark.webp"
+  },
+  {
+    "id": "priory_of_hope",
+    "name": "Приорат Надежды",
+    "domain": "creation",
+    "panelIconSrc": "/priory_of_hope.webp"
+  },
+  {
+    "id": "mercenaries",
+    "name": "Наёмники",
+    "domain": "life",
+    "panelIconSrc": "/mercenaries.webp"
+  }
 ]

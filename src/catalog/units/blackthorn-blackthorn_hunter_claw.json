@@ -1,0 +1,54 @@
+{
+  "id": "blackthorn-blackthorn_hunter_claw",
+  "points": 27,
+  "card": {
+    "name": "Охотник Терновника",
+    "size": "small",
+    "health": 1,
+    "maxHealth": 1,
+    "defense": {
+      "white": 7,
+      "green": 9
+    },
+    "defenseReaction": {
+      "white": 0,
+      "green": 0
+    },
+    "walk": 2,
+    "run": 2,
+    "domains": [
+      "death"
+    ],
+    "concentration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "exploration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "attacks": [
+      {
+        "name": "че 4 а 3 М",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 1,
+        "dice": {}
+      }
+    ],
+    "keywords": [
+      "Великий Терновник"
+    ],
+    "flagSprite": "/blackthorn.webp",
+    "catalogUnitId": "blackthorn-blackthorn_hunter_claw",
+    "sprite": "/catalog-units/blackthorn-blackthorn_hunter_claw/image.jpg",
+    "miniatureSprite": "/catalog-units/blackthorn-blackthorn_hunter_claw/miniature.jpg"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "id": "chasm-hellhound",
+  "points": 25,
+  "card": {
+    "name": "Гончая Бездны",
+    "size": "small",
+    "health": 1,
+    "maxHealth": 1,
+    "defense": {
+      "white": 0,
+      "green": 0
+    },
+    "defenseReaction": {
+      "white": 0,
+      "green": 0
+    },
+    "walk": 1,
+    "run": 2,
+    "domains": [
+      "destruction"
+    ],
+    "concentration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "exploration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "attacks": [
+      {
+        "name": "—",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 1,
+        "dice": {
+          "red": 1,
+          "green": 0,
+          "black": 0,
+          "white": 0
+        }
+      }
+    ],
+    "keywords": [
+      "Бездна"
+    ],
+    "flagSprite": "/chasm.webp",
+    "catalogUnitId": "chasm-hellhound",
+    "sprite": "/catalog-units/chasm-hellhound/image.jpg",
+    "miniatureSprite": "/catalog-units/chasm-hellhound/miniature.jpg"
+  }
+}

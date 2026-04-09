@@ -109,7 +109,7 @@ function stdMeleeRegions() {
 
 const MINIATURE_ON_FACE = { x: 0.172, y: 0, w: 0.698, h: 0.448 };
 
-/** Индексы 0–22 = как в split-broomgar-spritesheet.mjs. Яч. 21–22 на листе — оборотные фрагменты зурбагов; при смене листа проверить. */
+/** Индексы 0–22 по сетке листа broomgar-front.jpg. Яч. 21–22 — оборотные фрагменты зурбагов; при смене листа проверить. */
 const UNITS = [
   {
     id: 'broomgar-bibar-batyr-topory',
@@ -510,9 +510,7 @@ async function writeLeaderArtFromSheet() {
     .extract({ left, top, width, height })
     .jpeg({ quality: 92 })
     .toBuffer();
-  const facePath = path.join(dir, 'face.jpg');
   const imgPath = path.join(dir, 'image.jpg');
-  await sharp(faceBuf).toFile(facePath);
   await sharp(faceBuf).toFile(imgPath);
   const faceW = width;
   const faceFullH = height;

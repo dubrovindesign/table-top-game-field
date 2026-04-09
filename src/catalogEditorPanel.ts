@@ -317,7 +317,7 @@ export class CatalogEditorPanel {
   private cardKeywords!: HTMLInputElement;
   private cardSprite!: HTMLInputElement;
   private cardMiniatureSprite!: HTMLInputElement;
-  /** Пара «лицо + оборот» для склейки как ingest-unit-card-pair.ts */
+  /** Пара «лицо + оборот» для склейки (как tornscape:batch / tornscapePairIngestCore) */
   private cardPairFaceIn!: HTMLInputElement;
   private cardPairBackIn!: HTMLInputElement;
   private cardConcR!: HTMLInputElement;
@@ -3653,7 +3653,7 @@ export class CatalogEditorPanel {
   }
 
   /**
-   * Склейка лицо+оборот в оверрайды хотспотов (как ingest-unit-card-pair.ts).
+   * Склейка лицо+оборот в оверрайды хотспотов (как tornscape:batch).
    * Если задан `torKemadCard` — хотспоты по пресету a2 (`tornscapeKowHotspotPresetA2.ts`).
    * @returns data URL миниатюры для поля карточки
    */

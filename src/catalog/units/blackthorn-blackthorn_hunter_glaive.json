@@ -1,0 +1,54 @@
+{
+  "id": "blackthorn-blackthorn_hunter_glaive",
+  "points": 31,
+  "card": {
+    "name": "Охотник Терновника с Глефой",
+    "size": "small",
+    "health": 1,
+    "maxHealth": 1,
+    "defense": {
+      "white": 1,
+      "green": 7
+    },
+    "defenseReaction": {
+      "white": 0,
+      "green": 0
+    },
+    "walk": 2,
+    "run": 2,
+    "domains": [
+      "death"
+    ],
+    "concentration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "exploration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "attacks": [
+      {
+        "name": "Охотнак TepHoBHuka ®",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 1,
+        "dice": {}
+      }
+    ],
+    "keywords": [
+      "Великий Терновник"
+    ],
+    "flagSprite": "/blackthorn.webp",
+    "catalogUnitId": "blackthorn-blackthorn_hunter_glaive",
+    "sprite": "/catalog-units/blackthorn-blackthorn_hunter_glaive/image.jpg",
+    "miniatureSprite": "/catalog-units/blackthorn-blackthorn_hunter_glaive/miniature.jpg"
+  }
+}

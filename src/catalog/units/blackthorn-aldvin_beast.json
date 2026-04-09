@@ -1,0 +1,57 @@
+{
+  "id": "blackthorn-aldvin_beast",
+  "points": 19,
+  "card": {
+    "name": "Алдвин Искатель Истины",
+    "size": "small",
+    "health": 1,
+    "maxHealth": 1,
+    "defense": {
+      "white": 2,
+      "green": 5
+    },
+    "defenseReaction": {
+      "white": 0,
+      "green": 0
+    },
+    "walk": 5,
+    "run": 0,
+    "domains": [
+      "death"
+    ],
+    "concentration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "exploration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "attacks": [
+      {
+        "name": "Алдвин Мортенсон",
+        "range": 7,
+        "attackRange": "ranged",
+        "damageType": "physical",
+        "damage": 1,
+        "dice": {
+          "red": 7,
+          "white": 7
+        }
+      }
+    ],
+    "keywords": [
+      "Великий Терновник"
+    ],
+    "flagSprite": "/blackthorn.webp",
+    "catalogUnitId": "blackthorn-aldvin_beast",
+    "sprite": "/catalog-units/blackthorn-aldvin_beast/image.jpg",
+    "miniatureSprite": "/catalog-units/blackthorn-aldvin_beast/miniature.jpg"
+  }
+}

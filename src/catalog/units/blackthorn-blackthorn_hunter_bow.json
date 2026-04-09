@@ -1,0 +1,58 @@
+{
+  "id": "blackthorn-blackthorn_hunter_bow",
+  "points": 33,
+  "card": {
+    "name": "Охотник Терновника с Луком",
+    "size": "small",
+    "health": 1,
+    "maxHealth": 1,
+    "defense": {
+      "white": 4,
+      "green": 0
+    },
+    "defenseReaction": {
+      "white": 0,
+      "green": 0
+    },
+    "walk": 1,
+    "run": 2,
+    "domains": [
+      "death"
+    ],
+    "concentration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "exploration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "attacks": [
+      {
+        "name": "oY",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 4,
+        "dice": {
+          "red": 0,
+          "black": 4,
+          "green": 4
+        }
+      }
+    ],
+    "keywords": [
+      "Великий Терновник"
+    ],
+    "flagSprite": "/blackthorn.webp",
+    "catalogUnitId": "blackthorn-blackthorn_hunter_bow",
+    "sprite": "/catalog-units/blackthorn-blackthorn_hunter_bow/image.jpg",
+    "miniatureSprite": "/catalog-units/blackthorn-blackthorn_hunter_bow/miniature.jpg"
+  }
+}

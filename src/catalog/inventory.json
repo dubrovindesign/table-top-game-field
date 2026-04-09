@@ -1,184 +1,570 @@
 {
-  "inv-sheet-01": {
-    "id": "inv-sheet-01",
-    "name": "Доспех «Благословение Опсора»",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-01.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-02": {
-    "id": "inv-sheet-02",
-    "name": "Укреплённый Львиный Щит",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-02.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-03": {
-    "id": "inv-sheet-03",
-    "name": "Меч «Молниеносец»",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-03.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-04": {
-    "id": "inv-sheet-04",
-    "name": "Прислужник из Бездны",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-04.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-05": {
-    "id": "inv-sheet-05",
-    "name": "Защитная Печать Пламени",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-05.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-06": {
-    "id": "inv-sheet-06",
-    "name": "Посох «Сердце Пламени»",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-06.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-07": {
-    "id": "inv-sheet-07",
-    "name": "Секира «Жатва Леса»",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-07.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-08": {
-    "id": "inv-sheet-08",
-    "name": "Метка Дикой Ярости",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-08.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-09": {
-    "id": "inv-sheet-09",
-    "name": "Амулет «Благословение Леса»",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-09.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-10": {
-    "id": "inv-sheet-10",
-    "name": "Меч «Чемпион Десписа»",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-10.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-11": {
-    "id": "inv-sheet-11",
-    "name": "Бронебойные Снаряды",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-11.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-12": {
-    "id": "inv-sheet-12",
-    "name": "Укреплённый Некро-конь",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-12.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-13": {
-    "id": "inv-sheet-13",
-    "name": "Зелье Исцеления Ран",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-13.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-14": {
-    "id": "inv-sheet-14",
-    "name": "Печать Крыльев Бездны",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-14.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-15": {
-    "id": "inv-sheet-15",
-    "name": "Зелье Мороза",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-15.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-16": {
-    "id": "inv-sheet-16",
+  "eq-5-antidote": {
+    "id": "eq-5-antidote",
     "name": "Противоядие",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-16.jpg",
+    "points": 1,
+    "sprite": "/images/equipment/antidote.webp",
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
     "maxCopies": 99
   },
-  "inv-sheet-17": {
-    "id": "inv-sheet-17",
-    "name": "Согревающее Зелье",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-17.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-18": {
-    "id": "inv-sheet-18",
-    "name": "Зелье Воли",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-18.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-19": {
-    "id": "inv-sheet-19",
-    "name": "Зелье Ясности",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-19.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-20": {
-    "id": "inv-sheet-20",
-    "name": "Печать Истовой Веры",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-20.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-21": {
-    "id": "inv-sheet-21",
-    "name": "Эфирный Компас Экспедитора",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-21.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-22": {
-    "id": "inv-sheet-22",
-    "name": "Кольцо Покрова",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-22.jpg",
-    "maxCopies": 99
-  },
-  "inv-sheet-23": {
-    "id": "inv-sheet-23",
+  "eq-31-fate_cards": {
+    "id": "eq-31-fate_cards",
     "name": "Карты Судьбы",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-23.jpg",
+    "points": 2,
+    "sprite": "/images/equipment/fate_cards.webp",
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
     "maxCopies": 99
   },
-  "inv-sheet-24": {
-    "id": "inv-sheet-24",
-    "name": "Амулет Божественного Взора",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-24.jpg",
+  "eq-28-seal_faith": {
+    "id": "eq-28-seal_faith",
+    "name": "Печать Истовой Веры",
+    "points": 2,
+    "sprite": "/images/equipment/seal_faith.webp",
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
     "maxCopies": 99
   },
-  "inv-sheet-25": {
-    "id": "inv-sheet-25",
+  "eq-13-lion_shield": {
+    "id": "eq-13-lion_shield",
+    "name": "Укрепленный Львиный Щит",
+    "points": 6,
+    "sprite": "/images/equipment/lion_shield.webp",
+    "onlyForLeaderIds": [
+      "engeln-richard",
+      "engeln-richard_2"
+    ],
+    "maxCopies": 99
+  },
+  "eq-30-shroud_ring": {
+    "id": "eq-30-shroud_ring",
+    "name": "Кольцо Покрова",
+    "points": 4,
+    "sprite": "/images/equipment/shroud_ring.webp",
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "maxCopies": 99
+  },
+  "eq-26-will_potion": {
+    "id": "eq-26-will_potion",
+    "name": "Зелье Воли",
+    "points": 1,
+    "sprite": "/images/equipment/will_potion.webp",
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "maxCopies": 99
+  },
+  "eq-6-frost_potion": {
+    "id": "eq-6-frost_potion",
+    "name": "Зелье Мороза",
+    "points": 1,
+    "sprite": "/images/equipment/frost_potion.webp",
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "maxCopies": 99
+  },
+  "eq-33-belt_strength": {
+    "id": "eq-33-belt_strength",
     "name": "Пояс Силы",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-25.jpg",
+    "points": 4,
+    "sprite": "/images/equipment/belt_strength.webp",
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
     "maxCopies": 99
   },
-  "inv-sheet-26": {
-    "id": "inv-sheet-26",
+  "eq-34-chaos_grenade": {
+    "id": "eq-34-chaos_grenade",
     "name": "Граната Хаоса",
-    "points": 0,
-    "sprite": "/inventory/inv-sheet-26.jpg",
+    "points": 2,
+    "sprite": "/images/equipment/chaos_grenade.webp",
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "maxCopies": 99
+  },
+  "eq-29-aether_compass": {
+    "id": "eq-29-aether_compass",
+    "name": "Эфирный Компас Экспедитора",
+    "points": 2,
+    "sprite": "/images/equipment/aether_compass.webp",
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "maxCopies": 99
+  },
+  "eq-27-clarity_potion": {
+    "id": "eq-27-clarity_potion",
+    "name": "Зелье Ясности",
+    "points": 1,
+    "sprite": "/images/equipment/clarity_potion.webp",
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "maxCopies": 99
+  },
+  "eq-2-healing_potion": {
+    "id": "eq-2-healing_potion",
+    "name": "Зелье Исцеления Ран",
+    "points": 2,
+    "sprite": "/images/equipment/healing_potion.webp",
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "maxCopies": 99
+  },
+  "eq-25-warming_potion": {
+    "id": "eq-25-warming_potion",
+    "name": "Согревающее Зелье",
+    "points": 1,
+    "sprite": "/images/equipment/warming_potion.webp",
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "maxCopies": 99
+  },
+  "eq-14-sword_lightning": {
+    "id": "eq-14-sword_lightning",
+    "name": "Меч \"Молниеносец\"",
+    "points": 3,
+    "sprite": "/images/equipment/sword_lightning.webp",
+    "onlyForLeaderIds": [
+      "engeln-richard"
+    ],
+    "maxCopies": 99
+  },
+  "eq-32-amulet_divine_gaze": {
+    "id": "eq-32-amulet_divine_gaze",
+    "name": "Амулет Божественного Взора",
+    "points": 1,
+    "sprite": "/images/equipment/amulet_divine_gaze.webp",
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "maxCopies": 99
+  },
+  "eq-12-armor_opsor": {
+    "id": "eq-12-armor_opsor",
+    "name": "Доспех \"Благословение Опсора\"",
+    "points": 2,
+    "sprite": "/images/equipment/armor_opsor.webp",
+    "onlyForLeaderIds": [
+      "engeln-richard_2"
+    ],
+    "maxCopies": 99
+  },
+  "eq-15-chasm_minion": {
+    "id": "eq-15-chasm_minion",
+    "name": "Прислужник из Бездны",
+    "points": 3,
+    "sprite": "/images/equipment/chasm_minion.webp",
+    "onlyForLeaderIds": [
+      "castilla-torquemad"
+    ],
+    "maxCopies": 99
+  },
+  "eq-17-staff_fireheart": {
+    "id": "eq-17-staff_fireheart",
+    "name": "Посох \"Сердце Пламени\"",
+    "points": 2,
+    "sprite": "/images/equipment/staff_fireheart.webp",
+    "onlyForLeaderIds": [
+      "castilla-torquemad",
+      "castilla-torquemad_2"
+    ],
+    "maxCopies": 99
+  },
+  "eq-24-seal_chasm_wings": {
+    "id": "eq-24-seal_chasm_wings",
+    "name": "Печать Крыльев Бездны",
+    "points": 3,
+    "sprite": "/images/equipment/seal_chasm_wings.webp",
+    "onlyForLeaderIds": [
+      "castilla-torquemad",
+      "chasm-abgorr",
+      "chasm-faceless",
+      "chasm-garkrand"
+    ],
+    "maxCopies": 99
+  },
+  "eq-16-seal_fire_defence": {
+    "id": "eq-16-seal_fire_defence",
+    "name": "Защитная Печать Пламени",
+    "points": 2,
+    "sprite": "/images/equipment/seal_fire_defence.webp",
+    "onlyForLeaderIds": [
+      "castilla-torquemad",
+      "castilla-torquemad_2"
+    ],
+    "maxCopies": 99
+  },
+  "eq-18-axe_harverster": {
+    "id": "eq-18-axe_harverster",
+    "name": "Секира \"Жатва Леса\"",
+    "points": 3,
+    "sprite": "/images/equipment/axe_harverster.webp",
+    "onlyForLeaderIds": [
+      "keld-kellantra",
+      "keld-kellantra_lindwurm"
+    ],
+    "maxCopies": 99
+  },
+  "eq-20-amulet_forest_blessing": {
+    "id": "eq-20-amulet_forest_blessing",
+    "name": "Амулет \"Благословение Леса\"",
+    "points": 2,
+    "sprite": "/images/equipment/amulet_forest_blessing.webp",
+    "onlyForLeaderIds": [
+      "keld-kellantra",
+      "keld-kellantra_lindwurm"
+    ],
+    "maxCopies": 99
+  },
+  "eq-19-mark_wild_rage": {
+    "id": "eq-19-mark_wild_rage",
+    "name": "Метка Дикой Ярости",
+    "points": 2,
+    "sprite": "/images/equipment/mark_wild_rage.webp",
+    "onlyForLeaderIds": [
+      "keld-kellantra_lindwurm"
+    ],
+    "maxCopies": 99
+  },
+  "eq-22-ap_shells": {
+    "id": "eq-22-ap_shells",
+    "name": "Бронебойные Снаряды",
+    "points": 2,
+    "sprite": "/images/equipment/ap_shells.webp",
+    "onlyForLeaderIds": [
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "maxCopies": 99
+  },
+  "eq-23-necro_horse": {
+    "id": "eq-23-necro_horse",
+    "name": "Укрепленный Некро-конь",
+    "points": 4,
+    "sprite": "/images/equipment/necro_horse.webp",
+    "onlyForLeaderIds": [
+      "krigmark-gottfried"
+    ],
+    "maxCopies": 99
+  },
+  "eq-21-sword_despis": {
+    "id": "eq-21-sword_despis",
+    "name": "Меч \"Чемпион Десписа\"",
+    "points": 2,
+    "sprite": "/images/equipment/sword_despis.webp",
+    "onlyForLeaderIds": [
+      "krigmark-gottfried_2"
+    ],
     "maxCopies": 99
   }
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Приорат Надежды: статы и хотспоты с карточек (лист SoE / KoW).
- * Геометрия зон — доли от полного face.jpg (склейка ряд0+ряд1); build-priory-scroll-cards пересчитает y под склейку с оборотом.
+ * Геометрия зон — доли от полной высоты лицевой части (склейка ряд0+ряд1); при смене склейки пересчитать y под image.jpg.
  */
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -558,7 +558,7 @@ const UNITS = [
   },
 ];
 
-/** Пары PNG: лицевая + вторая сторона (public/priory-pairs-png), см. build-priory-pairs-from-png.mjs */
+/** Пары PNG: лицевая + вторая сторона (public/priory-pairs-png) */
 const PRIORY_PNG_PAIR_UNITS = [
   {
     id: 'priory_of_hope-brigadir-strazhey-poberezhya',

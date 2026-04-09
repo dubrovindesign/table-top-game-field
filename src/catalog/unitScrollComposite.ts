@@ -1,11 +1,11 @@
 /**
  * Склейка «лицо + оборот» для карточки юнита в браузере — та же геометрия, что
- * scripts/ingest-unit-card-pair.ts (вертикальный скролл, кроп шапки оборота).
+ * tornscapePairIngestCore (вертикальный скролл, кроп шапки оборота).
  */
 
 import type { HotspotRegion } from './hotspotTypes';
 
-/** Как в build-priory-pairs-from-png.mjs */
+/** Геометрия склейки лица и оборота */
 export const UNIT_SCROLL_BACK_TOP_CROP_RATIO = 0.255;
 export const UNIT_SCROLL_BACK_TOP_CROP_LESS_PX = 30;
 export const UNIT_SCROLL_FACE_BOTTOM_CROP_PX = 30;
@@ -57,7 +57,7 @@ function canvasToJpegDataUrl(canvas: HTMLCanvasElement, quality: number): string
 }
 
 /**
- * Пересчёт нормализованных y/h зон при смене склейки (как в ingest-unit-card-pair.ts).
+ * Пересчёт нормализованных y/h зон при смене склейки (как в tornscapePairIngestCore).
  */
 export function rescaleHotspotRegionsForScroll(
   regions: HotspotRegion[],

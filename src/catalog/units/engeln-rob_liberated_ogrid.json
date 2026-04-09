@@ -1,0 +1,59 @@
+{
+  "id": "engeln-rob_liberated_ogrid",
+  "points": 34,
+  "card": {
+    "name": "Роб, Беглый Огрид",
+    "size": "small",
+    "health": 1,
+    "maxHealth": 1,
+    "defense": {
+      "white": 0,
+      "green": 0
+    },
+    "defenseReaction": {
+      "white": 0,
+      "green": 0
+    },
+    "walk": 1,
+    "run": 2,
+    "domains": [
+      "creation"
+    ],
+    "concentration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "exploration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "attacks": [
+      {
+        "name": "—",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 1,
+        "dice": {
+          "red": 1,
+          "green": 0,
+          "black": 0,
+          "white": 0
+        }
+      }
+    ],
+    "keywords": [
+      "Ангельн"
+    ],
+    "flagSprite": "/engeln.webp",
+    "catalogUnitId": "engeln-rob_liberated_ogrid",
+    "sprite": "/catalog-units/engeln-rob_liberated_ogrid/image.jpg",
+    "miniatureSprite": "/catalog-units/engeln-rob_liberated_ogrid/miniature.jpg"
+  }
+}

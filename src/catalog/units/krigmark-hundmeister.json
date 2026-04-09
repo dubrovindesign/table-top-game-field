@@ -2,47 +2,58 @@
   "id": "krigmark-hundmeister",
   "points": 18,
   "card": {
-    "attacks": [],
-    "catalogUnitId": "krigmark-hundmeister",
-    "concentration": {
-      "black": 0,
-      "green": 0,
-      "red": 0,
-      "white": 0
-    },
+    "name": "Хундмейстер",
+    "size": "small",
+    "health": 1,
+    "maxHealth": 1,
     "defense": {
-      "white": 1,
-      "green": 1
+      "white": 0,
+      "green": 0
     },
     "defenseReaction": {
-      "green": 0,
-      "white": 1
+      "white": 0,
+      "green": 0
     },
+    "walk": 1,
+    "run": 2,
     "domains": [
       "death"
     ],
-    "exploration": {
-      "black": 0,
-      "green": 0,
+    "concentration": {
       "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "exploration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
       "white": 0
     },
     "explorationRange": 0,
     "grabRange": 1,
-    "health": 5,
-    "faithMarkers": {
-      "red": 1
-    },
+    "attacks": [
+      {
+        "name": "—",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 1,
+        "dice": {
+          "red": 1,
+          "green": 0,
+          "black": 0,
+          "white": 0
+        }
+      }
+    ],
     "keywords": [
       "Кригмарк"
     ],
-    "maxHealth": 5,
-    "miniatureSprite": "/catalog-units/krigmark-hundmeister/miniature.jpg",
-    "name": "Хундмейстер",
-    "run": 6,
-    "size": "small",
+    "flagSprite": "/krigmark.webp",
+    "catalogUnitId": "krigmark-hundmeister",
     "sprite": "/catalog-units/krigmark-hundmeister/image.jpg",
-    "walk": 3,
-    "flagSprite": "/krigmark.webp"
+    "miniatureSprite": "/catalog-units/krigmark-hundmeister/miniature.jpg"
   }
 }

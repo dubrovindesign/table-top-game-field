@@ -1,0 +1,40 @@
+{
+  "image": "/catalog-units/blackthorn-drago_mort/image.jpg",
+  "title": "Драго-Морт Дэа'Мор",
+  "regions": [
+    {
+      "id": "defense_main",
+      "label": "Защита",
+      "x": 0.052,
+      "y": 0.298,
+      "w": 0.896,
+      "h": 0.056,
+      "range": 0,
+      "rangeUnit": "hex",
+      "damage": 0,
+      "white": 3,
+      "green": 3,
+      "red": 0,
+      "black": 0
+    },
+    {
+      "id": "attack_0",
+      "label": "УДАР. БУЛАВОЙ",
+      "x": 0.038,
+      "y": 0.366,
+      "w": 0.924,
+      "h": 0.044,
+      "range": 1,
+      "rangeUnit": "hex",
+      "damage": 1,
+      "red": 0,
+      "green": 0,
+      "black": 4,
+      "white": 0
+    }
+  ],
+  "scrollLayout": {
+    "faceH": 1419,
+    "totalH": 2476
+  }
+}

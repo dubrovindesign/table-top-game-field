@@ -1,0 +1,2620 @@
+[
+  {
+    "id": "god-spell-1",
+    "title": "Слово Войны",
+    "text": "word_of_war",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand"
+    ],
+    "copiesByLeader": {
+      "castilla-salvador": 1,
+      "castilla-torquemad": 1,
+      "castilla-torquemad_2": 1,
+      "castilla-torres": 1,
+      "chasm-abgorr": 1,
+      "chasm-chazz": 1,
+      "chasm-faceless": 1,
+      "chasm-garkrand": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/word_of_war.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-10",
+    "title": "Пламенная Земля",
+    "text": "flaming_earth",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "broomgar_horde-kurosh_khan": 2,
+      "castilla-salvador": 2,
+      "castilla-torquemad": 2,
+      "castilla-torquemad_2": 2,
+      "castilla-torres": 2,
+      "chasm-abgorr": 2,
+      "chasm-chazz": 2,
+      "chasm-faceless": 2,
+      "chasm-garkrand": 2,
+      "keld-kellantra": 2,
+      "keld-kellantra_lindwurm": 2,
+      "krigmark-gottfried": 2,
+      "krigmark-gottfried_2": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/flaming_earth.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-11",
+    "title": "Луч Хаоса",
+    "text": "ray_of_chaos",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "broomgar_horde-kurosh_khan": 3,
+      "castilla-salvador": 3,
+      "castilla-torquemad": 3,
+      "castilla-torquemad_2": 3,
+      "castilla-torres": 3,
+      "chasm-abgorr": 3,
+      "chasm-chazz": 3,
+      "chasm-faceless": 3,
+      "chasm-garkrand": 3,
+      "keld-kellantra": 3,
+      "keld-kellantra_lindwurm": 3,
+      "krigmark-gottfried": 3,
+      "krigmark-gottfried_2": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/ray_of_chaos.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-12",
+    "title": "Течение Хаоса",
+    "text": "current_of_chaos",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "broomgar_horde-kurosh_khan": 3,
+      "castilla-salvador": 3,
+      "castilla-torquemad": 3,
+      "castilla-torquemad_2": 3,
+      "castilla-torres": 3,
+      "chasm-abgorr": 3,
+      "chasm-chazz": 3,
+      "chasm-faceless": 3,
+      "chasm-garkrand": 3,
+      "keld-kellantra": 3,
+      "keld-kellantra_lindwurm": 3,
+      "krigmark-gottfried": 3,
+      "krigmark-gottfried_2": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/current_of_chaos.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-13",
+    "title": "Ускорение",
+    "text": "acceleration",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand"
+    ],
+    "copiesByLeader": {
+      "castilla-salvador": 3,
+      "castilla-torquemad": 3,
+      "castilla-torquemad_2": 3,
+      "castilla-torres": 3,
+      "chasm-abgorr": 3,
+      "chasm-chazz": 3,
+      "chasm-faceless": 3,
+      "chasm-garkrand": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/acceleration.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-14",
+    "title": "Боевая Ярость",
+    "text": "battle_rage",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand"
+    ],
+    "copiesByLeader": {
+      "castilla-salvador": 3,
+      "castilla-torquemad": 3,
+      "castilla-torquemad_2": 3,
+      "castilla-torres": 3,
+      "chasm-abgorr": 3,
+      "chasm-chazz": 3,
+      "chasm-faceless": 3,
+      "chasm-garkrand": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/battle_rage.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-15",
+    "title": "Клинки Пламени",
+    "text": "blades_of_flame",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "broomgar_horde-kurosh_khan": 3,
+      "castilla-salvador": 3,
+      "castilla-torquemad": 3,
+      "castilla-torquemad_2": 3,
+      "castilla-torres": 3,
+      "chasm-abgorr": 3,
+      "chasm-chazz": 3,
+      "chasm-faceless": 3,
+      "chasm-garkrand": 3,
+      "keld-kellantra": 3,
+      "keld-kellantra_lindwurm": 3,
+      "krigmark-gottfried": 3,
+      "krigmark-gottfried_2": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/blades_of_flame.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-16",
+    "title": "Возгорание",
+    "text": "Ignition",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "broomgar_horde-kurosh_khan": 3,
+      "castilla-salvador": 3,
+      "castilla-torquemad": 3,
+      "castilla-torquemad_2": 3,
+      "castilla-torres": 3,
+      "chasm-abgorr": 3,
+      "chasm-chazz": 3,
+      "chasm-faceless": 3,
+      "chasm-garkrand": 3,
+      "keld-kellantra": 3,
+      "keld-kellantra_lindwurm": 3,
+      "krigmark-gottfried": 3,
+      "krigmark-gottfried_2": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/ignition.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-17",
+    "title": "Воодушевление",
+    "text": "inspiration",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "copiesByLeader": {
+      "engeln-ayris": 1,
+      "engeln-breylon": 1,
+      "engeln-richard": 1,
+      "engeln-richard_2": 1,
+      "krigmark-gottfried": 1,
+      "krigmark-gottfried_2": 1,
+      "priory_of_hope-ferran_bull": 1,
+      "priory_of_hope-ferran_infantry": 1,
+      "priory_of_hope-hoakin_de_esperando": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/inspiration.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-18",
+    "title": "Плоть в Свет",
+    "text": "flesh into light",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2"
+    ],
+    "copiesByLeader": {
+      "engeln-ayris": 1,
+      "engeln-breylon": 1,
+      "engeln-richard": 1,
+      "engeln-richard_2": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/flesh_into_light.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-19",
+    "title": "Щит Веры",
+    "text": "shield of faith",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2"
+    ],
+    "copiesByLeader": {
+      "engeln-ayris": 1,
+      "engeln-breylon": 1,
+      "engeln-richard": 1,
+      "engeln-richard_2": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/shield_of_faith.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-2",
+    "title": "Адское Пламя",
+    "text": "hellfire",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "broomgar_horde-kurosh_khan": 1,
+      "castilla-salvador": 1,
+      "castilla-torquemad": 1,
+      "castilla-torquemad_2": 1,
+      "castilla-torres": 1,
+      "chasm-abgorr": 1,
+      "chasm-chazz": 1,
+      "chasm-faceless": 1,
+      "chasm-garkrand": 1,
+      "keld-kellantra": 1,
+      "keld-kellantra_lindwurm": 1,
+      "krigmark-gottfried": 1,
+      "krigmark-gottfried_2": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/hellfire.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-20",
+    "title": "Кара",
+    "text": "punishment",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "copiesByLeader": {
+      "engeln-ayris": 1,
+      "engeln-breylon": 1,
+      "engeln-richard": 1,
+      "engeln-richard_2": 1,
+      "krigmark-gottfried": 1,
+      "krigmark-gottfried_2": 1,
+      "priory_of_hope-ferran_bull": 1,
+      "priory_of_hope-ferran_infantry": 1,
+      "priory_of_hope-hoakin_de_esperando": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/punishment.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-22",
+    "title": "Телепорт",
+    "text": "teleport",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "copiesByLeader": {
+      "engeln-ayris": 2,
+      "engeln-breylon": 2,
+      "engeln-richard": 2,
+      "engeln-richard_2": 2,
+      "krigmark-gottfried": 2,
+      "krigmark-gottfried_2": 2,
+      "priory_of_hope-ferran_bull": 2,
+      "priory_of_hope-ferran_infantry": 2,
+      "priory_of_hope-hoakin_de_esperando": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/teleport.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-24",
+    "title": "Предсказать",
+    "text": "foretell",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "copiesByLeader": {
+      "engeln-ayris": 2,
+      "engeln-breylon": 2,
+      "engeln-richard": 2,
+      "engeln-richard_2": 2,
+      "krigmark-gottfried": 2,
+      "krigmark-gottfried_2": 2,
+      "priory_of_hope-ferran_bull": 2,
+      "priory_of_hope-ferran_infantry": 2,
+      "priory_of_hope-hoakin_de_esperando": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/foretell.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-26",
+    "title": "Точность",
+    "text": "accuracy",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "copiesByLeader": {
+      "engeln-ayris": 2,
+      "engeln-breylon": 2,
+      "engeln-richard": 2,
+      "engeln-richard_2": 2,
+      "krigmark-gottfried": 2,
+      "krigmark-gottfried_2": 2,
+      "priory_of_hope-ferran_bull": 2,
+      "priory_of_hope-ferran_infantry": 2,
+      "priory_of_hope-hoakin_de_esperando": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/accuracy.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-27",
+    "title": "Укрепить Доспех",
+    "text": "strengthen the armor",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2"
+    ],
+    "copiesByLeader": {
+      "engeln-ayris": 3,
+      "engeln-breylon": 3,
+      "engeln-richard": 3,
+      "engeln-richard_2": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/strengthen_the_armor.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-28",
+    "title": "Полет",
+    "text": "flight",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2"
+    ],
+    "copiesByLeader": {
+      "engeln-ayris": 3,
+      "engeln-breylon": 3,
+      "engeln-richard": 3,
+      "engeln-richard_2": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/flight.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-29",
+    "title": "Молния",
+    "text": "lightning",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "copiesByLeader": {
+      "engeln-ayris": 3,
+      "engeln-breylon": 3,
+      "engeln-richard": 3,
+      "engeln-richard_2": 3,
+      "krigmark-gottfried": 3,
+      "krigmark-gottfried_2": 3,
+      "priory_of_hope-ferran_bull": 3,
+      "priory_of_hope-ferran_infantry": 3,
+      "priory_of_hope-hoakin_de_esperando": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/lightning.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-3",
+    "title": "Огненный Дождь",
+    "text": "fire_rain",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "broomgar_horde-kurosh_khan": 1,
+      "castilla-salvador": 1,
+      "castilla-torquemad": 1,
+      "castilla-torquemad_2": 1,
+      "castilla-torres": 1,
+      "chasm-abgorr": 1,
+      "chasm-chazz": 1,
+      "chasm-faceless": 1,
+      "chasm-garkrand": 1,
+      "keld-kellantra": 1,
+      "keld-kellantra_lindwurm": 1,
+      "krigmark-gottfried": 1,
+      "krigmark-gottfried_2": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/fire_rain.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-30",
+    "title": "Удача",
+    "text": "luck",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "copiesByLeader": {
+      "engeln-ayris": 3,
+      "engeln-breylon": 3,
+      "engeln-richard": 3,
+      "engeln-richard_2": 3,
+      "krigmark-gottfried": 3,
+      "krigmark-gottfried_2": 3,
+      "priory_of_hope-ferran_bull": 3,
+      "priory_of_hope-ferran_infantry": 3,
+      "priory_of_hope-hoakin_de_esperando": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/luck.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-31",
+    "title": "Воля Света",
+    "text": "will of light",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2"
+    ],
+    "copiesByLeader": {
+      "engeln-ayris": 3,
+      "engeln-breylon": 3,
+      "engeln-richard": 3,
+      "engeln-richard_2": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/will_of_light.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-32",
+    "title": "Контрудар",
+    "text": "counterattack",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "copiesByLeader": {
+      "engeln-ayris": 3,
+      "engeln-breylon": 3,
+      "engeln-richard": 3,
+      "engeln-richard_2": 3,
+      "krigmark-gottfried": 3,
+      "krigmark-gottfried_2": 3,
+      "priory_of_hope-ferran_bull": 3,
+      "priory_of_hope-ferran_infantry": 3,
+      "priory_of_hope-hoakin_de_esperando": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/counterattack.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-33",
+    "title": "Дыхание Смерти",
+    "text": "breath of death",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 1,
+      "krigmark-dalmar_shultz_hero": 1,
+      "krigmark-gottfried": 1,
+      "krigmark-gottfried_2": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/breath_of_death.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-34",
+    "title": "Слово Смерти",
+    "text": "word of death",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 1,
+      "krigmark-dalmar_shultz_hero": 1,
+      "krigmark-gottfried": 1,
+      "krigmark-gottfried_2": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/word_of_death.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-35",
+    "title": "Волна Страха",
+    "text": "wave of fear",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "krigmark-dalmar_shultz_hero": 1,
+      "krigmark-gottfried": 1,
+      "krigmark-gottfried_2": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/wave_of_fear.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-36",
+    "title": "Призрачные Врата",
+    "text": "ghost gate",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 1,
+      "krigmark-dalmar_shultz_hero": 1,
+      "krigmark-gottfried": 1,
+      "krigmark-gottfried_2": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/ghost_gate.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-37",
+    "title": "Марш Смерти",
+    "text": "death march",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "krigmark-dalmar_shultz_hero": 1,
+      "krigmark-gottfried": 1,
+      "krigmark-gottfried_2": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/death_march.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-4",
+    "title": "Безумие",
+    "text": "Madness",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand"
+    ],
+    "copiesByLeader": {
+      "castilla-salvador": 1,
+      "castilla-torquemad": 1,
+      "castilla-torquemad_2": 1,
+      "castilla-torres": 1,
+      "chasm-abgorr": 1,
+      "chasm-chazz": 1,
+      "chasm-faceless": 1,
+      "chasm-garkrand": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/madness.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-40",
+    "title": "Тлен",
+    "text": "decay",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 2,
+      "krigmark-dalmar_shultz_hero": 2,
+      "krigmark-gottfried": 2,
+      "krigmark-gottfried_2": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/decay.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-41",
+    "title": "Болезнь",
+    "text": "disease",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 2,
+      "krigmark-dalmar_shultz_hero": 2,
+      "krigmark-gottfried": 2,
+      "krigmark-gottfried_2": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/disease.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-42",
+    "title": "Отчаяние",
+    "text": "despair",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "krigmark-dalmar_shultz_hero": 2,
+      "krigmark-gottfried": 2,
+      "krigmark-gottfried_2": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/despair.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-44",
+    "title": "Замедлить",
+    "text": "slow down",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 3,
+      "krigmark-dalmar_shultz_hero": 3,
+      "krigmark-gottfried": 3,
+      "krigmark-gottfried_2": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/slow_down.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-45",
+    "title": "Чемпион Смерти",
+    "text": "champion of death",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 3,
+      "krigmark-dalmar_shultz_hero": 3,
+      "krigmark-gottfried": 3,
+      "krigmark-gottfried_2": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/champion_of_death.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-46",
+    "title": "Неупокоение",
+    "text": "restlessness",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "krigmark-dalmar_shultz_hero": 3,
+      "krigmark-gottfried": 3,
+      "krigmark-gottfried_2": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/restlessness.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-48",
+    "title": "Угасание",
+    "text": "extinction",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 3,
+      "krigmark-dalmar_shultz_hero": 3,
+      "krigmark-gottfried": 3,
+      "krigmark-gottfried_2": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/extinction.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-5",
+    "title": "Сфера Огня",
+    "text": "sphere_of_fire",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "broomgar_horde-kurosh_khan": 1,
+      "castilla-salvador": 1,
+      "castilla-torquemad": 1,
+      "castilla-torquemad_2": 1,
+      "castilla-torres": 1,
+      "chasm-abgorr": 1,
+      "chasm-chazz": 1,
+      "chasm-faceless": 1,
+      "chasm-garkrand": 1,
+      "keld-kellantra": 1,
+      "keld-kellantra_lindwurm": 1,
+      "krigmark-gottfried": 1,
+      "krigmark-gottfried_2": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/sphere_of_fire.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-50",
+    "title": "Призыв Эфира",
+    "text": "call of the aether",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 1,
+      "keld-brammn_hero": 1,
+      "keld-kellantra": 1,
+      "keld-kellantra_lindwurm": 1,
+      "keld-na'atly_hero": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/call_of_the_aether.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-51",
+    "title": "Волна Жизни",
+    "text": "wave of life",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 1,
+      "keld-brammn_hero": 1,
+      "keld-kellantra": 1,
+      "keld-kellantra_lindwurm": 1,
+      "keld-na'atly_hero": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/wave_of_life.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-54",
+    "title": "Проворство",
+    "text": "agility",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 2,
+      "keld-brammn_hero": 2,
+      "keld-kellantra": 2,
+      "keld-kellantra_lindwurm": 2,
+      "keld-na'atly_hero": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/agility.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-55",
+    "title": "Размытый Облик",
+    "text": "blurred appearance",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 2,
+      "keld-brammn_hero": 2,
+      "keld-kellantra": 2,
+      "keld-kellantra_lindwurm": 2,
+      "keld-na'atly_hero": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/blurred_appearance.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-56",
+    "title": "Дар Жизни",
+    "text": "gift of life",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 2,
+      "keld-brammn_hero": 2,
+      "keld-kellantra": 2,
+      "keld-kellantra_lindwurm": 2,
+      "keld-na'atly_hero": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/gift_of_life.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-57",
+    "title": "Провидение",
+    "text": "providence",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 2,
+      "keld-brammn_hero": 2,
+      "keld-kellantra": 2,
+      "keld-kellantra_lindwurm": 2,
+      "keld-na'atly_hero": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/providence.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-58",
+    "title": "Восстановить",
+    "text": "recover",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 2,
+      "keld-brammn_hero": 2,
+      "keld-kellantra": 2,
+      "keld-kellantra_lindwurm": 2,
+      "keld-na'atly_hero": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/recover.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-6",
+    "title": "Слепота",
+    "text": "blindness",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "broomgar_horde-kurosh_khan": 2,
+      "castilla-salvador": 2,
+      "castilla-torquemad": 2,
+      "castilla-torquemad_2": 2,
+      "castilla-torres": 2,
+      "chasm-abgorr": 2,
+      "chasm-chazz": 2,
+      "chasm-faceless": 2,
+      "chasm-garkrand": 2,
+      "keld-kellantra": 2,
+      "keld-kellantra_lindwurm": 2,
+      "krigmark-gottfried": 2,
+      "krigmark-gottfried_2": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/blindness.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-60",
+    "title": "Рост Веры",
+    "text": "growth of faith",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero"
+    ],
+    "copiesByLeader": {
+      "keld-brammn_hero": 3,
+      "keld-kellantra": 3,
+      "keld-kellantra_lindwurm": 3,
+      "keld-na'atly_hero": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/growth_of_faith.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-61",
+    "title": "Посадить Семя",
+    "text": "plant a seed",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero"
+    ],
+    "copiesByLeader": {
+      "keld-brammn_hero": 3,
+      "keld-kellantra": 3,
+      "keld-kellantra_lindwurm": 3,
+      "keld-na'atly_hero": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/plant_a_seed.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-63",
+    "title": "Колючка",
+    "text": "thorn",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero"
+    ],
+    "copiesByLeader": {
+      "keld-brammn_hero": 3,
+      "keld-kellantra": 3,
+      "keld-kellantra_lindwurm": 3,
+      "keld-na'atly_hero": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/thorn.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-64",
+    "title": "Исцеление",
+    "text": "healing",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 3,
+      "keld-brammn_hero": 3,
+      "keld-kellantra": 3,
+      "keld-kellantra_lindwurm": 3,
+      "keld-na'atly_hero": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/healing.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-65",
+    "title": "Смерч",
+    "text": "tornado",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "copiesByLeader": {
+      "engeln-ayris": 2,
+      "engeln-breylon": 2,
+      "engeln-richard": 2,
+      "engeln-richard_2": 2,
+      "krigmark-gottfried": 2,
+      "krigmark-gottfried_2": 2,
+      "priory_of_hope-ferran_bull": 2,
+      "priory_of_hope-ferran_infantry": 2,
+      "priory_of_hope-hoakin_de_esperando": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/tornado.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-66",
+    "title": "Помеха",
+    "text": "interference",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "copiesByLeader": {
+      "engeln-ayris": 2,
+      "engeln-breylon": 2,
+      "engeln-richard": 2,
+      "engeln-richard_2": 2,
+      "krigmark-gottfried": 2,
+      "krigmark-gottfried_2": 2,
+      "priory_of_hope-ferran_bull": 2,
+      "priory_of_hope-ferran_infantry": 2,
+      "priory_of_hope-hoakin_de_esperando": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/interference.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-67",
+    "title": "Цепная Молния",
+    "text": "chain lightning",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "engeln-ayris",
+      "engeln-breylon",
+      "engeln-richard",
+      "engeln-richard_2",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2",
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "copiesByLeader": {
+      "engeln-ayris": 1,
+      "engeln-breylon": 1,
+      "engeln-richard": 1,
+      "engeln-richard_2": 1,
+      "krigmark-gottfried": 1,
+      "krigmark-gottfried_2": 1,
+      "priory_of_hope-ferran_bull": 1,
+      "priory_of_hope-ferran_infantry": 1,
+      "priory_of_hope-hoakin_de_esperando": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/chain_lightning.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-68",
+    "title": "Отказ",
+    "text": "denial",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 2,
+      "krigmark-dalmar_shultz_hero": 2,
+      "krigmark-gottfried": 2,
+      "krigmark-gottfried_2": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/denial.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-69",
+    "title": "Возвращение",
+    "text": "return",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 2,
+      "krigmark-dalmar_shultz_hero": 2,
+      "krigmark-gottfried": 2,
+      "krigmark-gottfried_2": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/return.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-7",
+    "title": "Щит Огня",
+    "text": "shield_of_fire",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "broomgar_horde-kurosh_khan": 2,
+      "castilla-salvador": 2,
+      "castilla-torquemad": 2,
+      "castilla-torquemad_2": 2,
+      "castilla-torres": 2,
+      "chasm-abgorr": 2,
+      "chasm-chazz": 2,
+      "chasm-faceless": 2,
+      "chasm-garkrand": 2,
+      "keld-kellantra": 2,
+      "keld-kellantra_lindwurm": 2,
+      "krigmark-gottfried": 2,
+      "krigmark-gottfried_2": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/shield_of_fire.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-70",
+    "title": "Порча",
+    "text": "spoilage",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 3,
+      "krigmark-dalmar_shultz_hero": 3,
+      "krigmark-gottfried": 3,
+      "krigmark-gottfried_2": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/spoilage.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-71",
+    "title": "Не-Жизнь",
+    "text": "unlife",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "krigmark-dalmar_shultz_hero": 3,
+      "krigmark-gottfried": 3,
+      "krigmark-gottfried_2": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/unlife.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-72",
+    "title": "Восстановление",
+    "text": "recovery",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 1,
+      "keld-brammn_hero": 1,
+      "keld-kellantra": 1,
+      "keld-kellantra_lindwurm": 1,
+      "keld-na'atly_hero": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/recovery.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-73",
+    "title": "Древесный Двойник",
+    "text": "woody twin",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero"
+    ],
+    "copiesByLeader": {
+      "keld-brammn_hero": 1,
+      "keld-kellantra": 1,
+      "keld-kellantra_lindwurm": 1,
+      "keld-na'atly_hero": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/woody_twin.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-74",
+    "title": "Веление Жизни",
+    "text": "dictates of life",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 1,
+      "keld-brammn_hero": 1,
+      "keld-kellantra": 1,
+      "keld-kellantra_lindwurm": 1,
+      "keld-na'atly_hero": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/dictates_of_life.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-75",
+    "title": "Разведка",
+    "text": "reconnaissance",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 3,
+      "keld-brammn_hero": 3,
+      "keld-kellantra": 3,
+      "keld-kellantra_lindwurm": 3,
+      "keld-na'atly_hero": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/reconnaissance.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-76",
+    "title": "Ядовитая Лоза",
+    "text": "poison vine",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero"
+    ],
+    "copiesByLeader": {
+      "keld-brammn_hero": 3,
+      "keld-kellantra": 3,
+      "keld-kellantra_lindwurm": 3,
+      "keld-na'atly_hero": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/poison_vine.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-77",
+    "title": "Голодный Близнец",
+    "text": "Hungry Twin",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "broomgar_horde-kurosh_khan"
+    ],
+    "copiesByLeader": {
+      "broomgar_horde-kurosh_khan": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/hungry_twin.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-78",
+    "title": "Дар Варгата",
+    "text": "Vargat Gift",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "broomgar_horde-kurosh_khan"
+    ],
+    "copiesByLeader": {
+      "broomgar_horde-kurosh_khan": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/vargat_gift.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-79",
+    "title": "Опустошение Брюха",
+    "text": "Belly Emptying",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "broomgar_horde-kurosh_khan"
+    ],
+    "copiesByLeader": {
+      "broomgar_horde-kurosh_khan": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/belly_emptying.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-8",
+    "title": "Сломать Доспех",
+    "text": "break_the_armor",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand"
+    ],
+    "copiesByLeader": {
+      "castilla-salvador": 2,
+      "castilla-torquemad": 2,
+      "castilla-torquemad_2": 2,
+      "castilla-torres": 2,
+      "chasm-abgorr": 2,
+      "chasm-chazz": 2,
+      "chasm-faceless": 2,
+      "chasm-garkrand": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/break_the_armor.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-80",
+    "title": "Пир",
+    "text": "Feast",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "broomgar_horde-kurosh_khan"
+    ],
+    "copiesByLeader": {
+      "broomgar_horde-kurosh_khan": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/feast.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-81",
+    "title": "Подстегнуть",
+    "text": "Spur",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "broomgar_horde-kurosh_khan"
+    ],
+    "copiesByLeader": {
+      "broomgar_horde-kurosh_khan": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/spur.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-82",
+    "title": "Зачаровать Оружие",
+    "text": "enchant weapon",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "copiesByLeader": {
+      "priory_of_hope-ferran_bull": 3,
+      "priory_of_hope-ferran_infantry": 3,
+      "priory_of_hope-hoakin_de_esperando": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/enchant weapon.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-83",
+    "title": "Молот Ариста",
+    "text": "arist hammer",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "copiesByLeader": {
+      "priory_of_hope-ferran_bull": 3,
+      "priory_of_hope-ferran_infantry": 3,
+      "priory_of_hope-hoakin_de_esperando": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/arist_hammer.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-84",
+    "title": "Метка Солнца",
+    "text": "mark of the sun",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "copiesByLeader": {
+      "priory_of_hope-ferran_bull": 2,
+      "priory_of_hope-ferran_infantry": 2,
+      "priory_of_hope-hoakin_de_esperando": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/sun_mark.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-85",
+    "title": "Пылевой Кулак",
+    "text": "dust fist",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "copiesByLeader": {
+      "priory_of_hope-ferran_bull": 1,
+      "priory_of_hope-ferran_infantry": 1,
+      "priory_of_hope-hoakin_de_esperando": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/dust_fist.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-86",
+    "title": "Оковы Света",
+    "text": "shackles of light",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "priory_of_hope-ferran_bull",
+      "priory_of_hope-ferran_infantry",
+      "priory_of_hope-hoakin_de_esperando"
+    ],
+    "copiesByLeader": {
+      "priory_of_hope-ferran_bull": 1,
+      "priory_of_hope-ferran_infantry": 1,
+      "priory_of_hope-hoakin_de_esperando": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/shackles_of_light.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-87",
+    "title": "Приближение Рока",
+    "text": "approach of doom",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "krigmark-dalmar_shultz_hero",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 2,
+      "krigmark-dalmar_shultz_hero": 2,
+      "krigmark-gottfried": 2,
+      "krigmark-gottfried_2": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/approach_of_doom.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-88",
+    "title": "Назад к Природе",
+    "text": "back to nature",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort",
+      "keld-brammn_hero",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "keld-na'atly_hero"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 3,
+      "keld-brammn_hero": 3,
+      "keld-kellantra": 3,
+      "keld-kellantra_lindwurm": 3,
+      "keld-na'atly_hero": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/back_to_nature.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-89",
+    "title": "Объятия Терновника",
+    "text": "blackthorn embrace",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/blackthorn_embrace.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-9",
+    "title": "Разлом",
+    "text": "rift",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "broomgar_horde-kurosh_khan",
+      "castilla-salvador",
+      "castilla-torquemad",
+      "castilla-torquemad_2",
+      "castilla-torres",
+      "chasm-abgorr",
+      "chasm-chazz",
+      "chasm-faceless",
+      "chasm-garkrand",
+      "keld-kellantra",
+      "keld-kellantra_lindwurm",
+      "krigmark-gottfried",
+      "krigmark-gottfried_2"
+    ],
+    "copiesByLeader": {
+      "broomgar_horde-kurosh_khan": 2,
+      "castilla-salvador": 2,
+      "castilla-torquemad": 2,
+      "castilla-torquemad_2": 2,
+      "castilla-torres": 2,
+      "chasm-abgorr": 2,
+      "chasm-chazz": 2,
+      "chasm-faceless": 2,
+      "chasm-garkrand": 2,
+      "keld-kellantra": 2,
+      "keld-kellantra_lindwurm": 2,
+      "krigmark-gottfried": 2,
+      "krigmark-gottfried_2": 2
+    },
+    "sprite": {
+      "sheet": "/images/spells/rift.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-90",
+    "title": "Чемпион Терновника",
+    "text": "blackthorn champion",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/blackthorn_champion.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-91",
+    "title": "Семена Смерти",
+    "text": "seeds of death",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "blackthorn-drago_mort"
+    ],
+    "copiesByLeader": {
+      "blackthorn-drago_mort": 3
+    },
+    "sprite": {
+      "sheet": "/images/spells/seeds_of_death.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  },
+  {
+    "id": "god-spell-92",
+    "title": "boyd",
+    "text": "",
+    "tags": [
+      "utility"
+    ],
+    "onlyForLeaderIds": [
+      "chasm-abgorr"
+    ],
+    "copiesByLeader": {
+      "chasm-abgorr": 1
+    },
+    "sprite": {
+      "sheet": "/images/spells/boyd.webp",
+      "col": 0,
+      "row": 0
+    },
+    "spriteGrid": {
+      "cols": 1,
+      "rows": 1
+    }
+  }
+]

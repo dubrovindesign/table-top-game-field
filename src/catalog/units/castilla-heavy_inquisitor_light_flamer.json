@@ -1,0 +1,59 @@
+{
+  "id": "castilla-heavy_inquisitor_light_flamer",
+  "points": 29,
+  "card": {
+    "name": "Инквизитор-Ревнитель с штурмовым Очистителем",
+    "size": "small",
+    "health": 1,
+    "maxHealth": 1,
+    "defense": {
+      "white": 0,
+      "green": 0
+    },
+    "defenseReaction": {
+      "white": 0,
+      "green": 0
+    },
+    "walk": 1,
+    "run": 2,
+    "domains": [
+      "destruction"
+    ],
+    "concentration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "exploration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "attacks": [
+      {
+        "name": "—",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 1,
+        "dice": {
+          "red": 1,
+          "green": 0,
+          "black": 0,
+          "white": 0
+        }
+      }
+    ],
+    "keywords": [
+      "Кастилия"
+    ],
+    "flagSprite": "/castilla.webp",
+    "catalogUnitId": "castilla-heavy_inquisitor_light_flamer",
+    "sprite": "/catalog-units/castilla-heavy_inquisitor_light_flamer/image.jpg",
+    "miniatureSprite": "/catalog-units/castilla-heavy_inquisitor_light_flamer/miniature.jpg"
+  }
+}

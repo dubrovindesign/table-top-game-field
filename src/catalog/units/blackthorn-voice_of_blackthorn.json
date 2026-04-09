@@ -1,0 +1,54 @@
+{
+  "id": "blackthorn-voice_of_blackthorn",
+  "points": 45,
+  "card": {
+    "name": "Сильд Голос Терновника",
+    "size": "small",
+    "health": 1,
+    "maxHealth": 1,
+    "defense": {
+      "white": 3,
+      "green": 4
+    },
+    "defenseReaction": {
+      "white": 0,
+      "green": 0
+    },
+    "walk": 1,
+    "run": 7,
+    "domains": [
+      "death"
+    ],
+    "concentration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "exploration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "attacks": [
+      {
+        "name": "Голос Терновнака",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 1,
+        "dice": {}
+      }
+    ],
+    "keywords": [
+      "Великий Терновник"
+    ],
+    "flagSprite": "/blackthorn.webp",
+    "catalogUnitId": "blackthorn-voice_of_blackthorn",
+    "sprite": "/catalog-units/blackthorn-voice_of_blackthorn/image.jpg",
+    "miniatureSprite": "/catalog-units/blackthorn-voice_of_blackthorn/miniature.jpg"
+  }
+}

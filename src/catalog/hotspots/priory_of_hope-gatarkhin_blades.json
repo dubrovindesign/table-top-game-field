@@ -1,0 +1,40 @@
+{
+  "image": "/catalog-units/priory_of_hope-gatarkhin_blades/image.jpg",
+  "title": "Гатархин, убийца",
+  "regions": [
+    {
+      "id": "defense_main",
+      "label": "Защита",
+      "x": 0.052,
+      "y": 0.298,
+      "w": 0.896,
+      "h": 0.056,
+      "range": 0,
+      "rangeUnit": "hex",
+      "damage": 0,
+      "white": 0,
+      "green": 0,
+      "red": 0,
+      "black": 0
+    },
+    {
+      "id": "attack_0",
+      "label": "—",
+      "x": 0.038,
+      "y": 0.366,
+      "w": 0.924,
+      "h": 0.044,
+      "range": 1,
+      "rangeUnit": "hex",
+      "damage": 1,
+      "red": 1,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    }
+  ],
+  "scrollLayout": {
+    "faceH": 1417,
+    "totalH": 2473
+  }
+}

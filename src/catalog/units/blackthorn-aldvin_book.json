@@ -1,0 +1,58 @@
+{
+  "id": "blackthorn-aldvin_book",
+  "points": 19,
+  "card": {
+    "name": "Алдвин Летописец",
+    "size": "small",
+    "health": 1,
+    "maxHealth": 1,
+    "defense": {
+      "white": 0,
+      "green": 0
+    },
+    "defenseReaction": {
+      "white": 0,
+      "green": 0
+    },
+    "walk": 2,
+    "run": 2,
+    "domains": [
+      "death"
+    ],
+    "concentration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "exploration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "attacks": [
+      {
+        "name": "NN 5 - ДЕ | BERN Мы { oy",
+        "range": 4,
+        "attackRange": "ranged",
+        "damageType": "physical",
+        "damage": 5,
+        "dice": {
+          "red": 2,
+          "black": 2,
+          "green": 0
+        }
+      }
+    ],
+    "keywords": [
+      "Великий Терновник"
+    ],
+    "flagSprite": "/blackthorn.webp",
+    "catalogUnitId": "blackthorn-aldvin_book",
+    "sprite": "/catalog-units/blackthorn-aldvin_book/image.jpg",
+    "miniatureSprite": "/catalog-units/blackthorn-aldvin_book/miniature.jpg"
+  }
+}

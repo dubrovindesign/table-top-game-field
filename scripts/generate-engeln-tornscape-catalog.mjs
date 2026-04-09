@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * JSON юнитов + хотспоты для импорта engeln-tornscape (после ingest-engeln-tornscape-pairs.mjs).
+ * JSON юнитов + хотспоты для импорта engeln-tornscape (арт — через tornscape:batch / ручная склейка).
  */
 import fs from 'node:fs/promises';
 import path from 'node:path';

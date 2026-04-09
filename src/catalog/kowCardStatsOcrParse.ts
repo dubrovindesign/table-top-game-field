@@ -48,9 +48,15 @@ export function parseStatsFromOcrText(text: string): ParsedKowCardStats {
     }
   }
 
-  // Шаг / Бег отдельно
-  const wM = t.match(/[Шш]аг[^\d]{0,6}(\d)/);
-  const rM = t.match(/[Бб]ег[^\d]{0,6}(\d)/);
+  // Шаг / Бег отдельно (Tornscape: крупные «ШАГ» / «БЕГ» на карте)
+  const wM =
+    t.match(/[Шш]\s*а\s*г[^\d]{0,12}(\d)/i) ||
+    t.match(/ША\s*Г[^\d]{0,12}(\d)/i) ||
+    t.match(/[Шш]аг[^\d]{0,8}(\d)/);
+  const rM =
+    t.match(/[Бб]\s*е\s*г[^\d]{0,12}(\d)/i) ||
+    t.match(/БЕ\s*Г[^\d]{0,12}(\d)/i) ||
+    t.match(/[Бб]ег[^\d]{0,8}(\d)/);
   if (wM) out.walk = intOrU(wM[1]);
   if (rM) out.run = intOrU(rM[1]);
 
@@ -150,13 +156,56 @@ export function parsedFirstAttackFromAttackCrop(text: string): ParsedFirstAttack
   };
 }
 
+/** Сборка первой атаки из отдельных OCR-кропов дальность / урон / R / B / G. */
+export function parsedFirstAttackFromDigitFields(opts: {
+  nameHint: string;
+  range?: number;
+  damage?: number;
+  red?: number;
+  black?: number;
+  green?: number;
+}): ParsedFirstAttack | null {
+  const {
+    nameHint,
+    range: rng,
+    damage: dmg,
+    red: r,
+    black: b,
+    green: g,
+  } = opts;
+  if (rng == null || dmg == null) return null;
+  const name = nameHint.trim().slice(0, 100) || 'Атака';
+  return {
+    name,
+    range: rng,
+    damage: dmg,
+    dice: { red: r ?? 0, black: b ?? 0, green: g ?? 0 },
+    melee: rng <= 1,
+  };
+}
+
 /** Значения из кропов перекрывают fallback (в т.ч. 0 для кубов). */
 export function mergeKowStatsPreferCrops(
   crops: ParsedKowCardStats,
   fallback: ParsedKowCardStats,
 ): ParsedKowCardStats {
   const out: ParsedKowCardStats = { ...fallback };
+
+  const hp = crops.health;
+  if (hp !== undefined) {
+    const fh = fallback.health;
+    // Кроп ОЗ часто ловит шум «1»; если из полного текста уже есть ОЗ > 1 — не затирать.
+    if (hp === 1 && fh != null && fh > 1) {
+      out.health = fh;
+      out.maxHealth = fallback.maxHealth ?? fh;
+    } else {
+      out.health = hp;
+      out.maxHealth = crops.maxHealth ?? hp;
+    }
+  }
+
   (Object.keys(crops) as (keyof ParsedKowCardStats)[]).forEach((k) => {
+    if (k === 'health' || k === 'maxHealth') return;
     const v = crops[k];
     if (v !== undefined) out[k] = v;
   });

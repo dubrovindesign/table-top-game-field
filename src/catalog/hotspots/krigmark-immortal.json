@@ -3,37 +3,38 @@
   "title": "Бессмертный",
   "regions": [
     {
-      "x": 0.045,
-      "y": 0.230363196125908,
-      "w": 0.91,
-      "h": 0.03896690879741727,
-      "id": "attack_0",
-      "label": "Удар клинком",
-      "red": 3,
-      "green": 2,
-      "black": 2,
+      "id": "defense_main",
+      "label": "Защита",
+      "x": 0.052,
+      "y": 0.298,
+      "w": 0.896,
+      "h": 0.056,
+      "range": 0,
+      "rangeUnit": "hex",
+      "damage": 0,
       "white": 0,
-      "range": 1,
-      "damage": 2
+      "green": 0,
+      "red": 0,
+      "black": 0
     },
     {
-      "x": 0.045,
-      "y": 0.27162227602905564,
-      "w": 0.91,
-      "h": 0.03896690879741727,
-      "id": "attack_1",
-      "label": "Выстрел",
-      "red": 3,
-      "green": 2,
-      "black": 2,
-      "white": 0,
-      "range": 3,
+      "id": "attack_0",
+      "label": "—",
+      "x": 0.038,
+      "y": 0.366,
+      "w": 0.924,
+      "h": 0.044,
+      "range": 1,
       "rangeUnit": "hex",
-      "damage": 1
+      "damage": 1,
+      "red": 1,
+      "green": 0,
+      "black": 0,
+      "white": 0
     }
   ],
   "scrollLayout": {
-    "faceH": 1420,
-    "totalH": 2478
+    "faceH": 1417,
+    "totalH": 2473
   }
 }

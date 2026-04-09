@@ -29,13 +29,10 @@ export type RosterSlotFieldPatch = Partial<
   Pick<RosterSlotDef, 'points' | 'maxCopies' | 'requiresUnitId'>
 >;
 
-export type GodCardPatch = Partial<Pick<GodCardDef, 'onlyForLeaderIds'>> & {
-  /**
-   * Сколько экземпляров карты в колоде для лидера (по умолчанию 1).
-   * 0 — карта не попадает в панель армии для этого лидера, даже если он в `onlyForLeaderIds`.
-   */
-  copiesByLeader?: Record<string, number>;
-};
+/**
+ * Оверрайд статической карты: `onlyForLeaderIds`, `copiesByLeader` (в т.ч. 0 — убрать карту у лидера).
+ */
+export type GodCardPatch = Partial<Pick<GodCardDef, 'onlyForLeaderIds' | 'copiesByLeader'>>;
 
 export type CatalogOverridesV1 = {
   version: 1;
@@ -409,6 +406,9 @@ function mergeGodCardDef(base: GodCardDef, patch: GodCardPatch): GodCardDef {
     out.onlyForLeaderIds =
       patch.onlyForLeaderIds.length > 0 ? [...patch.onlyForLeaderIds] : undefined;
   }
+  if (patch.copiesByLeader !== undefined) {
+    out.copiesByLeader = { ...base.copiesByLeader, ...patch.copiesByLeader };
+  }
   return out;
 }
 
@@ -425,9 +425,16 @@ export function getMergedGodCard(cardId: string): GodCardDef | undefined {
 /** Сколько экземпляров карты `cardId` (базовый id) в колоде для лидера. */
 export function effectiveGodCardCopiesForLeader(cardId: string, leaderId: string): number {
   const baseId = godCardBaseId(cardId);
-  const raw = getCatalogOverrides().godCardPatches[baseId]?.copiesByLeader?.[leaderId];
-  if (raw === undefined) return 1;
-  return Math.max(0, Math.floor(raw));
+  const fromPatch = getCatalogOverrides().godCardPatches[baseId]?.copiesByLeader?.[leaderId];
+  if (fromPatch !== undefined) {
+    return Math.max(0, Math.floor(fromPatch));
+  }
+  const base = getGodCardById(baseId);
+  const fromCatalog = base?.copiesByLeader?.[leaderId];
+  if (fromCatalog !== undefined) {
+    return Math.max(0, Math.floor(fromCatalog));
+  }
+  return 1;
 }
 
 /**

@@ -1,0 +1,40 @@
+{
+  "image": "/catalog-units/blackthorn-dal_hiar/image.jpg",
+  "title": "Дал'Хиар Отшельник Терновника",
+  "regions": [
+    {
+      "id": "defense_main",
+      "label": "Защита",
+      "x": 0.052,
+      "y": 0.298,
+      "w": 0.896,
+      "h": 0.056,
+      "range": 0,
+      "rangeUnit": "hex",
+      "damage": 0,
+      "white": 3,
+      "green": 0,
+      "red": 0,
+      "black": 0
+    },
+    {
+      "id": "attack_0",
+      "label": "CIN ых #7) er La] TEPHOBHWK и",
+      "x": 0.038,
+      "y": 0.366,
+      "w": 0.924,
+      "h": 0.044,
+      "range": 0,
+      "rangeUnit": "hex",
+      "damage": 9,
+      "red": 4,
+      "green": 7,
+      "black": 7,
+      "white": 0
+    }
+  ],
+  "scrollLayout": {
+    "faceH": 1419,
+    "totalH": 2476
+  }
+}

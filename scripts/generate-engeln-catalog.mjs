@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Ангельн: каталог юнитов и заглушки хотспотов (хотспоты дополняет build-engeln-scroll-cards).
+ * Ангельн: каталог юнитов и заглушки хотспотов.
  */
 import fs from 'node:fs/promises';
 import path from 'node:path';

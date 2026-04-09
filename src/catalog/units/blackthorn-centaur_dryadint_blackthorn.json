@@ -1,0 +1,54 @@
+{
+  "id": "blackthorn-centaur_dryadint_blackthorn",
+  "points": 32,
+  "card": {
+    "name": "Дриадинта-Кентавр Терновника",
+    "size": "small",
+    "health": 1,
+    "maxHealth": 1,
+    "defense": {
+      "white": 1,
+      "green": 0
+    },
+    "defenseReaction": {
+      "white": 0,
+      "green": 0
+    },
+    "walk": 1,
+    "run": 7,
+    "domains": [
+      "death"
+    ],
+    "concentration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "exploration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "attacks": [
+      {
+        "name": "\\ из 7 | т",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 1,
+        "dice": {}
+      }
+    ],
+    "keywords": [
+      "Великий Терновник"
+    ],
+    "flagSprite": "/blackthorn.webp",
+    "catalogUnitId": "blackthorn-centaur_dryadint_blackthorn",
+    "sprite": "/catalog-units/blackthorn-centaur_dryadint_blackthorn/image.jpg",
+    "miniatureSprite": "/catalog-units/blackthorn-centaur_dryadint_blackthorn/miniature.jpg"
+  }
+}

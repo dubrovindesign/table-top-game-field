@@ -1,0 +1,56 @@
+{
+  "id": "blackthorn-defender_seedlings_blackthorn",
+  "points": 15,
+  "card": {
+    "name": "Защитник Саженцев Терновника",
+    "size": "small",
+    "health": 1,
+    "maxHealth": 1,
+    "defense": {
+      "white": 3,
+      "green": 3
+    },
+    "defenseReaction": {
+      "white": 0,
+      "green": 0
+    },
+    "walk": 1,
+    "run": 2,
+    "domains": [
+      "death"
+    ],
+    "concentration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "exploration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "attacks": [
+      {
+        "name": "В; oF Г",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 1,
+        "dice": {
+          "black": 1
+        }
+      }
+    ],
+    "keywords": [
+      "Великий Терновник"
+    ],
+    "flagSprite": "/blackthorn.webp",
+    "catalogUnitId": "blackthorn-defender_seedlings_blackthorn",
+    "sprite": "/catalog-units/blackthorn-defender_seedlings_blackthorn/image.jpg",
+    "miniatureSprite": "/catalog-units/blackthorn-defender_seedlings_blackthorn/miniature.jpg"
+  }
+}

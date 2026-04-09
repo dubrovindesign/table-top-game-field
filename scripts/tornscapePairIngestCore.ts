@@ -1,6 +1,6 @@
 /**
  * Склейка лица + оборота Tornscape, опционально OCR статы и хотспоты «Торкемад».
- * Используется `ingest-unit-card-pair.ts` и `batch-ingest-tornscape-cards.ts`.
+ * Используется `batch-ingest-tornscape-cards.ts`.
  */
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -8,7 +8,11 @@ import sharp from 'sharp';
 import type { UnitCardData } from '../src/unitCard';
 import { buildTornscapeScrollHotspotRegionsFromA2Preset } from '../src/catalog/tornscapeScrollHotspots';
 import { parsedAttackToAbility } from '../src/catalog/kowCardStatsOcrParse';
-import { runOcrOnFaceBackBuffers } from './ocrKowCardFace';
+import {
+  runOcrOnFaceBackBuffers,
+  runOcrOnScrollImage,
+  type OcrKowCardResult,
+} from './ocrKowCardFace';
 
 export const BACK_TOP_CROP_RATIO = 0.255;
 export const BACK_TOP_CROP_LESS_PX = 30;
@@ -150,10 +154,18 @@ async function compositeScroll(faceBuf: Buffer, backBuf: Buffer) {
     .toBuffer();
 
   const scaleY = faceFullH / totalH;
-  return { imageBuf, faceBuf: faceOutBuf, faceW, faceFullH, totalH, scaleY };
+  return {
+    imageBuf,
+    faceBuf: faceOutBuf,
+    faceW,
+    faceFullH,
+    faceCropH,
+    totalH,
+    scaleY,
+  };
 }
 
-function mergeOcrIntoCard(card: UnitCardData, ocr: Awaited<ReturnType<typeof runOcrOnFaceBackBuffers>>): UnitCardData {
+function mergeOcrIntoCard(card: UnitCardData, ocr: OcrKowCardResult): UnitCardData {
   const c = structuredClone(card);
   const s = ocr.stats;
   if (s.health != null) {
@@ -197,12 +209,10 @@ export async function ingestTornscapeCardPair(opts: TornscapeIngestOptions): Pro
   });
 
   const outDir = path.join(repoRoot, 'public', 'catalog-units', unitId);
-  const facePath = path.join(outDir, 'face.jpg');
   const imagePath = path.join(outDir, 'image.jpg');
   const miniaturePath = path.join(outDir, 'miniature.jpg');
 
   if (dryRun) {
-    console.log(`[dry-run] ${facePath}`);
     console.log(`[dry-run] ${imagePath}`);
     console.log(`[dry-run] ${miniaturePath}`);
     const raw = await fs.readFile(unitJsonPath, 'utf8');
@@ -217,16 +227,31 @@ export async function ingestTornscapeCardPair(opts: TornscapeIngestOptions): Pro
     const faceCropH = faceFullH - FACE_BOTTOM_CROP_PX;
     const totalH = faceCropH + backH;
     const scaleY = faceFullH / totalH;
-    return { unitId, faceW, faceFullH, totalH, scaleY };
+    return { unitId, faceW, faceFullH, faceCropH, totalH, scaleY };
   }
 
   const faceOpt = await optimizeSourceToJpegBuffer(frontAbs, maxEdge);
   const backOpt = await optimizeSourceToJpegBuffer(backAbs, maxEdge);
 
+  await fs.mkdir(outDir, { recursive: true });
+
+  const { imageBuf, faceBuf, faceW, faceFullH, faceCropH, totalH, scaleY } = await compositeScroll(
+    faceOpt,
+    backOpt,
+  );
+
   let mergedCard: UnitCardData | null = null;
   if (ocr) {
     console.log(`[tornscapePairIngest] ${unitId}: OCR (rus+eng)…`);
-    const ocrResult = await runOcrOnFaceBackBuffers(faceOpt, backOpt);
+    const ocrResult = unitId.startsWith('blackthorn-')
+      ? await runOcrOnScrollImage(imageBuf, {
+          width: faceW,
+          faceFullH,
+          faceCropH,
+          totalH,
+          backBuf: backOpt,
+        })
+      : await runOcrOnFaceBackBuffers(faceOpt, backOpt);
     const unitRaw = await fs.readFile(unitJsonPath, 'utf8');
     const unitJson = JSON.parse(unitRaw) as { card: UnitCardData; id: string; points?: number };
     mergedCard = mergeOcrIntoCard(unitJson.card, ocrResult);
@@ -235,12 +260,16 @@ export async function ingestTornscapeCardPair(opts: TornscapeIngestOptions): Pro
     console.log(`[tornscapePairIngest] Обновлён каталог: ${unitJsonPath}`);
   }
 
-  await fs.mkdir(outDir, { recursive: true });
-  await fs.writeFile(facePath, faceOpt);
-
-  const { imageBuf, faceBuf, faceW, faceFullH, totalH, scaleY } = await compositeScroll(faceOpt, backOpt);
   await fs.writeFile(imagePath, imageBuf);
   await writeMiniatureFromFace(faceBuf, faceW, faceFullH, miniaturePath);
+
+  {
+    const unitRawSprites = await fs.readFile(unitJsonPath, 'utf8');
+    const uj = JSON.parse(unitRawSprites) as { card: UnitCardData; id: string; points?: number };
+    uj.card.sprite = `/catalog-units/${unitId}/image.jpg`;
+    uj.card.miniatureSprite = `/catalog-units/${unitId}/miniature.jpg`;
+    await fs.writeFile(unitJsonPath, JSON.stringify(uj, null, 2) + '\n', 'utf8');
+  }
 
   if (!noHotspot) {
     const hfPath = path.join(repoRoot, 'src', 'catalog', 'hotspots', `${unitId}.json`);

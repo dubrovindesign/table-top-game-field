@@ -1,0 +1,56 @@
+{
+  "id": "blackthorn-sild_seeder",
+  "points": 32,
+  "card": {
+    "name": "Сильд Сеятель Терновника",
+    "size": "small",
+    "health": 1,
+    "maxHealth": 1,
+    "defense": {
+      "white": 2,
+      "green": 7
+    },
+    "defenseReaction": {
+      "white": 0,
+      "green": 0
+    },
+    "walk": 1,
+    "run": 2,
+    "domains": [
+      "death"
+    ],
+    "concentration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "exploration": {
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "grabRange": 1,
+    "attacks": [
+      {
+        "name": "4 Сальд",
+        "range": 1,
+        "attackRange": "melee",
+        "damageType": "physical",
+        "damage": 1,
+        "dice": {
+          "black": 1
+        }
+      }
+    ],
+    "keywords": [
+      "Великий Терновник"
+    ],
+    "flagSprite": "/blackthorn.webp",
+    "catalogUnitId": "blackthorn-sild_seeder",
+    "sprite": "/catalog-units/blackthorn-sild_seeder/image.jpg",
+    "miniatureSprite": "/catalog-units/blackthorn-sild_seeder/miniature.jpg"
+  }
+}
