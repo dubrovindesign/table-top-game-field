@@ -18,6 +18,8 @@ import {
   hugeMiniActivationToggleCenterFromPivotWorld,
   hugeMiniDrawPivotWorld,
   hugeMiniHealthBadgeCenterWorld,
+  HEALTH_PLUS_MINUS_BUTTON_RADIUS_FRAC_OF_BADGE,
+  HEALTH_PLUS_MINUS_OFFSET_FROM_BADGE_CENTER_FRAC,
   SMALL_UNIT_HEALTH_BADGE_EXPAND_WHEN_OPEN,
   SMALL_UNIT_HEALTH_BADGE_SCALE,
   smallUnitActivationToggleCenterWorldRad,
@@ -1815,8 +1817,10 @@ export class Renderer {
       return;
     }
 
-    const buttonRadius = badgeRadius * 0.55;
-    const buttonOffsetX = badgeRadius * 1.55;
+    const buttonRadius =
+      badgeRadius * HEALTH_PLUS_MINUS_BUTTON_RADIUS_FRAC_OF_BADGE;
+    const buttonOffsetX =
+      badgeRadius * HEALTH_PLUS_MINUS_OFFSET_FROM_BADGE_CENTER_FRAC;
     this.drawHealthButton(
       { x: badgeCenter.x - buttonOffsetX, y: badgeCenter.y },
       buttonRadius,
@@ -3105,19 +3109,21 @@ export class Renderer {
           ? this.godLoosePreviewWorld
           : p.world;
       this.drawGodTablePiece(p, world, i);
-      const z = this.camera.zoom;
-      const hw = GOD_TABLE_CARD_HW * 1.08;
-      const hh = GOD_TABLE_CARD_HH * 1.08;
-      const r = 5 / z;
-      ctx.save();
-      ctx.translate(world.x, world.y);
-      this.applyGodTableCardVisualRotation(ctx);
-      ctx.beginPath();
-      ctx.roundRect(-hw, -hh, hw * 2, hh * 2, r);
-      ctx.strokeStyle = '#4caf50';
-      ctx.lineWidth = 3 / z;
-      ctx.stroke();
-      ctx.restore();
+      if (p.kind === 'deck') {
+        const z = this.camera.zoom;
+        const hw = GOD_TABLE_CARD_HW * 1.08;
+        const hh = GOD_TABLE_CARD_HH * 1.08;
+        const r = 5 / z;
+        ctx.save();
+        ctx.translate(world.x, world.y);
+        this.applyGodTableCardVisualRotation(ctx);
+        ctx.beginPath();
+        ctx.roundRect(-hw, -hh, hw * 2, hh * 2, r);
+        ctx.strokeStyle = '#4caf50';
+        ctx.lineWidth = 3 / z;
+        ctx.stroke();
+        ctx.restore();
+      }
     }
   }
 

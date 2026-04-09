@@ -28,6 +28,17 @@ export const SMALL_UNIT_HEALTH_BADGE_SCALE = 0.52;
 export const SMALL_UNIT_HEALTH_BADGE_EXPAND_WHEN_OPEN = 1.62;
 
 /**
+ * − / + circles: radius relative to the HP badge disc radius (`1` = same size as the indicator).
+ */
+export const HEALTH_PLUS_MINUS_BUTTON_RADIUS_FRAC_OF_BADGE = 1;
+
+/**
+ * Distance from HP badge center to each − / + center, in badge-radius units.
+ * With {@link HEALTH_PLUS_MINUS_BUTTON_RADIUS_FRAC_OF_BADGE} = 1, use ≥ 2 so circles do not overlap.
+ */
+export const HEALTH_PLUS_MINUS_OFFSET_FROM_BADGE_CENTER_FRAC = 2.08;
+
+/**
  * Flat-top layout: `hexCornerOffset(1)` is the bottom-right vertex (+x, +y on screen).
  * Inset 1 = on vertex; lower = closer to center (keeps badge inside the cell).
  */
@@ -437,4 +448,76 @@ export function hugeMiniDrawPivotWorld(anchor: Hex, rotationDeg: number, layout:
     x: T.x - (c * dx - s * dy),
     y: T.y - (s * dx + c * dy),
   };
+}
+
+// ── Pointer hit vs drawn silhouette (scaled hexon / large tri) ──
+// Matches `drawBigMiniHexonAtPoint` / `drawLargeMiniShapeAtPoint`: outer hull in local space,
+// then `BIG_MINI_VISUAL_SCALE` / `LARGE_MINI_VISUAL_SCALE`. Lets clicks on the visible vortex
+// ring (outside the art) fall through to the ether vortex.
+
+function pointInPolygon(px: number, py: number, poly: Point[]): boolean {
+  let inside = false;
+  const n = poly.length;
+  for (let i = 0, j = n - 1; i < n; j = i++) {
+    const xi = poly[i]!.x;
+    const yi = poly[i]!.y;
+    const xj = poly[j]!.x;
+    const yj = poly[j]!.y;
+    if ((yi > py) !== (yj > py)) {
+      const xint = ((xj - xi) * (py - yi)) / (yj - yi) + xi;
+      if (px < xint) inside = !inside;
+    }
+  }
+  return inside;
+}
+
+function bigHexonOuterVerticesLocal(layout: Layout): Point[] {
+  return outerBoundaryVerticesFromCells(hexonLocalCellCenters(layout), layout, 1);
+}
+
+/**
+ * True if `world` lies inside the scaled big-mini hexon outline (same geometry as canvas clip).
+ * `hexCenterWorld` = hexon center; `rotationDegModel` = stored model rotation.
+ */
+export function isWorldPointInBigMiniSilhouette(
+  world: Point,
+  hexCenterWorld: Point,
+  rotationDegModel: number,
+  layout: Layout,
+): boolean {
+  const verts = bigHexonOuterVerticesLocal(layout);
+  if (verts.length < 3) return true;
+  const rotRad = (rotationDegModel * Math.PI) / 180;
+  const c = Math.cos(rotRad);
+  const s = Math.sin(rotRad);
+  const b = hexonBoundsLocal(layout);
+  const pcx = (b.minX + b.maxX) / 2;
+  const pcy = (b.minY + b.maxY) / 2;
+  const dx = world.x - hexCenterWorld.x;
+  const dy = world.y - hexCenterWorld.y;
+  const lx = (c * dx + s * dy) / BIG_MINI_VISUAL_SCALE + pcx;
+  const ly = (-s * dx + c * dy) / BIG_MINI_VISUAL_SCALE + pcy;
+  return pointInPolygon(lx, ly, verts);
+}
+
+/**
+ * True if `world` lies inside the scaled large-mini (3-hex) triangle outline.
+ * `anchorWorld` = anchor hex center; `rotationDegModel` = model rotation; local origin (0,0).
+ */
+export function isWorldPointInLargeMiniSilhouette(
+  world: Point,
+  anchorWorld: Point,
+  rotationDegModel: number,
+  layout: Layout,
+): boolean {
+  const verts = largeTriangleOuterVerticesLocal(layout);
+  if (verts.length < 3) return true;
+  const rotRad = (rotationDegModel * Math.PI) / 180;
+  const c = Math.cos(rotRad);
+  const s = Math.sin(rotRad);
+  const dx = world.x - anchorWorld.x;
+  const dy = world.y - anchorWorld.y;
+  const lx = (c * dx + s * dy) / LARGE_MINI_VISUAL_SCALE;
+  const ly = (-s * dx + c * dy) / LARGE_MINI_VISUAL_SCALE;
+  return pointInPolygon(lx, ly, verts);
 }

@@ -22,6 +22,7 @@ import type {
   SerializedSharedDiceStateV2,
 } from './multiplayer/boardState.ts';
 import type { PlayerSlot } from './multiplayer/protocol.ts';
+import { silenceAllDiceTickVoices, startDiceTickLoop } from './diceRollAudio.ts';
 import { UnitCard, unitMiniatureImageSrc, type UnitCardData } from './unitCard';
 
 // ── Types ──────────────────────────────────────────────────────
@@ -304,6 +305,8 @@ export class DiceRoller {
   private localViewSlot: PlayerSlot | null = null;
   /** Ключи действий карточки, уже добавивших кубики в селектор (сброс при пустом наборе / броске). */
   private usedDiceActionKeys = new Set<string>();
+  /** Остановка щелчков анимации (Web Audio). */
+  private diceRollTickStop: (() => void) | null = null;
 
   constructor(parent: HTMLElement) {
     for (const dc of DIE_CONFIGS) {
@@ -575,9 +578,18 @@ export class DiceRoller {
     }
   }
 
+  private stopDiceRollTicks(): void {
+    silenceAllDiceTickVoices();
+    if (this.diceRollTickStop) {
+      this.diceRollTickStop();
+      this.diceRollTickStop = null;
+    }
+  }
+
   private clearDiceAnimTimers(): void {
     this.clearRollFinishTimerForSlot(0);
     this.clearRollFinishTimerForSlot(1);
+    this.stopDiceRollTicks();
     for (const slot of [0, 1] as const) {
       const t = this.pendingRerollBySlot[slot];
       if (t !== null) {
@@ -1145,6 +1157,7 @@ export class DiceRoller {
     opts: { lockGlobalRollButton: boolean },
   ): void {
     this.clearRollFinishTimerForSlot(slot);
+    this.stopDiceRollTicks();
     const b = this.bucket[slot];
     const activeEl = this.slotDom[slot].activeEl;
     activeEl.innerHTML = '';
@@ -1232,8 +1245,10 @@ export class DiceRoller {
     });
 
     const totalDuration = baseDuration + (slots.length - 1) * staggerDelay + 200;
+    this.diceRollTickStop = startDiceTickLoop(totalDuration);
     this.pendingRollFinishBySlot[slot] = setTimeout(() => {
       this.pendingRollFinishBySlot[slot] = null;
+      this.stopDiceRollTicks();
       if (opts.lockGlobalRollButton) {
         this.myRollAnimating = false;
         this.rollButton.disabled = false;
@@ -1329,8 +1344,12 @@ export class DiceRoller {
       });
     });
 
+    this.stopDiceRollTicks();
+    this.diceRollTickStop = startDiceTickLoop(duration + 80);
+
     this.pendingRerollBySlot[slot] = setTimeout(() => {
       this.pendingRerollBySlot[slot] = null;
+      this.stopDiceRollTicks();
       if (opts.lockMyRoll) {
         this.myRollAnimating = false;
         this.syncStateRollButton();

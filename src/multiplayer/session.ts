@@ -82,11 +82,11 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
 
   const toggleBtn = document.createElement('button');
   toggleBtn.type = 'button';
-  toggleBtn.className = 'mp-menu-btn';
-  toggleBtn.setAttribute('aria-label', 'Мультиплеер');
-  toggleBtn.title = 'Мультиплеер';
+  toggleBtn.className = 'mp-menu-btn mp-menu-btn--text';
+  toggleBtn.setAttribute('aria-label', 'Multiplayer');
+  toggleBtn.title = 'Multiplayer';
   toggleBtn.setAttribute('aria-expanded', 'false');
-  toggleBtn.innerHTML = `<svg class="mp-menu-btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.87 2.13 7.13 2.13 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 7.14 8.87 7.14 5 13z"/></svg>`;
+  toggleBtn.textContent = 'multiplayer';
 
   const root = document.createElement('div');
   root.className = 'mp-root mp-popover-hidden';

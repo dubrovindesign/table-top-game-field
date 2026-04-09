@@ -381,7 +381,10 @@ export class CatalogEditorPanel {
   private leaderAttachExistingUnitSel!: HTMLSelectElement;
   private unitStubFieldsWrap!: HTMLElement;
 
-  constructor(toolbarMount: HTMLElement) {
+  constructor(
+    toolbarMount: HTMLElement,
+    opts?: { skipToolbarButton?: boolean },
+  ) {
     this.selectedFactionId = FACTIONS[0]?.id ?? '';
     this.selectedDomainId = (FACTIONS[0]?.domain ?? 'life') as Domain;
     const first = leadersForFaction(this.selectedFactionId);
@@ -397,7 +400,9 @@ export class CatalogEditorPanel {
       e.stopPropagation();
       this.setOpen(true);
     });
-    toolbarMount.appendChild(this.menuBtn);
+    if (!opts?.skipToolbarButton) {
+      toolbarMount.appendChild(this.menuBtn);
+    }
 
     this.overlay = el('div', 'catalog-editor-overlay');
     this.overlay.addEventListener('click', () => this.setOpen(false));

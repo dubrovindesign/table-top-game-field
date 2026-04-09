@@ -1685,8 +1685,10 @@ select option {
   transition: opacity 0.18s ease, visibility 0.18s ease;
   display: inline-flex;
   flex-direction: row;
+  flex-wrap: wrap;
   align-items: flex-start;
   gap: 8px;
+  max-width: calc(100vw - 24px);
 }
 
 .army-builder-root:has(.army-panel.army-panel-open) .army-menu-wrap {
@@ -1713,6 +1715,19 @@ select option {
 
 .army-menu-btn:hover {
   background: rgba(36, 36, 42, 0.96);
+}
+
+.army-menu-btn--text {
+  width: auto;
+  min-width: 42px;
+  height: auto;
+  min-height: 42px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .army-open-panel-icon {
@@ -2836,6 +2851,19 @@ select option {
   background: rgba(36, 36, 42, 0.96);
 }
 
+.mp-menu-btn--text {
+  width: auto;
+  min-width: 42px;
+  height: auto;
+  min-height: 42px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
 .mp-menu-btn-icon {
   width: 22px;
   height: 22px;
@@ -3086,6 +3114,190 @@ select option {
 
 .mp-join-gate-hint {
   margin-top: 0;
+}
+
+/* ── Верхнее меню «⋯» (каталог / PWA / настройки / управление) ─ */
+
+.app-more-menu-anchor {
+  position: relative;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: flex-start;
+  flex-shrink: 0;
+  pointer-events: auto;
+}
+
+.app-more-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(22, 22, 26, 0.92);
+  color: #e8e8e8;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+
+.app-more-menu-btn:hover {
+  background: rgba(36, 36, 42, 0.96);
+}
+
+.app-more-menu-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.app-more-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 10000;
+  min-width: min(280px, calc(100vw - 24px));
+  padding: 6px 0;
+  background: rgba(22, 22, 28, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  pointer-events: auto;
+}
+
+.app-more-menu-dropdown--hidden {
+  display: none !important;
+}
+
+.app-more-menu-item {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 11px 16px;
+  border: none;
+  background: transparent;
+  color: #e8e8f0;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.app-more-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.app-controls-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 26000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  box-sizing: border-box;
+  background: rgba(6, 8, 14, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  pointer-events: auto;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.app-controls-dialog {
+  width: min(440px, 100%);
+  max-height: min(82vh, 100%);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: rgba(22, 22, 28, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+}
+
+.app-controls-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.app-controls-dialog-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #f3f4f6;
+}
+
+.app-controls-dialog-close {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8e8f0;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.app-controls-dialog-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.app-controls-dialog-body {
+  padding: 12px 16px 18px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.app-controls-help {
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.app-controls-section {
+  margin-top: 14px;
+}
+
+.app-controls-section:first-child {
+  margin-top: 0;
+}
+
+.app-controls-heading {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.app-controls-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.app-controls-list li {
+  margin-bottom: 8px;
+}
+
+.app-controls-list li:last-child {
+  margin-bottom: 0;
+}
+
+.app-controls-list strong {
+  color: #f3f4f6;
+  font-weight: 600;
 }
 
 /* ── PWA: установить приложение (рядом с Армия / Мультиплеер) ─── */

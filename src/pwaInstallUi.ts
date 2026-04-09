@@ -1,5 +1,5 @@
 /**
- * Кнопка «Установить приложение» в тулбаре (beforeinstallprompt + подсказка вручную).
+ * Установка PWA: без отдельной кнопки в тулбаре — вызов из меню «⋯».
  */
 
 function isStandaloneDisplay(): boolean {
@@ -20,23 +20,24 @@ function installHintParagraph(): string {
   return 'В Chrome или Edge: меню (⋮) → «Установить приложение…». Либо значок установки в адресной строке.';
 }
 
-export function mountPwaInstallToolbar(toolbarMount: HTMLElement): void {
-  if (isStandaloneDisplay()) return;
+export type PwaInstallMenuHandle = {
+  open: () => Promise<void>;
+};
+
+/**
+ * Готовит логику установки и всплывающую подсказку. `null`, если приложение уже в режиме установки.
+ */
+export function createPwaInstallMenuFlow(): PwaInstallMenuHandle | null {
+  if (isStandaloneDisplay()) return null;
 
   const anchor = document.createElement('div');
-  anchor.className = 'pwa-install-toolbar-anchor';
-
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = 'pwa-install-menu-btn';
-  btn.setAttribute('aria-label', 'Установить приложение');
-  btn.title = 'Установить на устройство (PWA)';
-  btn.setAttribute('aria-haspopup', 'dialog');
-  btn.setAttribute('aria-expanded', 'false');
-  btn.innerHTML = `<svg class="pwa-install-menu-btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>`;
+  anchor.className = 'pwa-install-toolbar-anchor pwa-install-toolbar-anchor--ghost';
+  anchor.style.cssText =
+    'position:fixed;top:52px;left:12px;width:0;height:0;overflow:visible;z-index:189;pointer-events:none;';
 
   const root = document.createElement('div');
   root.className = 'pwa-install-root pwa-install-popover-hidden';
+  root.style.pointerEvents = 'auto';
   root.setAttribute('role', 'dialog');
   root.setAttribute('aria-label', 'Как установить приложение');
   root.innerHTML = `
@@ -54,40 +55,16 @@ export function mountPwaInstallToolbar(toolbarMount: HTMLElement): void {
   function setPopoverOpen(open: boolean): void {
     popoverOpen = open;
     root.classList.toggle('pwa-install-popover-hidden', !open);
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-  }
-
-  function hideToolbar(): void {
-    anchor.classList.add('pwa-install-toolbar-anchor--gone');
   }
 
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferred = e as BeforeInstallPromptEvent;
-    btn.title = 'Установить на устройство — готово к установке';
   });
 
   window.addEventListener('appinstalled', () => {
     deferred = null;
     setPopoverOpen(false);
-    hideToolbar();
-  });
-
-  btn.addEventListener('click', async (e) => {
-    e.stopPropagation();
-    if (deferred) {
-      try {
-        await deferred.prompt();
-        await deferred.userChoice;
-      } catch {
-        /* ignore */
-      }
-      deferred = null;
-      btn.title = 'Установить на устройство (PWA)';
-      setPopoverOpen(false);
-      return;
-    }
-    setPopoverOpen(!popoverOpen);
   });
 
   document.addEventListener(
@@ -100,7 +77,23 @@ export function mountPwaInstallToolbar(toolbarMount: HTMLElement): void {
     true,
   );
 
-  anchor.appendChild(btn);
   anchor.appendChild(root);
-  toolbarMount.appendChild(anchor);
+  document.body.appendChild(anchor);
+
+  async function open(): Promise<void> {
+    if (deferred) {
+      try {
+        await deferred.prompt();
+        await deferred.userChoice;
+      } catch {
+        /* ignore */
+      }
+      deferred = null;
+      setPopoverOpen(false);
+      return;
+    }
+    setPopoverOpen(true);
+  }
+
+  return { open };
 }
