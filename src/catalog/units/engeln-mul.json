@@ -1,59 +1,71 @@
 {
-  "id": "engeln-mul",
-  "points": 10,
   "card": {
-    "name": "Автоматон \"М.У.Л.\"",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {
+          "black": 0,
+          "green": 0,
+          "red": 1,
+          "white": 0
+        },
+        "name": "—",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "engeln-mul",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "creation"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "faithMarkers": {
+      "red": 0
+    },
+    "flagSprite": "/engeln.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "—",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {
-          "red": 1,
-          "green": 0,
-          "black": 0,
-          "white": 0
-        }
-      }
-    ],
+    "health": 4,
     "keywords": [
       "Ангельн"
     ],
-    "flagSprite": "/engeln.webp",
-    "catalogUnitId": "engeln-mul",
-    "sprite": "/catalog-units/engeln-mul/image.jpg",
-    "miniatureSprite": "/catalog-units/engeln-mul/miniature.jpg"
-  }
+    "maxHealth": 4,
+    "miniatureSprite": "/catalog-units/engeln-mul/miniature.jpg",
+    "movementDistanceUnit": "hex",
+    "name": "Автоматон \"М.У.Л.\"",
+    "run": 5,
+    "size": "small",
+    "sprite": "",
+    "traits": [
+      {
+        "description": "Карточка-заглушка: заданы только имя, очки и лимит из torn-world.com. Арт и игровые статы не заполнены.",
+        "name": "Ростер Army Builder"
+      }
+    ],
+    "walk": 3
+  },
+  "id": "engeln-mul",
+  "mercenary": true,
+  "points": 10,
+  "requiresCommanderUnitId": null
 }

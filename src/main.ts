@@ -3136,9 +3136,10 @@ function placeArmyCatalogUnitOnBoard(
           catalogUnitId: unitId,
           rosterLeaderId: leaderId,
         } as const);
-  const broomgarHungerMeta = isBroomgarRosterLeader(leaderId)
-    ? ({ broomgarHungerPhase: 0 as BroomgarHungerPhase })
-    : {};
+  const broomgarHungerMeta =
+    isBroomgarRosterLeader(leaderId) && getCatalogUnit(unitId)?.mercenary !== true
+      ? ({ broomgarHungerPhase: 0 as BroomgarHungerPhase })
+      : {};
 
   if (def.card.size === 'small') {
     const world = screenToBoardWorld(screenX, screenY);
@@ -7046,6 +7047,17 @@ function resetTransientMultiplayerInteractionState(): void {
   openHealthControlsHugeMiniIndex = null;
 }
 
+/** Drop hunger phase for mercenary units (`mercenary` from merged catalog / editor overrides). */
+function broomgarHungerPhaseAfterMercenaryStrip(
+  catalogUnitId: string | undefined,
+  raw: unknown,
+): BroomgarHungerPhase | undefined {
+  const ph = parseBroomgarHungerPhase(raw);
+  if (ph === undefined) return undefined;
+  if (catalogUnitId && getCatalogUnit(catalogUnitId)?.mercenary === true) return undefined;
+  return ph;
+}
+
 function applyBoardSnapshot(raw: unknown): void {
   if (!isSerializedBoardStateV1(raw)) {
     if (import.meta.env.DEV) {
@@ -7058,7 +7070,7 @@ function applyBoardSnapshot(raw: unknown): void {
 
   units.length = 0;
   for (const u of s.units) {
-    const bh = parseBroomgarHungerPhase(u.broomgarHungerPhase);
+    const bh = broomgarHungerPhaseAfterMercenaryStrip(u.catalogUnitId, u.broomgarHungerPhase);
     units.push({
       position: new Hex(u.position.q, u.position.r),
       offBoardWorld: u.offBoardWorld,
@@ -7081,7 +7093,7 @@ function applyBoardSnapshot(raw: unknown): void {
 
   bigMiniatures.length = 0;
   for (const m of s.bigMiniatures) {
-    const bh = parseBroomgarHungerPhase(m.broomgarHungerPhase);
+    const bh = broomgarHungerPhaseAfterMercenaryStrip(m.catalogUnitId, m.broomgarHungerPhase);
     bigMiniatures.push({
       center: new Hex(m.center.q, m.center.r),
       offBoardWorld: m.offBoardWorld,
@@ -7103,7 +7115,7 @@ function applyBoardSnapshot(raw: unknown): void {
 
   largeMiniatures.length = 0;
   for (const m of s.largeMiniatures) {
-    const bh = parseBroomgarHungerPhase(m.broomgarHungerPhase);
+    const bh = broomgarHungerPhaseAfterMercenaryStrip(m.catalogUnitId, m.broomgarHungerPhase);
     largeMiniatures.push({
       anchor: new Hex(m.anchor.q, m.anchor.r),
       offBoardWorld: m.offBoardWorld,
@@ -7125,7 +7137,7 @@ function applyBoardSnapshot(raw: unknown): void {
 
   hugeMiniatures.length = 0;
   for (const m of s.hugeMiniatures) {
-    const bh = parseBroomgarHungerPhase(m.broomgarHungerPhase);
+    const bh = broomgarHungerPhaseAfterMercenaryStrip(m.catalogUnitId, m.broomgarHungerPhase);
     hugeMiniatures.push({
       anchor: new Hex(m.anchor.q, m.anchor.r),
       offBoardWorld: m.offBoardWorld,

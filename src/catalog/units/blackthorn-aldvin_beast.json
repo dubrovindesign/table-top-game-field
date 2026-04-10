@@ -2,15 +2,17 @@
   "card": {
     "attacks": [
       {
-        "attackRange": "ranged",
+        "attackRange": "melee",
         "damage": 1,
         "damageType": "physical",
         "dice": {
-          "red": 7,
-          "white": 7
+          "black": 0,
+          "green": 0,
+          "red": 1,
+          "white": 0
         },
-        "name": "Алдвин Мортенсон",
-        "range": 7
+        "name": "—",
+        "range": 1
       }
     ],
     "catalogUnitId": "blackthorn-aldvin_beast",
@@ -21,15 +23,15 @@
       "white": 0
     },
     "defense": {
-      "green": 5,
-      "white": 2
+      "green": 0,
+      "white": 0
     },
     "defenseReaction": {
       "green": 0,
       "white": 0
     },
     "domains": [
-      "death"
+      "creation"
     ],
     "exploration": {
       "black": 0,
@@ -38,14 +40,14 @@
       "white": 0
     },
     "explorationRange": 0,
-    "flagSprite": "/blackthorn.webp",
+    "flagSprite": "/engeln.webp",
     "grabRange": 1,
     "health": 5,
     "keywords": [
-      "Великий Терновник"
+      "Ангельн"
     ],
     "maxHealth": 5,
-    "miniatureSprite": "/catalog-units/blackthorn-aldvin_beast/miniature.jpg",
+    "miniatureSprite": "/catalog-units/blackthorn-aldvin_beast/card_miniatureSprite.jpg",
     "name": "Алдвин Искатель Истины",
     "run": 6,
     "size": "small",
@@ -53,6 +55,7 @@
     "walk": 3
   },
   "id": "blackthorn-aldvin_beast",
-  "mercenary": false,
-  "points": 19
+  "mercenary": true,
+  "points": 19,
+  "requiresCommanderUnitId": null
 }

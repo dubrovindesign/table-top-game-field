@@ -2,16 +2,17 @@
   "card": {
     "attacks": [
       {
-        "attackRange": "ranged",
-        "damage": 5,
+        "attackRange": "melee",
+        "damage": 1,
         "damageType": "physical",
         "dice": {
-          "black": 2,
+          "black": 0,
           "green": 0,
-          "red": 2
+          "red": 1,
+          "white": 0
         },
-        "name": "NN 5 - ДЕ | BERN Мы { oy",
-        "range": 4
+        "name": "—",
+        "range": 1
       }
     ],
     "catalogUnitId": "blackthorn-aldvin_book",
@@ -30,7 +31,7 @@
       "white": 0
     },
     "domains": [
-      "death"
+      "creation"
     ],
     "exploration": {
       "black": 0,
@@ -39,14 +40,14 @@
       "white": 0
     },
     "explorationRange": 0,
-    "flagSprite": "/blackthorn.webp",
+    "flagSprite": "/engeln.webp",
     "grabRange": 1,
     "health": 5,
     "keywords": [
-      "Великий Терновник"
+      "Ангельн"
     ],
     "maxHealth": 5,
-    "miniatureSprite": "/catalog-units/blackthorn-aldvin_book/miniature.jpg",
+    "miniatureSprite": "/catalog-units/blackthorn-aldvin_book/card_miniatureSprite.jpg",
     "name": "Алдвин Летописец",
     "run": 6,
     "size": "small",
@@ -54,6 +55,7 @@
     "walk": 3
   },
   "id": "blackthorn-aldvin_book",
-  "mercenary": false,
-  "points": 19
+  "mercenary": true,
+  "points": 19,
+  "requiresCommanderUnitId": null
 }

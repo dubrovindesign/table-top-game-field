@@ -1,59 +1,61 @@
 {
-  "id": "engeln-gatarkhin_glaive",
-  "points": 35,
   "card": {
-    "name": "Гатархин, дуэлянт",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {
+          "black": 0,
+          "green": 0,
+          "red": 1,
+          "white": 0
+        },
+        "name": "—",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "engeln-gatarkhin_glaive",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "creation"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "flagSprite": "/engeln.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "—",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {
-          "red": 1,
-          "green": 0,
-          "black": 0,
-          "white": 0
-        }
-      }
-    ],
+    "health": 5,
     "keywords": [
       "Ангельн"
     ],
-    "flagSprite": "/engeln.webp",
-    "catalogUnitId": "engeln-gatarkhin_glaive",
-    "sprite": "/catalog-units/engeln-gatarkhin_glaive/image.jpg",
-    "miniatureSprite": "/catalog-units/engeln-gatarkhin_glaive/miniature.jpg"
-  }
+    "maxHealth": 5,
+    "miniatureSprite": "/catalog-units/engeln-gatarkhin_glaive/miniature.jpg",
+    "name": "Гатархин, дуэлянт",
+    "run": 7,
+    "size": "small",
+    "sprite": "",
+    "walk": 4
+  },
+  "id": "engeln-gatarkhin_glaive",
+  "mercenary": true,
+  "points": 35,
+  "requiresCommanderUnitId": null
 }

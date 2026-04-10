@@ -770,7 +770,20 @@ export function getMergedLeadersForFaction(factionId: string): LeaderDef[] {
 export function getHotspotsForUnit(unitId: string): HotspotFile | undefined {
   if (!getMergedCatalogUnit(unitId)) return undefined;
   const o = getCatalogOverrides();
-  return o.hotspots[unitId] ?? getStaticHotspotForUnit(unitId);
+  const ov = o.hotspots[unitId];
+  const st = getStaticHotspotForUnit(unitId);
+  if (!ov) return st;
+  const hasOvImg = !!(ov.image && String(ov.image).trim());
+  if (hasOvImg) return ov;
+  if (st?.image?.trim()) {
+    return {
+      ...st,
+      ...ov,
+      image: st.image,
+      regions: ov.regions && ov.regions.length > 0 ? ov.regions : st.regions,
+    };
+  }
+  return ov;
 }
 
 /** Только оверрайд из редактора (не статика из репозитория). */

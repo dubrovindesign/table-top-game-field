@@ -368,6 +368,11 @@ export class CatalogEditorPanel {
   private hotspotClipboard: HotspotRegion | null = null;
   private unitIdInput!: HTMLInputElement;
   private unitNameInput!: HTMLInputElement;
+  /** Выбранный id юнита-командира; '' = не требуется. */
+  private unitRequiresCommanderValue = '';
+  /** Нативный disclosure: только summary виден, пока блок закрыт. */
+  private unitRequiresCommanderDetails!: HTMLDetailsElement;
+  private unitRequiresCommanderSummary!: HTMLElement;
   private unitRequiresCommanderSearch!: HTMLInputElement;
   private unitRequiresCommanderSelect!: HTMLSelectElement;
   private unitCostHintEl!: HTMLElement;
@@ -771,23 +776,38 @@ export class CatalogEditorPanel {
       'Для слота в армии: пока нет миниатюры выбранного юнита, этот юнит нельзя взять (как «требует» у слота ростера). Поиск фильтрует список.',
     );
     commanderBlock.appendChild(commanderHint);
+    this.unitRequiresCommanderDetails = document.createElement('details');
+    this.unitRequiresCommanderDetails.className = 'ce-unit-commander-details';
+    this.unitRequiresCommanderSummary = el('summary', 'ce-unit-commander-summary', '— не требуется —');
+    const commanderPanel = el('div', 'ce-unit-commander-panel');
     this.unitRequiresCommanderSearch = el('input', 'catalog-editor-input ce-unit-commander-search') as HTMLInputElement;
     this.unitRequiresCommanderSearch.type = 'search';
     this.unitRequiresCommanderSearch.placeholder = 'Поиск по имени или id…';
     this.unitRequiresCommanderSearch.autocomplete = 'off';
-    this.unitRequiresCommanderSearch.addEventListener('input', () => {
-      const keep = this.unitRequiresCommanderSelect.value;
-      this.refreshUnitRequiresCommanderOptions(keep);
-    });
-    commanderBlock.appendChild(this.unitRequiresCommanderSearch);
+    this.unitRequiresCommanderSearch.addEventListener('input', () => this.populateUnitRequiresCommanderSelect());
     this.unitRequiresCommanderSelect = el('select', 'catalog-editor-select ce-unit-commander-select') as HTMLSelectElement;
     this.unitRequiresCommanderSelect.size = 8;
-    commanderBlock.appendChild(this.unitRequiresCommanderSelect);
+    this.unitRequiresCommanderSelect.addEventListener('change', () => {
+      this.unitRequiresCommanderValue = this.unitRequiresCommanderSelect.value;
+      this.syncUnitRequiresCommanderSummary();
+      this.unitRequiresCommanderDetails.open = false;
+    });
+    this.unitRequiresCommanderDetails.addEventListener('toggle', () => {
+      if (this.unitRequiresCommanderDetails.open) {
+        this.unitRequiresCommanderSearch.value = '';
+        this.populateUnitRequiresCommanderSelect();
+        requestAnimationFrame(() => this.unitRequiresCommanderSearch.focus());
+      }
+    });
+    commanderPanel.appendChild(this.unitRequiresCommanderSearch);
+    commanderPanel.appendChild(this.unitRequiresCommanderSelect);
+    this.unitRequiresCommanderDetails.appendChild(this.unitRequiresCommanderSummary);
+    this.unitRequiresCommanderDetails.appendChild(commanderPanel);
+    commanderBlock.appendChild(this.unitRequiresCommanderDetails);
     unitEditorCol.appendChild(commanderBlock);
     this.unitIdInput.addEventListener('input', () => {
       if (!this.unitFormIsNew) return;
-      const keep = this.unitRequiresCommanderSelect.value;
-      this.refreshUnitRequiresCommanderOptions(keep);
+      this.refreshUnitRequiresCommanderOptions(this.unitRequiresCommanderValue);
     });
 
     const unitSubTabs = el('div', 'catalog-editor-tabs ce-unit-subtabs');
@@ -1529,6 +1549,7 @@ export class CatalogEditorPanel {
 
   private finishUnitForm(): void {
     this.closeHotspotQuickEditDiscard();
+    if (this.unitRequiresCommanderDetails) this.unitRequiresCommanderDetails.open = false;
     this.unitModalBackdrop.classList.remove('ce-modal-backdrop--open');
     this.unitFormIsNew = false;
     this.unitCreatePresetLeaderId = null;
@@ -1730,7 +1751,7 @@ export class CatalogEditorPanel {
       const cardResolved = await resolveCardImageUrlsForStorage(rawCard);
       const card = finalizeCardForUnitSave(id, cardResolved, 'newUnit');
       const mercenary = this.unitMercenaryCb.checked;
-      const rc = this.unitRequiresCommanderSelect.value.trim();
+      const rc = this.unitRequiresCommanderValue.trim();
       const nu: CatalogUnitDef = { id, points: 0, card, mercenary };
       if (rc) nu.requiresCommanderUnitId = rc;
       setNewUnit(id, nu);
@@ -3056,19 +3077,43 @@ export class CatalogEditorPanel {
     this.unitListEl.title = visibleIds.length > 1 ? 'Перетащите юнита, чтобы изменить порядок в библиотеке' : '';
   }
 
-  /** Список юнитов для «Требуется командир» с фильтром поиска; исключает текущего юнита. */
-  private refreshUnitRequiresCommanderOptions(preferredValue?: string): void {
+  private syncUnitRequiresCommanderSummary(): void {
+    if (!this.unitRequiresCommanderSummary) return;
+    const v = this.unitRequiresCommanderValue;
+    if (!v) {
+      this.unitRequiresCommanderSummary.textContent = '— не требуется —';
+      this.unitRequiresCommanderSummary.title = '';
+      return;
+    }
+    const d = getCatalogUnit(v);
+    const t = d ? `${d.card.name} · ${v}` : v;
+    this.unitRequiresCommanderSummary.textContent = t;
+    this.unitRequiresCommanderSummary.title = t;
+  }
+
+  /** Заполняет нативный select с учётом строки поиска. */
+  private populateUnitRequiresCommanderSelect(): void {
     if (!this.unitRequiresCommanderSelect) return;
+    const q = (this.unitRequiresCommanderSearch?.value ?? '').trim().toLowerCase();
+    const rows = this.getUnitRequiresCommanderRowSource();
+    const prev = this.unitRequiresCommanderValue;
+    this.unitRequiresCommanderSelect.innerHTML = '';
+    this.unitRequiresCommanderSelect.appendChild(new Option('— не требуется —', ''));
+    for (const r of rows) {
+      if (q && !r.id.toLowerCase().includes(q) && !r.label.toLowerCase().includes(q)) continue;
+      this.unitRequiresCommanderSelect.appendChild(new Option(r.label, r.id));
+    }
+    const can = prev === '' || [...this.unitRequiresCommanderSelect.options].some((o) => o.value === prev);
+    this.unitRequiresCommanderSelect.value = can ? prev : '';
+  }
+
+  private getUnitRequiresCommanderRowSource(): { id: string; label: string }[] {
     const exclude = new Set<string>();
     if (this.selectedUnitId) exclude.add(this.selectedUnitId);
     if (this.unitFormIsNew) {
       const draft = this.unitIdInput?.value?.trim();
       if (draft) exclude.add(draft);
     }
-    const q = (this.unitRequiresCommanderSearch?.value ?? '').trim().toLowerCase();
-    const prev = preferredValue !== undefined ? preferredValue : this.unitRequiresCommanderSelect.value;
-    this.unitRequiresCommanderSelect.innerHTML = '';
-    this.unitRequiresCommanderSelect.appendChild(new Option('— не требуется —', ''));
     const rows: { id: string; label: string }[] = [];
     for (const uid of listAllUnitIds()) {
       if (exclude.has(uid)) continue;
@@ -3077,12 +3122,18 @@ export class CatalogEditorPanel {
       rows.push({ id: uid, label });
     }
     rows.sort((a, b) => a.label.localeCompare(b.label, 'ru'));
-    for (const r of rows) {
-      if (q && !r.id.toLowerCase().includes(q) && !r.label.toLowerCase().includes(q)) continue;
-      this.unitRequiresCommanderSelect.appendChild(new Option(r.label, r.id));
-    }
-    const canKeep = prev && [...this.unitRequiresCommanderSelect.options].some((o) => o.value === prev);
-    this.unitRequiresCommanderSelect.value = canKeep ? prev : '';
+    return rows;
+  }
+
+  /** Пересчитать допустимое значение, подпись на summary и опции select. */
+  private refreshUnitRequiresCommanderOptions(preferredValue?: string): void {
+    if (!this.unitRequiresCommanderSummary) return;
+    const rows = this.getUnitRequiresCommanderRowSource();
+    const prev = preferredValue !== undefined ? preferredValue : this.unitRequiresCommanderValue;
+    const canKeep = prev === '' || (prev !== '' && rows.some((r) => r.id === prev));
+    this.unitRequiresCommanderValue = canKeep ? prev : '';
+    this.syncUnitRequiresCommanderSummary();
+    this.populateUnitRequiresCommanderSelect();
   }
 
   private refreshUnitSelectors(): void {
@@ -3098,8 +3149,8 @@ export class CatalogEditorPanel {
       }
       sel.value = unitIds.includes(prev) ? prev : '';
     };
-    if (this.unitRequiresCommanderSelect) {
-      this.refreshUnitRequiresCommanderOptions(this.unitRequiresCommanderSelect.value);
+    if (this.unitRequiresCommanderDetails) {
+      this.refreshUnitRequiresCommanderOptions(this.unitRequiresCommanderValue);
     }
     refill(this.leaderCatalogUnitSel, 'Шаблон карточки (опц.)');
     refill(this.leaderRosterUnitSel);
@@ -3811,7 +3862,7 @@ export class CatalogEditorPanel {
     const card = finalizeCardForUnitSave(id, cardResolved, storage);
     card.catalogUnitId = def.card.catalogUnitId ?? this.selectedUnitId;
     const mercenary = this.unitMercenaryCb.checked;
-    const rc = this.unitRequiresCommanderSelect.value.trim();
+    const rc = this.unitRequiresCommanderValue.trim();
     if (getCatalogOverrides().newUnits[id]) {
       const next: CatalogUnitDef = { ...def, card, mercenary };
       if (rc) next.requiresCommanderUnitId = rc;
