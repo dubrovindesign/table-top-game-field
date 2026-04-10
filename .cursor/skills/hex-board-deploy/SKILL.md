@@ -40,6 +40,8 @@ npm run catalog:apply -- path/to/hex-board-catalog-overrides.json
 
 Опционально сначала: `npm run catalog:apply -- --dry-run path/to/...`
 
+Перед записью `catalog:apply` **нормализует id** в JSON: ключи лидеров/юнитов приводятся к каноническим (как в `leaders.json` и `src/catalog/units`), в т.ч. по `catalogUnitId`, имени карточки, сегменту `/catalog-units/<папка>/` в `sprite` и ручным алиасам в `src/catalog/data/id-aliases.json`. Если в экспорте встречались «имена папок» вроде `Na'atly-Wild-Huntress` вместо `keld-na'atly_unit`, они будут сопоставлены автоматически или через алиасы.
+
 Скрипт обновляет:
 
 - `src/catalog/units/<id>.json` — новые юниты и патчи к существующим (как в `getMergedCatalogUnit`);
@@ -52,15 +54,17 @@ npm run catalog:apply -- path/to/hex-board-catalog-overrides.json
 
 ### 3. Картинки карточек (не раздувать бандл)
 
-Если в JSON юнитов остались строки **`data:image/...;base64,...`**:
+При **`npm run build`** и при старте **`vite`** автоматически выполняется `scripts/extract-catalog-base64-images.mjs` (тихий режим): строки **`data:image/...;base64,...`** в `src/catalog/units/*.json` и `src/catalog/hotspots/*.json` выносятся в `public/catalog-units/<unitId>/` как **`image.jpg` / `miniature.jpg`** (для `card.sprite` / `card.miniatureSprite`) и заменяются на URL `/catalog-units/...`.
+
+Вручную при необходимости:
 
 ```bash
 npm run catalog:extract-images
 ```
 
-Они выносятся в `public/catalog-units/<unitId>/...` и заменяются на URL вида `/catalog-units/...`. После этого основной JS-чанк должен оставаться сотни килобайт, а не несколько мегабайт.
+Перед коммитом и деплоем **`npm run build` должен проходить**: в конце сборки `verify-catalog-public-assets.mjs` проверяет, что каждый `/catalog-units/...` из `public/generated/catalog-data.json` существует на диске. Обход (не для прода): `SKIP_CATALOG_ASSET_CHECK=1`.
 
-Новые файлы под `public/` (не только из скрипта) — **добавить в git** вместе с JSON.
+Новые файлы под `public/` — **добавить в git** вместе с JSON.
 
 ### 4. Проверка сборки
 

@@ -41,6 +41,56 @@ function buildLeaderResolver(ctx: IdResolveContext): (key: string) => string {
   };
 }
 
+/** Если URL вида `/catalog-units/<seg>/...` и `<seg>` резолвится в другой канонический id — переписывает первый сегмент. */
+const CATALOG_UNITS_URL_RE = /^\/catalog-units\/([^/]+)(\/.*)?$/;
+
+function rewriteCatalogUnitsUrl(url: string, resolveUnit: (k: string) => string): string {
+  const m = url.match(CATALOG_UNITS_URL_RE);
+  if (!m) return url;
+  const seg = m[1];
+  const rest = m[2] ?? '';
+  const canonical = resolveUnit(seg);
+  if (canonical === seg) return url;
+  return `/catalog-units/${canonical}${rest}`;
+}
+
+type UrlRewriteLog = { ownerId: string; field: string; from: string; to: string };
+
+/**
+ * Глубокий обход значения: каждую строку, начинающуюся с `/catalog-units/`, прогоняет через
+ * `rewriteCatalogUnitsUrl`. Изменения записывает в `out` (для отчёта `renames.units`).
+ * Мутирует объекты/массивы по месту, для строк возвращает новое значение — вызывающий должен
+ * присвоить результат полю.
+ */
+function rewriteUrlsDeep(
+  value: unknown,
+  resolveUnit: (k: string) => string,
+  ownerId: string,
+  fieldPath: string,
+  out: UrlRewriteLog[],
+): unknown {
+  if (typeof value === 'string') {
+    if (!value.startsWith('/catalog-units/')) return value;
+    const next = rewriteCatalogUnitsUrl(value, resolveUnit);
+    if (next !== value) out.push({ ownerId, field: fieldPath || '<root>', from: value, to: next });
+    return next;
+  }
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i++) {
+      value[i] = rewriteUrlsDeep(value[i], resolveUnit, ownerId, `${fieldPath}[${i}]`, out);
+    }
+    return value;
+  }
+  if (value !== null && typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    for (const k of Object.keys(obj)) {
+      obj[k] = rewriteUrlsDeep(obj[k], resolveUnit, ownerId, fieldPath ? `${fieldPath}.${k}` : k, out);
+    }
+    return value;
+  }
+  return value;
+}
+
 function buildUnitResolver(ctx: IdResolveContext): (key: string) => string {
   const byId = new Set(Object.keys(ctx.units));
   const byName = new Map<string, string>();
@@ -233,6 +283,34 @@ export function normalizeCatalogOverridesV1(
 
   next.hiddenLeaderIds = next.hiddenLeaderIds?.length ? [...new Set(next.hiddenLeaderIds.map(wrapL))] : next.hiddenLeaderIds;
   next.hiddenUnitIds = next.hiddenUnitIds?.length ? [...new Set(next.hiddenUnitIds.map(wrapU))] : next.hiddenUnitIds;
+
+  /**
+   * URL-рерайт `/catalog-units/<oldFolder>/...` → канонический id.
+   * Лечит «прилипшие» к новому ключу старые пути sprite/miniatureSprite/hotspots.image
+   * после переименования папок (см. id-aliases.json и `bySpriteFolder` в резолвере).
+   */
+  const urlRewrites: UrlRewriteLog[] = [];
+  for (const [id, patch] of Object.entries(next.unitPatches ?? {})) {
+    if (patch == null) continue;
+    rewriteUrlsDeep(patch, resolveUnit, id, '', urlRewrites);
+    // Stale `card.catalogUnitId` (если хранится в патче) — переписать на канонический id ключа.
+    const card = (patch as { card?: { catalogUnitId?: string } }).card;
+    if (card && typeof card.catalogUnitId === 'string' && card.catalogUnitId !== id) {
+      urlRewrites.push({ ownerId: id, field: 'card.catalogUnitId', from: card.catalogUnitId, to: id });
+      card.catalogUnitId = id;
+    }
+  }
+  for (const [id, def] of Object.entries(next.newUnits ?? {})) {
+    if (def == null) continue;
+    rewriteUrlsDeep(def, resolveUnit, id, '', urlRewrites);
+  }
+  for (const [id, hf] of Object.entries(next.hotspots ?? {})) {
+    if (hf == null) continue;
+    rewriteUrlsDeep(hf, resolveUnit, id, '', urlRewrites);
+  }
+  for (const w of urlRewrites) {
+    renames.units.push(`${w.ownerId}: ${w.field} ${w.from} → ${w.to}`);
+  }
 
   // newLeaders
   {

@@ -452,12 +452,69 @@ function deepMerge<T extends object>(base: T, patch: Partial<T>): T {
   return out as T;
 }
 
+/**
+ * Если в патче `card.sprite`/`card.miniatureSprite` ссылается на «чужую» папку
+ * `/catalog-units/<X>/...`, не совпадающую ни с id юнита, ни с папкой базового sprite, —
+ * убираем это поле из патча, чтобы значение из базы (бандла) победило. Защита от
+ * залежавшихся переименованных папок, которые ещё не попали в `id-aliases.json`.
+ */
+const CATALOG_UNITS_FOLDER_RE = /^\/catalog-units\/([^/]+)\//;
+const guardWarnedKeys = new Set<string>();
+
+function guardPatchCardSpritePaths(
+  base: CatalogUnitDef,
+  patch: Partial<CatalogUnitDef>,
+): Partial<CatalogUnitDef> {
+  if (!patch.card) return patch;
+  const baseId = base.id;
+  const baseSpriteFolder =
+    typeof base.card?.sprite === 'string'
+      ? base.card.sprite.match(CATALOG_UNITS_FOLDER_RE)?.[1]
+      : undefined;
+  const baseMiniFolder =
+    typeof base.card?.miniatureSprite === 'string'
+      ? base.card.miniatureSprite.match(CATALOG_UNITS_FOLDER_RE)?.[1]
+      : undefined;
+  const isAcceptable = (folder: string): boolean =>
+    folder === baseId || folder === baseSpriteFolder || folder === baseMiniFolder;
+
+  const sp = patch.card.sprite;
+  const mi = patch.card.miniatureSprite;
+  let dropSprite = false;
+  let dropMini = false;
+  if (typeof sp === 'string') {
+    const m = sp.match(CATALOG_UNITS_FOLDER_RE);
+    if (m && !isAcceptable(m[1])) dropSprite = true;
+  }
+  if (typeof mi === 'string') {
+    const m = mi.match(CATALOG_UNITS_FOLDER_RE);
+    if (m && !isAcceptable(m[1])) dropMini = true;
+  }
+  if (!dropSprite && !dropMini) return patch;
+
+  const warnKey = `${baseId}|${dropSprite ? 's' : ''}|${dropMini ? 'm' : ''}`;
+  if (!guardWarnedKeys.has(warnKey)) {
+    guardWarnedKeys.add(warnKey);
+    const drops: string[] = [];
+    if (dropSprite) drops.push(`card.sprite=${sp}`);
+    if (dropMini) drops.push(`card.miniatureSprite=${mi}`);
+    console.warn(
+      `[catalogOverrides] игнорирую поля патча юнита "${baseId}" со ссылкой на чужую папку /catalog-units/<X>/: ${drops.join('; ')}`,
+    );
+  }
+  const nextCard = { ...patch.card } as Partial<CatalogUnitDef['card']>;
+  if (dropSprite) delete nextCard.sprite;
+  if (dropMini) delete nextCard.miniatureSprite;
+  return { ...patch, card: nextCard as CatalogUnitDef['card'] };
+}
+
 function mergeCatalogUnitDef(base: CatalogUnitDef, patch: Partial<CatalogUnitDef>): CatalogUnitDef {
   let effectivePatch = patch;
   if (patch.card && patch.card.miniatureSprite === '') {
     const { miniatureSprite: _omit, ...restCard } = patch.card;
     effectivePatch = { ...patch, card: restCard };
   }
+  effectivePatch = guardPatchCardSpritePaths(base, effectivePatch);
   const out = deepMerge(base, effectivePatch) as CatalogUnitDef;
   if (Object.prototype.hasOwnProperty.call(patch, 'requiresCommanderUnitId')) {
     const v = patch.requiresCommanderUnitId;

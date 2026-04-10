@@ -63,6 +63,14 @@ export const INVENTORY_TABLE_MARKER_HH = 48;
 export const GOD_TABLE_CARD_ROT_CW_DEG = 10;
 /** Double-click flip duration (ms). */
 export const GOD_TABLE_CARD_FLIP_MS = 400;
+/** Uniform scale at flip midpoint: first 50% of flip anim 1→this, last 50% this→1 (subtle «подлёт»). */
+const GOD_TABLE_CARD_FLIP_POP_SCALE = 1.12;
+
+function godFlipPopUniformScale(t: number): number {
+  const peak = GOD_TABLE_CARD_FLIP_POP_SCALE;
+  if (t <= 0.5) return 1 + (peak - 1) * (t * 2);
+  return peak + (1 - peak) * ((t - 0.5) * 2);
+}
 
 /** Remote peer drag overlay (multiplayer ghost). */
 export type RemotePeerTableDragPaint = {
@@ -1331,10 +1339,12 @@ export class Renderer {
       if (elapsed < anim.durationMs) {
         const t = Math.min(1, elapsed / anim.durationMs);
         const scaleX = Math.max(0.06, Math.abs(Math.cos(Math.PI * t)));
+        const pop = godFlipPopUniformScale(t);
         const showFaceUp = t < 0.5 ? anim.fromFaceUp : p.faceUp;
         const { ctx } = this;
         ctx.save();
         ctx.translate(world.x, world.y);
+        ctx.scale(pop, pop);
         ctx.scale(scaleX, 1);
         ctx.translate(-world.x, -world.y);
         this.drawGodTablePieceWithFace(p, world, showFaceUp);

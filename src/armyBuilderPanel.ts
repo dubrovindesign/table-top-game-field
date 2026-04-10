@@ -81,7 +81,7 @@ const ROSTER_SIZE_RANK: Record<UnitSize, number> = {
 
 type RosterSortMode = 'roster' | 'pointsAsc' | 'pointsDesc' | 'sizeDesc' | 'sizeAsc' | 'nameAz';
 
-const ROSTER_SORT_CYCLE: readonly RosterSortMode[] = [
+const ROSTER_SORT_ORDER: readonly RosterSortMode[] = [
   'roster',
   'pointsAsc',
   'pointsDesc',
@@ -90,23 +90,18 @@ const ROSTER_SORT_CYCLE: readonly RosterSortMode[] = [
   'nameAz',
 ] as const;
 
-const ROSTER_SORT_BUTTON_TEXT: Record<RosterSortMode, string> = {
-  roster: 'Каталог',
-  pointsAsc: '↑ очки',
-  pointsDesc: '↓ очки',
-  sizeDesc: '↓ разм.',
-  sizeAsc: '↑ разм.',
-  nameAz: 'А–Я',
+const ROSTER_SORT_MENU_LABEL: Record<RosterSortMode, string> = {
+  roster: 'Как в каталоге лидера',
+  pointsAsc: 'От дешёвых к дорогим',
+  pointsDesc: 'От дорогих к дешёвым',
+  sizeDesc: 'От огромных к малым',
+  sizeAsc: 'От малых к огромным',
+  nameAz: 'По имени (А–Я)',
 };
 
-const ROSTER_SORT_TITLE: Record<RosterSortMode, string> = {
-  roster: 'Порядок как в каталоге лидера. Нажмите — от дешёвых к дорогим.',
-  pointsAsc: 'Сортировка: от дешёвых к дорогим (по очкам). Нажмите — следующий режим.',
-  pointsDesc: 'Сортировка: от дорогих к дешёвым. Нажмите — следующий режим.',
-  sizeDesc: 'Сортировка: от огромных к малым. Нажмите — следующий режим.',
-  sizeAsc: 'Сортировка: от малых к огромным. Нажмите — следующий режим.',
-  nameAz: 'Сортировка: по алфавиту (имя на карте). Нажмите — снова порядок каталога.',
-};
+/** Иконка сортировки: стрелка вверх и стрелка вниз. */
+const ROSTER_SORT_ICON_SVG =
+  '<svg class="army-roster-sort-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 5l4.5 6h-9L12 5zm0 14l-4.5-6h9L12 19z"/></svg>';
 
 function godCardMatchesArmySearch(c: GodCardDef, q: string): boolean {
   if (!q) return true;
@@ -163,7 +158,9 @@ export class ArmyBuilderPanel {
   private leadersSection: HTMLElement;
   private leadersListEl: HTMLElement;
   private rosterSearchInput: HTMLInputElement;
-  private rosterSortBtn: HTMLButtonElement;
+  private rosterSortWrap!: HTMLElement;
+  private rosterSortBtn!: HTMLButtonElement;
+  private rosterSortPopover!: HTMLElement;
   private rosterSortMode: RosterSortMode = 'roster';
   private godSearchInput: HTMLInputElement;
   private pointsBlock: HTMLElement;
@@ -200,6 +197,10 @@ export class ArmyBuilderPanel {
   private boundKey = (e: KeyboardEvent) => this.onGlobalKey(e);
   private boundPreviewScroll = (): void => this.syncGodPreviewPosition();
   private boundPreviewResize = (): void => this.syncGodPreviewPosition();
+  private boundRepositionRosterSortPopover = (): void => {
+    if (this.rosterSortPopover.hidden) return;
+    this.positionRosterSortPopover();
+  };
   /** Экранный прямоугольник увеличенной карты (учитывает `transform: scale` у флоатера). */
   private pointerInGodPreviewFloater(clientX: number, clientY: number): boolean {
     if (this.godPreviewFloater.hidden) return false;
@@ -338,20 +339,48 @@ export class ArmyBuilderPanel {
     this.rosterSearchInput.type = 'search';
     this.rosterSearchInput.placeholder = 'Поиск юнита (имя, id, слова)…';
     this.rosterSearchInput.setAttribute('aria-label', 'Поиск по юнитам ростера');
-    this.rosterSortBtn = el('button', 'army-roster-sort-btn', ROSTER_SORT_BUTTON_TEXT[this.rosterSortMode]) as HTMLButtonElement;
+
+    this.rosterSortWrap = el('div', 'army-roster-sort-wrap');
+    this.rosterSortBtn = el('button', 'army-roster-sort-btn') as HTMLButtonElement;
     this.rosterSortBtn.type = 'button';
-    this.rosterSortBtn.setAttribute('aria-label', ROSTER_SORT_TITLE[this.rosterSortMode]);
-    this.rosterSortBtn.title = ROSTER_SORT_TITLE[this.rosterSortMode];
-    this.rosterSortBtn.addEventListener('click', () => {
-      const i = ROSTER_SORT_CYCLE.indexOf(this.rosterSortMode);
-      this.rosterSortMode = ROSTER_SORT_CYCLE[(i + 1) % ROSTER_SORT_CYCLE.length]!;
-      this.rosterSortBtn.textContent = ROSTER_SORT_BUTTON_TEXT[this.rosterSortMode];
-      this.rosterSortBtn.setAttribute('aria-label', ROSTER_SORT_TITLE[this.rosterSortMode]);
-      this.rosterSortBtn.title = ROSTER_SORT_TITLE[this.rosterSortMode];
-      this.renderList();
+    this.rosterSortBtn.innerHTML = ROSTER_SORT_ICON_SVG;
+    this.rosterSortBtn.title = 'Сортировка списка ростера';
+    this.rosterSortBtn.setAttribute('aria-label', 'Сортировка списка ростера');
+    this.rosterSortBtn.setAttribute('aria-haspopup', 'true');
+    this.rosterSortBtn.setAttribute('aria-expanded', 'false');
+
+    this.rosterSortPopover = el('div', 'army-roster-sort-popover');
+    this.rosterSortPopover.id = 'army-roster-sort-popover';
+    this.rosterSortPopover.hidden = true;
+    this.rosterSortPopover.setAttribute('role', 'menu');
+    this.rosterSortBtn.setAttribute('aria-controls', this.rosterSortPopover.id);
+
+    for (const mode of ROSTER_SORT_ORDER) {
+      const item = el('button', 'army-roster-sort-menu-item') as HTMLButtonElement;
+      item.type = 'button';
+      item.setAttribute('role', 'menuitemradio');
+      item.dataset.sortMode = mode;
+      item.textContent = ROSTER_SORT_MENU_LABEL[mode];
+      item.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        this.rosterSortMode = mode;
+        this.syncRosterSortMenuActive();
+        this.closeRosterSortPopover();
+        this.renderList();
+      });
+      this.rosterSortPopover.appendChild(item);
+    }
+    this.syncRosterSortMenuActive();
+
+    this.rosterSortBtn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      this.toggleRosterSortPopover();
     });
+    this.rosterSortWrap.appendChild(this.rosterSortBtn);
+    this.rosterSortWrap.appendChild(this.rosterSortPopover);
+
     rosterToolbar.appendChild(this.rosterSearchInput);
-    rosterToolbar.appendChild(this.rosterSortBtn);
+    rosterToolbar.appendChild(this.rosterSortWrap);
     this.rosterPanel.appendChild(rosterToolbar);
     this.rosterPanel.appendChild(this.listEl);
 
@@ -425,6 +454,7 @@ export class ArmyBuilderPanel {
 
   private boundDocClick = (e: MouseEvent): void => {
     this.closePointsCapMenu();
+    this.closeRosterSortPopover();
     if (!this.selectedCardUnitId) return;
     const target = e.target;
     if (target instanceof Node && this.panel.contains(target)) return;
@@ -443,6 +473,7 @@ export class ArmyBuilderPanel {
   };
 
   private selectMainTab(tab: ArmyMainTab): void {
+    if (tab !== 'roster') this.closeRosterSortPopover();
     if (tab !== 'gods') this.closeGodCardPreview();
     if (tab !== 'inventory') this.closeInventoryCardPreview();
     if (tab !== 'roster') this.clearSelectedCard();
@@ -464,6 +495,7 @@ export class ArmyBuilderPanel {
   }
 
   dispose(): void {
+    this.closeRosterSortPopover();
     this.closeGodCardPreview();
     this.closeInventoryCardPreview();
     window.removeEventListener('keydown', this.boundKey);
@@ -504,6 +536,11 @@ export class ArmyBuilderPanel {
 
   private onGlobalKey(e: KeyboardEvent): void {
     if (e.key !== 'Escape') return;
+    if (!this.rosterSortPopover.hidden) {
+      this.closeRosterSortPopover();
+      e.preventDefault();
+      return;
+    }
     if (!this.inventoryPreviewFloater.hidden) {
       this.closeInventoryCardPreview();
       e.preventDefault();
@@ -561,6 +598,7 @@ export class ArmyBuilderPanel {
     this.panel.classList.toggle('army-panel-open', v);
     if (!v) {
       this.clearSelectedCard();
+      this.closeRosterSortPopover();
       this.closeGodCardPreview();
       this.closeInventoryCardPreview();
     }
@@ -873,6 +911,58 @@ export class ArmyBuilderPanel {
     if (this.pointsCapMenu.hidden) return;
     this.pointsCapMenu.hidden = true;
     this.pointsCapBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  private syncRosterSortMenuActive(): void {
+    for (const child of this.rosterSortPopover.children) {
+      const b = child as HTMLButtonElement;
+      const mode = b.dataset.sortMode as RosterSortMode | undefined;
+      if (!mode) continue;
+      const on = mode === this.rosterSortMode;
+      b.classList.toggle('army-roster-sort-menu-item--active', on);
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+    }
+  }
+
+  private positionRosterSortPopover(): void {
+    const rect = this.rosterSortBtn.getBoundingClientRect();
+    const gap = 6;
+    const menuWidth = 240;
+    let left = rect.right - menuWidth;
+    left = Math.max(8, Math.min(left, window.innerWidth - menuWidth - 8));
+    this.rosterSortPopover.style.top = `${rect.bottom + gap}px`;
+    this.rosterSortPopover.style.left = `${left}px`;
+    this.rosterSortPopover.style.width = `${menuWidth}px`;
+  }
+
+  private clearRosterSortPopoverPosition(): void {
+    this.rosterSortPopover.style.top = '';
+    this.rosterSortPopover.style.left = '';
+    this.rosterSortPopover.style.width = '';
+  }
+
+  private toggleRosterSortPopover(): void {
+    const open = this.rosterSortPopover.hidden;
+    this.rosterSortPopover.hidden = !open;
+    this.rosterSortBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    this.rosterSortBtn.classList.toggle('army-roster-sort-btn--open', open);
+    if (open) {
+      this.syncRosterSortMenuActive();
+      this.positionRosterSortPopover();
+      window.addEventListener('resize', this.boundRepositionRosterSortPopover);
+    } else {
+      window.removeEventListener('resize', this.boundRepositionRosterSortPopover);
+      this.clearRosterSortPopoverPosition();
+    }
+  }
+
+  private closeRosterSortPopover(): void {
+    if (this.rosterSortPopover.hidden) return;
+    window.removeEventListener('resize', this.boundRepositionRosterSortPopover);
+    this.rosterSortPopover.hidden = true;
+    this.rosterSortBtn.setAttribute('aria-expanded', 'false');
+    this.rosterSortBtn.classList.remove('army-roster-sort-btn--open');
+    this.clearRosterSortPopoverPosition();
   }
 
   private updatePointsBar(): void {

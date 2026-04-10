@@ -1946,26 +1946,89 @@ select option {
   min-width: 0;
 }
 
-.army-roster-sort-btn {
+.army-roster-sort-wrap {
+  position: relative;
   flex: 0 0 auto;
-  min-width: 76px;
-  padding: 0 10px;
+  align-self: stretch;
+}
+
+.army-roster-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 100%;
+  min-height: 48px;
+  padding: 0;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(0, 0, 0, 0.35);
-  color: #e0e0e8;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: inherit;
+  color: #d8dce8;
   cursor: pointer;
   transition:
     border-color 0.15s,
-    background-color 0.15s;
+    background-color 0.15s,
+    color 0.15s;
 }
 
 .army-roster-sort-btn:hover {
   border-color: rgba(255, 255, 255, 0.24);
   background: rgba(0, 0, 0, 0.48);
+  color: #fff;
+}
+
+.army-roster-sort-btn.army-roster-sort-btn--open {
+  border-color: rgba(74, 144, 217, 0.45);
+  background: rgba(74, 144, 217, 0.14);
+  color: #e3f2fd;
+}
+
+.army-roster-sort-icon {
+  display: block;
+  pointer-events: none;
+}
+
+.army-roster-sort-popover {
+  position: fixed;
+  z-index: 220;
+  min-width: 220px;
+  max-width: min(280px, calc(100vw - 24px));
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(26, 28, 34, 0.98);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(12px);
+}
+
+.army-roster-sort-popover[hidden] {
+  display: none !important;
+}
+
+.army-roster-sort-menu-item {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #e6e6ec;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.army-roster-sort-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.army-roster-sort-menu-item.army-roster-sort-menu-item--active {
+  background: rgba(74, 144, 217, 0.22);
+  color: #fff;
 }
 
 .army-god-search-row {
