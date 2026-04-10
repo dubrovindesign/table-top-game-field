@@ -23,6 +23,15 @@ export const CATALOG_OVERRIDES_STORAGE_KEY = 'hexBoard_catalogOverrides_v1';
 
 export const CATALOG_OVERRIDES_CHANGED = 'hexBoard:catalog-overrides-changed';
 
+/** Options for `saveCatalogOverrides` and `CATALOG_OVERRIDES_CHANGED` listeners. */
+export type CatalogOverridesSaveOptions = {
+  /**
+   * When true, the catalog editor skips rebuilding the unit library list (keeps focus
+   * in inline HP/walk/run fields). Other editor refreshes still run.
+   */
+  catalogEditorSkipUnitLibraryList?: boolean;
+};
+
 export type LeaderPointsPatch = Partial<Pick<LeaderDef, 'points'>>;
 
 export type RosterSlotFieldPatch = Partial<
@@ -95,6 +104,8 @@ function emptyOverrides(): CatalogOverridesV1 {
 let cache: CatalogOverridesV1 | null = null;
 let persistTimer: number | null = null;
 let notifyQueued = false;
+/** Merged across coalesced `notifyChanged` calls in one animation frame (AND of skip flags). */
+let mergedCatalogEditorSkipUnitLibraryList: boolean | null = null;
 const PERSIST_DEBOUNCE_MS = 120;
 const dispatchAsync = (fn: () => void): void => {
   if (typeof window.requestAnimationFrame === 'function') {
@@ -116,12 +127,24 @@ function schedulePersist(overrides: CatalogOverridesV1): void {
   }, PERSIST_DEBOUNCE_MS);
 }
 
-function notifyChanged(): void {
+function notifyChanged(opts?: CatalogOverridesSaveOptions): void {
+  const skip = opts?.catalogEditorSkipUnitLibraryList === true;
+  if (mergedCatalogEditorSkipUnitLibraryList === null) {
+    mergedCatalogEditorSkipUnitLibraryList = skip;
+  } else {
+    mergedCatalogEditorSkipUnitLibraryList =
+      mergedCatalogEditorSkipUnitLibraryList && skip;
+  }
+
   if (notifyQueued) return;
   notifyQueued = true;
   dispatchAsync(() => {
     notifyQueued = false;
-    window.dispatchEvent(new CustomEvent(CATALOG_OVERRIDES_CHANGED));
+    const detail: CatalogOverridesSaveOptions = {
+      catalogEditorSkipUnitLibraryList: mergedCatalogEditorSkipUnitLibraryList === true,
+    };
+    mergedCatalogEditorSkipUnitLibraryList = null;
+    window.dispatchEvent(new CustomEvent(CATALOG_OVERRIDES_CHANGED, { detail }));
   });
 }
 
@@ -252,10 +275,13 @@ function normalizeHotspotLayoutPresets(raw: unknown): HotspotLayoutPreset[] {
   return out;
 }
 
-export function saveCatalogOverrides(overrides: CatalogOverridesV1): void {
+export function saveCatalogOverrides(
+  overrides: CatalogOverridesV1,
+  opts?: CatalogOverridesSaveOptions,
+): void {
   cache = overrides;
   schedulePersist(overrides);
-  notifyChanged();
+  notifyChanged(opts);
 }
 
 export function resetCatalogOverrides(): void {
@@ -265,7 +291,7 @@ export function resetCatalogOverrides(): void {
   } catch {
     /* ignore */
   }
-  notifyChanged();
+  notifyChanged(undefined);
 }
 
 export function exportCatalogOverridesJson(): string {
@@ -841,17 +867,25 @@ export function applyHotspotLayoutPresetToAllUnits(
   return { applied, skipped };
 }
 
-export function setUnitPatch(unitId: string, patch: Partial<CatalogUnitDef> | undefined): void {
+export function setUnitPatch(
+  unitId: string,
+  patch: Partial<CatalogUnitDef> | undefined,
+  saveOpts?: CatalogOverridesSaveOptions,
+): void {
   const o = structuredClone(getCatalogOverrides());
   if (patch === undefined || Object.keys(patch).length === 0) {
     delete o.unitPatches[unitId];
   } else {
     o.unitPatches[unitId] = patch;
   }
-  saveCatalogOverrides(o);
+  saveCatalogOverrides(o, saveOpts);
 }
 
-export function setNewUnit(unitId: string, def: CatalogUnitDef | undefined): void {
+export function setNewUnit(
+  unitId: string,
+  def: CatalogUnitDef | undefined,
+  saveOpts?: CatalogOverridesSaveOptions,
+): void {
   const o = structuredClone(getCatalogOverrides());
   if (def === undefined) {
     delete o.newUnits[unitId];
@@ -859,7 +893,7 @@ export function setNewUnit(unitId: string, def: CatalogUnitDef | undefined): voi
     o.newUnits[unitId] = def;
     o.hiddenUnitIds = o.hiddenUnitIds.filter((id) => id !== unitId);
   }
-  saveCatalogOverrides(o);
+  saveCatalogOverrides(o, saveOpts);
 }
 
 export function setNewLeader(leaderId: string, def: LeaderDef | undefined): void {

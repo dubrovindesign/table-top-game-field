@@ -7,6 +7,7 @@ import './catalogEditorPanel.css';
 import {
   addRosterSlot,
   CATALOG_OVERRIDES_CHANGED,
+  type CatalogOverridesSaveOptions,
   clearCardSpriteFromUnitOverrides,
   createStubCatalogUnit,
   exportCatalogOverridesJson,
@@ -491,20 +492,21 @@ export class CatalogEditorPanel {
 
     document.addEventListener('keydown', this.onDocumentHotspotShortcutsCapture, true);
 
-    window.addEventListener(CATALOG_OVERRIDES_CHANGED, () => {
+    window.addEventListener(CATALOG_OVERRIDES_CHANGED, (ev: Event) => {
       if (!this.open) return;
-      this.scheduleOverridesRefresh();
+      const d = (ev as CustomEvent<CatalogOverridesSaveOptions>).detail;
+      this.scheduleOverridesRefresh(d?.catalogEditorSkipUnitLibraryList === true);
     });
   }
 
-  private scheduleOverridesRefresh(): void {
+  private scheduleOverridesRefresh(skipUnitLibraryList = false): void {
     if (this.overridesRefreshQueued) return;
     this.overridesRefreshQueued = true;
     requestAnimationFrame(() => {
       this.overridesRefreshQueued = false;
       if (!this.open) return;
       this.refreshLeaderSelect();
-      this.refreshUnitLibraryList();
+      if (!skipUnitLibraryList) this.refreshUnitLibraryList();
       this.updateBreadcrumbs();
       this.refreshLeaderAttachedUnits();
       this.refreshLeaderRosterEditor();
@@ -3788,10 +3790,13 @@ export class CatalogEditorPanel {
       const card = finalizeCardForUnitSave(unitId, cardResolved, storage);
       card.catalogUnitId = def.card.catalogUnitId ?? unitId;
       const mercenary = def.mercenary === true;
+      const skipLib: CatalogOverridesSaveOptions = {
+        catalogEditorSkipUnitLibraryList: true,
+      };
       if (getCatalogOverrides().newUnits[unitId]) {
-        setNewUnit(unitId, { ...def, card, mercenary });
+        setNewUnit(unitId, { ...def, card, mercenary }, skipLib);
       } else {
-        setUnitPatch(unitId, { card, mercenary });
+        setUnitPatch(unitId, { card, mercenary }, skipLib);
       }
       if (this.applyError) this.applyError.textContent = '';
       if (this.selectedUnitId === unitId && !this.unitFormIsNew) {
