@@ -55,7 +55,7 @@
     "name": "Бойд Великолепный",
     "run": 6,
     "size": "small",
-    "sprite": "",
+    "sprite": "/catalog-units/engeln-boyd/image.jpg",
     "traits": [
       {
         "description": "Карточка-заглушка: заданы только имя, очки и лимит из torn-world.com. Арт и игровые статы не заполнены.",
@@ -66,6 +66,5 @@
   },
   "id": "engeln-boyd",
   "mercenary": true,
-  "points": 17,
-  "requiresCommanderUnitId": null
+  "points": 17
 }

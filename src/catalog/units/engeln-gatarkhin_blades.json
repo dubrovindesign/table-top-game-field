@@ -51,11 +51,10 @@
     "name": "Гатархин, убийца",
     "run": 7,
     "size": "small",
-    "sprite": "",
+    "sprite": "/catalog-units/engeln-gatarkhin_blades/image.jpg",
     "walk": 4
   },
   "id": "engeln-gatarkhin_blades",
   "mercenary": true,
-  "points": 33,
-  "requiresCommanderUnitId": null
+  "points": 33
 }

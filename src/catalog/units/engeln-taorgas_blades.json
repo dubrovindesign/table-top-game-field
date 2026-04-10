@@ -51,11 +51,10 @@
     "name": "Таоргас с Клинками",
     "run": 2,
     "size": "big",
-    "sprite": "",
+    "sprite": "/catalog-units/engeln-taorgas_blades/image.jpg",
     "walk": 1
   },
   "id": "engeln-taorgas_blades",
   "mercenary": true,
-  "points": 41,
-  "requiresCommanderUnitId": null
+  "points": 41
 }

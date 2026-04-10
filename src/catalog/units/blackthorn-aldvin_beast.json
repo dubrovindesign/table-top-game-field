@@ -47,15 +47,14 @@
       "Ангельн"
     ],
     "maxHealth": 5,
-    "miniatureSprite": "/catalog-units/blackthorn-aldvin_beast/card_miniatureSprite.jpg",
+    "miniatureSprite": "/catalog-units/blackthorn-aldvin_beast/miniature.jpg",
     "name": "Алдвин Искатель Истины",
     "run": 6,
     "size": "small",
-    "sprite": "",
+    "sprite": "/catalog-units/blackthorn-aldvin_beast/image.jpg",
     "walk": 3
   },
   "id": "blackthorn-aldvin_beast",
   "mercenary": true,
-  "points": 19,
-  "requiresCommanderUnitId": null
+  "points": 19
 }

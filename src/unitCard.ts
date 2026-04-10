@@ -507,9 +507,20 @@ export class UnitCard {
     const inner = el('div', 'uc-image-card-inner');
     const img = document.createElement('img');
     img.className = 'uc-image-card-img';
-    img.src = hf.image;
+    const primary = (hf.image ?? '').trim();
+    const fallbackSprite = (data.sprite ?? '').trim();
+    img.src = primary || fallbackSprite;
     img.alt = data.name;
     img.draggable = false;
+    if (primary && fallbackSprite && primary !== fallbackSprite) {
+      img.addEventListener(
+        'error',
+        () => {
+          if (img.getAttribute('src') === primary) img.src = fallbackSprite;
+        },
+        { once: true },
+      );
+    }
     inner.appendChild(img);
 
     hf.regions.forEach((r, regionIndex) => {
@@ -617,7 +628,8 @@ export class UnitCard {
       if (hf2?.image?.trim()) {
         this.container.classList.add('unit-card-image-mode');
         this.renderImageCard(data, hf2, anchorScreen, catalogUnitId);
-        if (!anchorScreen) {
+        // Army roster preview uses `.army-catalog-selected` CSS; dice-column docking overrides top/bottom inline and hides the card.
+        if (!anchorScreen && !this.container.classList.contains('army-catalog-selected')) {
           this.attachDockedImageLayout();
         }
         this.lastDockedShowKey = dockedKey;

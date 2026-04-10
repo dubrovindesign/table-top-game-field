@@ -47,15 +47,14 @@
       "Ангельн"
     ],
     "maxHealth": 5,
-    "miniatureSprite": "/catalog-units/blackthorn-aldvin_book/card_miniatureSprite.jpg",
+    "miniatureSprite": "/catalog-units/blackthorn-aldvin_book/miniature.jpg",
     "name": "Алдвин Летописец",
     "run": 6,
     "size": "small",
-    "sprite": "",
+    "sprite": "/catalog-units/blackthorn-aldvin_book/image.jpg",
     "walk": 3
   },
   "id": "blackthorn-aldvin_book",
   "mercenary": true,
-  "points": 19,
-  "requiresCommanderUnitId": null
+  "points": 19
 }
