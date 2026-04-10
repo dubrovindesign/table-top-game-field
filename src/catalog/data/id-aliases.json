@@ -1,0 +1,30 @@
+{
+  "leaderAliases": {
+    "Bram'mn-the-Wise": "keld-brammn_hero",
+    "Na'atly-Wild-Huntress": "keld-na'atly_hero"
+  },
+  "unitAliases": {
+    "Na'atly-Wild-Huntress": "keld-na'atly_unit",
+    "krigmark-gottfried-goed-kriglingen": "krigmark-gottfried",
+    "castilla-okhotnik-na-svyatykh": "castilla-saint_hunter_salvador",
+    "castilla-leader-torquemad-prelat": "castilla-torquemad",
+    "broomgar-grrokh-ten-shaktana": "broomgar_horde-grrokh",
+    "broomgar-tsereg-tesak": "broomgar_horde-hogrim_tsereg_axe",
+    "broomgar-tsereg-bulava": "broomgar_horde-hogrim_tsereg_maul",
+    "broomgar-daychin-znamenosets": "broomgar_horde-hogrim_daichin_spear",
+    "broomgar-daychin-tesaki": "broomgar_horde-hogrim_daichin_cleavers",
+    "broomgar-daychin-bulava": "broomgar_horde-hogrim_daichin_maul",
+    "broomgar-shaktan-trezubets": "broomgar_horde-hogrim_shaktan_spear",
+    "broomgar-shaktan-ruchnitsa": "broomgar_horde-hogrim_shaktan_gun",
+    "broomgar-bibar-batyr-bombarda": "broomgar_horde-bibar_boptir_bombard",
+    "broomgar-bibar-batyr-topory": "broomgar_horde-bibar_boptir_axe",
+    "broomgar-yargachin-bulava": "broomgar_horde-hogrim_yargochin_maul",
+    "broomgar-yargachin-mech": "broomgar_horde-hogrim_yargochin_sword",
+    "broomgar-mutsereg-sekira": "broomgar_horde-hogrim_mutsereg_axe",
+    "broomgar-mutsereg-topory": "broomgar_horde-hogrim_mutsereg_cleavers",
+    "ab-ns-chasm-marauder_trident": "chasm-marauder_trident",
+    "ab-ns-prioryofhope-mul": "priory_of_hope-mul",
+    "ab-ns-prioryofhope-boyd": "priory_of_hope-boyd",
+    "engeln-ekzo-rytsar-mechami": "engeln-ekzoknight_two_swords"
+  }
+}

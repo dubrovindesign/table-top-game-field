@@ -1,59 +1,63 @@
 {
-  "id": "krigmark-gottfried",
-  "points": 60,
   "card": {
-    "name": "Готфрид «Гёц» фон Криглихинген",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {
+          "black": 0,
+          "green": 0,
+          "red": 1,
+          "white": 0
+        },
+        "name": "—",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "krigmark-gottfried",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 0,
-      "green": 0
+      "green": 2,
+      "white": 1
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "death"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "faithMarkers": {
+      "red": 2
+    },
+    "flagSprite": "/krigmark.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "—",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {
-          "red": 1,
-          "green": 0,
-          "black": 0,
-          "white": 0
-        }
-      }
-    ],
+    "health": 14,
     "keywords": [
       "Кригмарк"
     ],
-    "flagSprite": "/krigmark.webp",
-    "catalogUnitId": "krigmark-gottfried",
-    "sprite": "/catalog-units/krigmark-gottfried/image.jpg",
-    "miniatureSprite": "/catalog-units/krigmark-gottfried/miniature.jpg"
-  }
+    "maxHealth": 14,
+    "miniatureSprite": "/catalog-units/krigmark-gottfried/miniature.jpg",
+    "name": "Готфрид «Гёц» фон Криглихинген",
+    "run": 4,
+    "size": "big",
+    "sprite": "",
+    "walk": 3
+  },
+  "id": "krigmark-gottfried",
+  "mercenary": false,
+  "points": 60
 }

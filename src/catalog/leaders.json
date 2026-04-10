@@ -2348,6 +2348,12 @@
         "points": 40
       },
       {
+        "unitId": "keld-virmgling",
+        "maxCopies": 4,
+        "points": 12,
+        "requiresUnitId": "keld-na'atly_unit"
+      },
+      {
         "unitId": "keld-sild_protector_keld",
         "maxCopies": 1,
         "points": 36
@@ -3141,6 +3147,10 @@
         "unitId": "krigmark-mul",
         "maxCopies": 2,
         "points": 10
+      },
+      {
+        "unitId": "krigmark-kefer_modification_a",
+        "maxCopies": 1
       }
     ]
   },

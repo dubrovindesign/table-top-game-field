@@ -1707,3 +1707,23 @@
   margin-top: 4px;
   align-self: flex-end;
 }
+
+/* «Требуется командир» в форме юнита */
+.ce-unit-commander-block {
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.ce-unit-commander-hint {
+  margin-bottom: 2px;
+}
+
+.ce-unit-commander-search {
+  width: 100%;
+}
+
+.ce-unit-commander-select {
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+}

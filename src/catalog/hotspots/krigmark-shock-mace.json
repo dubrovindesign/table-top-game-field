@@ -1,0 +1,25 @@
+{
+  "image": "/catalog-units/krigmark-shock-mace/image.jpg",
+  "regions": [
+    {
+      "black": 0,
+      "damage": 0,
+      "green": 1,
+      "h": 0.0795722104808384,
+      "id": "defense_main",
+      "label": "Защита",
+      "range": 0,
+      "rangeUnit": "hex",
+      "red": 0,
+      "w": 0.1824418058425681,
+      "white": 2,
+      "x": 0.3341288716974333,
+      "y": 0.30704732706469723
+    }
+  ],
+  "scrollLayout": {
+    "faceH": 1419,
+    "totalH": 2476
+  },
+  "title": "Штоссрягер (с булавой)"
+}

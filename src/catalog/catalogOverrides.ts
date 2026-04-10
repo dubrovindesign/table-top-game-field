@@ -4,6 +4,7 @@
  */
 
 import { CATALOG_INVENTORY, CATALOG_UNITS, LEADERS } from './index';
+import { normalizeCatalogOverridesV1 } from './catalogIdResolve';
 import { getStaticHotspotForUnit } from './staticHotspots';
 import type { CatalogUnitDef, InventoryItemDef, LeaderDef, RosterSlotDef } from './types';
 import type {
@@ -102,6 +103,8 @@ function emptyOverrides(): CatalogOverridesV1 {
 }
 
 let cache: CatalogOverridesV1 | null = null;
+/** После загрузки каталога один раз приводим ключи localStorage к каноническим id. */
+let loadedStorageNormalized = false;
 let persistTimer: number | null = null;
 let notifyQueued = false;
 /** Merged across coalesced `notifyChanged` calls in one animation frame (AND of skip flags). */
@@ -148,9 +151,28 @@ function notifyChanged(opts?: CatalogOverridesSaveOptions): void {
   });
 }
 
+function catalogBundleReady(): boolean {
+  return LEADERS.length > 0 && Object.keys(CATALOG_UNITS).length > 0;
+}
+
+/** Нормализация id в оверрайдах (алиасы папок art / отображаемые имена → id из каталога). */
+function maybeNormalizeCacheAfterCatalogLoad(): void {
+  if (loadedStorageNormalized || !cache || !catalogBundleReady()) return;
+  loadedStorageNormalized = true;
+  const r = normalizeCatalogOverridesV1(cache, { leaders: LEADERS, units: CATALOG_UNITS });
+  if (!r.changed) return;
+  cache = r.normalized;
+  const lines = [...r.renames.leaders, ...r.renames.units];
+  if (lines.length) {
+    console.warn('[catalogOverrides] Ключи оверрайдов приведены к каноническим id:', lines.join('; '));
+  }
+  schedulePersist(cache);
+  notifyChanged({ catalogEditorSkipUnitLibraryList: true });
+}
+
 export function getCatalogOverrides(): CatalogOverridesV1 {
-  if (cache) return cache;
-  cache = loadCatalogOverridesFromStorage();
+  if (!cache) cache = loadCatalogOverridesFromStorage();
+  maybeNormalizeCacheAfterCatalogLoad();
   return cache;
 }
 
@@ -279,13 +301,25 @@ export function saveCatalogOverrides(
   overrides: CatalogOverridesV1,
   opts?: CatalogOverridesSaveOptions,
 ): void {
-  cache = overrides;
-  schedulePersist(overrides);
+  let next = overrides;
+  if (catalogBundleReady()) {
+    const r = normalizeCatalogOverridesV1(overrides, { leaders: LEADERS, units: CATALOG_UNITS });
+    next = r.normalized;
+    if (r.changed) {
+      const lines = [...r.renames.leaders, ...r.renames.units];
+      if (lines.length) {
+        console.warn('[catalogOverrides] При сохранении приведены id к канону:', lines.join('; '));
+      }
+    }
+  }
+  cache = next;
+  schedulePersist(next);
   notifyChanged(opts);
 }
 
 export function resetCatalogOverrides(): void {
   cache = emptyOverrides();
+  loadedStorageNormalized = false;
   try {
     localStorage.removeItem(CATALOG_OVERRIDES_STORAGE_KEY);
   } catch {
@@ -419,7 +453,14 @@ function deepMerge<T extends object>(base: T, patch: Partial<T>): T {
 }
 
 function mergeCatalogUnitDef(base: CatalogUnitDef, patch: Partial<CatalogUnitDef>): CatalogUnitDef {
-  return deepMerge(base, patch);
+  const out = deepMerge(base, patch) as CatalogUnitDef;
+  if (Object.prototype.hasOwnProperty.call(patch, 'requiresCommanderUnitId')) {
+    const v = patch.requiresCommanderUnitId;
+    if (v === null || v === '') {
+      delete (out as { requiresCommanderUnitId?: string }).requiresCommanderUnitId;
+    }
+  }
+  return out;
 }
 
 function mergeInventoryItemDef(base: InventoryItemDef, patch: Partial<InventoryItemDef>): InventoryItemDef {
@@ -869,7 +910,7 @@ export function applyHotspotLayoutPresetToAllUnits(
 
 export function setUnitPatch(
   unitId: string,
-  patch: Partial<CatalogUnitDef> | undefined,
+  patch: (Partial<CatalogUnitDef> & { requiresCommanderUnitId?: string | null }) | undefined,
   saveOpts?: CatalogOverridesSaveOptions,
 ): void {
   const o = structuredClone(getCatalogOverrides());

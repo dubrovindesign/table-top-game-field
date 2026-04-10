@@ -40,19 +40,22 @@
       "white": 0
     },
     "explorationRange": 0,
+    "faithMarkers": {
+      "red": 1
+    },
     "flagSprite": "/broomgar_horde.webp",
     "grabRange": 1,
-    "health": 0,
+    "health": 12,
     "keywords": [
       "Орда Брумгаров"
     ],
-    "maxHealth": 0,
+    "maxHealth": 12,
     "miniatureSprite": "/catalog-units/broomgar_horde-hogrim_shaktan_spear/miniature.jpg",
     "name": "Шактан с Трезубцем",
-    "run": 0,
+    "run": 5,
     "size": "large",
-    "sprite": "/catalog-units/broomgar_horde-hogrim_shaktan_spear/image.jpg",
-    "walk": 0
+    "sprite": "",
+    "walk": 3
   },
   "id": "broomgar_horde-hogrim_shaktan_spear",
   "mercenary": false,

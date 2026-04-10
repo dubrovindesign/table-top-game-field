@@ -1,40 +1,40 @@
 {
   "image": "/catalog-units/castilla-flammalero_mortar_torres/image.jpg",
-  "title": "Фламмальеро с ручной мортирой",
   "regions": [
     {
+      "black": 0,
+      "damage": 0,
+      "green": 0,
+      "h": 0.0795722104808384,
       "id": "defense_main",
       "label": "Защита",
-      "x": 0.052,
-      "y": 0.298,
-      "w": 0.896,
-      "h": 0.056,
       "range": 0,
       "rangeUnit": "hex",
-      "damage": 0,
-      "white": 0,
-      "green": 0,
       "red": 0,
-      "black": 0
+      "w": 0.1824418058425681,
+      "white": 0,
+      "x": 0.3341288716974333,
+      "y": 0.30704732706469723
     },
     {
+      "black": 0,
+      "damage": 1,
+      "green": 0,
+      "h": 0.052515685413378824,
       "id": "attack_0",
       "label": "—",
-      "x": 0.038,
-      "y": 0.366,
-      "w": 0.924,
-      "h": 0.044,
       "range": 1,
       "rangeUnit": "hex",
-      "damage": 1,
       "red": 1,
-      "green": 0,
-      "black": 0,
-      "white": 0
+      "w": 0.8749345863355974,
+      "white": 0,
+      "x": 0.059758079884178195,
+      "y": 0.42480898789573773
     }
   ],
   "scrollLayout": {
     "faceH": 1417,
     "totalH": 2473
-  }
+  },
+  "title": "Фламмальеро с ручной мортирой"
 }

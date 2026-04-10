@@ -1,59 +1,69 @@
 {
-  "id": "castilla-torquemad",
-  "points": 60,
   "card": {
-    "name": "Торкемад, Прелат Чистоты",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {
+          "black": 0,
+          "green": 0,
+          "red": 1,
+          "white": 4
+        },
+        "name": "| | po В pe",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "castilla-leader-torquemad-prelat",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 0,
-      "green": 0
+      "green": 1,
+      "white": 4
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 1
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "destruction"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "faithMarkers": {
+      "red": 2
+    },
+    "flagSprite": "/castilla.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "—",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {
-          "red": 1,
-          "green": 0,
-          "black": 0,
-          "white": 0
-        }
-      }
-    ],
+    "health": 12,
     "keywords": [
       "Кастилия"
     ],
-    "flagSprite": "/castilla.webp",
-    "catalogUnitId": "castilla-torquemad",
-    "sprite": "/catalog-units/castilla-torquemad/image.jpg",
-    "miniatureSprite": "/catalog-units/castilla-torquemad/miniature.jpg"
-  }
+    "maxHealth": 12,
+    "miniatureSprite": "/catalog-units/castilla-torquemad/card_miniatureSprite.jpg",
+    "name": "Торкемад, Прелат Чистоты",
+    "run": 3,
+    "size": "big",
+    "sprite": "",
+    "traits": [
+      {
+        "description": "Миниатюра лидера без арта; очки и ростер из torn-world.com.",
+        "name": "Лидер Army Builder"
+      }
+    ],
+    "walk": 2
+  },
+  "id": "castilla-torquemad",
+  "mercenary": false,
+  "points": 60
 }

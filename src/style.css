@@ -1248,6 +1248,28 @@ select option {
   letter-spacing: 0.5px;
 }
 
+/* Ростер: requiresUnitId (подсказки на карточке) */
+.uc-roster-deps {
+  padding: 6px 14px 8px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.82);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.uc-roster-deps-line + .uc-roster-deps-line {
+  margin-top: 4px;
+}
+
+.uc-roster-deps-label {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.uc-roster-deps-value {
+  color: rgba(200, 230, 255, 0.95);
+}
+
 /* ── Health bar ── */
 
 .uc-health-section {

@@ -42,17 +42,17 @@
     "explorationRange": 0,
     "flagSprite": "/broomgar_horde.webp",
     "grabRange": 1,
-    "health": 0,
+    "health": 14,
     "keywords": [
       "Орда Брумгаров"
     ],
-    "maxHealth": 0,
+    "maxHealth": 14,
     "miniatureSprite": "/catalog-units/broomgar_horde-kurosh_khan/miniature.jpg",
     "name": "Курош Хан",
-    "run": 0,
+    "run": 6,
     "size": "large",
-    "sprite": "/catalog-units/broomgar_horde-kurosh_khan/image.jpg",
-    "walk": 0
+    "sprite": "",
+    "walk": 3
   },
   "id": "broomgar_horde-kurosh_khan",
   "mercenary": false,

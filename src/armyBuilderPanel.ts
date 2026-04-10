@@ -10,13 +10,11 @@ import {
   leadersForFaction,
   LEADER_MINI_MAX_COPIES,
   listInventoryItemsForLeader,
-  listMercenaryUnitIds,
   listRosterRows,
   MERCENARY_FACTION_ID,
   type LeaderDef,
   type RosterRowView,
 } from './armyCatalog';
-import type { CatalogUnitDef } from './catalog/types';
 import { CATALOG_OVERRIDES_CHANGED } from './catalog/catalogOverrides';
 import type { InventoryItemDef } from './catalog/types';
 
@@ -173,7 +171,7 @@ export class ArmyBuilderPanel {
 
   constructor(parent: HTMLElement, opts: ArmyPanelOptions) {
     this.opts = opts;
-    this.selectedFactionId = FACTIONS[0]?.id ?? '';
+    this.selectedFactionId = FACTIONS.find((f) => f.id !== MERCENARY_FACTION_ID)?.id ?? FACTIONS[0]?.id ?? '';
     const firstLeaders = leadersForFaction(this.selectedFactionId);
     this.selectedLeaderId = firstLeaders[0]?.id ?? '';
 
@@ -421,6 +419,7 @@ export class ArmyBuilderPanel {
   }
 
   refresh(): void {
+    this.buildFactionTabs();
     this.updatePointsBar();
     this.renderLeaders();
     this.renderList();
@@ -615,8 +614,17 @@ export class ArmyBuilderPanel {
   }
 
   private buildFactionTabs(): void {
+    const tabFactions = FACTIONS.filter(
+      (f) => f.id !== MERCENARY_FACTION_ID && f.panelIconSrc !== '/mercenaries.webp',
+    );
+    if (!tabFactions.some((f) => f.id === this.selectedFactionId)) {
+      this.selectedFactionId = tabFactions[0]?.id ?? '';
+      const leaders = leadersForFaction(this.selectedFactionId);
+      this.selectedLeaderId = leaders[0]?.id ?? '';
+      this.clearSelectedCard();
+    }
     this.factionTabs.replaceChildren();
-    for (const f of FACTIONS) {
+    for (const f of tabFactions) {
       const tab = el('button', 'army-faction-tab');
       tab.type = 'button';
       const domLabel = DOMAIN_LABELS[f.domain];
@@ -675,16 +683,6 @@ export class ArmyBuilderPanel {
 
   private renderLeaders(): void {
     this.leadersListEl.replaceChildren();
-    if (this.selectedFactionId === MERCENARY_FACTION_ID) {
-      this.leadersListEl.appendChild(
-        el(
-          'div',
-          'army-list-empty',
-          'Наёмники не привязаны к отдельным лидерам. Выберите лидера в своей фракции и набирайте наёмников в ростере — доступность и лимиты задаются у каждого лидера.',
-        ),
-      );
-      return;
-    }
     const leaders = leadersForFaction(this.selectedFactionId);
     for (const l of leaders) {
       this.leadersListEl.appendChild(this.makeLeaderRow(l));
@@ -822,41 +820,6 @@ export class ArmyBuilderPanel {
     this.updatePointsBar();
     this.syncLeaderRowActiveClass();
     this.listEl.replaceChildren();
-    if (this.selectedFactionId === MERCENARY_FACTION_ID) {
-      const q = this.searchInput.value.trim().toLowerCase();
-      const mercIds = listMercenaryUnitIds();
-      let shown = 0;
-      for (const unitId of mercIds) {
-        const def = getCatalogUnit(unitId);
-        if (!def) continue;
-        const kw = def.card.keywords?.join(' ') ?? '';
-        const hay = `${def.card.name} ${kw}`.toLowerCase();
-        if (q && !hay.includes(q)) continue;
-        this.listEl.appendChild(this.makeMercenaryBrowseRow(def));
-        shown += 1;
-      }
-      if (shown === 0) {
-        this.listEl.appendChild(
-          el(
-            'div',
-            'army-list-empty',
-            mercIds.length === 0
-              ? 'Нет юнитов с флагом «Наёмник» в каталоге. Отметьте их в редакторе каталога.'
-              : 'Нет юнитов по фильтру',
-          ),
-        );
-      }
-      if (
-        this.selectedCardSource === 'roster' &&
-        this.selectedCardUnitId &&
-        !mercIds.includes(this.selectedCardUnitId)
-      ) {
-        this.clearSelectedCard();
-      } else {
-        this.syncRosterSelectionUi();
-      }
-      return;
-    }
     if (!this.selectedLeaderId) return;
 
     const rows = listRosterRows(this.selectedLeaderId, this.searchInput.value, this.opts.getUsedCount);
@@ -949,41 +912,6 @@ export class ArmyBuilderPanel {
         unitId: row.unitId,
       };
       this.opts.onTouchArmPayload!(JSON.stringify(payload));
-    });
-
-    return wrap;
-  }
-
-  /** Справочник наёмников: без перетаскивания — набор только через ростер лидера фракции. */
-  private makeMercenaryBrowseRow(def: CatalogUnitDef): HTMLElement {
-    const wrap = el('div', 'army-unit-row army-unit-row--merc-browse');
-    wrap.dataset.unitId = def.id;
-    wrap.draggable = false;
-    wrap.title =
-      'Наёмники выставляются на стол из ростера выбранного лидера своей фракции (лимиты и доступность — в слотах ростера).';
-
-    const thumb = el('div', 'army-unit-thumb');
-    const troopThumb = unitPanelThumbSrc(def.card);
-    if (troopThumb) {
-      const img = el('img', 'army-unit-thumb-img');
-      img.src = troopThumb;
-      img.alt = '';
-      thumb.appendChild(img);
-    }
-    applyArmyUnitThumbClip(thumb, def.card.size);
-
-    const meta = el('div', 'army-unit-meta');
-    const name = el('div', 'army-unit-name', def.card.name);
-    const sub = el('div', 'army-unit-sub');
-    sub.textContent = `справочник · база ${def.points} pts`;
-
-    meta.appendChild(name);
-    meta.appendChild(sub);
-    wrap.appendChild(thumb);
-    wrap.appendChild(meta);
-    wrap.addEventListener('click', (e) => {
-      e.preventDefault();
-      this.selectRosterUnit(def.id);
     });
 
     return wrap;

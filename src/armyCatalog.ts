@@ -125,8 +125,9 @@ export function listRosterRows(
     if (q && !hay.includes(q)) continue;
     let rosterBlocked = false;
     let rosterBlockedReason: string | undefined;
-    if (slot.requiresUnitId) {
-      if (usedCount(leaderId, slot.requiresUnitId) < 1) {
+    const reqId = slot.requiresUnitId ?? def.requiresCommanderUnitId;
+    if (reqId) {
+      if (usedCount(leaderId, reqId) < 1) {
         rosterBlocked = true;
         rosterBlockedReason = 'Сначала добавьте в армию миниатюру, от которой зависит этот слот';
       }
@@ -174,4 +175,48 @@ export function listInventoryItemsForLeader(leaderId: string): InventoryItemDef[
     out.push(def);
   }
   return out;
+}
+
+/** Справка для карточки: связи ростера через `requiresUnitId` (по всем лидерам после merge). */
+export type RosterDependencyHint = { unitId: string; name: string };
+
+export function getRosterDependencyHintsForUnit(unitId: string): {
+  requires: RosterDependencyHint[];
+  unlocks: RosterDependencyHint[];
+} {
+  const requiresMap = new Map<string, string>();
+  const unlocksMap = new Map<string, string>();
+  const selfDef = getCatalogUnit(unitId);
+  if (selfDef?.requiresCommanderUnitId) {
+    const req = getCatalogUnit(selfDef.requiresCommanderUnitId);
+    if (req) requiresMap.set(selfDef.requiresCommanderUnitId, req.card.name);
+  }
+  for (const leaderId of listAllMergedLeaderIds()) {
+    const leader = getMergedLeader(leaderId);
+    if (!leader) continue;
+    for (const slot of leader.roster) {
+      const slotReq = slot.requiresUnitId ?? getCatalogUnit(slot.unitId)?.requiresCommanderUnitId;
+      if (!slotReq) continue;
+      if (slot.unitId === unitId) {
+        const req = getCatalogUnit(slotReq);
+        if (req) requiresMap.set(slotReq, req.card.name);
+      }
+      if (slotReq === unitId) {
+        const dep = getCatalogUnit(slot.unitId);
+        if (dep) unlocksMap.set(slot.unitId, dep.card.name);
+      }
+    }
+  }
+  for (const oid of listAllUnitIds()) {
+    if (oid === unitId) continue;
+    const od = getCatalogUnit(oid);
+    if (od?.requiresCommanderUnitId === unitId) {
+      unlocksMap.set(oid, od.card.name);
+    }
+  }
+  const toSorted = (m: Map<string, string>): RosterDependencyHint[] =>
+    [...m.entries()]
+      .map(([id, name]) => ({ unitId: id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+  return { requires: toSorted(requiresMap), unlocks: toSorted(unlocksMap) };
 }

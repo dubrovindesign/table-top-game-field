@@ -5,6 +5,7 @@
  */
 
 import { ETHER_VORTEX_DOMAINS, type EtherVortexDomainId } from './etherVortex';
+import { getRosterDependencyHintsForUnit } from './armyCatalog';
 import { getHotspotsForUnit } from './catalog/catalogOverrides';
 import type { HotspotFile, HotspotRegion, LegacyHotspotBinding } from './catalog/hotspotTypes';
 
@@ -320,6 +321,32 @@ function appendOptionalEtherCostRow(info: HTMLElement, cost: EtherCrystalPool | 
   info.appendChild(row);
 }
 
+/** Связи ростера (`requiresUnitId`) — боковая карточка и режим картинки. */
+function appendRosterDependencyHintsBlock(parent: HTMLElement, catalogUnitId: string | undefined): void {
+  const cid = catalogUnitId?.trim();
+  if (!cid) return;
+  const { requires, unlocks } = getRosterDependencyHintsForUnit(cid);
+  if (requires.length === 0 && unlocks.length === 0) return;
+  const block = el('div', 'uc-roster-deps');
+  if (requires.length > 0) {
+    const line = el('div', 'uc-roster-deps-line');
+    line.appendChild(el('span', 'uc-roster-deps-label', 'В армии сначала: '));
+    line.appendChild(
+      el('span', 'uc-roster-deps-value', requires.map((h) => h.name).join(', ')),
+    );
+    block.appendChild(line);
+  }
+  if (unlocks.length > 0) {
+    const line = el('div', 'uc-roster-deps-line');
+    line.appendChild(el('span', 'uc-roster-deps-label', 'Открывает: '));
+    line.appendChild(
+      el('span', 'uc-roster-deps-value', unlocks.map((h) => h.name).join(', ')),
+    );
+    block.appendChild(line);
+  }
+  parent.appendChild(block);
+}
+
 // ── UnitCard class ─────────────────────────────────────────────
 
 export class UnitCard {
@@ -468,9 +495,15 @@ export class UnitCard {
     };
   }
 
-  private renderImageCard(data: UnitCardData, hf: HotspotFile, _anchorScreen?: { x: number; y: number }): void {
+  private renderImageCard(
+    data: UnitCardData,
+    hf: HotspotFile,
+    _anchorScreen: { x: number; y: number } | undefined,
+    catalogUnitId: string | undefined,
+  ): void {
     const source = data;
     const wrap = el('div', 'uc-image-card');
+    appendRosterDependencyHintsBlock(wrap, catalogUnitId);
     const inner = el('div', 'uc-image-card-inner');
     const img = document.createElement('img');
     img.className = 'uc-image-card-img';
@@ -583,7 +616,7 @@ export class UnitCard {
       const hf2 = getHotspotsForUnit(catalogUnitId);
       if (hf2?.image?.trim()) {
         this.container.classList.add('unit-card-image-mode');
-        this.renderImageCard(data, hf2, anchorScreen);
+        this.renderImageCard(data, hf2, anchorScreen, catalogUnitId);
         if (!anchorScreen) {
           this.attachDockedImageLayout();
         }
@@ -893,6 +926,8 @@ export class UnitCard {
       }
       this.container.appendChild(kwSection);
     }
+
+    appendRosterDependencyHintsBlock(this.container, catalogUnitId);
 
     if (!anchorScreen && dockedKey) {
       this.lastDockedShowKey = dockedKey;

@@ -1,59 +1,77 @@
 {
-  "id": "engeln-ekzoknight_two_swords",
-  "points": 25,
   "card": {
-    "name": "Экзо-рыцарь с мечами",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 2,
+        "damageType": "electric",
+        "dice": {
+          "black": 1,
+          "green": 1,
+          "red": 3,
+          "white": 0
+        },
+        "name": "Удар мечом",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "engeln-ekzo-rytsar-mechami",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 0,
-      "green": 0
+      "green": 1,
+      "white": 2
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 1
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "creation"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "faithMarkers": {
+      "red": 1
+    },
+    "flagSprite": "/engeln.webp",
     "grabRange": 1,
-    "attacks": [
+    "health": 5,
+    "keywords": [
+      "Ангельн",
+      "Живой",
+      "Человек",
+      "Воин",
+      "Меч"
+    ],
+    "maxHealth": 5,
+    "miniatureSprite": "/catalog-units/engeln-ekzo-rytsar-mechami/miniature.jpg",
+    "name": "Экзо-рыцарь Ангельна с мечами",
+    "run": 5,
+    "size": "small",
+    "sprite": "/catalog-units/engeln-ekzo-rytsar-mechami/image.jpg",
+    "traits": [
       {
-        "name": "—",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {
-          "red": 1,
-          "green": 0,
-          "black": 0,
-          "white": 0
-        }
+        "description": "",
+        "name": "Генератор Молний"
+      },
+      {
+        "description": "",
+        "name": "Ветеран"
       }
     ],
-    "keywords": [
-      "Ангельн"
-    ],
-    "flagSprite": "/engeln.webp",
-    "catalogUnitId": "engeln-ekzoknight_two_swords",
-    "sprite": "/catalog-units/engeln-ekzoknight_two_swords/image.jpg",
-    "miniatureSprite": "/catalog-units/engeln-ekzoknight_two_swords/miniature.jpg"
-  }
+    "walk": 3
+  },
+  "id": "engeln-ekzoknight_two_swords",
+  "mercenary": false,
+  "points": 25
 }

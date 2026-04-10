@@ -49,6 +49,11 @@ export type CatalogUnitDef = {
    * Доступность и лимиты по-прежнему задаются слотами ростера у лидеров.
    */
   mercenary?: boolean;
+  /**
+   * Другой юнит, чья миниатюра должна быть в армии до этого (как `requiresUnitId` у слота ростера).
+   * Можно переопределить на уровне слота у лидера; если в слоте `requiresUnitId` нет — используется это поле.
+   */
+  requiresCommanderUnitId?: string;
   card: UnitCardData;
 };
 

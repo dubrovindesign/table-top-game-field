@@ -1,59 +1,49 @@
 {
-  "id": "castilla-saint_hunter_salvador",
-  "points": 26,
   "card": {
-    "name": "Охотник на Святых",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [],
+    "catalogUnitId": "castilla-okhotnik-na-svyatykh",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 0,
-      "green": 0
+      "green": 1,
+      "white": 1
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 1
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "destruction"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "faithMarkers": {
+      "red": 1
+    },
+    "flagSprite": "/castilla.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "—",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {
-          "red": 1,
-          "green": 0,
-          "black": 0,
-          "white": 0
-        }
-      }
-    ],
+    "health": 5,
     "keywords": [
       "Кастилия"
     ],
-    "flagSprite": "/castilla.webp",
-    "catalogUnitId": "castilla-saint_hunter_salvador",
-    "sprite": "/catalog-units/castilla-saint_hunter_salvador/image.jpg",
-    "miniatureSprite": "/catalog-units/castilla-saint_hunter_salvador/miniature.jpg"
-  }
+    "maxHealth": 5,
+    "miniatureSprite": "/catalog-units/castilla-okhotnik-na-svyatykh/miniature.jpg",
+    "name": "Охотник на Святых",
+    "run": 6,
+    "size": "small",
+    "sprite": "",
+    "walk": 3
+  },
+  "id": "castilla-saint_hunter_salvador",
+  "mercenary": false,
+  "points": 26
 }

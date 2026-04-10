@@ -1,59 +1,60 @@
 {
-  "id": "broomgar_horde-zurbag_butcher",
-  "points": 12,
   "card": {
-    "name": "Зурбаг Мясник",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {
+          "black": 0,
+          "green": 0,
+          "red": 1,
+          "white": 0
+        },
+        "name": "—",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "broomgar_horde-zurbag_butcher",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "destruction"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "flagSprite": "/broomgar_horde.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "—",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {
-          "red": 1,
-          "green": 0,
-          "black": 0,
-          "white": 0
-        }
-      }
-    ],
+    "health": 4,
     "keywords": [
       "Орда Брумгаров"
     ],
-    "flagSprite": "/broomgar_horde.webp",
-    "catalogUnitId": "broomgar_horde-zurbag_butcher",
-    "sprite": "/catalog-units/broomgar_horde-zurbag_butcher/image.jpg",
-    "miniatureSprite": "/catalog-units/broomgar_horde-zurbag_butcher/miniature.jpg"
-  }
+    "maxHealth": 4,
+    "miniatureSprite": "/catalog-units/broomgar_horde-zurbag_butcher/miniature.jpg",
+    "name": "Зурбаг Мясник",
+    "run": 5,
+    "size": "small",
+    "sprite": "",
+    "walk": 3
+  },
+  "id": "broomgar_horde-zurbag_butcher",
+  "mercenary": false,
+  "points": 12
 }

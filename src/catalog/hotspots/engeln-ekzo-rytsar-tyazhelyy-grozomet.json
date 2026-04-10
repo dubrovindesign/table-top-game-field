@@ -1,0 +1,54 @@
+{
+  "image": "/catalog-units/engeln-ekzo-rytsar-tyazhelyy-grozomet/image.jpg",
+  "regions": [
+    {
+      "black": 0,
+      "damage": 0,
+      "green": 1,
+      "h": 0.0795722104808384,
+      "id": "defense_main",
+      "label": "Защита",
+      "range": 0,
+      "rangeUnit": "hex",
+      "red": 0,
+      "w": 0.1824418058425681,
+      "white": 2,
+      "x": 0.3341288716974333,
+      "y": 0.30704732706469723
+    },
+    {
+      "black": 1,
+      "damage": 2,
+      "green": 1,
+      "h": 0.052515685413378824,
+      "id": "attack_0",
+      "label": "Залп молний",
+      "range": 4,
+      "rangeUnit": "hex",
+      "red": 3,
+      "w": 0.8749345863355974,
+      "white": 0,
+      "x": 0.059758079884178195,
+      "y": 0.4248
+    },
+    {
+      "black": 1,
+      "damage": 2,
+      "green": 1,
+      "h": 0.052515685413378824,
+      "id": "attack_1",
+      "label": "Удар прикладом",
+      "range": 1,
+      "rangeUnit": "hex",
+      "red": 1,
+      "w": 0.8749345863355974,
+      "white": 0,
+      "x": 0.059758079884178195,
+      "y": 0.5233
+    }
+  ],
+  "scrollLayout": {
+    "scaleY": 0.5731608730800324
+  },
+  "title": "Экзо-рыцарь с тяжёлым грозомётом"
+}

@@ -1,0 +1,48 @@
+{
+  "card": {
+    "attacks": [],
+    "catalogUnitId": "castilla-belial-vladyka-nenavisti",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "green": 0,
+      "white": 1
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 1
+    },
+    "domains": [
+      "destruction"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "faithMarkers": {
+      "red": 2
+    },
+    "flagSprite": "/castilla.webp",
+    "grabRange": 1,
+    "health": 20,
+    "keywords": [
+      "Кастилия"
+    ],
+    "maxHealth": 20,
+    "miniatureSprite": "/catalog-units/castilla-belial-vladyka-nenavisti/miniature.jpg",
+    "name": "Белиал Владыка Ненависти",
+    "run": 2,
+    "size": "big",
+    "sprite": "/catalog-units/castilla-belial-vladyka-nenavisti/image.jpg",
+    "walk": 1
+  },
+  "id": "castilla-belial-vladyka-nenavisti",
+  "points": 1
+}
