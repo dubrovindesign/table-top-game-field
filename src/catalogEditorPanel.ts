@@ -255,7 +255,6 @@ export class CatalogEditorPanel {
   private selectedLeaderId: string;
   private selectedUnitId: string | null = null;
 
-  private crumbsEl!: HTMLElement;
   private unitSearchInput!: HTMLInputElement;
   private unitFormMainWrap!: HTMLElement;
   private unitFormDiceWrap!: HTMLElement;
@@ -375,7 +374,6 @@ export class CatalogEditorPanel {
   private unitRequiresCommanderSummary!: HTMLElement;
   private unitRequiresCommanderSearch!: HTMLInputElement;
   private unitRequiresCommanderSelect!: HTMLSelectElement;
-  private unitCostHintEl!: HTMLElement;
   private drag:
     | { kind: 'move'; index: number; offX: number; offY: number }
     | {
@@ -513,7 +511,6 @@ export class CatalogEditorPanel {
       if (!this.open) return;
       this.refreshLeaderSelect();
       if (!skipUnitLibraryList) this.refreshUnitLibraryList();
-      this.updateBreadcrumbs();
       this.refreshLeaderAttachedUnits();
       this.refreshLeaderRosterEditor();
       this.refreshUnitSelectors();
@@ -585,9 +582,6 @@ export class CatalogEditorPanel {
       ),
     );
 
-    this.crumbsEl = el('div', 'ce-breadcrumbs', '');
-    leaderPane.appendChild(this.crumbsEl);
-
     const domainRow = el('div', 'ce-domain-chips');
     domainRow.appendChild(el('span', 'ce-domain-chips-label', 'Домен'));
     for (const d of DOMAIN_IDS) {
@@ -614,7 +608,6 @@ export class CatalogEditorPanel {
         this.selectedLeaderId = ls[0]?.id ?? '';
         this.selectedUnitId = null;
         this.refreshLeaderSelect();
-        this.updateBreadcrumbs();
         this.clearEditor();
       });
       domainRow.appendChild(chip);
@@ -641,7 +634,6 @@ export class CatalogEditorPanel {
       this.selectedLeaderId = ls[0]?.id ?? '';
       this.selectedUnitId = null;
       this.refreshLeaderSelect();
-      this.updateBreadcrumbs();
       this.clearEditor();
     });
     row1.appendChild(this.factionSelectEl);
@@ -752,30 +744,20 @@ export class CatalogEditorPanel {
     this.unitNameInput.placeholder = 'Имя на карте';
     newBlock.appendChild(this.unitIdInput);
     newBlock.appendChild(this.unitNameInput);
-    this.unitCostHintEl = el(
-      'div',
-      'catalog-editor-hint ce-unit-cost-hint',
-      'Стоимость в армии задаётся у лидера: миниатюра лидера и слоты ростера (не здесь).',
-    );
-    newBlock.appendChild(this.unitCostHintEl);
     this.unitMercenaryCb = el('input', 'catalog-editor-input') as HTMLInputElement;
     this.unitMercenaryCb.type = 'checkbox';
     this.unitMercenaryCb.id = 'ce-unit-mercenary';
     const mercLabel = el('label', 'ce-unit-mercenary-label', 'Наёмник (вкладка «Наёмники» в армии и фильтр в библиотеке)');
     mercLabel.setAttribute('for', 'ce-unit-mercenary');
-    newBlock.appendChild(this.unitMercenaryCb);
-    newBlock.appendChild(mercLabel);
+    const mercRow = el('div', 'ce-unit-mercenary-row');
+    mercRow.appendChild(this.unitMercenaryCb);
+    mercRow.appendChild(mercLabel);
+    newBlock.appendChild(mercRow);
     unitEditorCol.appendChild(newBlock);
 
     const commanderBlock = el('div', 'ce-unit-commander-block catalog-editor-row');
     commanderBlock.style.flexDirection = 'column';
     commanderBlock.appendChild(el('div', 'ce-field-label', 'Требуется командир'));
-    const commanderHint = el(
-      'div',
-      'catalog-editor-hint ce-unit-commander-hint',
-      'Для слота в армии: пока нет миниатюры выбранного юнита, этот юнит нельзя взять (как «требует» у слота ростера). Поиск фильтрует список.',
-    );
-    commanderBlock.appendChild(commanderHint);
     this.unitRequiresCommanderDetails = document.createElement('details');
     this.unitRequiresCommanderDetails.className = 'ce-unit-commander-details';
     this.unitRequiresCommanderSummary = el('summary', 'ce-unit-commander-summary', '— не требуется —');
@@ -1527,7 +1509,6 @@ export class CatalogEditorPanel {
     this.setupModalEscapeHandler();
     this.refreshLeaderSelect();
     this.refreshUnitLibraryList();
-    this.updateBreadcrumbs();
     this.refreshLeaderAttachedUnits();
     this.refreshRequiresUnitSelect();
   }
@@ -2585,12 +2566,10 @@ export class CatalogEditorPanel {
     leadSel.onchange = () => {
       this.selectedLeaderId = leadSel.value;
       this.selectedUnitId = null;
-      this.updateBreadcrumbs();
       this.refreshUnitLibraryList();
       this.refreshLeaderAttachedUnits();
       this.clearEditor();
     };
-    this.updateBreadcrumbs();
     this.refreshLeaderAttachedUnits();
   }
 
@@ -3545,17 +3524,8 @@ export class CatalogEditorPanel {
     }
     this.closeLeaderModal();
     this.refreshLeaderSelect();
-    this.updateBreadcrumbs();
     this.refreshUnitLibraryList();
     this.refreshUnitSelectors();
-  }
-
-  private updateBreadcrumbs(): void {
-    if (!this.crumbsEl) return;
-    const domain = DOMAIN_LABELS[this.selectedDomainId];
-    const fac = FACTIONS.find((f) => f.id === this.selectedFactionId);
-    const leader = this.selectedLeaderId ? getLeader(this.selectedLeaderId) : undefined;
-    this.crumbsEl.textContent = `${domain} › ${fac?.name ?? '—'} › ${leader?.name ?? '—'}`;
   }
 
   private deleteSelectedUnit(): void {
@@ -3588,7 +3558,6 @@ export class CatalogEditorPanel {
     this.selectedLeaderId = next[0]?.id ?? '';
     this.selectedUnitId = null;
     this.refreshLeaderSelect();
-    this.updateBreadcrumbs();
     this.refreshUnitLibraryList();
   }
 
@@ -4261,7 +4230,6 @@ export class CatalogEditorPanel {
       this.refreshUnitSelectors();
       this.refreshLeaderSelect();
       this.refreshUnitLibraryList();
-      this.updateBreadcrumbs();
       this.refreshLeaderAttachedUnits();
       this.panel.focus();
     }

@@ -626,17 +626,7 @@
   }
 }
 
-/* ——— IA: domains, breadcrumbs, panes ——— */
-
-.ce-breadcrumbs {
-  font-size: 0.78rem;
-  color: var(--ce-muted);
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--ce-border);
-  background: rgba(0, 0, 0, 0.2);
-  line-height: 1.35;
-}
+/* ——— IA: domains, panes ——— */
 
 .ce-domain-chips {
   display: flex;
@@ -1085,7 +1075,6 @@
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.ce-pane--leaders > .ce-breadcrumbs,
 .ce-pane--leaders > .ce-domain-chips,
 .ce-pane--leaders > .catalog-editor-row {
   flex-shrink: 0;
@@ -1201,6 +1190,46 @@
   flex-direction: column;
   gap: 10px;
   min-height: 120px;
+  text-align: left;
+  align-items: stretch;
+  width: 100%;
+}
+
+/* Column + .catalog-editor-row по умолчанию даёт align-items:center — поля сжимаются по центру */
+.catalog-editor-row.ce-unit-stub-fields,
+.catalog-editor-row.ce-unit-commander-block {
+  align-items: stretch;
+  text-align: left;
+}
+
+.ce-unit-stub-fields > label {
+  width: 100%;
+  text-align: left;
+}
+
+.ce-unit-mercenary-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+
+.ce-unit-mercenary-row .catalog-editor-input[type='checkbox'] {
+  flex: none;
+  min-width: 0;
+  width: auto;
+  margin: 0;
+}
+
+.ce-unit-mercenary-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+  line-height: 1.35;
+  cursor: pointer;
 }
 
 .ce-unit-subtabs {
@@ -1236,14 +1265,26 @@
   min-width: 100px;
 }
 
-.ce-unit-main-row--movement .catalog-editor-field {
-  flex: 1 1 72px;
-  min-width: 72px;
+/* Пять полей в одну линию: равные доли ширины, без min-width:120px у инпутов (иначе наложение) */
+.ce-unit-main-row--movement {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  align-items: end;
 }
 
-.ce-unit-main-row--movement .ce-unit-main-field--move-unit {
-  flex: 1.4 1 130px;
-  min-width: 120px;
+.ce-unit-main-row--movement .catalog-editor-field {
+  min-width: 0;
+  width: 100%;
+}
+
+.ce-unit-main-row--movement .catalog-editor-field .catalog-editor-input,
+.ce-unit-main-row--movement .catalog-editor-field .catalog-editor-select {
+  flex: none;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .ce-unit-main-row--defense {
@@ -1369,7 +1410,7 @@
 
 .ce-modal {
   width: min(480px, 100%);
-  max-height: min(88vh, 720px);
+  max-height: min(92vh, 900px);
   display: flex;
   flex-direction: column;
   background: #16161c;
@@ -1384,17 +1425,16 @@
   max-height: min(92vh, 900px);
 }
 
-/* Leader modal: «Ростер» tab — wider/taller, roster list fills pane height */
+/* Leader modal: «Ростер» — шире окно; высота по контенту, список ростера с собственным скроллом */
 .ce-modal.ce-modal--leader-roster {
   width: min(720px, 96vw);
-  height: min(92vh, 900px);
   max-height: min(92vh, 900px);
 }
 
 .ce-modal-pane.ce-modal-pane--leader-roster {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
   gap: 10px;
 }
 
@@ -1410,9 +1450,9 @@
 }
 
 .ce-modal-pane--leader-roster .ce-modal-roster-list {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-height: 0;
-  max-height: none;
+  max-height: min(50vh, 440px);
   overflow-y: auto;
 }
 
@@ -1441,7 +1481,9 @@
 }
 
 .ce-modal-pane {
-  flex: 1;
+  /* Не растягиваем пустоту до max-height: окно по высоте «обнимает» контент, при переполнении — скролл здесь */
+  flex: 0 1 auto;
+  min-height: 0;
   overflow: auto;
   padding: 12px 14px;
   display: flex;
@@ -1712,10 +1754,6 @@
 .ce-unit-commander-block {
   gap: 6px;
   margin-bottom: 8px;
-}
-
-.ce-unit-commander-hint {
-  margin-bottom: 2px;
 }
 
 .ce-unit-commander-details {
