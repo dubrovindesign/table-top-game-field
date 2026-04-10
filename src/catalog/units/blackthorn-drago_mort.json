@@ -50,7 +50,7 @@
     "miniatureSprite": "/catalog-units/blackthorn-drago_mort/miniature.jpg",
     "name": "Драго-Морт Дэа'Мор",
     "run": 2,
-    "size": "small",
+    "size": "large",
     "sprite": "",
     "walk": 1
   },

@@ -1,59 +1,60 @@
 {
-  "id": "krigmark-footsoldier_mace",
-  "points": 20,
   "card": {
-    "name": "Рядовой с Булавой",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {
+          "black": 0,
+          "green": 0,
+          "red": 1,
+          "white": 0
+        },
+        "name": "—",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "krigmark-footsoldier_mace",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "death"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "flagSprite": "/krigmark.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "—",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {
-          "red": 1,
-          "green": 0,
-          "black": 0,
-          "white": 0
-        }
-      }
-    ],
+    "health": 5,
     "keywords": [
       "Кригмарк"
     ],
-    "flagSprite": "/krigmark.webp",
-    "catalogUnitId": "krigmark-footsoldier_mace",
+    "maxHealth": 5,
+    "miniatureSprite": "/catalog-units/krigmark-footsoldier_mace/miniature.jpg",
+    "name": "Рядовой с Булавой",
+    "run": 6,
+    "size": "small",
     "sprite": "/catalog-units/krigmark-footsoldier_mace/image.jpg",
-    "miniatureSprite": "/catalog-units/krigmark-footsoldier_mace/miniature.jpg"
-  }
+    "walk": 3
+  },
+  "id": "krigmark-footsoldier_mace",
+  "mercenary": false,
+  "points": 20
 }

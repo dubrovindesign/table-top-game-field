@@ -1,59 +1,60 @@
 {
-  "id": "keld-sild_protector_keld",
-  "points": 36,
   "card": {
-    "name": "Сильд Защитник Кельда",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {
+          "black": 0,
+          "green": 0,
+          "red": 1,
+          "white": 0
+        },
+        "name": "—",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "keld-sild_protector_keld",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "life"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "flagSprite": "/keld.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "—",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {
-          "red": 1,
-          "green": 0,
-          "black": 0,
-          "white": 0
-        }
-      }
-    ],
+    "health": 9,
     "keywords": [
       "Кельд"
     ],
-    "flagSprite": "/keld.webp",
-    "catalogUnitId": "keld-sild_protector_keld",
+    "maxHealth": 9,
+    "miniatureSprite": "/catalog-units/keld-sild_protector_keld/miniature.jpg",
+    "name": "Сильд Защитник Кельда",
+    "run": 5,
+    "size": "small",
     "sprite": "/catalog-units/keld-sild_protector_keld/image.jpg",
-    "miniatureSprite": "/catalog-units/keld-sild_protector_keld/miniature.jpg"
-  }
+    "walk": 2
+  },
+  "id": "keld-sild_protector_keld",
+  "mercenary": false,
+  "points": 36
 }

@@ -1,59 +1,60 @@
 {
-  "id": "priory_of_hope-gerrilyas_halberd",
-  "points": 20,
   "card": {
-    "name": "Геррильяс Алебардист",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {
+          "black": 0,
+          "green": 0,
+          "red": 1,
+          "white": 0
+        },
+        "name": "—",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "priory_of_hope-gerrilyas_halberd",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "creation"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "flagSprite": "/priory_of_hope.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "—",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {
-          "red": 1,
-          "green": 0,
-          "black": 0,
-          "white": 0
-        }
-      }
-    ],
+    "health": 5,
     "keywords": [
       "Приорат Надежды"
     ],
-    "flagSprite": "/priory_of_hope.webp",
-    "catalogUnitId": "priory_of_hope-gerrilyas_halberd",
+    "maxHealth": 5,
+    "miniatureSprite": "/catalog-units/priory_of_hope-gerrilyas_halberd/miniature.jpg",
+    "name": "Геррильяс Алебардист",
+    "run": 6,
+    "size": "small",
     "sprite": "/catalog-units/priory_of_hope-gerrilyas_halberd/image.jpg",
-    "miniatureSprite": "/catalog-units/priory_of_hope-gerrilyas_halberd/miniature.jpg"
-  }
+    "walk": 3
+  },
+  "id": "priory_of_hope-gerrilyas_halberd",
+  "mercenary": false,
+  "points": 20
 }

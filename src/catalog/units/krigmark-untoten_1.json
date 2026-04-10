@@ -1,59 +1,60 @@
 {
-  "id": "krigmark-untoten_1",
-  "points": 10,
   "card": {
-    "name": "Возвратившийся Мод.1",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {
+          "black": 0,
+          "green": 0,
+          "red": 1,
+          "white": 0
+        },
+        "name": "—",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "krigmark-untoten_1",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "death"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "flagSprite": "/krigmark.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "—",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {
-          "red": 1,
-          "green": 0,
-          "black": 0,
-          "white": 0
-        }
-      }
-    ],
+    "health": 6,
     "keywords": [
       "Кригмарк"
     ],
-    "flagSprite": "/krigmark.webp",
-    "catalogUnitId": "krigmark-untoten_1",
+    "maxHealth": 6,
+    "miniatureSprite": "/catalog-units/krigmark-untoten_1/miniature.jpg",
+    "name": "Возвратившийся Мод.1",
+    "run": 4,
+    "size": "small",
     "sprite": "/catalog-units/krigmark-untoten_1/image.jpg",
-    "miniatureSprite": "/catalog-units/krigmark-untoten_1/miniature.jpg"
-  }
+    "walk": 2
+  },
+  "id": "krigmark-untoten_1",
+  "mercenary": false,
+  "points": 10
 }

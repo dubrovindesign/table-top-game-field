@@ -1,59 +1,60 @@
 {
-  "id": "krigmark-bolt_thrower",
-  "points": 55,
   "card": {
-    "name": "Тяжелый Стреломет",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {
+          "black": 0,
+          "green": 0,
+          "red": 1,
+          "white": 0
+        },
+        "name": "—",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "krigmark-bolt_thrower",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "death"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "flagSprite": "/krigmark.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "—",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {
-          "red": 1,
-          "green": 0,
-          "black": 0,
-          "white": 0
-        }
-      }
-    ],
+    "health": 10,
     "keywords": [
       "Кригмарк"
     ],
-    "flagSprite": "/krigmark.webp",
-    "catalogUnitId": "krigmark-bolt_thrower",
+    "maxHealth": 10,
+    "miniatureSprite": "/catalog-units/krigmark-bolt_thrower/miniature.jpg",
+    "name": "Тяжелый Стреломет",
+    "run": 1,
+    "size": "big",
     "sprite": "/catalog-units/krigmark-bolt_thrower/image.jpg",
-    "miniatureSprite": "/catalog-units/krigmark-bolt_thrower/miniature.jpg"
-  }
+    "walk": 0
+  },
+  "id": "krigmark-bolt_thrower",
+  "mercenary": false,
+  "points": 55
 }
