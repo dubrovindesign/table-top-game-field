@@ -1,56 +1,57 @@
 {
-  "id": "blackthorn-drago_mort",
-  "points": 55,
   "card": {
-    "name": "Драго-Морт Дэа'Мор",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {
+          "black": 4
+        },
+        "name": "УДАР. БУЛАВОЙ",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "blackthorn-drago_mort",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 3,
-      "green": 3
+      "green": 3,
+      "white": 3
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "death"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "flagSprite": "/blackthorn.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "УДАР. БУЛАВОЙ",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {
-          "black": 4
-        }
-      }
-    ],
+    "health": 13,
     "keywords": [
       "Великий Терновник"
     ],
-    "flagSprite": "/blackthorn.webp",
-    "catalogUnitId": "blackthorn-drago_mort",
+    "maxHealth": 13,
+    "miniatureSprite": "/catalog-units/blackthorn-drago_mort/miniature.jpg",
+    "name": "Драго-Морт Дэа'Мор",
+    "run": 7,
+    "size": "large",
     "sprite": "/catalog-units/blackthorn-drago_mort/image.jpg",
-    "miniatureSprite": "/catalog-units/blackthorn-drago_mort/miniature.jpg"
-  }
+    "walk": 4
+  },
+  "id": "blackthorn-drago_mort",
+  "mercenary": false,
+  "points": 55
 }

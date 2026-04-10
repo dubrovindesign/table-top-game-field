@@ -1,54 +1,55 @@
 {
-  "id": "blackthorn-centaur_dryadint_blackthorn",
-  "points": 32,
   "card": {
-    "name": "Дриадинта-Кентавр Терновника",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {},
+        "name": "\\ из 7 | т",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "blackthorn-centaur_dryadint_blackthorn",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 1,
-      "green": 0
+      "green": 0,
+      "white": 1
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "death"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "flagSprite": "/blackthorn.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "\\ из 7 | т",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {}
-      }
-    ],
+    "health": 7,
     "keywords": [
       "Великий Терновник"
     ],
-    "flagSprite": "/blackthorn.webp",
-    "catalogUnitId": "blackthorn-centaur_dryadint_blackthorn",
+    "maxHealth": 7,
+    "miniatureSprite": "/catalog-units/blackthorn-centaur_dryadint_blackthorn/miniature.jpg",
+    "name": "Дриадинта-Кентавр Терновника",
+    "run": 8,
+    "size": "small",
     "sprite": "/catalog-units/blackthorn-centaur_dryadint_blackthorn/image.jpg",
-    "miniatureSprite": "/catalog-units/blackthorn-centaur_dryadint_blackthorn/miniature.jpg"
-  }
+    "walk": 6
+  },
+  "id": "blackthorn-centaur_dryadint_blackthorn",
+  "mercenary": false,
+  "points": 32
 }

@@ -1,57 +1,58 @@
 {
-  "id": "blackthorn-aldvin_beast",
-  "points": 19,
   "card": {
-    "name": "Алдвин Искатель Истины",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
-    "defense": {
-      "white": 2,
-      "green": 5
-    },
-    "defenseReaction": {
-      "white": 0,
-      "green": 0
-    },
-    "walk": 0,
-    "run": 0,
-    "domains": [
-      "death"
-    ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
-    "exploration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
-    "explorationRange": 0,
-    "grabRange": 1,
     "attacks": [
       {
-        "name": "Алдвин Мортенсон",
-        "range": 7,
         "attackRange": "ranged",
-        "damageType": "physical",
         "damage": 1,
+        "damageType": "physical",
         "dice": {
           "red": 7,
           "white": 7
-        }
+        },
+        "name": "Алдвин Мортенсон",
+        "range": 7
       }
     ],
+    "catalogUnitId": "blackthorn-aldvin_beast",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "green": 5,
+      "white": 2
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 0
+    },
+    "domains": [
+      "death"
+    ],
+    "exploration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "explorationRange": 0,
+    "flagSprite": "/blackthorn.webp",
+    "grabRange": 1,
+    "health": 5,
     "keywords": [
       "Великий Терновник"
     ],
-    "flagSprite": "/blackthorn.webp",
-    "catalogUnitId": "blackthorn-aldvin_beast",
+    "maxHealth": 5,
+    "miniatureSprite": "/catalog-units/blackthorn-aldvin_beast/miniature.jpg",
+    "name": "Алдвин Искатель Истины",
+    "run": 6,
+    "size": "small",
     "sprite": "/catalog-units/blackthorn-aldvin_beast/image.jpg",
-    "miniatureSprite": "/catalog-units/blackthorn-aldvin_beast/miniature.jpg"
-  }
+    "walk": 3
+  },
+  "id": "blackthorn-aldvin_beast",
+  "mercenary": false,
+  "points": 19
 }

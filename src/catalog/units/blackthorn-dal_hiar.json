@@ -1,58 +1,59 @@
 {
-  "id": "blackthorn-dal_hiar",
-  "points": 50,
   "card": {
-    "name": "Дал'Хиар Отшельник Терновника",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 9,
+        "damageType": "physical",
+        "dice": {
+          "black": 7,
+          "green": 7,
+          "red": 4
+        },
+        "name": "CIN ых #7) er La] TEPHOBHWK и",
+        "range": 0
+      }
+    ],
+    "catalogUnitId": "blackthorn-dal_hiar",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 3,
-      "green": 0
+      "green": 0,
+      "white": 3
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "death"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "flagSprite": "/blackthorn.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "CIN ых #7) er La] TEPHOBHWK и",
-        "range": 0,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 9,
-        "dice": {
-          "red": 4,
-          "black": 7,
-          "green": 7
-        }
-      }
-    ],
+    "health": 9,
     "keywords": [
       "Великий Терновник"
     ],
-    "flagSprite": "/blackthorn.webp",
-    "catalogUnitId": "blackthorn-dal_hiar",
+    "maxHealth": 9,
+    "miniatureSprite": "/catalog-units/blackthorn-dal_hiar/miniature.jpg",
+    "name": "Дал'Хиар Отшельник Терновника",
+    "run": 5,
+    "size": "small",
     "sprite": "/catalog-units/blackthorn-dal_hiar/image.jpg",
-    "miniatureSprite": "/catalog-units/blackthorn-dal_hiar/miniature.jpg"
-  }
+    "walk": 2
+  },
+  "id": "blackthorn-dal_hiar",
+  "mercenary": false,
+  "points": 50
 }

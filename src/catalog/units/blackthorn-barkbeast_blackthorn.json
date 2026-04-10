@@ -1,54 +1,55 @@
 {
-  "id": "blackthorn-barkbeast_blackthorn",
-  "points": 31,
   "card": {
-    "name": "Зверь Подлеска Терновника",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {},
+        "name": "by ДОН 7d ' а! %",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "blackthorn-barkbeast_blackthorn",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 0,
-      "green": 7
+      "green": 7,
+      "white": 0
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "death"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "flagSprite": "/blackthorn.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "by ДОН 7d ' а! %",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {}
-      }
-    ],
+    "health": 10,
     "keywords": [
       "Великий Терновник"
     ],
-    "flagSprite": "/blackthorn.webp",
-    "catalogUnitId": "blackthorn-barkbeast_blackthorn",
+    "maxHealth": 10,
+    "miniatureSprite": "/catalog-units/blackthorn-barkbeast_blackthorn/miniature.jpg",
+    "name": "Зверь Подлеска Терновника",
+    "run": 0,
+    "size": "big",
     "sprite": "/catalog-units/blackthorn-barkbeast_blackthorn/image.jpg",
-    "miniatureSprite": "/catalog-units/blackthorn-barkbeast_blackthorn/miniature.jpg"
-  }
+    "walk": 2
+  },
+  "id": "blackthorn-barkbeast_blackthorn",
+  "mercenary": false,
+  "points": 31
 }

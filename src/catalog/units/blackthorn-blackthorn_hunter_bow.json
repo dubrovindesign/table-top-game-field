@@ -1,58 +1,59 @@
 {
-  "id": "blackthorn-blackthorn_hunter_bow",
-  "points": 33,
   "card": {
-    "name": "Охотник Терновника с Луком",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 4,
+        "damageType": "physical",
+        "dice": {
+          "black": 4,
+          "green": 4,
+          "red": 0
+        },
+        "name": "oY",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "blackthorn-blackthorn_hunter_bow",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 4,
-      "green": 0
+      "green": 0,
+      "white": 4
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "death"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "flagSprite": "/blackthorn.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "oY",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 4,
-        "dice": {
-          "red": 0,
-          "black": 4,
-          "green": 4
-        }
-      }
-    ],
+    "health": 7,
     "keywords": [
       "Великий Терновник"
     ],
-    "flagSprite": "/blackthorn.webp",
-    "catalogUnitId": "blackthorn-blackthorn_hunter_bow",
+    "maxHealth": 7,
+    "miniatureSprite": "/catalog-units/blackthorn-blackthorn_hunter_bow/miniature.jpg",
+    "name": "Охотник Терновника с Луком",
+    "run": 7,
+    "size": "small",
     "sprite": "/catalog-units/blackthorn-blackthorn_hunter_bow/image.jpg",
-    "miniatureSprite": "/catalog-units/blackthorn-blackthorn_hunter_bow/miniature.jpg"
-  }
+    "walk": 4
+  },
+  "id": "blackthorn-blackthorn_hunter_bow",
+  "mercenary": false,
+  "points": 33
 }

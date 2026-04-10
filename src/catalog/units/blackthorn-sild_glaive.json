@@ -1,54 +1,55 @@
 {
-  "id": "blackthorn-sild_glaive",
-  "points": 34,
   "card": {
-    "name": "Сильд Мститель с Глефой",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {},
+        "name": "Сальд",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "blackthorn-sild_glaive",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 3,
-      "green": 1
+      "green": 1,
+      "white": 3
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "death"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "flagSprite": "/blackthorn.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "Сальд",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {}
-      }
-    ],
+    "health": 9,
     "keywords": [
       "Великий Терновник"
     ],
-    "flagSprite": "/blackthorn.webp",
-    "catalogUnitId": "blackthorn-sild_glaive",
+    "maxHealth": 9,
+    "miniatureSprite": "/catalog-units/blackthorn-sild_glaive/miniature.jpg",
+    "name": "Сильд Мститель с Глефой",
+    "run": 5,
+    "size": "small",
     "sprite": "/catalog-units/blackthorn-sild_glaive/image.jpg",
-    "miniatureSprite": "/catalog-units/blackthorn-sild_glaive/miniature.jpg"
-  }
+    "walk": 2
+  },
+  "id": "blackthorn-sild_glaive",
+  "mercenary": false,
+  "points": 34
 }

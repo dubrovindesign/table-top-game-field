@@ -1,1169 +1,413 @@
 [
   {
-    "id": "engeln-richard",
-    "name": "Ричард, Сердце Леогриффа",
-    "factionId": "engeln",
-    "catalogUnitId": "engeln-richard",
-    "points": 65,
-    "roster": [
-      {
-        "unitId": "engeln-swordsman",
-        "maxCopies": 4,
-        "points": 20
-      },
-      {
-        "unitId": "engeln-swordmaster",
-        "maxCopies": 3,
-        "points": 21
-      },
-      {
-        "unitId": "engeln-healing_hand",
-        "maxCopies": 3,
-        "points": 28
-      },
-      {
-        "unitId": "engeln-shieldman",
-        "maxCopies": 2,
-        "points": 30
-      },
-      {
-        "unitId": "engeln-ranger_archer",
-        "maxCopies": 3,
-        "points": 27
-      },
-      {
-        "unitId": "engeln-shadowstep_thief",
-        "maxCopies": 3,
-        "points": 28
-      },
-      {
-        "unitId": "engeln-lion_cavalry_knight",
-        "maxCopies": 2,
-        "points": 42
-      },
-      {
-        "unitId": "engeln-magister_windtower",
-        "maxCopies": 2,
-        "points": 58
-      },
-      {
-        "unitId": "engeln-houndmaster",
-        "maxCopies": 2,
-        "points": 15
-      },
-      {
-        "unitId": "engeln-taorgas_blades",
-        "maxCopies": 1,
-        "points": 41
-      },
-      {
-        "unitId": "engeln-taorgas_hammer",
-        "maxCopies": 1,
-        "points": 45
-      },
-      {
-        "unitId": "engeln-aldvin_book",
-        "maxCopies": 1,
-        "points": 19
-      },
-      {
-        "unitId": "engeln-aldvin_beast",
-        "maxCopies": 1,
-        "points": 19
-      },
-      {
-        "unitId": "engeln-gatarkhin_blades",
-        "maxCopies": 1,
-        "points": 33
-      },
-      {
-        "unitId": "engeln-gatarkhin_glaive",
-        "maxCopies": 1,
-        "points": 35
-      },
-      {
-        "unitId": "engeln-militia_sword",
-        "maxCopies": 3,
-        "points": 11
-      },
-      {
-        "unitId": "engeln-militia_banner",
-        "maxCopies": 1,
-        "points": 12
-      },
-      {
-        "unitId": "engeln-militia_crossbow",
-        "maxCopies": 2,
-        "points": 21
-      },
-      {
-        "unitId": "engeln-exonaut_spear",
-        "maxCopies": 3,
-        "points": 32
-      },
-      {
-        "unitId": "engeln-ranger_swordsman",
-        "maxCopies": 3,
-        "points": 26
-      },
-      {
-        "unitId": "engeln-exonaut_sword",
-        "maxCopies": 3,
-        "points": 35
-      },
-      {
-        "unitId": "engeln-rob_liberated_ogrid",
-        "maxCopies": 1,
-        "points": 34
-      },
-      {
-        "unitId": "engeln-thunderbird",
-        "maxCopies": 3,
-        "points": 30
-      },
-      {
-        "unitId": "engeln-thunderbird_crossbow",
-        "maxCopies": 3,
-        "points": 33
-      },
-      {
-        "unitId": "engeln-stingray_captain",
-        "maxCopies": 1,
-        "points": 28
-      },
-      {
-        "unitId": "engeln-ekzo_efirnat_lightning",
-        "maxCopies": 1,
-        "points": 62
-      },
-      {
-        "unitId": "engeln-boyd",
-        "maxCopies": 1,
-        "points": 17
-      },
-      {
-        "unitId": "engeln-mul",
-        "maxCopies": 2,
-        "points": 10
-      },
-      {
-        "unitId": "engeln-siege_golem",
-        "maxCopies": 1,
-        "points": 100
-      },
-      {
-        "unitId": "engeln-ekzoknight_two_swords",
-        "maxCopies": 2,
-        "points": 25
-      },
-      {
-        "unitId": "engeln-ekzoknight_spear",
-        "maxCopies": 2,
-        "points": 24
-      },
-      {
-        "unitId": "engeln-ekzoknight_shield",
-        "maxCopies": 2,
-        "points": 24
-      },
-      {
-        "unitId": "engeln-ekzoknight_twohanded_sword",
-        "maxCopies": 2,
-        "points": 24
-      },
-      {
-        "unitId": "engeln-olverton",
-        "maxCopies": 1,
-        "points": 23
-      },
-      {
-        "unitId": "engeln-condesator_of_lightning",
-        "maxCopies": 3,
-        "points": 3
-      },
-      {
-        "unitId": "engeln-ekzoknight_heavy_gun",
-        "maxCopies": 1,
-        "points": 50
-      },
-      {
-        "unitId": "engeln-servidim_sword_shield",
-        "maxCopies": 1,
-        "points": 43
-      },
-      {
-        "unitId": "engeln-servidim_swords",
-        "maxCopies": 1,
-        "points": 41
-      },
-      {
-        "unitId": "engeln-servidim_shooter",
-        "maxCopies": 1,
-        "points": 47
-      }
-    ]
-  },
-  {
-    "id": "engeln-richard_2",
-    "name": "Ричард, Первый Рыцарь",
-    "factionId": "engeln",
-    "catalogUnitId": "engeln-richard_2",
-    "points": 30,
-    "roster": [
-      {
-        "unitId": "engeln-swordsman",
-        "maxCopies": 5,
-        "points": 20
-      },
-      {
-        "unitId": "engeln-swordmaster",
-        "maxCopies": 3,
-        "points": 21
-      },
-      {
-        "unitId": "engeln-healing_hand",
-        "maxCopies": 2,
-        "points": 28
-      },
-      {
-        "unitId": "engeln-shieldman",
-        "maxCopies": 2,
-        "points": 30
-      },
-      {
-        "unitId": "engeln-ranger_archer",
-        "maxCopies": 2,
-        "points": 27
-      },
-      {
-        "unitId": "engeln-shadowstep_thief",
-        "maxCopies": 2,
-        "points": 28
-      },
-      {
-        "unitId": "engeln-lion_cavalry_knight",
-        "maxCopies": 1,
-        "points": 42
-      },
-      {
-        "unitId": "engeln-magister_windtower",
-        "maxCopies": 2,
-        "points": 58
-      },
-      {
-        "unitId": "engeln-houndmaster",
-        "maxCopies": 3,
-        "points": 15
-      },
-      {
-        "unitId": "engeln-taorgas_blades",
-        "maxCopies": 1,
-        "points": 41
-      },
-      {
-        "unitId": "engeln-taorgas_hammer",
-        "maxCopies": 1,
-        "points": 45
-      },
-      {
-        "unitId": "engeln-aldvin_book",
-        "maxCopies": 1,
-        "points": 19
-      },
-      {
-        "unitId": "engeln-aldvin_beast",
-        "maxCopies": 1,
-        "points": 19
-      },
-      {
-        "unitId": "engeln-gatarkhin_blades",
-        "maxCopies": 1,
-        "points": 33
-      },
-      {
-        "unitId": "engeln-gatarkhin_glaive",
-        "maxCopies": 1,
-        "points": 35
-      },
-      {
-        "unitId": "engeln-militia_sword",
-        "maxCopies": 3,
-        "points": 11
-      },
-      {
-        "unitId": "engeln-militia_banner",
-        "maxCopies": 1,
-        "points": 12
-      },
-      {
-        "unitId": "engeln-militia_crossbow",
-        "maxCopies": 2,
-        "points": 21
-      },
-      {
-        "unitId": "engeln-exonaut_spear",
-        "maxCopies": 3,
-        "points": 32
-      },
-      {
-        "unitId": "engeln-ranger_swordsman",
-        "maxCopies": 2,
-        "points": 26
-      },
-      {
-        "unitId": "engeln-exonaut_sword",
-        "maxCopies": 3,
-        "points": 35
-      },
-      {
-        "unitId": "engeln-rob_liberated_ogrid",
-        "maxCopies": 1,
-        "points": 34
-      },
-      {
-        "unitId": "engeln-thunderbird",
-        "maxCopies": 3,
-        "points": 30
-      },
-      {
-        "unitId": "engeln-thunderbird_crossbow",
-        "maxCopies": 3,
-        "points": 33
-      },
-      {
-        "unitId": "engeln-stingray_captain",
-        "maxCopies": 1,
-        "points": 28
-      },
-      {
-        "unitId": "engeln-ekzo_efirnat_lightning",
-        "maxCopies": 1,
-        "points": 62
-      },
-      {
-        "unitId": "engeln-boyd",
-        "maxCopies": 1,
-        "points": 17
-      },
-      {
-        "unitId": "engeln-mul",
-        "maxCopies": 2,
-        "points": 10
-      },
-      {
-        "unitId": "engeln-siege_golem",
-        "maxCopies": 1,
-        "points": 100
-      },
-      {
-        "unitId": "engeln-ekzoknight_two_swords",
-        "maxCopies": 1,
-        "points": 25
-      },
-      {
-        "unitId": "engeln-ekzoknight_spear",
-        "maxCopies": 1,
-        "points": 24
-      },
-      {
-        "unitId": "engeln-ekzoknight_shield",
-        "maxCopies": 1,
-        "points": 24
-      },
-      {
-        "unitId": "engeln-ekzoknight_twohanded_sword",
-        "maxCopies": 1,
-        "points": 24
-      },
-      {
-        "unitId": "engeln-olverton",
-        "maxCopies": 1,
-        "points": 23
-      },
-      {
-        "unitId": "engeln-condesator_of_lightning",
-        "maxCopies": 2,
-        "points": 3
-      },
-      {
-        "unitId": "engeln-ekzoknight_heavy_gun",
-        "maxCopies": 1,
-        "points": 50
-      }
-    ]
-  },
-  {
-    "id": "engeln-breylon",
-    "name": "Брэйлон, Освещающий Путь",
-    "factionId": "engeln",
-    "catalogUnitId": "engeln-breylon",
-    "points": 30,
-    "roster": [
-      {
-        "unitId": "engeln-healing_hand",
-        "maxCopies": 1,
-        "points": 28
-      },
-      {
-        "unitId": "engeln-lion_cavalry_knight",
-        "maxCopies": 1,
-        "points": 42
-      },
-      {
-        "unitId": "engeln-taorgas_blades",
-        "maxCopies": 1,
-        "points": 41
-      },
-      {
-        "unitId": "engeln-taorgas_hammer",
-        "maxCopies": 1,
-        "points": 45
-      },
-      {
-        "unitId": "engeln-aldvin_book",
-        "maxCopies": 1,
-        "points": 19
-      },
-      {
-        "unitId": "engeln-aldvin_beast",
-        "maxCopies": 1,
-        "points": 19
-      },
-      {
-        "unitId": "engeln-gatarkhin_blades",
-        "maxCopies": 1,
-        "points": 33
-      },
-      {
-        "unitId": "engeln-gatarkhin_glaive",
-        "maxCopies": 1,
-        "points": 35
-      },
-      {
-        "unitId": "engeln-militia_sword",
-        "maxCopies": 1,
-        "points": 11
-      },
-      {
-        "unitId": "engeln-militia_banner",
-        "maxCopies": 1,
-        "points": 12
-      },
-      {
-        "unitId": "engeln-militia_crossbow",
-        "maxCopies": 1,
-        "points": 21
-      },
-      {
-        "unitId": "engeln-thunderbird",
-        "maxCopies": 2,
-        "points": 30
-      },
-      {
-        "unitId": "engeln-ekzo_efirnat_lightning",
-        "maxCopies": 2,
-        "points": 62
-      },
-      {
-        "unitId": "engeln-boyd",
-        "maxCopies": 1,
-        "points": 17
-      },
-      {
-        "unitId": "engeln-mul",
-        "maxCopies": 2,
-        "points": 10
-      },
-      {
-        "unitId": "engeln-siege_golem",
-        "maxCopies": 1,
-        "points": 100
-      },
-      {
-        "unitId": "engeln-ekzoknight_two_swords",
-        "maxCopies": 3,
-        "points": 25
-      },
-      {
-        "unitId": "engeln-ekzoknight_spear",
-        "maxCopies": 3,
-        "points": 24
-      },
-      {
-        "unitId": "engeln-ekzoknight_shield",
-        "maxCopies": 3,
-        "points": 24
-      },
-      {
-        "unitId": "engeln-ekzoknight_twohanded_sword",
-        "maxCopies": 2,
-        "points": 24
-      },
-      {
-        "unitId": "engeln-exonaut_sword_breylon",
-        "maxCopies": 2,
-        "points": 33
-      },
-      {
-        "unitId": "engeln-exonaut_spear_breylon",
-        "maxCopies": 2,
-        "points": 30
-      },
-      {
-        "unitId": "engeln-olverton",
-        "maxCopies": 1,
-        "points": 23
-      },
-      {
-        "unitId": "engeln-condesator_of_lightning",
-        "maxCopies": 3,
-        "points": 3
-      },
-      {
-        "unitId": "engeln-ekzoknight_heavy_gun",
-        "maxCopies": 2,
-        "points": 50
-      },
-      {
-        "unitId": "engeln-servidim_sword_shield",
-        "maxCopies": 2,
-        "points": 43
-      },
-      {
-        "unitId": "engeln-servidim_swords",
-        "maxCopies": 2,
-        "points": 41
-      },
-      {
-        "unitId": "engeln-servidim_shooter",
-        "maxCopies": 2,
-        "points": 47
-      }
-    ]
-  },
-  {
-    "id": "engeln-ayris",
-    "name": "Айрис из Йорвика",
-    "factionId": "engeln",
-    "catalogUnitId": "engeln-ayris",
-    "points": 45,
-    "roster": [
-      {
-        "unitId": "engeln-healing_hand",
-        "maxCopies": 1,
-        "points": 28
-      },
-      {
-        "unitId": "engeln-lion_cavalry_knight",
-        "maxCopies": 1,
-        "points": 42
-      },
-      {
-        "unitId": "engeln-taorgas_blades",
-        "maxCopies": 1,
-        "points": 41
-      },
-      {
-        "unitId": "engeln-taorgas_hammer",
-        "maxCopies": 1,
-        "points": 45
-      },
-      {
-        "unitId": "engeln-aldvin_book",
-        "maxCopies": 1,
-        "points": 19
-      },
-      {
-        "unitId": "engeln-aldvin_beast",
-        "maxCopies": 1,
-        "points": 19
-      },
-      {
-        "unitId": "engeln-gatarkhin_blades",
-        "maxCopies": 1,
-        "points": 33
-      },
-      {
-        "unitId": "engeln-gatarkhin_glaive",
-        "maxCopies": 1,
-        "points": 35
-      },
-      {
-        "unitId": "engeln-militia_sword",
-        "maxCopies": 1,
-        "points": 11
-      },
-      {
-        "unitId": "engeln-militia_banner",
-        "maxCopies": 1,
-        "points": 12
-      },
-      {
-        "unitId": "engeln-militia_crossbow",
-        "maxCopies": 1,
-        "points": 21
-      },
-      {
-        "unitId": "engeln-exonaut_spear",
-        "maxCopies": 1,
-        "points": 32
-      },
-      {
-        "unitId": "engeln-exonaut_sword",
-        "maxCopies": 1,
-        "points": 35
-      },
-      {
-        "unitId": "engeln-thunderbird",
-        "maxCopies": 1,
-        "points": 30
-      },
-      {
-        "unitId": "engeln-ekzo_efirnat_lightning",
-        "maxCopies": 2,
-        "points": 62
-      },
-      {
-        "unitId": "engeln-boyd",
-        "maxCopies": 1,
-        "points": 17
-      },
-      {
-        "unitId": "engeln-mul",
-        "maxCopies": 2,
-        "points": 10
-      },
-      {
-        "unitId": "engeln-siege_golem",
-        "maxCopies": 1,
-        "points": 100
-      },
-      {
-        "unitId": "engeln-ekzoknight_two_swords",
-        "maxCopies": 2,
-        "points": 25
-      },
-      {
-        "unitId": "engeln-ekzoknight_spear",
-        "maxCopies": 2,
-        "points": 24
-      },
-      {
-        "unitId": "engeln-ekzoknight_shield",
-        "maxCopies": 2,
-        "points": 24
-      },
-      {
-        "unitId": "engeln-ekzoknight_twohanded_sword",
-        "maxCopies": 2,
-        "points": 24
-      },
-      {
-        "unitId": "engeln-olverton",
-        "maxCopies": 1,
-        "points": 23
-      },
-      {
-        "unitId": "engeln-condesator_of_lightning",
-        "maxCopies": 3,
-        "points": 3
-      },
-      {
-        "unitId": "engeln-ekzoknight_heavy_gun",
-        "maxCopies": 2,
-        "points": 50
-      },
-      {
-        "unitId": "engeln-servidim_sword_shield",
-        "maxCopies": 3,
-        "points": 43
-      },
-      {
-        "unitId": "engeln-servidim_swords",
-        "maxCopies": 3,
-        "points": 41
-      },
-      {
-        "unitId": "engeln-servidim_shooter",
-        "maxCopies": 3,
-        "points": 47
-      }
-    ]
-  },
-  {
-    "id": "priory_of_hope-hoakin_de_esperando",
-    "name": "Хоакин де Эсперандо",
-    "factionId": "priory_of_hope",
-    "catalogUnitId": "priory_of_hope-hoakin_de_esperando",
-    "points": 28,
-    "roster": [
-      {
-        "unitId": "priory_of_hope-ranger_archer",
-        "maxCopies": 2,
-        "points": 27
-      },
-      {
-        "unitId": "priory_of_hope-shadowstep_thief",
-        "maxCopies": 2,
-        "points": 28
-      },
-      {
-        "unitId": "priory_of_hope-taorgas_blades",
-        "maxCopies": 1,
-        "points": 41
-      },
-      {
-        "unitId": "priory_of_hope-taorgas_hammer",
-        "maxCopies": 1,
-        "points": 45
-      },
-      {
-        "unitId": "priory_of_hope-aldvin_book",
-        "maxCopies": 1,
-        "points": 19
-      },
-      {
-        "unitId": "priory_of_hope-aldvin_beast",
-        "maxCopies": 1,
-        "points": 19
-      },
-      {
-        "unitId": "priory_of_hope-gatarkhin_blades",
-        "maxCopies": 1,
-        "points": 33
-      },
-      {
-        "unitId": "priory_of_hope-gatarkhin_glaive",
-        "maxCopies": 1,
-        "points": 35
-      },
-      {
-        "unitId": "priory_of_hope-gerrilyas_halberd",
-        "maxCopies": 5,
-        "points": 20
-      },
-      {
-        "unitId": "priory_of_hope-tolero's_rider_pistol",
-        "maxCopies": 2,
-        "points": 42
-      },
-      {
-        "unitId": "priory_of_hope-tolero's_rider",
-        "maxCopies": 2,
-        "points": 40
-      },
-      {
-        "unitId": "priory_of_hope-field_cannon",
-        "maxCopies": 2,
-        "points": 50
-      },
-      {
-        "unitId": "priory_of_hope-ranger_swordsman",
-        "maxCopies": 2,
-        "points": 26
-      },
-      {
-        "unitId": "priory_of_hope-officer_priory_of_hope",
-        "maxCopies": 2,
-        "points": 20
-      },
-      {
-        "unitId": "priory_of_hope-rob_liberated_ogrid",
-        "maxCopies": 1,
-        "points": 34
-      },
-      {
-        "unitId": "priory_of_hope-gerrilyas_musketeer",
-        "maxCopies": 4,
-        "points": 40
-      },
-      {
-        "unitId": "priory_of_hope-stingray_seeman_2",
-        "maxCopies": 4,
-        "points": 14
-      },
-      {
-        "unitId": "priory_of_hope-stingray_seeman_1",
-        "maxCopies": 2,
-        "points": 12
-      },
-      {
-        "unitId": "priory_of_hope-stingray_captain",
-        "maxCopies": 1,
-        "points": 28
-      },
-      {
-        "unitId": "priory_of_hope-coast_guard_cannon",
-        "maxCopies": 1,
-        "points": 44
-      },
-      {
-        "unitId": "priory_of_hope-coast_guard_musket",
-        "maxCopies": 1,
-        "points": 37
-      },
-      {
-        "unitId": "priory_of_hope-coast_guard_assault_musket",
-        "maxCopies": 1,
-        "points": 32
-      },
-      {
-        "unitId": "priory_of_hope-coast_guard_halberd",
-        "maxCopies": 2,
-        "points": 23
-      },
-      {
-        "unitId": "priory_of_hope-coast_guard_mace",
-        "maxCopies": 2,
-        "points": 24
-      },
-      {
-        "unitId": "priory_of_hope-ferran_infantry_unit",
-        "maxCopies": 1,
-        "points": 30
-      },
-      {
-        "unitId": "priory_of_hope-boyd",
-        "maxCopies": 1,
-        "points": 17
-      },
-      {
-        "unitId": "priory_of_hope-mul",
-        "maxCopies": 2,
-        "points": 10
-      },
-      {
-        "unitId": "priory_of_hope-coast_guard_officer",
-        "maxCopies": 1,
-        "points": 23
-      },
-      {
-        "unitId": "priory_of_hope-coast_guard_seeker",
-        "maxCopies": 1,
-        "points": 26
-      },
-      {
-        "unitId": "priory_of_hope-coast_guard_medic",
-        "maxCopies": 1,
-        "points": 21
-      }
-    ]
-  },
-  {
-    "id": "priory_of_hope-ferran_infantry",
-    "name": "Рикардо Ферран",
-    "factionId": "priory_of_hope",
-    "catalogUnitId": "priory_of_hope-ferran_infantry",
-    "points": 30,
-    "roster": [
-      {
-        "unitId": "priory_of_hope-ranger_archer",
-        "maxCopies": 1,
-        "points": 27
-      },
-      {
-        "unitId": "priory_of_hope-shadowstep_thief",
-        "maxCopies": 1,
-        "points": 28
-      },
-      {
-        "unitId": "priory_of_hope-taorgas_blades",
-        "maxCopies": 1,
-        "points": 41
-      },
-      {
-        "unitId": "priory_of_hope-taorgas_hammer",
-        "maxCopies": 1,
-        "points": 45
-      },
-      {
-        "unitId": "priory_of_hope-aldvin_book",
-        "maxCopies": 1,
-        "points": 19
-      },
-      {
-        "unitId": "priory_of_hope-aldvin_beast",
-        "maxCopies": 1,
-        "points": 19
-      },
-      {
-        "unitId": "priory_of_hope-gatarkhin_blades",
-        "maxCopies": 1,
-        "points": 33
-      },
-      {
-        "unitId": "priory_of_hope-gatarkhin_glaive",
-        "maxCopies": 1,
-        "points": 35
-      },
-      {
-        "unitId": "priory_of_hope-gerrilyas_halberd",
-        "maxCopies": 3,
-        "points": 20
-      },
-      {
-        "unitId": "priory_of_hope-tolero's_rider_pistol",
-        "maxCopies": 2,
-        "points": 42
-      },
-      {
-        "unitId": "priory_of_hope-tolero's_rider",
-        "maxCopies": 2,
-        "points": 40
-      },
-      {
-        "unitId": "priory_of_hope-field_cannon",
-        "maxCopies": 2,
-        "points": 50
-      },
-      {
-        "unitId": "priory_of_hope-ranger_swordsman",
-        "maxCopies": 1,
-        "points": 26
-      },
-      {
-        "unitId": "priory_of_hope-officer_priory_of_hope",
-        "maxCopies": 2,
-        "points": 20
-      },
-      {
-        "unitId": "priory_of_hope-rob_liberated_ogrid",
-        "maxCopies": 1,
-        "points": 34
-      },
-      {
-        "unitId": "priory_of_hope-gerrilyas_musketeer",
-        "maxCopies": 2,
-        "points": 40
-      },
-      {
-        "unitId": "priory_of_hope-stingray_seeman_2",
-        "maxCopies": 2,
-        "points": 14
-      },
-      {
-        "unitId": "priory_of_hope-stingray_seeman_1",
-        "maxCopies": 2,
-        "points": 12
-      },
-      {
-        "unitId": "priory_of_hope-stingray_captain",
-        "maxCopies": 1,
-        "points": 28
-      },
-      {
-        "unitId": "priory_of_hope-coast_guard_cannon",
-        "maxCopies": 2,
-        "points": 44
-      },
-      {
-        "unitId": "priory_of_hope-coast_guard_musket",
-        "maxCopies": 2,
-        "points": 37
-      },
-      {
-        "unitId": "priory_of_hope-coast_guard_assault_musket",
-        "maxCopies": 2,
-        "points": 32
-      },
-      {
-        "unitId": "priory_of_hope-coast_guard_halberd",
-        "maxCopies": 3,
-        "points": 23
-      },
-      {
-        "unitId": "priory_of_hope-coast_guard_mace",
-        "maxCopies": 3,
-        "points": 24
-      },
-      {
-        "unitId": "priory_of_hope-hoakin_de_esperando_rebel",
-        "maxCopies": 1,
-        "points": 28
-      },
-      {
-        "unitId": "priory_of_hope-boyd",
-        "maxCopies": 1,
-        "points": 17
-      },
-      {
-        "unitId": "priory_of_hope-mul",
-        "maxCopies": 2,
-        "points": 10
-      },
-      {
-        "unitId": "priory_of_hope-coast_guard_officer",
-        "maxCopies": 2,
-        "points": 23
-      },
-      {
-        "unitId": "priory_of_hope-coast_guard_seeker",
-        "maxCopies": 2,
-        "points": 26
-      },
-      {
-        "unitId": "priory_of_hope-coast_guard_medic",
-        "maxCopies": 2,
-        "points": 21
-      }
-    ]
-  },
-  {
-    "id": "priory_of_hope-ferran_bull",
-    "name": "Рикардо Ферран, Рокот Моря",
-    "factionId": "priory_of_hope",
-    "catalogUnitId": "priory_of_hope-ferran_bull",
+    "id": "blackthorn-drago_mort",
+    "name": "Драго-Морт Дэа'Мор",
+    "factionId": "blackthorn",
+    "catalogUnitId": "blackthorn-drago_mort",
     "points": 55,
     "roster": [
       {
-        "unitId": "priory_of_hope-ranger_archer",
-        "maxCopies": 1,
-        "points": 27
-      },
-      {
-        "unitId": "priory_of_hope-shadowstep_thief",
-        "maxCopies": 1,
-        "points": 28
-      },
-      {
-        "unitId": "priory_of_hope-taorgas_blades",
-        "maxCopies": 1,
-        "points": 41
-      },
-      {
-        "unitId": "priory_of_hope-taorgas_hammer",
-        "maxCopies": 1,
-        "points": 45
-      },
-      {
-        "unitId": "priory_of_hope-aldvin_book",
+        "unitId": "blackthorn-aldvin_book",
         "maxCopies": 1,
         "points": 19
       },
       {
-        "unitId": "priory_of_hope-aldvin_beast",
+        "unitId": "blackthorn-aldvin_beast",
         "maxCopies": 1,
         "points": 19
       },
       {
-        "unitId": "priory_of_hope-gatarkhin_blades",
+        "unitId": "blackthorn-kristoff_keller_who_discovered_life",
         "maxCopies": 1,
-        "points": 33
+        "points": 21
       },
       {
-        "unitId": "priory_of_hope-gatarkhin_glaive",
-        "maxCopies": 1,
-        "points": 35
-      },
-      {
-        "unitId": "priory_of_hope-gerrilyas_halberd",
-        "maxCopies": 2,
-        "points": 20
-      },
-      {
-        "unitId": "priory_of_hope-tolero's_rider_pistol",
+        "unitId": "blackthorn-alraune_blackthorn",
         "maxCopies": 3,
-        "points": 42
+        "points": 3
       },
       {
-        "unitId": "priory_of_hope-tolero's_rider",
-        "maxCopies": 3,
-        "points": 40
+        "unitId": "blackthorn-defender_seedlings_blackthorn",
+        "maxCopies": 4,
+        "points": 15
       },
       {
-        "unitId": "priory_of_hope-field_cannon",
+        "unitId": "blackthorn-blackthorn_assassin_2",
         "maxCopies": 2,
-        "points": 50
-      },
-      {
-        "unitId": "priory_of_hope-ranger_swordsman",
-        "maxCopies": 1,
         "points": 26
       },
       {
-        "unitId": "priory_of_hope-officer_priory_of_hope",
+        "unitId": "blackthorn-blackthorn_hunter_claw",
         "maxCopies": 2,
-        "points": 20
+        "points": 27
       },
       {
-        "unitId": "priory_of_hope-rob_liberated_ogrid",
+        "unitId": "blackthorn-centaur_dryadint_blackthorn",
         "maxCopies": 1,
-        "points": 34
-      },
-      {
-        "unitId": "priory_of_hope-gerrilyas_musketeer",
-        "maxCopies": 2,
-        "points": 40
-      },
-      {
-        "unitId": "priory_of_hope-stingray_seeman_2",
-        "maxCopies": 2,
-        "points": 14
-      },
-      {
-        "unitId": "priory_of_hope-stingray_seeman_1",
-        "maxCopies": 2,
-        "points": 12
-      },
-      {
-        "unitId": "priory_of_hope-stingray_captain",
-        "maxCopies": 1,
-        "points": 28
-      },
-      {
-        "unitId": "priory_of_hope-coast_guard_cannon",
-        "maxCopies": 2,
-        "points": 44
-      },
-      {
-        "unitId": "priory_of_hope-coast_guard_musket",
-        "maxCopies": 2,
-        "points": 37
-      },
-      {
-        "unitId": "priory_of_hope-coast_guard_assault_musket",
-        "maxCopies": 2,
         "points": 32
       },
       {
-        "unitId": "priory_of_hope-coast_guard_halberd",
-        "maxCopies": 3,
-        "points": 23
+        "unitId": "blackthorn-barkbeast_blackthorn",
+        "maxCopies": 2,
+        "points": 31
       },
       {
-        "unitId": "priory_of_hope-coast_guard_mace",
+        "unitId": "blackthorn-sild_protector",
         "maxCopies": 3,
-        "points": 24
+        "points": 33
       },
       {
-        "unitId": "priory_of_hope-hoakin_de_esperando_rebel",
+        "unitId": "blackthorn-sild_seeder",
+        "maxCopies": 3,
+        "points": 32
+      },
+      {
+        "unitId": "blackthorn-sild_glaive",
+        "maxCopies": 3,
+        "points": 34
+      },
+      {
+        "unitId": "blackthorn-voice_of_blackthorn",
+        "maxCopies": 2,
+        "points": 45
+      },
+      {
+        "unitId": "blackthorn-dal_hiar",
         "maxCopies": 1,
-        "points": 28
+        "points": 50
       },
       {
-        "unitId": "priory_of_hope-boyd",
+        "unitId": "blackthorn-blackthorn_hunter_glaive",
+        "maxCopies": 2,
+        "points": 31
+      },
+      {
+        "unitId": "blackthorn-blackthorn_hunter_bow",
+        "maxCopies": 2,
+        "points": 33
+      },
+      {
+        "unitId": "blackthorn-boyd",
         "maxCopies": 1,
         "points": 17
       },
       {
-        "unitId": "priory_of_hope-mul",
-        "maxCopies": 2,
+        "unitId": "blackthorn-mul",
+        "maxCopies": 1,
         "points": 10
+      }
+    ]
+  },
+  {
+    "id": "broomgar_horde-kurosh_khan",
+    "name": "Курош Хан",
+    "factionId": "broomgar_horde",
+    "catalogUnitId": "broomgar_horde-kurosh_khan",
+    "points": 50,
+    "roster": [
+      {
+        "unitId": "broomgar_horde-taorgas_blades",
+        "maxCopies": 1,
+        "points": 41
       },
       {
-        "unitId": "priory_of_hope-coast_guard_officer",
+        "unitId": "broomgar_horde-taorgas_hammer",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "broomgar_horde-gatarkhin_blades",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "broomgar_horde-gatarkhin_glaive",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "broomgar_horde-boiler_soup",
+        "maxCopies": 2,
+        "points": 3
+      },
+      {
+        "unitId": "broomgar_horde-boiler_fish",
+        "maxCopies": 2,
+        "points": 3
+      },
+      {
+        "unitId": "broomgar_horde-boiler_sausage",
+        "maxCopies": 2,
+        "points": 4
+      },
+      {
+        "unitId": "broomgar_horde-hogrim_shaktan_spear",
+        "maxCopies": 2,
+        "points": 55
+      },
+      {
+        "unitId": "broomgar_horde-hogrim_shaktan_gun",
+        "maxCopies": 2,
+        "points": 50
+      },
+      {
+        "unitId": "broomgar_horde-hogrim_daichin_spear",
+        "maxCopies": 1,
+        "points": 27
+      },
+      {
+        "unitId": "broomgar_horde-hogrim_daichin_maul",
+        "maxCopies": 2,
+        "points": 35
+      },
+      {
+        "unitId": "broomgar_horde-hogrim_daichin_cleavers",
+        "maxCopies": 3,
+        "points": 30
+      },
+      {
+        "unitId": "broomgar_horde-hogrim_yargochin_maul",
+        "maxCopies": 2,
+        "points": 40
+      },
+      {
+        "unitId": "broomgar_horde-hogrim_tsereg_axe",
+        "maxCopies": 2,
+        "points": 25
+      },
+      {
+        "unitId": "broomgar_horde-hogrim_mutsereg_axe",
+        "maxCopies": 2,
+        "points": 31
+      },
+      {
+        "unitId": "broomgar_horde-hogrim_mutsereg_cleavers",
+        "maxCopies": 3,
+        "points": 30
+      },
+      {
+        "unitId": "broomgar_horde-gahai_spear",
+        "maxCopies": 3,
+        "points": 20
+      },
+      {
+        "unitId": "broomgar_horde-gahai_boomerang",
         "maxCopies": 2,
         "points": 23
       },
       {
-        "unitId": "priory_of_hope-coast_guard_seeker",
+        "unitId": "broomgar_horde-zurbag_butcher",
+        "maxCopies": 3,
+        "points": 12
+      },
+      {
+        "unitId": "broomgar_horde-bibar_boptir_bombard",
+        "maxCopies": 1,
+        "points": 46
+      },
+      {
+        "unitId": "broomgar_horde-bibar_boptir_axe",
+        "maxCopies": 1,
+        "points": 36
+      },
+      {
+        "unitId": "broomgar_horde-gahai_sling",
+        "maxCopies": 2,
+        "points": 22
+      },
+      {
+        "unitId": "broomgar_horde-hogrim_tsereg_maul",
         "maxCopies": 2,
         "points": 26
       },
       {
-        "unitId": "priory_of_hope-coast_guard_medic",
+        "unitId": "broomgar_horde-hogrim_yargochin_sword",
         "maxCopies": 2,
-        "points": 21
+        "points": 39
+      },
+      {
+        "unitId": "broomgar_horde-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "broomgar_horde-zurbag_devastator",
+        "maxCopies": 3,
+        "points": 15
+      },
+      {
+        "unitId": "broomgar_horde-zurbag_conqueror",
+        "maxCopies": 3,
+        "points": 20
+      },
+      {
+        "unitId": "broomgar_horde-grrokh",
+        "maxCopies": 1,
+        "points": 25
+      },
+      {
+        "unitId": "broomgar_horde-mul",
+        "maxCopies": 1,
+        "points": 10
+      }
+    ]
+  },
+  {
+    "id": "castilla-salvador",
+    "name": "Сальвадор Йерро",
+    "factionId": "castilla",
+    "catalogUnitId": "castilla-salvador",
+    "points": 30,
+    "roster": [
+      {
+        "unitId": "castilla-possessed_rider",
+        "maxCopies": 1,
+        "points": 40
+      },
+      {
+        "unitId": "castilla-guardsman_halberd",
+        "maxCopies": 2,
+        "points": 20
+      },
+      {
+        "unitId": "castilla-guardsman_officer",
+        "maxCopies": 1,
+        "points": 20
+      },
+      {
+        "unitId": "castilla-flamethrower",
+        "maxCopies": 1,
+        "points": 26
+      },
+      {
+        "unitId": "castilla-guardsman_musketeer",
+        "maxCopies": 2,
+        "points": 42
+      },
+      {
+        "unitId": "castilla-taorgas_blades",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "castilla-taorgas_hammer",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "castilla-aldvin_book",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "castilla-aldvin_beast",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "castilla-flammalero_bigaxe",
+        "maxCopies": 3,
+        "points": 40
+      },
+      {
+        "unitId": "castilla-flammalero_axes",
+        "maxCopies": 3,
+        "points": 35
+      },
+      {
+        "unitId": "castilla-flammalero_mortar",
+        "maxCopies": 2,
+        "points": 50
+      },
+      {
+        "unitId": "castilla-gatarkhin_blades",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "castilla-gatarkhin_glaive",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "castilla-gabrielit_monk",
+        "maxCopies": 1,
+        "points": 18
+      },
+      {
+        "unitId": "castilla-purifirer",
+        "maxCopies": 1,
+        "points": 14
+      },
+      {
+        "unitId": "castilla-possessed_rider_two_handed_axe",
+        "maxCopies": 1,
+        "points": 46
+      },
+      {
+        "unitId": "castilla-possessed_rider_hand_mortar",
+        "maxCopies": 1,
+        "points": 51
+      },
+      {
+        "unitId": "castilla-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "castilla-mul",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "castilla-saint_hunter_salvador",
+        "maxCopies": 2,
+        "points": 26
+      },
+      {
+        "unitId": "castilla-heavy_inquisitor_flamer",
+        "maxCopies": 2,
+        "points": 31
+      },
+      {
+        "unitId": "castilla-inquisitor_sword",
+        "maxCopies": 2,
+        "points": 25
+      },
+      {
+        "unitId": "castilla-sacrifice_monk",
+        "maxCopies": 4,
+        "points": 10
+      },
+      {
+        "unitId": "castilla-heavy_castilla_guard_halberd",
+        "maxCopies": 2,
+        "points": 24
+      },
+      {
+        "unitId": "castilla-olverton",
+        "maxCopies": 1,
+        "points": 23
+      },
+      {
+        "unitId": "castilla-castilla_guard_hand",
+        "maxCopies": 2,
+        "points": 23
+      },
+      {
+        "unitId": "castilla-heavy_inquisitor_light_flamer",
+        "maxCopies": 2,
+        "points": 29
+      },
+      {
+        "unitId": "castilla-heavy_inquisitor_hand",
+        "maxCopies": 2,
+        "points": 28
+      },
+      {
+        "unitId": "castilla-heavy_inquisitor_swords",
+        "maxCopies": 2,
+        "points": 28
       }
     ]
   },
@@ -1815,161 +1059,185 @@
     ]
   },
   {
-    "id": "castilla-salvador",
-    "name": "Сальвадор Йерро",
-    "factionId": "castilla",
-    "catalogUnitId": "castilla-salvador",
-    "points": 30,
+    "id": "chasm-abgorr",
+    "name": "Абгорр, Неотразимый Истязатель",
+    "factionId": "chasm",
+    "catalogUnitId": "chasm-abgorr",
+    "points": 45,
     "roster": [
       {
-        "unitId": "castilla-possessed_rider",
-        "maxCopies": 1,
-        "points": 40
-      },
-      {
-        "unitId": "castilla-guardsman_halberd",
+        "unitId": "chasm-succubus",
         "maxCopies": 2,
-        "points": 20
+        "points": 30
       },
       {
-        "unitId": "castilla-guardsman_officer",
+        "unitId": "chasm-hellhound",
         "maxCopies": 1,
-        "points": 20
+        "points": 25
       },
       {
-        "unitId": "castilla-flamethrower",
-        "maxCopies": 1,
-        "points": 26
-      },
-      {
-        "unitId": "castilla-guardsman_musketeer",
+        "unitId": "chasm-marauder",
         "maxCopies": 2,
-        "points": 42
+        "points": 15
       },
       {
-        "unitId": "castilla-taorgas_blades",
+        "unitId": "chasm-faceless_unit",
+        "maxCopies": 1,
+        "points": 70
+      },
+      {
+        "unitId": "chasm-taorgas_blades",
         "maxCopies": 1,
         "points": 41
       },
       {
-        "unitId": "castilla-taorgas_hammer",
+        "unitId": "chasm-taorgas_hammer",
         "maxCopies": 1,
         "points": 45
       },
       {
-        "unitId": "castilla-aldvin_book",
-        "maxCopies": 1,
-        "points": 19
-      },
-      {
-        "unitId": "castilla-aldvin_beast",
-        "maxCopies": 1,
-        "points": 19
-      },
-      {
-        "unitId": "castilla-flammalero_bigaxe",
-        "maxCopies": 3,
-        "points": 40
-      },
-      {
-        "unitId": "castilla-flammalero_axes",
-        "maxCopies": 3,
-        "points": 35
-      },
-      {
-        "unitId": "castilla-flammalero_mortar",
-        "maxCopies": 2,
-        "points": 50
-      },
-      {
-        "unitId": "castilla-gatarkhin_blades",
+        "unitId": "chasm-gatarkhin_blades",
         "maxCopies": 1,
         "points": 33
       },
       {
-        "unitId": "castilla-gatarkhin_glaive",
+        "unitId": "chasm-gatarkhin_glaive",
         "maxCopies": 1,
         "points": 35
       },
       {
-        "unitId": "castilla-gabrielit_monk",
+        "unitId": "chasm-void_walker_hammer",
         "maxCopies": 1,
-        "points": 18
+        "points": 44
       },
       {
-        "unitId": "castilla-purifirer",
+        "unitId": "chasm-void_walker_flamethrower",
         "maxCopies": 1,
-        "points": 14
+        "points": 58
       },
       {
-        "unitId": "castilla-possessed_rider_two_handed_axe",
-        "maxCopies": 1,
-        "points": 46
+        "unitId": "chasm-catimp",
+        "maxCopies": 3,
+        "points": 6
       },
       {
-        "unitId": "castilla-possessed_rider_hand_mortar",
-        "maxCopies": 1,
-        "points": 51
+        "unitId": "chasm-catimp_gun",
+        "maxCopies": 3,
+        "points": 8
       },
       {
-        "unitId": "castilla-boyd",
+        "unitId": "chasm-inkubus_sword",
+        "maxCopies": 2,
+        "points": 36
+      },
+      {
+        "unitId": "chasm-inkubus_flail",
+        "maxCopies": 2,
+        "points": 37
+      },
+      {
+        "unitId": "chasm-marauder_trident",
+        "maxCopies": 2,
+        "points": 17
+      },
+      {
+        "unitId": "chasm-imp_sword",
+        "maxCopies": 3,
+        "points": 6
+      },
+      {
+        "unitId": "chasm-imp_grenade",
+        "maxCopies": 3,
+        "points": 7
+      },
+      {
+        "unitId": "chasm-drazzgl",
+        "maxCopies": 1,
+        "points": 20
+      },
+      {
+        "unitId": "chasm-garkrand_unit",
+        "maxCopies": 1,
+        "points": 40
+      },
+      {
+        "unitId": "chasm-succubus_flamehands",
+        "maxCopies": 2,
+        "points": 36
+      },
+      {
+        "unitId": "chasm-inkubus_raider_glaive",
+        "maxCopies": 3,
+        "points": 41
+      },
+      {
+        "unitId": "chasm-inkubus_raider_sword",
+        "maxCopies": 3,
+        "points": 42
+      },
+      {
+        "unitId": "chasm-chazz_unit",
+        "maxCopies": 1,
+        "points": 13
+      },
+      {
+        "unitId": "chasm-valafar",
+        "maxCopies": 1,
+        "points": 40
+      },
+      {
+        "unitId": "chasm-boyd",
         "maxCopies": 1,
         "points": 17
       },
       {
-        "unitId": "castilla-mul",
-        "maxCopies": 2,
-        "points": 10
-      },
-      {
-        "unitId": "castilla-saint_hunter_salvador",
-        "maxCopies": 2,
-        "points": 26
-      },
-      {
-        "unitId": "castilla-heavy_inquisitor_flamer",
-        "maxCopies": 2,
-        "points": 31
-      },
-      {
-        "unitId": "castilla-inquisitor_sword",
-        "maxCopies": 2,
-        "points": 25
-      },
-      {
-        "unitId": "castilla-sacrifice_monk",
-        "maxCopies": 4,
-        "points": 10
-      },
-      {
-        "unitId": "castilla-heavy_castilla_guard_halberd",
-        "maxCopies": 2,
-        "points": 24
-      },
-      {
-        "unitId": "castilla-olverton",
+        "unitId": "chasm-mul",
         "maxCopies": 1,
-        "points": 23
+        "points": 10
+      }
+    ]
+  },
+  {
+    "id": "chasm-chazz",
+    "name": "Чазз, Отпрыск Неотразимого",
+    "factionId": "chasm",
+    "catalogUnitId": "chasm-chazz",
+    "points": 13,
+    "roster": [
+      {
+        "unitId": "chasm-marauder",
+        "maxCopies": 3,
+        "points": 15
       },
       {
-        "unitId": "castilla-castilla_guard_hand",
-        "maxCopies": 2,
-        "points": 23
+        "unitId": "chasm-catimp",
+        "maxCopies": 6,
+        "points": 6
       },
       {
-        "unitId": "castilla-heavy_inquisitor_light_flamer",
-        "maxCopies": 2,
-        "points": 29
+        "unitId": "chasm-catimp_gun",
+        "maxCopies": 6,
+        "points": 8
       },
       {
-        "unitId": "castilla-heavy_inquisitor_hand",
-        "maxCopies": 2,
-        "points": 28
+        "unitId": "chasm-marauder_trident",
+        "maxCopies": 3,
+        "points": 17
       },
       {
-        "unitId": "castilla-heavy_inquisitor_swords",
-        "maxCopies": 2,
-        "points": 28
+        "unitId": "chasm-imp_sword",
+        "maxCopies": 6,
+        "points": 6
+      },
+      {
+        "unitId": "chasm-imp_grenade",
+        "maxCopies": 6,
+        "points": 7
+      },
+      {
+        "unitId": "chasm-drazzgl",
+        "maxCopies": 1,
+        "points": 20
       }
     ]
   },
@@ -2247,337 +1515,865 @@
     ]
   },
   {
-    "id": "chasm-abgorr",
-    "name": "Абгорр, Неотразимый Истязатель",
-    "factionId": "chasm",
-    "catalogUnitId": "chasm-abgorr",
+    "id": "engeln-ayris",
+    "name": "Айрис из Йорвика",
+    "factionId": "engeln",
+    "catalogUnitId": "engeln-ayris",
     "points": 45,
     "roster": [
       {
-        "unitId": "chasm-succubus",
-        "maxCopies": 2,
-        "points": 30
-      },
-      {
-        "unitId": "chasm-hellhound",
+        "unitId": "engeln-healing_hand",
         "maxCopies": 1,
-        "points": 25
+        "points": 28
       },
       {
-        "unitId": "chasm-marauder",
-        "maxCopies": 2,
-        "points": 15
-      },
-      {
-        "unitId": "chasm-faceless_unit",
+        "unitId": "engeln-lion_cavalry_knight",
         "maxCopies": 1,
-        "points": 70
-      },
-      {
-        "unitId": "chasm-taorgas_blades",
-        "maxCopies": 1,
-        "points": 41
-      },
-      {
-        "unitId": "chasm-taorgas_hammer",
-        "maxCopies": 1,
-        "points": 45
-      },
-      {
-        "unitId": "chasm-gatarkhin_blades",
-        "maxCopies": 1,
-        "points": 33
-      },
-      {
-        "unitId": "chasm-gatarkhin_glaive",
-        "maxCopies": 1,
-        "points": 35
-      },
-      {
-        "unitId": "chasm-void_walker_hammer",
-        "maxCopies": 1,
-        "points": 44
-      },
-      {
-        "unitId": "chasm-void_walker_flamethrower",
-        "maxCopies": 1,
-        "points": 58
-      },
-      {
-        "unitId": "chasm-catimp",
-        "maxCopies": 3,
-        "points": 6
-      },
-      {
-        "unitId": "chasm-catimp_gun",
-        "maxCopies": 3,
-        "points": 8
-      },
-      {
-        "unitId": "chasm-inkubus_sword",
-        "maxCopies": 2,
-        "points": 36
-      },
-      {
-        "unitId": "chasm-inkubus_flail",
-        "maxCopies": 2,
-        "points": 37
-      },
-      {
-        "unitId": "chasm-marauder_trident",
-        "maxCopies": 2,
-        "points": 17
-      },
-      {
-        "unitId": "chasm-imp_sword",
-        "maxCopies": 3,
-        "points": 6
-      },
-      {
-        "unitId": "chasm-imp_grenade",
-        "maxCopies": 3,
-        "points": 7
-      },
-      {
-        "unitId": "chasm-drazzgl",
-        "maxCopies": 1,
-        "points": 20
-      },
-      {
-        "unitId": "chasm-garkrand_unit",
-        "maxCopies": 1,
-        "points": 40
-      },
-      {
-        "unitId": "chasm-succubus_flamehands",
-        "maxCopies": 2,
-        "points": 36
-      },
-      {
-        "unitId": "chasm-inkubus_raider_glaive",
-        "maxCopies": 3,
-        "points": 41
-      },
-      {
-        "unitId": "chasm-inkubus_raider_sword",
-        "maxCopies": 3,
         "points": 42
       },
       {
-        "unitId": "chasm-chazz_unit",
-        "maxCopies": 1,
-        "points": 13
-      },
-      {
-        "unitId": "chasm-valafar",
-        "maxCopies": 1,
-        "points": 40
-      },
-      {
-        "unitId": "chasm-boyd",
-        "maxCopies": 1,
-        "points": 17
-      },
-      {
-        "unitId": "chasm-mul",
-        "maxCopies": 1,
-        "points": 10
-      }
-    ]
-  },
-  {
-    "id": "chasm-chazz",
-    "name": "Чазз, Отпрыск Неотразимого",
-    "factionId": "chasm",
-    "catalogUnitId": "chasm-chazz",
-    "points": 13,
-    "roster": [
-      {
-        "unitId": "chasm-marauder",
-        "maxCopies": 3,
-        "points": 15
-      },
-      {
-        "unitId": "chasm-catimp",
-        "maxCopies": 6,
-        "points": 6
-      },
-      {
-        "unitId": "chasm-catimp_gun",
-        "maxCopies": 6,
-        "points": 8
-      },
-      {
-        "unitId": "chasm-marauder_trident",
-        "maxCopies": 3,
-        "points": 17
-      },
-      {
-        "unitId": "chasm-imp_sword",
-        "maxCopies": 6,
-        "points": 6
-      },
-      {
-        "unitId": "chasm-imp_grenade",
-        "maxCopies": 6,
-        "points": 7
-      },
-      {
-        "unitId": "chasm-drazzgl",
-        "maxCopies": 1,
-        "points": 20
-      }
-    ]
-  },
-  {
-    "id": "broomgar_horde-kurosh_khan",
-    "name": "Курош Хан",
-    "factionId": "broomgar_horde",
-    "catalogUnitId": "broomgar_horde-kurosh_khan",
-    "points": 50,
-    "roster": [
-      {
-        "unitId": "broomgar_horde-taorgas_blades",
+        "unitId": "engeln-taorgas_blades",
         "maxCopies": 1,
         "points": 41
       },
       {
-        "unitId": "broomgar_horde-taorgas_hammer",
+        "unitId": "engeln-taorgas_hammer",
         "maxCopies": 1,
         "points": 45
       },
       {
-        "unitId": "broomgar_horde-gatarkhin_blades",
+        "unitId": "engeln-aldvin_book",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "engeln-aldvin_beast",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "engeln-gatarkhin_blades",
         "maxCopies": 1,
         "points": 33
       },
       {
-        "unitId": "broomgar_horde-gatarkhin_glaive",
+        "unitId": "engeln-gatarkhin_glaive",
         "maxCopies": 1,
         "points": 35
       },
       {
-        "unitId": "broomgar_horde-boiler_soup",
+        "unitId": "engeln-militia_sword",
+        "maxCopies": 1,
+        "points": 11
+      },
+      {
+        "unitId": "engeln-militia_banner",
+        "maxCopies": 1,
+        "points": 12
+      },
+      {
+        "unitId": "engeln-militia_crossbow",
+        "maxCopies": 1,
+        "points": 21
+      },
+      {
+        "unitId": "engeln-exonaut_spear",
+        "maxCopies": 1,
+        "points": 32
+      },
+      {
+        "unitId": "engeln-exonaut_sword",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "engeln-thunderbird",
+        "maxCopies": 1,
+        "points": 30
+      },
+      {
+        "unitId": "engeln-ekzo_efirnat_lightning",
         "maxCopies": 2,
+        "points": 62
+      },
+      {
+        "unitId": "engeln-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "engeln-mul",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "engeln-siege_golem",
+        "maxCopies": 1,
+        "points": 100
+      },
+      {
+        "unitId": "engeln-ekzoknight_two_swords",
+        "maxCopies": 2,
+        "points": 25
+      },
+      {
+        "unitId": "engeln-ekzoknight_spear",
+        "maxCopies": 2,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-ekzoknight_shield",
+        "maxCopies": 2,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-ekzoknight_twohanded_sword",
+        "maxCopies": 2,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-olverton",
+        "maxCopies": 1,
+        "points": 23
+      },
+      {
+        "unitId": "engeln-condesator_of_lightning",
+        "maxCopies": 3,
         "points": 3
       },
       {
-        "unitId": "broomgar_horde-boiler_fish",
-        "maxCopies": 2,
-        "points": 3
-      },
-      {
-        "unitId": "broomgar_horde-boiler_sausage",
-        "maxCopies": 2,
-        "points": 4
-      },
-      {
-        "unitId": "broomgar_horde-hogrim_shaktan_spear",
-        "maxCopies": 2,
-        "points": 55
-      },
-      {
-        "unitId": "broomgar_horde-hogrim_shaktan_gun",
+        "unitId": "engeln-ekzoknight_heavy_gun",
         "maxCopies": 2,
         "points": 50
       },
       {
-        "unitId": "broomgar_horde-hogrim_daichin_spear",
-        "maxCopies": 1,
-        "points": 27
+        "unitId": "engeln-servidim_sword_shield",
+        "maxCopies": 3,
+        "points": 43
       },
       {
-        "unitId": "broomgar_horde-hogrim_daichin_maul",
-        "maxCopies": 2,
+        "unitId": "engeln-servidim_swords",
+        "maxCopies": 3,
+        "points": 41
+      },
+      {
+        "unitId": "engeln-servidim_shooter",
+        "maxCopies": 3,
+        "points": 47
+      }
+    ]
+  },
+  {
+    "id": "engeln-breylon",
+    "name": "Брэйлон, Освещающий Путь",
+    "factionId": "engeln",
+    "catalogUnitId": "engeln-breylon",
+    "points": 30,
+    "roster": [
+      {
+        "unitId": "engeln-healing_hand",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "engeln-lion_cavalry_knight",
+        "maxCopies": 1,
+        "points": 42
+      },
+      {
+        "unitId": "engeln-taorgas_blades",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "engeln-taorgas_hammer",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "engeln-aldvin_book",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "engeln-aldvin_beast",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "engeln-gatarkhin_blades",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "engeln-gatarkhin_glaive",
+        "maxCopies": 1,
         "points": 35
       },
       {
-        "unitId": "broomgar_horde-hogrim_daichin_cleavers",
-        "maxCopies": 3,
-        "points": 30
+        "unitId": "engeln-militia_sword",
+        "maxCopies": 1,
+        "points": 11
       },
       {
-        "unitId": "broomgar_horde-hogrim_yargochin_maul",
-        "maxCopies": 2,
-        "points": 40
-      },
-      {
-        "unitId": "broomgar_horde-hogrim_tsereg_axe",
-        "maxCopies": 2,
-        "points": 25
-      },
-      {
-        "unitId": "broomgar_horde-hogrim_mutsereg_axe",
-        "maxCopies": 2,
-        "points": 31
-      },
-      {
-        "unitId": "broomgar_horde-hogrim_mutsereg_cleavers",
-        "maxCopies": 3,
-        "points": 30
-      },
-      {
-        "unitId": "broomgar_horde-gahai_spear",
-        "maxCopies": 3,
-        "points": 20
-      },
-      {
-        "unitId": "broomgar_horde-gahai_boomerang",
-        "maxCopies": 2,
-        "points": 23
-      },
-      {
-        "unitId": "broomgar_horde-zurbag_butcher",
-        "maxCopies": 3,
+        "unitId": "engeln-militia_banner",
+        "maxCopies": 1,
         "points": 12
       },
       {
-        "unitId": "broomgar_horde-bibar_boptir_bombard",
+        "unitId": "engeln-militia_crossbow",
         "maxCopies": 1,
-        "points": 46
+        "points": 21
       },
       {
-        "unitId": "broomgar_horde-bibar_boptir_axe",
-        "maxCopies": 1,
-        "points": 36
-      },
-      {
-        "unitId": "broomgar_horde-gahai_sling",
+        "unitId": "engeln-thunderbird",
         "maxCopies": 2,
-        "points": 22
+        "points": 30
       },
       {
-        "unitId": "broomgar_horde-hogrim_tsereg_maul",
+        "unitId": "engeln-ekzo_efirnat_lightning",
         "maxCopies": 2,
-        "points": 26
+        "points": 62
       },
       {
-        "unitId": "broomgar_horde-hogrim_yargochin_sword",
-        "maxCopies": 2,
-        "points": 39
-      },
-      {
-        "unitId": "broomgar_horde-boyd",
+        "unitId": "engeln-boyd",
         "maxCopies": 1,
         "points": 17
       },
       {
-        "unitId": "broomgar_horde-zurbag_devastator",
+        "unitId": "engeln-mul",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "engeln-siege_golem",
+        "maxCopies": 1,
+        "points": 100
+      },
+      {
+        "unitId": "engeln-ekzoknight_two_swords",
+        "maxCopies": 3,
+        "points": 25
+      },
+      {
+        "unitId": "engeln-ekzoknight_spear",
+        "maxCopies": 3,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-ekzoknight_shield",
+        "maxCopies": 3,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-ekzoknight_twohanded_sword",
+        "maxCopies": 2,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-exonaut_sword_breylon",
+        "maxCopies": 2,
+        "points": 33
+      },
+      {
+        "unitId": "engeln-exonaut_spear_breylon",
+        "maxCopies": 2,
+        "points": 30
+      },
+      {
+        "unitId": "engeln-olverton",
+        "maxCopies": 1,
+        "points": 23
+      },
+      {
+        "unitId": "engeln-condesator_of_lightning",
+        "maxCopies": 3,
+        "points": 3
+      },
+      {
+        "unitId": "engeln-ekzoknight_heavy_gun",
+        "maxCopies": 2,
+        "points": 50
+      },
+      {
+        "unitId": "engeln-servidim_sword_shield",
+        "maxCopies": 2,
+        "points": 43
+      },
+      {
+        "unitId": "engeln-servidim_swords",
+        "maxCopies": 2,
+        "points": 41
+      },
+      {
+        "unitId": "engeln-servidim_shooter",
+        "maxCopies": 2,
+        "points": 47
+      }
+    ]
+  },
+  {
+    "id": "engeln-richard",
+    "name": "Ричард, Сердце Леогриффа",
+    "factionId": "engeln",
+    "catalogUnitId": "engeln-richard",
+    "points": 65,
+    "roster": [
+      {
+        "unitId": "engeln-swordsman",
+        "maxCopies": 4,
+        "points": 20
+      },
+      {
+        "unitId": "engeln-swordmaster",
+        "maxCopies": 3,
+        "points": 21
+      },
+      {
+        "unitId": "engeln-healing_hand",
+        "maxCopies": 3,
+        "points": 28
+      },
+      {
+        "unitId": "engeln-shieldman",
+        "maxCopies": 2,
+        "points": 30
+      },
+      {
+        "unitId": "engeln-ranger_archer",
+        "maxCopies": 3,
+        "points": 27
+      },
+      {
+        "unitId": "engeln-shadowstep_thief",
+        "maxCopies": 3,
+        "points": 28
+      },
+      {
+        "unitId": "engeln-lion_cavalry_knight",
+        "maxCopies": 2,
+        "points": 42
+      },
+      {
+        "unitId": "engeln-magister_windtower",
+        "maxCopies": 2,
+        "points": 58
+      },
+      {
+        "unitId": "engeln-houndmaster",
+        "maxCopies": 2,
+        "points": 15
+      },
+      {
+        "unitId": "engeln-taorgas_blades",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "engeln-taorgas_hammer",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "engeln-aldvin_book",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "engeln-aldvin_beast",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "engeln-gatarkhin_blades",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "engeln-gatarkhin_glaive",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "engeln-militia_sword",
+        "maxCopies": 3,
+        "points": 11
+      },
+      {
+        "unitId": "engeln-militia_banner",
+        "maxCopies": 1,
+        "points": 12
+      },
+      {
+        "unitId": "engeln-militia_crossbow",
+        "maxCopies": 2,
+        "points": 21
+      },
+      {
+        "unitId": "engeln-exonaut_spear",
+        "maxCopies": 3,
+        "points": 32
+      },
+      {
+        "unitId": "engeln-ranger_swordsman",
+        "maxCopies": 3,
+        "points": 26
+      },
+      {
+        "unitId": "engeln-exonaut_sword",
+        "maxCopies": 3,
+        "points": 35
+      },
+      {
+        "unitId": "engeln-rob_liberated_ogrid",
+        "maxCopies": 1,
+        "points": 34
+      },
+      {
+        "unitId": "engeln-thunderbird",
+        "maxCopies": 3,
+        "points": 30
+      },
+      {
+        "unitId": "engeln-thunderbird_crossbow",
+        "maxCopies": 3,
+        "points": 33
+      },
+      {
+        "unitId": "engeln-stingray_captain",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "engeln-ekzo_efirnat_lightning",
+        "maxCopies": 1,
+        "points": 62
+      },
+      {
+        "unitId": "engeln-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "engeln-mul",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "engeln-siege_golem",
+        "maxCopies": 1,
+        "points": 100
+      },
+      {
+        "unitId": "engeln-ekzoknight_two_swords",
+        "maxCopies": 2,
+        "points": 25
+      },
+      {
+        "unitId": "engeln-ekzoknight_spear",
+        "maxCopies": 2,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-ekzoknight_shield",
+        "maxCopies": 2,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-ekzoknight_twohanded_sword",
+        "maxCopies": 2,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-olverton",
+        "maxCopies": 1,
+        "points": 23
+      },
+      {
+        "unitId": "engeln-condesator_of_lightning",
+        "maxCopies": 3,
+        "points": 3
+      },
+      {
+        "unitId": "engeln-ekzoknight_heavy_gun",
+        "maxCopies": 1,
+        "points": 50
+      },
+      {
+        "unitId": "engeln-servidim_sword_shield",
+        "maxCopies": 1,
+        "points": 43
+      },
+      {
+        "unitId": "engeln-servidim_swords",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "engeln-servidim_shooter",
+        "maxCopies": 1,
+        "points": 47
+      }
+    ]
+  },
+  {
+    "id": "engeln-richard_2",
+    "name": "Ричард, Первый Рыцарь",
+    "factionId": "engeln",
+    "catalogUnitId": "engeln-richard_2",
+    "points": 30,
+    "roster": [
+      {
+        "unitId": "engeln-swordsman",
+        "maxCopies": 5,
+        "points": 20
+      },
+      {
+        "unitId": "engeln-swordmaster",
+        "maxCopies": 3,
+        "points": 21
+      },
+      {
+        "unitId": "engeln-healing_hand",
+        "maxCopies": 2,
+        "points": 28
+      },
+      {
+        "unitId": "engeln-shieldman",
+        "maxCopies": 2,
+        "points": 30
+      },
+      {
+        "unitId": "engeln-ranger_archer",
+        "maxCopies": 2,
+        "points": 27
+      },
+      {
+        "unitId": "engeln-shadowstep_thief",
+        "maxCopies": 2,
+        "points": 28
+      },
+      {
+        "unitId": "engeln-lion_cavalry_knight",
+        "maxCopies": 1,
+        "points": 42
+      },
+      {
+        "unitId": "engeln-magister_windtower",
+        "maxCopies": 2,
+        "points": 58
+      },
+      {
+        "unitId": "engeln-houndmaster",
         "maxCopies": 3,
         "points": 15
       },
       {
-        "unitId": "broomgar_horde-zurbag_conqueror",
-        "maxCopies": 3,
-        "points": 20
+        "unitId": "engeln-taorgas_blades",
+        "maxCopies": 1,
+        "points": 41
       },
       {
-        "unitId": "broomgar_horde-grrokh",
+        "unitId": "engeln-taorgas_hammer",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "engeln-aldvin_book",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "engeln-aldvin_beast",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "engeln-gatarkhin_blades",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "engeln-gatarkhin_glaive",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "engeln-militia_sword",
+        "maxCopies": 3,
+        "points": 11
+      },
+      {
+        "unitId": "engeln-militia_banner",
+        "maxCopies": 1,
+        "points": 12
+      },
+      {
+        "unitId": "engeln-militia_crossbow",
+        "maxCopies": 2,
+        "points": 21
+      },
+      {
+        "unitId": "engeln-exonaut_spear",
+        "maxCopies": 3,
+        "points": 32
+      },
+      {
+        "unitId": "engeln-ranger_swordsman",
+        "maxCopies": 2,
+        "points": 26
+      },
+      {
+        "unitId": "engeln-exonaut_sword",
+        "maxCopies": 3,
+        "points": 35
+      },
+      {
+        "unitId": "engeln-rob_liberated_ogrid",
+        "maxCopies": 1,
+        "points": 34
+      },
+      {
+        "unitId": "engeln-thunderbird",
+        "maxCopies": 3,
+        "points": 30
+      },
+      {
+        "unitId": "engeln-thunderbird_crossbow",
+        "maxCopies": 3,
+        "points": 33
+      },
+      {
+        "unitId": "engeln-stingray_captain",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "engeln-ekzo_efirnat_lightning",
+        "maxCopies": 1,
+        "points": 62
+      },
+      {
+        "unitId": "engeln-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "engeln-mul",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "engeln-siege_golem",
+        "maxCopies": 1,
+        "points": 100
+      },
+      {
+        "unitId": "engeln-ekzoknight_two_swords",
         "maxCopies": 1,
         "points": 25
       },
       {
-        "unitId": "broomgar_horde-mul",
+        "unitId": "engeln-ekzoknight_spear",
+        "maxCopies": 1,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-ekzoknight_shield",
+        "maxCopies": 1,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-ekzoknight_twohanded_sword",
+        "maxCopies": 1,
+        "points": 24
+      },
+      {
+        "unitId": "engeln-olverton",
+        "maxCopies": 1,
+        "points": 23
+      },
+      {
+        "unitId": "engeln-condesator_of_lightning",
+        "maxCopies": 2,
+        "points": 3
+      },
+      {
+        "unitId": "engeln-ekzoknight_heavy_gun",
+        "maxCopies": 1,
+        "points": 50
+      }
+    ]
+  },
+  {
+    "id": "keld-brammn_hero",
+    "name": "Брам'мн Мудрый",
+    "factionId": "keld",
+    "catalogUnitId": "keld-brammn_hero",
+    "points": 40,
+    "roster": [
+      {
+        "unitId": "keld-aent",
+        "maxCopies": 2,
+        "points": 75
+      },
+      {
+        "unitId": "keld-barkbeast",
+        "maxCopies": 3,
+        "points": 33
+      },
+      {
+        "unitId": "keld-defender_seedlings",
+        "maxCopies": 5,
+        "points": 16
+      },
+      {
+        "unitId": "keld-alraune",
+        "maxCopies": 3,
+        "points": 4
+      },
+      {
+        "unitId": "keld-dryadint_warrior",
+        "maxCopies": 1,
+        "points": 20
+      },
+      {
+        "unitId": "keld-dryadint_archer",
+        "maxCopies": 1,
+        "points": 27
+      },
+      {
+        "unitId": "keld-centaur_dryadint",
+        "maxCopies": 2,
+        "points": 32
+      },
+      {
+        "unitId": "keld-spirit_of_keld",
+        "maxCopies": 1,
+        "points": 29
+      },
+      {
+        "unitId": "keld-felidarn_bow",
+        "maxCopies": 1,
+        "points": 38
+      },
+      {
+        "unitId": "keld-felidarn_spear",
+        "maxCopies": 1,
+        "points": 40
+      },
+      {
+        "unitId": "keld-felidarn_sword",
+        "maxCopies": 1,
+        "points": 42
+      },
+      {
+        "unitId": "keld-taorgas_blades",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "keld-taorgas_hammer",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "keld-aldvin_book",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "keld-aldvin_beast",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "keld-dryadint_woodseer",
+        "maxCopies": 1,
+        "points": 42
+      },
+      {
+        "unitId": "keld-gatarkhin_blades",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "keld-gatarkhin_glaive",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "keld-keld_assassin_1",
+        "maxCopies": 1,
+        "points": 27
+      },
+      {
+        "unitId": "keld-keld_assassin_2",
+        "maxCopies": 2,
+        "points": 28
+      },
+      {
+        "unitId": "keld-keld_hunter_claw",
+        "maxCopies": 3,
+        "points": 28
+      },
+      {
+        "unitId": "keld-keld_hunter_glaive",
+        "maxCopies": 2,
+        "points": 32
+      },
+      {
+        "unitId": "keld-keld_hunter_bow",
+        "maxCopies": 2,
+        "points": 34
+      },
+      {
+        "unitId": "keld-thicket_guardian_sword",
+        "maxCopies": 3,
+        "points": 50
+      },
+      {
+        "unitId": "keld-thicket_guardian_stone",
+        "maxCopies": 2,
+        "points": 60
+      },
+      {
+        "unitId": "keld-kristoff_keller_who_discovered_life",
+        "maxCopies": 1,
+        "points": 21
+      },
+      {
+        "unitId": "keld-na'atly_unit",
+        "maxCopies": 1,
+        "points": 40
+      },
+      {
+        "unitId": "keld-sild_protector_keld",
+        "maxCopies": 1,
+        "points": 36
+      },
+      {
+        "unitId": "keld-sild_seeder_keld",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "keld-sild_glaive_keld",
+        "maxCopies": 1,
+        "points": 37
+      },
+      {
+        "unitId": "keld-voice_of_keld",
+        "maxCopies": 1,
+        "points": 48
+      },
+      {
+        "unitId": "keld-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "keld-mul",
         "maxCopies": 1,
         "points": 10
       }
@@ -2922,180 +2718,6 @@
     ]
   },
   {
-    "id": "keld-brammn_hero",
-    "name": "Брам'мн Мудрый",
-    "factionId": "keld",
-    "catalogUnitId": "keld-brammn_hero",
-    "points": 40,
-    "roster": [
-      {
-        "unitId": "keld-aent",
-        "maxCopies": 2,
-        "points": 75
-      },
-      {
-        "unitId": "keld-barkbeast",
-        "maxCopies": 3,
-        "points": 33
-      },
-      {
-        "unitId": "keld-defender_seedlings",
-        "maxCopies": 5,
-        "points": 16
-      },
-      {
-        "unitId": "keld-alraune",
-        "maxCopies": 3,
-        "points": 4
-      },
-      {
-        "unitId": "keld-dryadint_warrior",
-        "maxCopies": 1,
-        "points": 20
-      },
-      {
-        "unitId": "keld-dryadint_archer",
-        "maxCopies": 1,
-        "points": 27
-      },
-      {
-        "unitId": "keld-centaur_dryadint",
-        "maxCopies": 2,
-        "points": 32
-      },
-      {
-        "unitId": "keld-spirit_of_keld",
-        "maxCopies": 1,
-        "points": 29
-      },
-      {
-        "unitId": "keld-felidarn_bow",
-        "maxCopies": 1,
-        "points": 38
-      },
-      {
-        "unitId": "keld-felidarn_spear",
-        "maxCopies": 1,
-        "points": 40
-      },
-      {
-        "unitId": "keld-felidarn_sword",
-        "maxCopies": 1,
-        "points": 42
-      },
-      {
-        "unitId": "keld-taorgas_blades",
-        "maxCopies": 1,
-        "points": 41
-      },
-      {
-        "unitId": "keld-taorgas_hammer",
-        "maxCopies": 1,
-        "points": 45
-      },
-      {
-        "unitId": "keld-aldvin_book",
-        "maxCopies": 1,
-        "points": 19
-      },
-      {
-        "unitId": "keld-aldvin_beast",
-        "maxCopies": 1,
-        "points": 19
-      },
-      {
-        "unitId": "keld-dryadint_woodseer",
-        "maxCopies": 1,
-        "points": 42
-      },
-      {
-        "unitId": "keld-gatarkhin_blades",
-        "maxCopies": 1,
-        "points": 33
-      },
-      {
-        "unitId": "keld-gatarkhin_glaive",
-        "maxCopies": 1,
-        "points": 35
-      },
-      {
-        "unitId": "keld-keld_assassin_1",
-        "maxCopies": 1,
-        "points": 27
-      },
-      {
-        "unitId": "keld-keld_assassin_2",
-        "maxCopies": 2,
-        "points": 28
-      },
-      {
-        "unitId": "keld-keld_hunter_claw",
-        "maxCopies": 3,
-        "points": 28
-      },
-      {
-        "unitId": "keld-keld_hunter_glaive",
-        "maxCopies": 2,
-        "points": 32
-      },
-      {
-        "unitId": "keld-keld_hunter_bow",
-        "maxCopies": 2,
-        "points": 34
-      },
-      {
-        "unitId": "keld-thicket_guardian_sword",
-        "maxCopies": 3,
-        "points": 50
-      },
-      {
-        "unitId": "keld-thicket_guardian_stone",
-        "maxCopies": 2,
-        "points": 60
-      },
-      {
-        "unitId": "keld-kristoff_keller_who_discovered_life",
-        "maxCopies": 1,
-        "points": 21
-      },
-      {
-        "unitId": "keld-na'atly_unit",
-        "maxCopies": 1,
-        "points": 40
-      },
-      {
-        "unitId": "keld-sild_protector_keld",
-        "maxCopies": 1,
-        "points": 36
-      },
-      {
-        "unitId": "keld-sild_seeder_keld",
-        "maxCopies": 1,
-        "points": 35
-      },
-      {
-        "unitId": "keld-sild_glaive_keld",
-        "maxCopies": 1,
-        "points": 37
-      },
-      {
-        "unitId": "keld-voice_of_keld",
-        "maxCopies": 1,
-        "points": 48
-      },
-      {
-        "unitId": "keld-boyd",
-        "maxCopies": 1,
-        "points": 17
-      },
-      {
-        "unitId": "keld-mul",
-        "maxCopies": 1,
-        "points": 10
-      }
-    ]
-  },
-  {
     "id": "keld-na'atly_hero",
     "name": "На'атли Дикая Охотница",
     "factionId": "keld",
@@ -3205,6 +2827,155 @@
       {
         "unitId": "keld-mul",
         "maxCopies": 1,
+        "points": 10
+      }
+    ]
+  },
+  {
+    "id": "krigmark-dalmar_shultz_hero",
+    "name": "Дальмар Шульц Старший Инженер",
+    "factionId": "krigmark",
+    "catalogUnitId": "krigmark-dalmar_shultz_hero",
+    "points": 34,
+    "roster": [
+      {
+        "unitId": "krigmark-abomination",
+        "maxCopies": 1,
+        "points": 50
+      },
+      {
+        "unitId": "krigmark-grenadier",
+        "maxCopies": 4,
+        "points": 22
+      },
+      {
+        "unitId": "krigmark-alchemist",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "krigmark-frontline_healer",
+        "maxCopies": 2,
+        "points": 21
+      },
+      {
+        "unitId": "krigmark-immortal",
+        "maxCopies": 2,
+        "points": 33
+      },
+      {
+        "unitId": "krigmark-footsoldier_mace",
+        "maxCopies": 4,
+        "points": 20
+      },
+      {
+        "unitId": "krigmark-deathbringer",
+        "maxCopies": 2,
+        "points": 45
+      },
+      {
+        "unitId": "krigmark-bolt_thrower",
+        "maxCopies": 3,
+        "points": 55
+      },
+      {
+        "unitId": "krigmark-untoten_1",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "krigmark-taorgas_hammer",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "krigmark-aldvin_book",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "krigmark-aldvin_beast",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "krigmark-gatarkhin_glaive",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "krigmark-stosskrieger_2",
+        "maxCopies": 2,
+        "points": 45
+      },
+      {
+        "unitId": "krigmark-stosskrieger_3",
+        "maxCopies": 3,
+        "points": 50
+      },
+      {
+        "unitId": "krigmark-kefer_modification_a",
+        "maxCopies": 2,
+        "points": 8
+      },
+      {
+        "unitId": "krigmark-kefer_modification_c",
+        "maxCopies": 2,
+        "points": 6
+      },
+      {
+        "unitId": "krigmark-kristoff_keller_who_discovered_life",
+        "maxCopies": 1,
+        "points": 21
+      },
+      {
+        "unitId": "krigmark-jagdzombie",
+        "maxCopies": 2,
+        "points": 16
+      },
+      {
+        "unitId": "krigmark-kefer_modification_b",
+        "maxCopies": 2,
+        "points": 12
+      },
+      {
+        "unitId": "krigmark-stormtrooper_2",
+        "maxCopies": 2,
+        "points": 27
+      },
+      {
+        "unitId": "krigmark-stormtrooper_reaper",
+        "maxCopies": 2,
+        "points": 23
+      },
+      {
+        "unitId": "krigmark-stormtrooper_1",
+        "maxCopies": 2,
+        "points": 26
+      },
+      {
+        "unitId": "krigmark-hundmeister",
+        "maxCopies": 1,
+        "points": 18
+      },
+      {
+        "unitId": "krigmark-twins_wolf",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "krigmark-twins_verena",
+        "maxCopies": 1,
+        "points": 60
+      },
+      {
+        "unitId": "krigmark-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "krigmark-mul",
+        "maxCopies": 3,
         "points": 10
       }
     ]
@@ -3538,250 +3309,479 @@
     ]
   },
   {
-    "id": "krigmark-dalmar_shultz_hero",
-    "name": "Дальмар Шульц Старший Инженер",
-    "factionId": "krigmark",
-    "catalogUnitId": "krigmark-dalmar_shultz_hero",
-    "points": 34,
+    "id": "priory_of_hope-ferran_bull",
+    "name": "Рикардо Ферран, Рокот Моря",
+    "factionId": "priory_of_hope",
+    "catalogUnitId": "priory_of_hope-ferran_bull",
+    "points": 55,
     "roster": [
       {
-        "unitId": "krigmark-abomination",
+        "unitId": "priory_of_hope-ranger_archer",
         "maxCopies": 1,
-        "points": 50
+        "points": 27
       },
       {
-        "unitId": "krigmark-grenadier",
-        "maxCopies": 4,
-        "points": 22
-      },
-      {
-        "unitId": "krigmark-alchemist",
+        "unitId": "priory_of_hope-shadowstep_thief",
         "maxCopies": 1,
-        "points": 17
+        "points": 28
       },
       {
-        "unitId": "krigmark-frontline_healer",
-        "maxCopies": 2,
-        "points": 21
+        "unitId": "priory_of_hope-taorgas_blades",
+        "maxCopies": 1,
+        "points": 41
       },
       {
-        "unitId": "krigmark-immortal",
-        "maxCopies": 2,
+        "unitId": "priory_of_hope-taorgas_hammer",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "priory_of_hope-aldvin_book",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "priory_of_hope-aldvin_beast",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "priory_of_hope-gatarkhin_blades",
+        "maxCopies": 1,
         "points": 33
       },
       {
-        "unitId": "krigmark-footsoldier_mace",
-        "maxCopies": 4,
-        "points": 20
-      },
-      {
-        "unitId": "krigmark-deathbringer",
-        "maxCopies": 2,
-        "points": 45
-      },
-      {
-        "unitId": "krigmark-bolt_thrower",
-        "maxCopies": 3,
-        "points": 55
-      },
-      {
-        "unitId": "krigmark-untoten_1",
-        "maxCopies": 2,
-        "points": 10
-      },
-      {
-        "unitId": "krigmark-taorgas_hammer",
-        "maxCopies": 1,
-        "points": 45
-      },
-      {
-        "unitId": "krigmark-aldvin_book",
-        "maxCopies": 1,
-        "points": 19
-      },
-      {
-        "unitId": "krigmark-aldvin_beast",
-        "maxCopies": 1,
-        "points": 19
-      },
-      {
-        "unitId": "krigmark-gatarkhin_glaive",
+        "unitId": "priory_of_hope-gatarkhin_glaive",
         "maxCopies": 1,
         "points": 35
       },
       {
-        "unitId": "krigmark-stosskrieger_2",
+        "unitId": "priory_of_hope-gerrilyas_halberd",
         "maxCopies": 2,
-        "points": 45
+        "points": 20
       },
       {
-        "unitId": "krigmark-stosskrieger_3",
+        "unitId": "priory_of_hope-tolero's_rider_pistol",
         "maxCopies": 3,
+        "points": 42
+      },
+      {
+        "unitId": "priory_of_hope-tolero's_rider",
+        "maxCopies": 3,
+        "points": 40
+      },
+      {
+        "unitId": "priory_of_hope-field_cannon",
+        "maxCopies": 2,
         "points": 50
       },
       {
-        "unitId": "krigmark-kefer_modification_a",
-        "maxCopies": 2,
-        "points": 8
-      },
-      {
-        "unitId": "krigmark-kefer_modification_c",
-        "maxCopies": 2,
-        "points": 6
-      },
-      {
-        "unitId": "krigmark-kristoff_keller_who_discovered_life",
+        "unitId": "priory_of_hope-ranger_swordsman",
         "maxCopies": 1,
-        "points": 21
+        "points": 26
       },
       {
-        "unitId": "krigmark-jagdzombie",
+        "unitId": "priory_of_hope-officer_priory_of_hope",
         "maxCopies": 2,
-        "points": 16
+        "points": 20
       },
       {
-        "unitId": "krigmark-kefer_modification_b",
+        "unitId": "priory_of_hope-rob_liberated_ogrid",
+        "maxCopies": 1,
+        "points": 34
+      },
+      {
+        "unitId": "priory_of_hope-gerrilyas_musketeer",
+        "maxCopies": 2,
+        "points": 40
+      },
+      {
+        "unitId": "priory_of_hope-stingray_seeman_2",
+        "maxCopies": 2,
+        "points": 14
+      },
+      {
+        "unitId": "priory_of_hope-stingray_seeman_1",
         "maxCopies": 2,
         "points": 12
       },
       {
-        "unitId": "krigmark-stormtrooper_2",
-        "maxCopies": 2,
-        "points": 27
+        "unitId": "priory_of_hope-stingray_captain",
+        "maxCopies": 1,
+        "points": 28
       },
       {
-        "unitId": "krigmark-stormtrooper_reaper",
+        "unitId": "priory_of_hope-coast_guard_cannon",
+        "maxCopies": 2,
+        "points": 44
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_musket",
+        "maxCopies": 2,
+        "points": 37
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_assault_musket",
+        "maxCopies": 2,
+        "points": 32
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_halberd",
+        "maxCopies": 3,
+        "points": 23
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_mace",
+        "maxCopies": 3,
+        "points": 24
+      },
+      {
+        "unitId": "priory_of_hope-hoakin_de_esperando_rebel",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "priory_of_hope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "priory_of_hope-mul",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_officer",
         "maxCopies": 2,
         "points": 23
       },
       {
-        "unitId": "krigmark-stormtrooper_1",
+        "unitId": "priory_of_hope-coast_guard_seeker",
         "maxCopies": 2,
         "points": 26
       },
       {
-        "unitId": "krigmark-hundmeister",
-        "maxCopies": 1,
-        "points": 18
-      },
-      {
-        "unitId": "krigmark-twins_wolf",
-        "maxCopies": 1,
-        "points": 45
-      },
-      {
-        "unitId": "krigmark-twins_verena",
-        "maxCopies": 1,
-        "points": 60
-      },
-      {
-        "unitId": "krigmark-boyd",
-        "maxCopies": 1,
-        "points": 17
-      },
-      {
-        "unitId": "krigmark-mul",
-        "maxCopies": 3,
-        "points": 10
+        "unitId": "priory_of_hope-coast_guard_medic",
+        "maxCopies": 2,
+        "points": 21
       }
     ]
   },
   {
-    "id": "blackthorn-drago_mort",
-    "name": "Драго-Морт Дэа'Мор",
-    "factionId": "blackthorn",
-    "catalogUnitId": "blackthorn-drago_mort",
-    "points": 55,
+    "id": "priory_of_hope-ferran_infantry",
+    "name": "Рикардо Ферран",
+    "factionId": "priory_of_hope",
+    "catalogUnitId": "priory_of_hope-ferran_infantry",
+    "points": 30,
     "roster": [
       {
-        "unitId": "blackthorn-aldvin_book",
+        "unitId": "priory_of_hope-ranger_archer",
         "maxCopies": 1,
-        "points": 19
-      },
-      {
-        "unitId": "blackthorn-aldvin_beast",
-        "maxCopies": 1,
-        "points": 19
-      },
-      {
-        "unitId": "blackthorn-kristoff_keller_who_discovered_life",
-        "maxCopies": 1,
-        "points": 21
-      },
-      {
-        "unitId": "blackthorn-alraune_blackthorn",
-        "maxCopies": 3,
-        "points": 3
-      },
-      {
-        "unitId": "blackthorn-defender_seedlings_blackthorn",
-        "maxCopies": 4,
-        "points": 15
-      },
-      {
-        "unitId": "blackthorn-blackthorn_assassin_2",
-        "maxCopies": 2,
-        "points": 26
-      },
-      {
-        "unitId": "blackthorn-blackthorn_hunter_claw",
-        "maxCopies": 2,
         "points": 27
       },
       {
-        "unitId": "blackthorn-centaur_dryadint_blackthorn",
+        "unitId": "priory_of_hope-shadowstep_thief",
         "maxCopies": 1,
-        "points": 32
+        "points": 28
       },
       {
-        "unitId": "blackthorn-barkbeast_blackthorn",
-        "maxCopies": 2,
-        "points": 31
+        "unitId": "priory_of_hope-taorgas_blades",
+        "maxCopies": 1,
+        "points": 41
       },
       {
-        "unitId": "blackthorn-sild_protector",
-        "maxCopies": 3,
-        "points": 33
-      },
-      {
-        "unitId": "blackthorn-sild_seeder",
-        "maxCopies": 3,
-        "points": 32
-      },
-      {
-        "unitId": "blackthorn-sild_glaive",
-        "maxCopies": 3,
-        "points": 34
-      },
-      {
-        "unitId": "blackthorn-voice_of_blackthorn",
-        "maxCopies": 2,
+        "unitId": "priory_of_hope-taorgas_hammer",
+        "maxCopies": 1,
         "points": 45
       },
       {
-        "unitId": "blackthorn-dal_hiar",
+        "unitId": "priory_of_hope-aldvin_book",
         "maxCopies": 1,
-        "points": 50
+        "points": 19
       },
       {
-        "unitId": "blackthorn-blackthorn_hunter_glaive",
-        "maxCopies": 2,
-        "points": 31
+        "unitId": "priory_of_hope-aldvin_beast",
+        "maxCopies": 1,
+        "points": 19
       },
       {
-        "unitId": "blackthorn-blackthorn_hunter_bow",
-        "maxCopies": 2,
+        "unitId": "priory_of_hope-gatarkhin_blades",
+        "maxCopies": 1,
         "points": 33
       },
       {
-        "unitId": "blackthorn-boyd",
+        "unitId": "priory_of_hope-gatarkhin_glaive",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "priory_of_hope-gerrilyas_halberd",
+        "maxCopies": 3,
+        "points": 20
+      },
+      {
+        "unitId": "priory_of_hope-tolero's_rider_pistol",
+        "maxCopies": 2,
+        "points": 42
+      },
+      {
+        "unitId": "priory_of_hope-tolero's_rider",
+        "maxCopies": 2,
+        "points": 40
+      },
+      {
+        "unitId": "priory_of_hope-field_cannon",
+        "maxCopies": 2,
+        "points": 50
+      },
+      {
+        "unitId": "priory_of_hope-ranger_swordsman",
+        "maxCopies": 1,
+        "points": 26
+      },
+      {
+        "unitId": "priory_of_hope-officer_priory_of_hope",
+        "maxCopies": 2,
+        "points": 20
+      },
+      {
+        "unitId": "priory_of_hope-rob_liberated_ogrid",
+        "maxCopies": 1,
+        "points": 34
+      },
+      {
+        "unitId": "priory_of_hope-gerrilyas_musketeer",
+        "maxCopies": 2,
+        "points": 40
+      },
+      {
+        "unitId": "priory_of_hope-stingray_seeman_2",
+        "maxCopies": 2,
+        "points": 14
+      },
+      {
+        "unitId": "priory_of_hope-stingray_seeman_1",
+        "maxCopies": 2,
+        "points": 12
+      },
+      {
+        "unitId": "priory_of_hope-stingray_captain",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_cannon",
+        "maxCopies": 2,
+        "points": 44
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_musket",
+        "maxCopies": 2,
+        "points": 37
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_assault_musket",
+        "maxCopies": 2,
+        "points": 32
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_halberd",
+        "maxCopies": 3,
+        "points": 23
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_mace",
+        "maxCopies": 3,
+        "points": 24
+      },
+      {
+        "unitId": "priory_of_hope-hoakin_de_esperando_rebel",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "priory_of_hope-boyd",
         "maxCopies": 1,
         "points": 17
       },
       {
-        "unitId": "blackthorn-mul",
-        "maxCopies": 1,
+        "unitId": "priory_of_hope-mul",
+        "maxCopies": 2,
         "points": 10
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_officer",
+        "maxCopies": 2,
+        "points": 23
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_seeker",
+        "maxCopies": 2,
+        "points": 26
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_medic",
+        "maxCopies": 2,
+        "points": 21
+      }
+    ]
+  },
+  {
+    "id": "priory_of_hope-hoakin_de_esperando",
+    "name": "Хоакин де Эсперандо",
+    "factionId": "priory_of_hope",
+    "catalogUnitId": "priory_of_hope-hoakin_de_esperando",
+    "points": 28,
+    "roster": [
+      {
+        "unitId": "priory_of_hope-ranger_archer",
+        "maxCopies": 2,
+        "points": 27
+      },
+      {
+        "unitId": "priory_of_hope-shadowstep_thief",
+        "maxCopies": 2,
+        "points": 28
+      },
+      {
+        "unitId": "priory_of_hope-taorgas_blades",
+        "maxCopies": 1,
+        "points": 41
+      },
+      {
+        "unitId": "priory_of_hope-taorgas_hammer",
+        "maxCopies": 1,
+        "points": 45
+      },
+      {
+        "unitId": "priory_of_hope-aldvin_book",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "priory_of_hope-aldvin_beast",
+        "maxCopies": 1,
+        "points": 19
+      },
+      {
+        "unitId": "priory_of_hope-gatarkhin_blades",
+        "maxCopies": 1,
+        "points": 33
+      },
+      {
+        "unitId": "priory_of_hope-gatarkhin_glaive",
+        "maxCopies": 1,
+        "points": 35
+      },
+      {
+        "unitId": "priory_of_hope-gerrilyas_halberd",
+        "maxCopies": 5,
+        "points": 20
+      },
+      {
+        "unitId": "priory_of_hope-tolero's_rider_pistol",
+        "maxCopies": 2,
+        "points": 42
+      },
+      {
+        "unitId": "priory_of_hope-tolero's_rider",
+        "maxCopies": 2,
+        "points": 40
+      },
+      {
+        "unitId": "priory_of_hope-field_cannon",
+        "maxCopies": 2,
+        "points": 50
+      },
+      {
+        "unitId": "priory_of_hope-ranger_swordsman",
+        "maxCopies": 2,
+        "points": 26
+      },
+      {
+        "unitId": "priory_of_hope-officer_priory_of_hope",
+        "maxCopies": 2,
+        "points": 20
+      },
+      {
+        "unitId": "priory_of_hope-rob_liberated_ogrid",
+        "maxCopies": 1,
+        "points": 34
+      },
+      {
+        "unitId": "priory_of_hope-gerrilyas_musketeer",
+        "maxCopies": 4,
+        "points": 40
+      },
+      {
+        "unitId": "priory_of_hope-stingray_seeman_2",
+        "maxCopies": 4,
+        "points": 14
+      },
+      {
+        "unitId": "priory_of_hope-stingray_seeman_1",
+        "maxCopies": 2,
+        "points": 12
+      },
+      {
+        "unitId": "priory_of_hope-stingray_captain",
+        "maxCopies": 1,
+        "points": 28
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_cannon",
+        "maxCopies": 1,
+        "points": 44
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_musket",
+        "maxCopies": 1,
+        "points": 37
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_assault_musket",
+        "maxCopies": 1,
+        "points": 32
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_halberd",
+        "maxCopies": 2,
+        "points": 23
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_mace",
+        "maxCopies": 2,
+        "points": 24
+      },
+      {
+        "unitId": "priory_of_hope-ferran_infantry_unit",
+        "maxCopies": 1,
+        "points": 30
+      },
+      {
+        "unitId": "priory_of_hope-boyd",
+        "maxCopies": 1,
+        "points": 17
+      },
+      {
+        "unitId": "priory_of_hope-mul",
+        "maxCopies": 2,
+        "points": 10
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_officer",
+        "maxCopies": 1,
+        "points": 23
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_seeker",
+        "maxCopies": 1,
+        "points": 26
+      },
+      {
+        "unitId": "priory_of_hope-coast_guard_medic",
+        "maxCopies": 1,
+        "points": 21
       }
     ]
   }

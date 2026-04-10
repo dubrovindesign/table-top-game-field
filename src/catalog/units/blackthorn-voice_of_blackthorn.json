@@ -1,54 +1,55 @@
 {
-  "id": "blackthorn-voice_of_blackthorn",
-  "points": 45,
   "card": {
-    "name": "Сильд Голос Терновника",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {},
+        "name": "Голос Терновнака",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "blackthorn-voice_of_blackthorn",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 3,
-      "green": 4
+      "green": 4,
+      "white": 3
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "death"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "flagSprite": "/blackthorn.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "Голос Терновнака",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {}
-      }
-    ],
+    "health": 9,
     "keywords": [
       "Великий Терновник"
     ],
-    "flagSprite": "/blackthorn.webp",
-    "catalogUnitId": "blackthorn-voice_of_blackthorn",
+    "maxHealth": 9,
+    "miniatureSprite": "/catalog-units/blackthorn-voice_of_blackthorn/miniature.jpg",
+    "name": "Сильд Голос Терновника",
+    "run": 5,
+    "size": "small",
     "sprite": "/catalog-units/blackthorn-voice_of_blackthorn/image.jpg",
-    "miniatureSprite": "/catalog-units/blackthorn-voice_of_blackthorn/miniature.jpg"
-  }
+    "walk": 2
+  },
+  "id": "blackthorn-voice_of_blackthorn",
+  "mercenary": false,
+  "points": 45
 }

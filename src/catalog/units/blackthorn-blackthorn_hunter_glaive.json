@@ -1,54 +1,55 @@
 {
-  "id": "blackthorn-blackthorn_hunter_glaive",
-  "points": 31,
   "card": {
-    "name": "Охотник Терновника с Глефой",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {},
+        "name": "Охотнак TepHoBHuka ®",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "blackthorn-blackthorn_hunter_glaive",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 1,
-      "green": 7
+      "green": 7,
+      "white": 1
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "death"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "flagSprite": "/blackthorn.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "Охотнак TepHoBHuka ®",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {}
-      }
-    ],
+    "health": 7,
     "keywords": [
       "Великий Терновник"
     ],
-    "flagSprite": "/blackthorn.webp",
-    "catalogUnitId": "blackthorn-blackthorn_hunter_glaive",
+    "maxHealth": 7,
+    "miniatureSprite": "/catalog-units/blackthorn-blackthorn_hunter_glaive/miniature.jpg",
+    "name": "Охотник Терновника с Глефой",
+    "run": 7,
+    "size": "small",
     "sprite": "/catalog-units/blackthorn-blackthorn_hunter_glaive/image.jpg",
-    "miniatureSprite": "/catalog-units/blackthorn-blackthorn_hunter_glaive/miniature.jpg"
-  }
+    "walk": 4
+  },
+  "id": "blackthorn-blackthorn_hunter_glaive",
+  "mercenary": false,
+  "points": 31
 }
