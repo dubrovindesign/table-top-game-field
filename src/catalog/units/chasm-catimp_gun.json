@@ -1,59 +1,60 @@
 {
-  "id": "chasm-catimp_gun",
-  "points": 8,
   "card": {
-    "name": "Каттимп Бездны с пистолем",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {
+          "black": 0,
+          "green": 0,
+          "red": 1,
+          "white": 0
+        },
+        "name": "—",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "chasm-catimp_gun",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "destruction"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "flagSprite": "/chasm.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "—",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {
-          "red": 1,
-          "green": 0,
-          "black": 0,
-          "white": 0
-        }
-      }
-    ],
+    "health": 3,
     "keywords": [
       "Бездна"
     ],
-    "flagSprite": "/chasm.webp",
-    "catalogUnitId": "chasm-catimp_gun",
+    "maxHealth": 3,
+    "miniatureSprite": "/catalog-units/chasm-catimp_gun/miniature.jpg",
+    "name": "Каттимп Бездны с пистолем",
+    "run": 6,
+    "size": "small",
     "sprite": "/catalog-units/chasm-catimp_gun/image.jpg",
-    "miniatureSprite": "/catalog-units/chasm-catimp_gun/miniature.jpg"
-  }
+    "walk": 4
+  },
+  "id": "chasm-catimp_gun",
+  "mercenary": false,
+  "points": 8
 }

@@ -15,7 +15,7 @@
         "range": 1
       }
     ],
-    "catalogUnitId": "ab-ns-chasm-marauder_trident",
+    "catalogUnitId": "chasm-marauder_trident",
     "concentration": {
       "black": 0,
       "green": 0,
@@ -45,16 +45,16 @@
     },
     "flagSprite": "/chasm.webp",
     "grabRange": 1,
-    "health": 5,
+    "health": 6,
     "keywords": [
       "Бездна",
       "Army Builder"
     ],
-    "maxHealth": 5,
+    "maxHealth": 6,
     "miniatureSprite": "/catalog-units/chasm-marauder_trident/card_miniatureSprite.jpg",
     "movementDistanceUnit": "hex",
     "name": "Дьявол-налетчик с трезубцем",
-    "run": 4,
+    "run": 7,
     "size": "small",
     "sprite": "",
     "traits": [
@@ -63,7 +63,7 @@
         "name": "Ростер Army Builder"
       }
     ],
-    "walk": 7
+    "walk": 3
   },
   "id": "chasm-marauder_trident",
   "mercenary": false,

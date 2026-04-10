@@ -1,59 +1,60 @@
 {
-  "id": "castilla-possessed_rider_hand_mortar",
-  "points": 51,
   "card": {
-    "name": "Одержимый Наездник с Ручной Мортирой",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {
+          "black": 0,
+          "green": 0,
+          "red": 1,
+          "white": 0
+        },
+        "name": "—",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "castilla-possessed_rider_hand_mortar",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "destruction"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "flagSprite": "/castilla.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "—",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {
-          "red": 1,
-          "green": 0,
-          "black": 0,
-          "white": 0
-        }
-      }
-    ],
+    "health": 14,
     "keywords": [
       "Кастилия"
     ],
-    "flagSprite": "/castilla.webp",
-    "catalogUnitId": "castilla-possessed_rider_hand_mortar",
+    "maxHealth": 14,
+    "miniatureSprite": "/catalog-units/castilla-possessed_rider_hand_mortar/miniature.jpg",
+    "name": "Одержимый Наездник с Ручной Мортирой",
+    "run": 4,
+    "size": "big",
     "sprite": "/catalog-units/castilla-possessed_rider_hand_mortar/image.jpg",
-    "miniatureSprite": "/catalog-units/castilla-possessed_rider_hand_mortar/miniature.jpg"
-  }
+    "walk": 2
+  },
+  "id": "castilla-possessed_rider_hand_mortar",
+  "mercenary": false,
+  "points": 51
 }

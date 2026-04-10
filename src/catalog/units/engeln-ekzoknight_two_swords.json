@@ -15,7 +15,7 @@
         "range": 1
       }
     ],
-    "catalogUnitId": "engeln-ekzo-rytsar-mechami",
+    "catalogUnitId": "engeln-ekzoknight_two_swords",
     "concentration": {
       "black": 0,
       "green": 0,
@@ -54,11 +54,11 @@
       "Меч"
     ],
     "maxHealth": 5,
-    "miniatureSprite": "/catalog-units/engeln-ekzo-rytsar-mechami/miniature.jpg",
+    "miniatureSprite": "/catalog-units/engeln-ekzoknight_two_swords/miniature.jpg",
     "name": "Экзо-рыцарь Ангельна с мечами",
     "run": 5,
     "size": "small",
-    "sprite": "/catalog-units/engeln-ekzo-rytsar-mechami/image.jpg",
+    "sprite": "/catalog-units/engeln-ekzoknight_two_swords/image.jpg",
     "traits": [
       {
         "description": "",

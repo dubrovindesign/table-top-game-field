@@ -15,7 +15,7 @@
         "range": 1
       }
     ],
-    "catalogUnitId": "castilla-leader-torquemad-prelat",
+    "catalogUnitId": "castilla-torquemad",
     "concentration": {
       "black": 0,
       "green": 0,
@@ -45,14 +45,14 @@
     },
     "flagSprite": "/castilla.webp",
     "grabRange": 1,
-    "health": 12,
+    "health": 8,
     "keywords": [
       "Кастилия"
     ],
-    "maxHealth": 12,
+    "maxHealth": 8,
     "miniatureSprite": "/catalog-units/castilla-torquemad/card_miniatureSprite.jpg",
     "name": "Торкемад, Прелат Чистоты",
-    "run": 3,
+    "run": 2,
     "size": "big",
     "sprite": "",
     "traits": [
@@ -61,7 +61,7 @@
         "name": "Лидер Army Builder"
       }
     ],
-    "walk": 2
+    "walk": 1
   },
   "id": "castilla-torquemad",
   "mercenary": false,

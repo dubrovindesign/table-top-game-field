@@ -1,5 +1,5 @@
 /**
- * Army Builder — slide-in panel: factions, leader strip (click = filter), roster list, click-to-select, DnD.
+ * Army Builder — slide-in panel: factions, leader strip (click = filter), roster grid, click-to-select, DnD.
  */
 
 import {
@@ -28,7 +28,6 @@ import {
   godCardAriaLabel,
   type GodCardDef,
 } from './godCards';
-import { applyArmyUnitThumbClip } from './armyThumbShapes';
 import {
   DOMAIN_LABELS,
   UnitCard,
@@ -805,7 +804,7 @@ export class ArmyBuilderPanel {
 
   private makeLeaderRow(l: LeaderDef): HTMLElement {
     const def = getCatalogUnit(l.catalogUnitId);
-    const wrap = el('div', 'army-unit-row army-leader-row');
+    const wrap = el('div', 'army-unit-row army-catalog-card army-leader-row');
     wrap.dataset.leaderId = l.id;
     wrap.dataset.unitId = l.catalogUnitId;
     const used = this.opts.getUsedCount(l.id, l.catalogUnitId);
@@ -813,12 +812,26 @@ export class ArmyBuilderPanel {
     if (atMax) wrap.classList.add('army-unit-row-disabled');
     wrap.draggable = !atMax;
 
+    const pts = l.points ?? def?.points ?? 0;
+    const availText = `${used}/${LEADER_MINI_MAX_COPIES}`;
+    const ptsText = pts > 0 ? String(pts) : '—';
+    wrap.setAttribute(
+      'aria-label',
+      `${l.name}. ${pts > 0 ? `${pts} очков. ` : ''}Миниатюры лидера: ${used} из ${LEADER_MINI_MAX_COPIES}.`,
+    );
+
     wrap.addEventListener('click', (e) => {
       e.preventDefault();
       this.selectLeader(l.id);
     });
 
-    const thumb = el('div', 'army-unit-thumb');
+    const title = el('div', 'army-unit-name army-catalog-card__title', l.name);
+
+    const portrait = el('div', 'army-catalog-card__portrait');
+    const badgeAvail = el('span', 'army-catalog-card__badge army-catalog-card__badge--avail', availText);
+    badgeAvail.setAttribute('aria-hidden', 'true');
+
+    const thumb = el('div', 'army-unit-thumb army-catalog-card__thumb');
     const leaderThumb = def?.card ? unitPanelThumbSrc(def.card) : undefined;
     if (leaderThumb) {
       const img = el('img', 'army-unit-thumb-img');
@@ -826,19 +839,15 @@ export class ArmyBuilderPanel {
       img.alt = '';
       thumb.appendChild(img);
     }
-    applyArmyUnitThumbClip(thumb, def?.card?.size);
+    const badgePts = el('span', 'army-catalog-card__badge army-catalog-card__badge--pts', ptsText);
+    badgePts.setAttribute('aria-hidden', 'true');
 
-    const meta = el('div', 'army-unit-meta');
-    const name = el('div', 'army-unit-name', l.name);
-    const sub = el('div', 'army-unit-sub');
-    const pts = l.points ?? def?.points ?? 0;
-    sub.textContent =
-      pts > 0 ? `${pts} pts · ${used}/${LEADER_MINI_MAX_COPIES}` : `Лидер · ${used}/${LEADER_MINI_MAX_COPIES}`;
+    portrait.appendChild(badgeAvail);
+    portrait.appendChild(thumb);
+    portrait.appendChild(badgePts);
 
-    meta.appendChild(name);
-    meta.appendChild(sub);
-    wrap.appendChild(thumb);
-    wrap.appendChild(meta);
+    wrap.appendChild(title);
+    wrap.appendChild(portrait);
 
     let leaderTapX = 0;
     let leaderTapY = 0;
@@ -1039,7 +1048,7 @@ export class ArmyBuilderPanel {
   }
 
   private makeTroopRow(row: RosterRowView): HTMLElement {
-    const wrap = el('div', 'army-unit-row');
+    const wrap = el('div', 'army-unit-row army-catalog-card');
     wrap.dataset.unitId = row.unitId;
     const atMax = row.used >= row.maxCopies;
     const blocked = row.rosterBlocked === true;
@@ -1047,7 +1056,22 @@ export class ArmyBuilderPanel {
     wrap.draggable = !atMax && !blocked;
     if (blocked && row.rosterBlockedReason) wrap.title = row.rosterBlockedReason;
 
-    const thumb = el('div', 'army-unit-thumb');
+    const availText = `${row.used}/${row.maxCopies}`;
+    const ptsText = String(row.points);
+    wrap.setAttribute(
+      'aria-label',
+      blocked && row.rosterBlockedReason
+        ? `${row.name}. ${row.rosterBlockedReason}`
+        : `${row.name}. ${row.points} очков. В ростере: ${row.used} из ${row.maxCopies}.`,
+    );
+
+    const title = el('div', 'army-unit-name army-catalog-card__title', row.name);
+
+    const portrait = el('div', 'army-catalog-card__portrait');
+    const badgeAvail = el('span', 'army-catalog-card__badge army-catalog-card__badge--avail', availText);
+    badgeAvail.setAttribute('aria-hidden', 'true');
+
+    const thumb = el('div', 'army-unit-thumb army-catalog-card__thumb');
     const troopThumb = unitPanelThumbSrc(row.card);
     if (troopThumb) {
       const img = el('img', 'army-unit-thumb-img');
@@ -1055,17 +1079,15 @@ export class ArmyBuilderPanel {
       img.alt = '';
       thumb.appendChild(img);
     }
-    applyArmyUnitThumbClip(thumb, row.card.size);
+    const badgePts = el('span', 'army-catalog-card__badge army-catalog-card__badge--pts', ptsText);
+    badgePts.setAttribute('aria-hidden', 'true');
 
-    const meta = el('div', 'army-unit-meta');
-    const name = el('div', 'army-unit-name', row.name);
-    const sub = el('div', 'army-unit-sub');
-    sub.textContent = `${row.points} pts · ${row.used}/${row.maxCopies}`;
+    portrait.appendChild(badgeAvail);
+    portrait.appendChild(thumb);
+    portrait.appendChild(badgePts);
 
-    meta.appendChild(name);
-    meta.appendChild(sub);
-    wrap.appendChild(thumb);
-    wrap.appendChild(meta);
+    wrap.appendChild(title);
+    wrap.appendChild(portrait);
     wrap.addEventListener('click', (e) => {
       e.preventDefault();
       this.selectRosterUnit(row.unitId);

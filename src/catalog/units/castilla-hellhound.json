@@ -42,17 +42,17 @@
     "explorationRange": 0,
     "flagSprite": "/castilla.webp",
     "grabRange": 1,
-    "health": 0,
+    "health": 10,
     "keywords": [
       "Кастилия"
     ],
-    "maxHealth": 0,
+    "maxHealth": 10,
     "miniatureSprite": "/catalog-units/castilla-hellhound/miniature.jpg",
     "name": "Гончая Бездны",
-    "run": 0,
+    "run": 3,
     "size": "big",
     "sprite": "/catalog-units/castilla-hellhound/image.jpg",
-    "walk": 0
+    "walk": 1
   },
   "id": "castilla-hellhound",
   "mercenary": false,

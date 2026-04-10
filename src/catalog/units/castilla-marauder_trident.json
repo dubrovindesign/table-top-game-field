@@ -1,59 +1,60 @@
 {
-  "id": "castilla-marauder_trident",
-  "points": 17,
   "card": {
-    "name": "Дьявол-налетчик с трезубцем",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {
+          "black": 0,
+          "green": 0,
+          "red": 1,
+          "white": 0
+        },
+        "name": "—",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "castilla-marauder_trident",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "destruction"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "flagSprite": "/castilla.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "—",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {
-          "red": 1,
-          "green": 0,
-          "black": 0,
-          "white": 0
-        }
-      }
-    ],
+    "health": 6,
     "keywords": [
       "Кастилия"
     ],
-    "flagSprite": "/castilla.webp",
-    "catalogUnitId": "castilla-marauder_trident",
+    "maxHealth": 6,
+    "miniatureSprite": "/catalog-units/castilla-marauder_trident/miniature.jpg",
+    "name": "Дьявол-налетчик с трезубцем",
+    "run": 7,
+    "size": "small",
     "sprite": "/catalog-units/castilla-marauder_trident/image.jpg",
-    "miniatureSprite": "/catalog-units/castilla-marauder_trident/miniature.jpg"
-  }
+    "walk": 3
+  },
+  "id": "castilla-marauder_trident",
+  "mercenary": false,
+  "points": 17
 }

@@ -1,59 +1,60 @@
 {
-  "id": "engeln-siege_golem",
-  "points": 100,
   "card": {
-    "name": "Осадный Голем",
-    "size": "small",
-    "health": 0,
-    "maxHealth": 0,
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {
+          "black": 0,
+          "green": 0,
+          "red": 1,
+          "white": 0
+        },
+        "name": "—",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "engeln-siege_golem",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
     "defense": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
     "defenseReaction": {
-      "white": 0,
-      "green": 0
+      "green": 0,
+      "white": 0
     },
-    "walk": 0,
-    "run": 0,
     "domains": [
       "creation"
     ],
-    "concentration": {
-      "red": 0,
-      "green": 0,
-      "black": 0,
-      "white": 0
-    },
     "exploration": {
-      "red": 0,
-      "green": 0,
       "black": 0,
+      "green": 0,
+      "red": 0,
       "white": 0
     },
     "explorationRange": 0,
+    "flagSprite": "/engeln.webp",
     "grabRange": 1,
-    "attacks": [
-      {
-        "name": "—",
-        "range": 1,
-        "attackRange": "melee",
-        "damageType": "physical",
-        "damage": 1,
-        "dice": {
-          "red": 1,
-          "green": 0,
-          "black": 0,
-          "white": 0
-        }
-      }
-    ],
+    "health": 40,
     "keywords": [
       "Ангельн"
     ],
-    "flagSprite": "/engeln.webp",
-    "catalogUnitId": "engeln-siege_golem",
+    "maxHealth": 40,
+    "miniatureSprite": "/catalog-units/engeln-siege_golem/miniature.jpg",
+    "name": "Осадный Голем",
+    "run": 0,
+    "size": "huge",
     "sprite": "/catalog-units/engeln-siege_golem/image.jpg",
-    "miniatureSprite": "/catalog-units/engeln-siege_golem/miniature.jpg"
-  }
+    "walk": 1
+  },
+  "id": "engeln-siege_golem",
+  "mercenary": false,
+  "points": 100
 }
