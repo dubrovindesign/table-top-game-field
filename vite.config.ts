@@ -9,7 +9,12 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 function catalogBundlePlugin(): Plugin {
   const runBundle = (): void => {
+    execSync('node scripts/extract-catalog-base64-images.mjs --quiet', {
+      cwd: __dirname,
+      stdio: 'inherit',
+    });
     execSync('node scripts/build-catalog-bundle.mjs', { cwd: __dirname, stdio: 'inherit' });
+    execSync('node scripts/verify-catalog-public-assets.mjs', { cwd: __dirname, stdio: 'inherit' });
   };
   return {
     name: 'catalog-bundle',

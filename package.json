@@ -19,6 +19,7 @@
     "catalog:apply": "tsx scripts/apply-catalog-export.ts",
     "catalog:bundle": "node scripts/build-catalog-bundle.mjs",
     "catalog:extract-images": "node scripts/extract-catalog-base64-images.mjs",
+    "catalog:verify-assets": "node scripts/verify-catalog-public-assets.mjs",
     "priory:catalog": "node scripts/generate-priory-catalog.mjs",
     "priory:ingest": "node scripts/generate-priory-catalog.mjs && npm run catalog:bundle",
     "broomgar:catalog": "node scripts/generate-broomgar-catalog.mjs",

@@ -36,11 +36,11 @@
       "Кастилия"
     ],
     "maxHealth": 20,
-    "miniatureSprite": "/catalog-units/castilla-belial-vladyka-nenavisti/miniature.jpg",
+    "miniatureSprite": "/catalog-units/castilla-bezlikiy-vladyka-nenavisti/miniature.jpg",
     "name": "Белиал Владыка Ненависти",
     "run": 2,
     "size": "big",
-    "sprite": "/catalog-units/castilla-belial-vladyka-nenavisti/image.jpg",
+    "sprite": "/catalog-units/castilla-bezlikiy-vladyka-nenavisti/image.jpg",
     "walk": 1
   },
   "id": "castilla-belial-vladyka-nenavisti",

@@ -35,6 +35,15 @@ function fieldSlug(parts) {
   return parts.join('_').replace(/[^a-zA-Z0-9_-]/g, '_');
 }
 
+/** Match repo convention `image.jpg` / `miniature.jpg` under `public/catalog-units/<id>/`. */
+function outputBaseName(pathParts) {
+  if (pathParts.length === 2 && pathParts[0] === 'card' && pathParts[1] === 'sprite') return 'image';
+  if (pathParts.length === 2 && pathParts[0] === 'card' && pathParts[1] === 'miniatureSprite') {
+    return 'miniature';
+  }
+  return fieldSlug(pathParts);
+}
+
 function walkReplaceSync(obj, unitId, pathParts, dryRun, writes) {
   if (typeof obj === 'string') {
     const m = obj.match(DATA_URL_RE);
@@ -42,7 +51,7 @@ function walkReplaceSync(obj, unitId, pathParts, dryRun, writes) {
     const mime = m[1];
     const b64 = m[2];
     const ext = mimeToExt(mime);
-    const slug = fieldSlug(pathParts);
+    const slug = outputBaseName(pathParts);
     const relPosix = `catalog-units/${unitId}/${slug}.${ext}`;
     const outAbs = path.join(publicDir, relPosix);
     const url = `/${relPosix.split(path.sep).join('/')}`;
@@ -72,6 +81,7 @@ function walkReplaceSync(obj, unitId, pathParts, dryRun, writes) {
 
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
+  const quiet = process.argv.includes('--quiet');
   const files = (await fs.readdir(unitsDir)).filter((f) => f.endsWith('.json'));
   if (files.length === 0) {
     console.log('No unit JSON files in src/catalog/units');
@@ -90,7 +100,7 @@ async function main() {
     const writes = [];
     walkReplaceSync(data, unitId, [], dryRun, writes);
     if (writes.length === 0) {
-      console.log(`${f}: no data:image base64 fields`);
+      if (!quiet) console.log(`${f}: no data:image base64 fields`);
       continue;
     }
     for (const w of writes) {
@@ -118,7 +128,7 @@ async function main() {
     const writes = [];
     walkReplaceSync(data, unitId, [], dryRun, writes);
     if (writes.length === 0) {
-      console.log(`hotspots/${f}: no data:image base64 fields`);
+      if (!quiet) console.log(`hotspots/${f}: no data:image base64 fields`);
       continue;
     }
     for (const w of writes) {
@@ -133,11 +143,15 @@ async function main() {
   }
 
   const totalKb = allWrites.reduce((s, w) => s + w.size, 0) / 1024;
-  console.log(
-    dryRun
-      ? `\nDry run: ${allWrites.length} image(s), ~${totalKb.toFixed(0)} KiB would be written.`
-      : `\nDone: ${allWrites.length} image(s), ~${totalKb.toFixed(0)} KiB extracted.`,
-  );
+  if (quiet && allWrites.length === 0) {
+    /* no-op */
+  } else {
+    console.log(
+      dryRun
+        ? `\nDry run: ${allWrites.length} image(s), ~${totalKb.toFixed(0)} KiB would be written.`
+        : `\nDone: ${allWrites.length} image(s), ~${totalKb.toFixed(0)} KiB extracted.`,
+    );
+  }
 }
 
 main().catch((e) => {
