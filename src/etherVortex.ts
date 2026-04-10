@@ -4,6 +4,11 @@
 
 import { Hex } from './hex';
 
+import creationIcon from './assets/ether-vortex-domains/creation.webp?url';
+import deathIcon from './assets/ether-vortex-domains/death.webp?url';
+import destructionIcon from './assets/ether-vortex-domains/destruction.webp?url';
+import lifeIcon from './assets/ether-vortex-domains/life.webp?url';
+
 export type EtherVortexDomainId = 'life' | 'creation' | 'death' | 'destruction';
 
 export type EtherVortexState = {
@@ -16,6 +21,13 @@ export type EtherVortexState = {
   offBoardWorld?: { x: number; y: number };
 };
 
+const DOMAIN_ICON_SRC: Record<EtherVortexDomainId, string> = {
+  life: lifeIcon,
+  creation: creationIcon,
+  death: deathIcon,
+  destruction: destructionIcon,
+};
+
 export const ETHER_VORTEX_DOMAINS: readonly {
   id: EtherVortexDomainId;
   label: string;
@@ -23,10 +35,10 @@ export const ETHER_VORTEX_DOMAINS: readonly {
   /** Opaque fill for canvas `globalCompositeOperation: 'color'` over the vortex texture. */
   blendColor: string;
 }[] = [
-  { id: 'life', label: 'Жизнь', imageSrc: '/life.webp', blendColor: 'rgb(46, 160, 67)' },
-  { id: 'creation', label: 'Созидание', imageSrc: '/creation.webp', blendColor: 'rgb(255, 152, 0)' },
-  { id: 'death', label: 'Смерть', imageSrc: '/death.webp', blendColor: 'rgb(142, 36, 170)' },
-  { id: 'destruction', label: 'Разрушение', imageSrc: '/destruction.webp', blendColor: 'rgb(229, 57, 53)' },
+  { id: 'life', label: 'Жизнь', imageSrc: DOMAIN_ICON_SRC.life, blendColor: 'rgb(46, 160, 67)' },
+  { id: 'creation', label: 'Созидание', imageSrc: DOMAIN_ICON_SRC.creation, blendColor: 'rgb(255, 152, 0)' },
+  { id: 'death', label: 'Смерть', imageSrc: DOMAIN_ICON_SRC.death, blendColor: 'rgb(142, 36, 170)' },
+  { id: 'destruction', label: 'Разрушение', imageSrc: DOMAIN_ICON_SRC.destruction, blendColor: 'rgb(229, 57, 53)' },
 ] as const;
 
 const blendColorById = new Map<EtherVortexDomainId, string>(
