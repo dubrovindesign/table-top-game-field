@@ -14,6 +14,10 @@ export type CatalogArmyStyleRowOptions = {
   onMainClick?: () => void;
   /** Right column (points input, icon buttons, …). */
   actions?: HTMLElement[];
+  /**
+   * Placed below the thumb + name row, outside the main click target (e.g. inline list inputs).
+   */
+  inlineBelow?: HTMLElement;
 };
 
 export function buildCatalogArmyStyleRow(opts: CatalogArmyStyleRowOptions): HTMLElement {
@@ -57,13 +61,28 @@ export function buildCatalogArmyStyleRow(opts: CatalogArmyStyleRowOptions): HTML
 
   main.appendChild(thumb);
   main.appendChild(meta);
-  wrap.appendChild(main);
 
-  if (opts.actions?.length) {
-    const act = document.createElement('div');
-    act.className = 'ce-army-row-actions';
-    for (const n of opts.actions) act.appendChild(n);
-    wrap.appendChild(act);
+  const actionsEl =
+    opts.actions?.length != null && opts.actions.length > 0
+      ? (() => {
+          const act = document.createElement('div');
+          act.className = 'ce-army-row-actions';
+          for (const n of opts.actions) act.appendChild(n);
+          return act;
+        })()
+      : null;
+
+  if (opts.inlineBelow) {
+    wrap.classList.add('ce-catalog-army-row--stacked');
+    const top = document.createElement('div');
+    top.className = 'ce-catalog-army-row-top';
+    top.appendChild(main);
+    if (actionsEl) top.appendChild(actionsEl);
+    wrap.appendChild(top);
+    wrap.appendChild(opts.inlineBelow);
+  } else {
+    wrap.appendChild(main);
+    if (actionsEl) wrap.appendChild(actionsEl);
   }
 
   return wrap;

@@ -21,7 +21,8 @@ sudo -u "$APP_USER" mkdir -p "$NPM_CACHE"
 
 OLD_REV=$(sudo -u "$APP_USER" git rev-parse HEAD)
 sudo -u "$APP_USER" git fetch --quiet origin
-# `dist/` is rebuilt below; local edits there (e.g. index.html) block `git pull`.
+# `dist/` is not tracked in Git (see README); if an old clone still had tracked
+# dist files, reset them so `git pull` is not blocked. No-op when dist is untracked.
 sudo -u "$APP_USER" git checkout -- dist/ 2>/dev/null || true
 # Same: `npm run build` rewrites this file; it must not block the next pull.
 sudo -u "$APP_USER" git checkout -- public/generated/catalog-data.json 2>/dev/null || true

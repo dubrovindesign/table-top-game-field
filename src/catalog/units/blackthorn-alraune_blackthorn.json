@@ -4,8 +4,8 @@
   "card": {
     "name": "Альраун, Семя Терновника",
     "size": "small",
-    "health": 1,
-    "maxHealth": 1,
+    "health": 0,
+    "maxHealth": 0,
     "defense": {
       "white": 2,
       "green": 0
@@ -15,7 +15,7 @@
       "green": 0
     },
     "walk": 0,
-    "run": 2,
+    "run": 0,
     "domains": [
       "death"
     ],

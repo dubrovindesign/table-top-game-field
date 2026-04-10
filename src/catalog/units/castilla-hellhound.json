@@ -4,8 +4,8 @@
   "card": {
     "name": "Гончая Бездны",
     "size": "small",
-    "health": 1,
-    "maxHealth": 1,
+    "health": 0,
+    "maxHealth": 0,
     "defense": {
       "white": 0,
       "green": 0
@@ -14,8 +14,8 @@
       "white": 0,
       "green": 0
     },
-    "walk": 1,
-    "run": 2,
+    "walk": 0,
+    "run": 0,
     "domains": [
       "destruction"
     ],

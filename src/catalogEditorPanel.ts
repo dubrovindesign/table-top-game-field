@@ -810,7 +810,7 @@ export class CatalogEditorPanel {
     this.cardName.type = 'text';
 
     this.cardSize = el('select', 'catalog-editor-select') as HTMLSelectElement;
-    for (const s of ['small', 'big', 'large', 'huge'] as const) {
+    for (const s of ['small', 'large', 'big', 'huge'] as const) {
       this.cardSize.appendChild(new Option(s, s));
     }
     appendMainRow(
@@ -1870,7 +1870,7 @@ export class CatalogEditorPanel {
     this.lmTemplateSel.appendChild(new Option('Шаблон карточки (опц.)', ''));
     lmMk('Шаблон', this.lmTemplateSel);
     this.lmSize = el('select', 'catalog-editor-select') as HTMLSelectElement;
-    for (const s of ['small', 'big', 'large', 'huge'] as const) {
+    for (const s of ['small', 'large', 'big', 'huge'] as const) {
       this.lmSize.appendChild(new Option(s, s));
     }
     lmMk('Размер', this.lmSize);
@@ -2981,16 +2981,22 @@ export class CatalogEditorPanel {
           : baseSub;
       const displayName = `${name}${isNew ? ' (новый)' : ''}`;
       const editBtn = createPencilEditButton(() => this.openUnitFormEdit(id));
+      const inlineBelow = def ? this.buildUnitLibraryQuickStatsRow(id, def.card) : undefined;
       const row = buildCatalogArmyStyleRow({
         sprite: def ? unitPanelThumbSrc(def.card) : undefined,
         name: displayName,
         sub,
         onMainClick: () => this.openUnitFormEdit(id),
         actions: [editBtn],
+        inlineBelow,
       });
       row.dataset.unitId = id;
       row.draggable = true;
       row.addEventListener('dragstart', (e) => {
+        if ((e.target as HTMLElement).closest('input, select, textarea')) {
+          e.preventDefault();
+          return;
+        }
         dndState.draggedUnitId = id;
         row.classList.add('ce-row-dragging');
         e.dataTransfer?.setData('text/plain', id);
@@ -3752,6 +3758,121 @@ export class CatalogEditorPanel {
       setUnitPatch(id, { card, mercenary });
     }
     this.applyError.textContent = '';
+  }
+
+  /** Быстрое редактирование HP/шаг/бег/размер из списка юнитов (без модалки). */
+  private async persistUnitListQuickStats(
+    unitId: string,
+    next: { health: number; walk: number; run: number; size: UnitCardData['size'] },
+  ): Promise<void> {
+    const def = getCatalogUnit(unitId);
+    if (!def) return;
+    const h = Math.max(0, Math.floor(Number.isFinite(next.health) ? next.health : 0));
+    const walk = Math.max(0, Math.floor(Number.isFinite(next.walk) ? next.walk : 0));
+    const run = Math.max(0, Math.floor(Number.isFinite(next.run) ? next.run : 0));
+    const sizes: UnitCardData['size'][] = ['small', 'large', 'big', 'huge'];
+    const size = sizes.includes(next.size) ? next.size : def.card.size;
+
+    const cardRaw: UnitCardData = {
+      ...def.card,
+      health: h,
+      maxHealth: h,
+      walk,
+      run,
+      size,
+    };
+
+    try {
+      const cardResolved = await resolveCardImageUrlsForStorage(cardRaw);
+      const storage = getCatalogOverrides().newUnits[unitId] ? 'newUnit' : 'patch';
+      const card = finalizeCardForUnitSave(unitId, cardResolved, storage);
+      card.catalogUnitId = def.card.catalogUnitId ?? unitId;
+      const mercenary = def.mercenary === true;
+      if (getCatalogOverrides().newUnits[unitId]) {
+        setNewUnit(unitId, { ...def, card, mercenary });
+      } else {
+        setUnitPatch(unitId, { card, mercenary });
+      }
+      if (this.applyError) this.applyError.textContent = '';
+      if (this.selectedUnitId === unitId && !this.unitFormIsNew) {
+        const after = getCatalogUnit(unitId);
+        if (after) this.loadCardIntoForm(after.card, unitId);
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (this.applyError) this.applyError.textContent = msg;
+      console.warn('[catalogEditor] persistUnitListQuickStats', e);
+    }
+  }
+
+  private buildUnitLibraryQuickStatsRow(unitId: string, card: UnitCardData): HTMLElement {
+    const wrap = el('div', 'ce-unit-lib-inline');
+
+    const hpIn = el('input', 'catalog-editor-input ce-unit-lib-inline-hp') as HTMLInputElement;
+    hpIn.type = 'number';
+    hpIn.min = '0';
+    hpIn.step = '1';
+    hpIn.draggable = false;
+    hpIn.title = 'Здоровье (текущее = максимальному)';
+    hpIn.value = String(card.health ?? 0);
+
+    const walkIn = el('input', 'catalog-editor-input ce-unit-lib-inline-walk') as HTMLInputElement;
+    walkIn.type = 'number';
+    walkIn.min = '0';
+    walkIn.step = '1';
+    walkIn.draggable = false;
+    walkIn.title = 'Шаг';
+    walkIn.value = String(card.walk ?? 0);
+
+    const runIn = el('input', 'catalog-editor-input ce-unit-lib-inline-run') as HTMLInputElement;
+    runIn.type = 'number';
+    runIn.min = '0';
+    runIn.step = '1';
+    runIn.draggable = false;
+    runIn.title = 'Бег';
+    runIn.value = String(card.run ?? 0);
+
+    const sizeSel = el('select', 'catalog-editor-select ce-unit-lib-inline-size') as HTMLSelectElement;
+    sizeSel.draggable = false;
+    sizeSel.title = 'Размер миниатюры';
+    for (const s of ['small', 'large', 'big', 'huge'] as const) {
+      sizeSel.appendChild(new Option(s, s));
+    }
+    sizeSel.value = card.size;
+
+    const mkField = (label: string, control: HTMLElement) => {
+      const f = el('div', 'ce-unit-lib-inline-field');
+      const lab = el('span', 'ce-unit-lib-inline-label', label);
+      f.appendChild(lab);
+      f.appendChild(control);
+      wrap.appendChild(f);
+    };
+
+    mkField('Здор.', hpIn);
+    mkField('Шаг', walkIn);
+    mkField('Бег', runIn);
+    mkField('Разм.', sizeSel);
+
+    const read = () => ({
+      health: numOr0(hpIn.value),
+      walk: numOr0(walkIn.value),
+      run: numOr0(runIn.value),
+      size: sizeSel.value as UnitCardData['size'],
+    });
+
+    const save = () => void this.persistUnitListQuickStats(unitId, read());
+
+    hpIn.addEventListener('blur', save);
+    walkIn.addEventListener('blur', save);
+    runIn.addEventListener('blur', save);
+    sizeSel.addEventListener('change', save);
+    for (const inp of [hpIn, walkIn, runIn]) {
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+      });
+    }
+
+    return wrap;
   }
 
   private saveHotspots(): void {

@@ -1494,6 +1494,77 @@
   gap: 12px;
 }
 
+/* Stacked: row1 = thumb + meta + actions; row2 = full-width stats */
+.catalog-editor-panel .ce-catalog-army-row.ce-catalog-army-row--stacked.army-unit-row {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.ce-catalog-army-row-top {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.ce-catalog-army-row-top .ce-army-row-main,
+.ce-catalog-army-row-top .ce-army-row-main--btn {
+  flex: 1;
+  min-width: 0;
+}
+
+.ce-unit-lib-inline {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  width: 100%;
+  box-sizing: border-box;
+  gap: 8px;
+}
+
+.ce-unit-lib-inline-field {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: 11px;
+}
+
+.ce-unit-lib-inline-label {
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.2;
+}
+
+.ce-unit-lib-inline-field .catalog-editor-input,
+.ce-unit-lib-inline-field .catalog-editor-select {
+  /* сброс глобального flex:1; min-width:120px у .catalog-editor-input — иначе 4×120px + gap не влезают и поля «наезжают» */
+  flex: none;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 4px 6px;
+  font-size: 0.8rem;
+  min-height: 28px;
+}
+
+.ce-unit-lib-inline-hp,
+.ce-unit-lib-inline-walk,
+.ce-unit-lib-inline-run {
+  max-width: 100%;
+}
+
+.ce-unit-lib-inline-size {
+  width: 100%;
+  max-width: 100%;
+}
+
 .ce-army-row-actions {
   display: flex;
   align-items: center;
