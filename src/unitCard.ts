@@ -7,6 +7,7 @@
 import { ETHER_VORTEX_DOMAINS, type EtherVortexDomainId } from './etherVortex';
 import { getRosterDependencyHintsForUnit } from './armyCatalog';
 import { getHotspotsForUnit } from './catalog/catalogOverrides';
+import { publicUrl } from './publicUrl';
 import type { HotspotFile, HotspotRegion, LegacyHotspotBinding } from './catalog/hotspotTypes';
 
 // ── Types ──────────────────────────────────────────────────────
@@ -145,13 +146,15 @@ export interface UnitCardData {
  */
 export function unitMiniatureImageSrc(card: UnitCardData): string | undefined {
   const mini = card.miniatureSprite?.trim();
-  if (mini) return mini;
+  if (mini) return publicUrl(mini);
   const sp = card.sprite?.trim();
-  if (sp) return sp;
-  const cid = card.catalogUnitId;
+  if (sp) return publicUrl(sp);
+  const cid = card.catalogUnitId?.trim();
   if (cid) {
     const hf = getHotspotsForUnit(cid);
-    if (hf?.image?.trim()) return hf.image.trim();
+    const hi = hf?.image?.trim();
+    if (hi) return publicUrl(hi);
+    return publicUrl(`/catalog-units/${encodeURIComponent(cid)}/miniature.jpg`);
   }
   return undefined;
 }

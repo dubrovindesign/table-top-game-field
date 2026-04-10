@@ -453,7 +453,12 @@ function deepMerge<T extends object>(base: T, patch: Partial<T>): T {
 }
 
 function mergeCatalogUnitDef(base: CatalogUnitDef, patch: Partial<CatalogUnitDef>): CatalogUnitDef {
-  const out = deepMerge(base, patch) as CatalogUnitDef;
+  let effectivePatch = patch;
+  if (patch.card && patch.card.miniatureSprite === '') {
+    const { miniatureSprite: _omit, ...restCard } = patch.card;
+    effectivePatch = { ...patch, card: restCard };
+  }
+  const out = deepMerge(base, effectivePatch) as CatalogUnitDef;
   if (Object.prototype.hasOwnProperty.call(patch, 'requiresCommanderUnitId')) {
     const v = patch.requiresCommanderUnitId;
     if (v === null || v === '') {
@@ -795,6 +800,7 @@ export function getHotspotOverrideImage(unitId: string): string | undefined {
 /**
  * Когда для юнита в оверрайдах задана картинка хотспотов, не дублируем её в `card.sprite`
  * (иначе extract base64 создаёт два файла: card_sprite и image).
+ * Не трогаем sprite, если редактор только что залил файл (data URL) или указал другой URL, чем у хотспотов.
  * Для `newUnit` ключ `sprite` убираем; для патча к статике нужен `sprite: ''`, иначе deepMerge оставит sprite из базы.
  */
 export function finalizeCardForUnitSave(
@@ -803,7 +809,11 @@ export function finalizeCardForUnitSave(
   storage: 'newUnit' | 'patch',
 ): UnitCardData {
   if (!card || typeof card !== 'object') return card;
-  if (!getHotspotOverrideImage(unitId)) return card;
+  const hotImg = getHotspotOverrideImage(unitId);
+  if (!hotImg?.trim()) return card;
+  const spr = card.sprite?.trim() ?? '';
+  if (spr.startsWith('data:image/')) return card;
+  if (spr && spr !== hotImg.trim()) return card;
   if (storage === 'newUnit') {
     const { sprite: _omit, ...rest } = card;
     return rest as UnitCardData;

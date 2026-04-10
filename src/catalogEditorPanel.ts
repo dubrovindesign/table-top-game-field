@@ -907,7 +907,7 @@ export class CatalogEditorPanel {
       fileIn.type = 'file';
       fileIn.accept = 'image/*';
       fileIn.title =
-        'Файл сохраняется в оверрайды как data URL. Либо укажите путь под public/, например /card.png';
+        'Файл → data URL в localStorage (localhost). Для прода: файлы в public/ + короткий путь, либо экспорт и node scripts/extract-catalog-base64-images.mjs';
       fileIn.addEventListener('change', () => {
         const f = fileIn.files?.[0];
         if (!f) return;
@@ -1937,7 +1937,7 @@ export class CatalogEditorPanel {
       fileIn.type = 'file';
       fileIn.accept = 'image/*';
       fileIn.title =
-        'Файл сохраняется в оверрайды как data URL. Либо укажите путь под public/, например /card.png';
+        'Файл → data URL в localStorage (localhost). Для прода: файлы в public/ + короткий путь, либо экспорт и node scripts/extract-catalog-base64-images.mjs';
       fileIn.addEventListener('change', () => {
         const f = fileIn.files?.[0];
         if (!f) return;
@@ -2440,7 +2440,7 @@ export class CatalogEditorPanel {
     const spriteFallback =
       unitId && !card.sprite?.trim() ? getHotspotsForUnit(unitId)?.image?.trim() : '';
     this.cardSprite.value = card.sprite?.trim() || spriteFallback || '';
-    this.cardMiniatureSprite.value = card.miniatureSprite ?? '';
+    this.cardMiniatureSprite.value = card.miniatureSprite?.trim() ?? '';
     const conc = card.concentration ?? {};
     this.cardConcR.value = conc.red != null ? String(conc.red) : '';
     this.cardConcG.value = conc.green != null ? String(conc.green) : '';
@@ -4021,8 +4021,10 @@ export class CatalogEditorPanel {
     try {
       clearCardSpriteFromUnitOverrides(unitId);
       const defAfter = getCatalogUnit(unitId);
-      const thumb = defAfter ? unitPanelThumbSrc(defAfter.card) : undefined;
-      if (thumb) this.cardSprite.value = thumb;
+      // Лицо карточки — не путать с миниатюрой: unitPanelThumbSrc отдаёт miniatureSprite первым.
+      const face =
+        defAfter?.card.sprite?.trim() || getHotspotsForUnit(unitId)?.image?.trim() || '';
+      if (face) this.cardSprite.value = face;
     } catch (e) {
       console.warn('[catalogEditor] post-hotspot sprite dedupe failed', e);
     }
