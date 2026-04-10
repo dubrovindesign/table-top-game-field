@@ -365,21 +365,40 @@
  * Same coordinate space as `.uc-image-card-inner` + `.uc-image-card-img` on the unit card
  * (percent regions = fractions of the image box). Use outline, not border — border shifts
  * the content box and misaligns hotspots vs production.
+ *
+ * Preview is scaled down (max-height) so tall card art fits in the modal; the stage shrink-wraps
+ * the img so rect math still matches the visible bitmap.
  */
+.ce-unit-hotspot-art-column .ce-hotspot-stage {
+  --ce-hotspot-art-max-h: min(calc(92vh - 200px), 960px);
+}
+
 .ce-hotspot-stage {
+  --ce-hotspot-art-max-h: min(48vh, 500px);
   position: relative;
   display: block;
-  width: 100%;
-  border-radius: 8px;
+  align-self: center;
+  width: fit-content;
+  max-width: 100%;
+  border-radius: 10px;
   overflow: hidden;
-  background: #0a0a0e;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.04) 0%, transparent 55%),
+    #0a0a0e;
   outline: 1px solid rgba(255, 255, 255, 0.12);
   outline-offset: -1px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   user-select: none;
   touch-action: none;
 }
 
 .ce-hotspot-stage img.uc-image-card-img {
+  display: block;
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  max-height: var(--ce-hotspot-art-max-h);
+  vertical-align: top;
   pointer-events: none;
 }
 
@@ -605,9 +624,9 @@
   margin-bottom: 10px;
 }
 
-.ce-hs-save-row .catalog-editor-btn:first-child {
+.ce-hs-save-row .catalog-editor-btn {
   flex: 1;
-  min-width: min(100%, 220px);
+  min-width: min(100%, 140px);
 }
 
 .catalog-editor-split {
@@ -1097,6 +1116,65 @@
   min-height: 0;
 }
 
+/* Две колонки: слева карточка для хот-спотов, справа поля редактора */
+.ce-unit-form-split {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 16px;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+}
+
+.ce-unit-hotspot-art-column {
+  flex: 0 1 50%;
+  min-width: min(260px, 100%);
+  max-width: min(560px, 54%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  padding: 11px 12px 12px;
+  border-radius: 11px;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.055) 0%, rgba(8, 8, 12, 0.94) 48%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.38);
+}
+
+.ce-unit-hotspot-art-heading {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.ce-unit-form-split > .ce-unit-editor-col {
+  flex: 1 1 320px;
+  min-width: 0;
+  width: auto;
+}
+
+@media (max-width: 760px) {
+  .ce-unit-form-split {
+    flex-direction: column;
+  }
+
+  .ce-unit-hotspot-art-column {
+    position: static;
+    max-width: 100%;
+    flex: none;
+    width: 100%;
+  }
+
+  .ce-modal.ce-modal--unit.ce-modal--unit-hot-split {
+    width: min(640px, calc(100vw - 24px));
+  }
+}
+
 .ce-img-url-row .ce-img-url-row-controls {
   display: flex;
   flex-wrap: wrap;
@@ -1423,6 +1501,17 @@
 .ce-modal.ce-modal--unit {
   width: min(640px, 100%);
   max-height: min(92vh, 900px);
+  transition: width 0.2s ease;
+}
+
+.ce-modal.ce-modal--unit.ce-modal--unit-hot-split {
+  width: min(1080px, calc(100vw - 32px));
+  max-width: 100%;
+}
+
+.ce-modal.ce-modal--unit > .ce-unit-form-view.ce-modal-pane {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 /* Leader modal: «Ростер» — шире окно; высота по контенту, список ростера с собственным скроллом */

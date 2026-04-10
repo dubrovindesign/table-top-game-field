@@ -266,6 +266,8 @@ export class CatalogEditorPanel {
 
   private modalBackdrop!: HTMLElement;
   private unitModalBackdrop!: HTMLElement;
+  /** Корневой `.ce-modal` окна юнита — ширина при вкладке «Хотспоты». */
+  private unitModalEl!: HTMLDivElement;
   private leaderModalLeaderId: string | null = null;
   private leaderModalIsNew = false;
   private leaderModalOpen = false;
@@ -398,6 +400,8 @@ export class CatalogEditorPanel {
   private unitAddListBtn!: HTMLButtonElement;
   private unitFactionFilterSel!: HTMLSelectElement;
   private unitHotSectionWrap!: HTMLElement;
+  /** Левая колонка: превью карточки для разметки хот-спотов (только вкладка «Хотспоты»). */
+  private unitHotspotArtColumn!: HTMLElement;
   private removeUnitBtn!: HTMLButtonElement;
 
   private leaderAttachedUnitsEl!: HTMLElement;
@@ -729,8 +733,14 @@ export class CatalogEditorPanel {
     this.unitPresetHintEl.hidden = true;
     this.unitFormViewWrap.appendChild(this.unitPresetHintEl);
 
+    const formSplit = el('div', 'ce-unit-form-split');
+    this.unitHotspotArtColumn = el('aside', 'ce-unit-hotspot-art-column');
+    this.unitHotspotArtColumn.setAttribute('aria-label', 'Превью карточки для хот-спотов');
+    this.unitHotspotArtColumn.hidden = true;
     const unitEditorCol = el('div', 'ce-unit-editor-col');
-    this.unitFormViewWrap.appendChild(unitEditorCol);
+    formSplit.appendChild(this.unitHotspotArtColumn);
+    formSplit.appendChild(unitEditorCol);
+    this.unitFormViewWrap.appendChild(formSplit);
 
     const newBlock = el('div', 'catalog-editor-row ce-unit-stub-fields');
     newBlock.style.flexDirection = 'column';
@@ -793,30 +803,30 @@ export class CatalogEditorPanel {
     });
 
     const unitSubTabs = el('div', 'catalog-editor-tabs ce-unit-subtabs');
-    this.unitSubTabMain = el('button', 'catalog-editor-tab catalog-editor-tab--active', 'Основное') as HTMLButtonElement;
+    this.unitSubTabHot = el('button', 'catalog-editor-tab catalog-editor-tab--active', 'Хотспоты') as HTMLButtonElement;
+    this.unitSubTabMain = el('button', 'catalog-editor-tab', 'Основное') as HTMLButtonElement;
     this.unitSubTabDice = el('button', 'catalog-editor-tab', 'Кубы') as HTMLButtonElement;
     this.unitSubTabAtk = el('button', 'catalog-editor-tab', 'Атаки') as HTMLButtonElement;
-    this.unitSubTabHot = el('button', 'catalog-editor-tab', 'Хотспоты') as HTMLButtonElement;
     this.unitSubTabMain.type = 'button';
     this.unitSubTabDice.type = 'button';
     this.unitSubTabAtk.type = 'button';
     this.unitSubTabHot.type = 'button';
-    this.unitFormMainWrap = el('div', 'ce-unit-subpane ce-unit-subpane--active catalog-editor-data-section');
+    this.unitFormMainWrap = el('div', 'ce-unit-subpane catalog-editor-data-section');
+    this.unitFormMainWrap.hidden = true;
     this.unitFormDiceWrap = el('div', 'ce-unit-subpane catalog-editor-data-section');
     this.unitFormDiceWrap.hidden = true;
     this.unitFormAtkWrap = el('div', 'ce-unit-subpane catalog-editor-data-section');
     this.unitFormAtkWrap.hidden = true;
-    const hotSection = el('div', 'catalog-editor-hot-section ce-unit-subpane');
-    hotSection.hidden = true;
+    const hotSection = el('div', 'catalog-editor-hot-section ce-unit-subpane ce-unit-subpane--active');
     this.unitHotSectionWrap = hotSection;
     this.unitSubTabMain.addEventListener('click', () => this.activateUnitSubPane('main'));
     this.unitSubTabDice.addEventListener('click', () => this.activateUnitSubPane('dice'));
     this.unitSubTabAtk.addEventListener('click', () => this.activateUnitSubPane('atk'));
     this.unitSubTabHot.addEventListener('click', () => this.activateUnitSubPane('hot'));
+    unitSubTabs.appendChild(this.unitSubTabHot);
     unitSubTabs.appendChild(this.unitSubTabMain);
     unitSubTabs.appendChild(this.unitSubTabDice);
     unitSubTabs.appendChild(this.unitSubTabAtk);
-    unitSubTabs.appendChild(this.unitSubTabHot);
     unitEditorCol.appendChild(unitSubTabs);
 
     this.applyError = el('div', 'catalog-editor-error');
@@ -1077,7 +1087,7 @@ export class CatalogEditorPanel {
           this.hotspotImg.src = dataUrl;
           this.hotspotImageInput.value = dataUrl;
           this.hotspotHint.textContent =
-            'Изображение встроено (data URL). Нажмите «Сохранить хотспоты», чтобы записать в оверрайды.';
+            'Изображение встроено (data URL). Нажмите «Сохранить» внизу формы, чтобы записать в оверрайды.';
         })
         .catch((e) => {
           console.error(e);
@@ -1177,10 +1187,6 @@ export class CatalogEditorPanel {
     });
     this.hsRangeUnit.addEventListener('change', () => this.applyHotspotFieldsToSelected());
 
-    const saveHotBtn = el('button', 'catalog-editor-btn', 'Сохранить хотспоты');
-    saveHotBtn.type = 'button';
-    saveHotBtn.addEventListener('click', () => void this.saveHotspots());
-
     this.saveHotspotPresetBtn = el(
       'button',
       'catalog-editor-btn catalog-editor-btn-secondary',
@@ -1196,10 +1202,13 @@ export class CatalogEditorPanel {
 
     this.hotspotHint = el('div', 'catalog-editor-hint');
 
-    hotSection.appendChild(el('label', '', 'URL картинки (public/)'));
-    hotSection.appendChild(this.hotspotImageInput);
-    hotSection.appendChild(fileIn);
-    hotSection.appendChild(this.hotspotStage);
+    const artHeading = el('div', 'ce-unit-hotspot-art-heading', 'Карточка');
+    artHeading.title = 'Превью для разметки зон; поля справа — параметры и сохранение';
+    this.unitHotspotArtColumn.appendChild(artHeading);
+    this.unitHotspotArtColumn.appendChild(el('label', '', 'URL картинки (public/)'));
+    this.unitHotspotArtColumn.appendChild(this.hotspotImageInput);
+    this.unitHotspotArtColumn.appendChild(fileIn);
+    this.unitHotspotArtColumn.appendChild(this.hotspotStage);
     hotSection.appendChild(addReg);
     hotSection.appendChild(hotKeysHint);
     hotSection.appendChild(el('label', '', 'Параметры выбранной зоны'));
@@ -1211,7 +1220,7 @@ export class CatalogEditorPanel {
     const applyPresetAllBtn = el(
       'button',
       'catalog-editor-btn catalog-editor-btn-secondary',
-      'Пресет → все юниты',
+      'Пресет на все юниты',
     ) as HTMLButtonElement;
     applyPresetAllBtn.type = 'button';
     applyPresetAllBtn.title =
@@ -1219,17 +1228,16 @@ export class CatalogEditorPanel {
     applyPresetAllBtn.addEventListener('click', () => this.applyHotspotLayoutPresetToAllCatalogUnits());
 
     const saveHotRow = el('div', 'ce-hs-save-row');
-    saveHotRow.appendChild(saveHotBtn);
     saveHotRow.appendChild(this.saveHotspotPresetBtn);
     saveHotRow.appendChild(applyPresetAllBtn);
     hotSection.appendChild(saveHotRow);
     hotSection.appendChild(this.hotspotHint);
     this.refreshHotspotPresetSelect();
 
+    unitEditorCol.appendChild(hotSection);
     unitEditorCol.appendChild(this.unitFormMainWrap);
     unitEditorCol.appendChild(this.unitFormDiceWrap);
     unitEditorCol.appendChild(this.unitFormAtkWrap);
-    unitEditorCol.appendChild(hotSection);
 
     const formFooter = el('div', 'ce-unit-form-footer catalog-editor-row');
     this.removeUnitBtn = el('button', 'catalog-editor-btn catalog-editor-btn-danger', 'Удалить юнита') as HTMLButtonElement;
@@ -1238,6 +1246,7 @@ export class CatalogEditorPanel {
     this.removeUnitBtn.addEventListener('click', () => this.deleteSelectedUnit());
     this.unitFormSaveBtn = el('button', 'catalog-editor-btn', 'Сохранить') as HTMLButtonElement;
     this.unitFormSaveBtn.type = 'button';
+    this.unitFormSaveBtn.title = 'Сохраняет карточку юнита и хотспоты в оверрайды.';
     this.unitFormSaveBtn.addEventListener('click', () => void this.saveUnitForm());
     formFooter.appendChild(this.removeUnitBtn);
     formFooter.appendChild(this.unitFormSaveBtn);
@@ -1522,6 +1531,8 @@ export class CatalogEditorPanel {
     this.unitFormDiceWrap.hidden = which !== 'dice';
     this.unitFormAtkWrap.hidden = which !== 'atk';
     this.unitHotSectionWrap.hidden = which !== 'hot';
+    this.unitHotspotArtColumn.hidden = which !== 'hot';
+    this.unitModalEl.classList.toggle('ce-modal--unit-hot-split', which === 'hot');
   }
 
   private backFromUnitFormIfNeeded(): void {
@@ -1532,6 +1543,8 @@ export class CatalogEditorPanel {
     this.closeHotspotQuickEditDiscard();
     if (this.unitRequiresCommanderDetails) this.unitRequiresCommanderDetails.open = false;
     this.unitModalBackdrop.classList.remove('ce-modal-backdrop--open');
+    this.unitModalEl.classList.remove('ce-modal--unit-hot-split');
+    this.unitHotspotArtColumn.hidden = true;
     this.unitFormIsNew = false;
     this.unitCreatePresetLeaderId = null;
     this.selectedUnitId = null;
@@ -1580,7 +1593,7 @@ export class CatalogEditorPanel {
     }
     this.unitFormTitleEl.textContent = 'Новый юнит';
     this.removeUnitBtn.hidden = true;
-    this.activateUnitSubPane('main');
+    this.activateUnitSubPane('hot');
     this.applyDefaultHotspotLayoutPresetForNewUnit();
   }
 
@@ -1637,7 +1650,7 @@ export class CatalogEditorPanel {
     this.unitFormTitleEl.textContent = `Редактирование: ${unitId}`;
     this.removeUnitBtn.hidden = false;
     this.loadUnitIntoEditor(unitId);
-    this.activateUnitSubPane('main');
+    this.activateUnitSubPane('hot');
   }
 
   private loadUnitIntoEditor(unitId: string): void {
@@ -1710,7 +1723,6 @@ export class CatalogEditorPanel {
       const rawCard = this.readCardFromForm(stubDef.card);
       if (!rawCard) return;
 
-      let compositeApplied = false;
       if (faceF && backF) {
         try {
           const mini = await this.applyFaceBackCompositeForUnit(
@@ -1722,7 +1734,6 @@ export class CatalogEditorPanel {
           );
           rawCard.miniatureSprite = mini;
           rawCard.sprite = undefined;
-          compositeApplied = true;
         } catch (e) {
           alert(e instanceof Error ? e.message : 'Ошибка склейки карточки (лицо + оборот)');
           return;
@@ -1741,14 +1752,13 @@ export class CatalogEditorPanel {
         addRosterSlot(this.unitCreatePresetLeaderId, { unitId: id, maxCopies: 1 });
         this.unitCreatePresetLeaderId = null;
       }
-      if (!compositeApplied) {
-        await this.saveHotspotsAsync({ softIfNoImage: true });
-      }
+      await this.saveHotspotsAsync({ softIfNoImage: true });
       this.finishUnitForm();
       return;
     }
     await this.applyUnitPatch();
     if (!this.applyError.textContent) {
+      await this.saveHotspotsAsync({ softIfNoImage: true });
       this.finishUnitForm();
     }
   }
@@ -2015,7 +2025,8 @@ export class CatalogEditorPanel {
 
   private buildUnitModal(): void {
     this.unitModalBackdrop = el('div', 'ce-modal-backdrop ce-unit-modal-backdrop');
-    const modal = el('div', 'ce-modal ce-modal--unit');
+    const modal = el('div', 'ce-modal ce-modal--unit') as HTMLDivElement;
+    this.unitModalEl = modal;
     modal.addEventListener('click', (e) => e.stopPropagation());
     const head = el('div', 'ce-modal__header');
     head.appendChild(this.unitFormTitleEl);
@@ -3669,7 +3680,7 @@ export class CatalogEditorPanel {
           ? `Готово: ${applied} юнитов. Пропущено: ${skipped.length} (см. консоль).`
           : `Готово: ${applied} юнитов.`;
       if (skipped.length) {
-        console.warn('[catalog editor] Пресет → все юниты: пропуски', skipped);
+        console.warn('[catalog editor] Пресет на все юниты: пропуски', skipped);
       }
       this.refreshHotspotPresetSelect();
       window.dispatchEvent(new CustomEvent(CATALOG_OVERRIDES_CHANGED));
@@ -3966,10 +3977,6 @@ export class CatalogEditorPanel {
     return wrap;
   }
 
-  private saveHotspots(): void {
-    void this.saveHotspotsAsync();
-  }
-
   /** Для нового юнита id берётся из поля «Идентификатор», пока юнит ещё не в `selectedUnitId`. */
   private resolveHotspotUnitIdForSave(): string | null {
     if (this.selectedUnitId) return this.selectedUnitId;
@@ -4004,7 +4011,7 @@ export class CatalogEditorPanel {
       }
       if (opts?.softIfNoImage) {
         this.hotspotHint.textContent =
-          'Юнит сохранён. Хотспоты не записаны: укажите URL картинки в хотспотах и нажмите «Сохранить хотспоты».';
+          'Юнит сохранён. Хотспоты не записаны: укажите URL картинки в хотспотах и снова нажмите «Сохранить».';
         return;
       }
       alert(
@@ -4012,11 +4019,14 @@ export class CatalogEditorPanel {
       );
       return;
     }
+    const prevH = getHotspotsForUnit(unitId);
     const file: HotspotFile = {
       image,
       title: getCatalogUnit(unitId)?.card.name,
       regions: this.hotspotRegions.map((r) => stripRegionForSave(structuredClone(r))),
     };
+    if (prevH?.scrollLayout) file.scrollLayout = prevH.scrollLayout;
+    if (prevH?.referenceSize) file.referenceSize = prevH.referenceSize;
     setHotspotsForUnit(unitId, file);
     try {
       clearCardSpriteFromUnitOverrides(unitId);

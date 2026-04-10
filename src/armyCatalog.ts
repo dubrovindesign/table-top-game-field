@@ -121,7 +121,7 @@ export function listRosterRows(
     const def = getCatalogUnit(slot.unitId);
     if (!def) continue;
     const kw = def.card.keywords?.join(' ') ?? '';
-    const hay = `${def.card.name} ${kw}`.toLowerCase();
+    const hay = `${slot.unitId} ${def.card.name} ${kw}`.toLowerCase();
     if (q && !hay.includes(q)) continue;
     let rosterBlocked = false;
     let rosterBlockedReason: string | undefined;

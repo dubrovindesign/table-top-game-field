@@ -63,6 +63,25 @@ function getRoomFromUrl(): string | null {
   return q.toLowerCase();
 }
 
+function extractRoomIdFromPastedLink(raw: string): string | null {
+  // Accept either a full URL with ?room=… or a bare room id.
+  // 1) Try to parse as URL and read the `room` param.
+  try {
+    const u = new URL(raw);
+    const q = u.searchParams.get('room');
+    if (q && /^[a-z0-9]{4,16}$/i.test(q)) return q.toLowerCase();
+  } catch {
+    /* not a URL, fall through */
+  }
+  // 2) Fall back: regex-scan for room=… anywhere in the string (handles
+  //    malformed pastes, e.g. messaging apps that strip the scheme).
+  const m = raw.match(/[?&]room=([a-z0-9]{4,16})(?:[&#]|$)/i);
+  if (m) return m[1].toLowerCase();
+  // 3) Bare id paste.
+  if (/^[a-z0-9]{4,16}$/i.test(raw)) return raw.toLowerCase();
+  return null;
+}
+
 function setRoomInUrl(roomId: string): void {
   const u = new URL(location.href);
   u.searchParams.set('room', roomId);
@@ -93,10 +112,19 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
   root.innerHTML = `
     <div class="mp-panel" data-view="home">
       <div class="mp-title">Мультиплеер</div>
-      <p class="mp-hint">WebSocket: <code class="mp-ws-url"></code></p>
       <p class="mp-hint mp-connect-status mp-hidden" aria-live="polite"></p>
       <button type="button" class="mp-btn mp-btn-primary" data-action="create">Создать стол</button>
-      <p class="mp-hint mp-lan-hint"></p>
+      <div class="mp-join-link-row">
+        <input
+          type="text"
+          class="mp-join-link-input"
+          data-action="join-link-input"
+          placeholder="Вставьте ссылку приглашения"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button type="button" class="mp-btn mp-btn-primary mp-btn-compact" data-action="join-link">Присоединиться за стол</button>
+      </div>
     </div>
     <div class="mp-panel mp-hidden" data-view="join">
       <div class="mp-title" id="mp-join-gate-title">Комната <code class="mp-room-id"></code></div>
@@ -194,12 +222,6 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
   );
 
   const wsUrl = defaultWsUrl();
-  root.querySelector('.mp-ws-url')!.textContent = wsUrl;
-
-  const lanHint = root.querySelector('.mp-lan-hint') as HTMLElement;
-  lanHint.textContent =
-    'Сервер комнат: npm run dev:server (порт 3333). Страница подключается через прокси /__mp_ws к 127.0.0.1:3333. ' +
-    'Другой игрок: тот же Wi‑Fi, ссылка с ?room=…';
 
   const views = {
     home: root.querySelector('[data-view="home"]') as HTMLElement,
@@ -818,6 +840,28 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       ensureConnectedThen(() => {
         client.send({ type: 'createRoom' });
       });
+      return;
+    }
+    if (action === 'join-link') {
+      const input = root.querySelector('.mp-join-link-input') as HTMLInputElement;
+      const raw = (input.value || '').trim();
+      if (!raw) return;
+      const roomId = extractRoomIdFromPastedLink(raw);
+      if (!roomId) {
+        input.classList.add('mp-join-link-input--error');
+        const clear = (): void => {
+          input.classList.remove('mp-join-link-input--error');
+          input.removeEventListener('input', clear);
+        };
+        input.addEventListener('input', clear);
+        return;
+      }
+      // Navigate to the current origin with ?room=<id>. The existing init code
+      // detects the param on load and opens the join-gate dialog, reusing the
+      // whole existing join flow unchanged.
+      const target = new URL(location.href);
+      target.searchParams.set('room', roomId);
+      location.href = target.toString();
       return;
     }
     if (action === 'join-player') {

@@ -29,7 +29,13 @@ import {
   type GodCardDef,
 } from './godCards';
 import { applyArmyUnitThumbClip } from './armyThumbShapes';
-import { DOMAIN_LABELS, UnitCard, unitPanelThumbSrc, type DiceRequest } from './unitCard';
+import {
+  DOMAIN_LABELS,
+  UnitCard,
+  unitPanelThumbSrc,
+  type DiceRequest,
+  type UnitSize,
+} from './unitCard';
 
 const DND_MIME = 'application/x-army-unit';
 
@@ -63,6 +69,51 @@ function pickAvailableGodCardId(group: readonly GodCardDef[], inPlay: ReadonlySe
     if (!inPlay.has(d.id)) return d.id;
   }
   return null;
+}
+
+/** Порядок «малый → огромный» для сортировки ростера. */
+const ROSTER_SIZE_RANK: Record<UnitSize, number> = {
+  small: 0,
+  large: 1,
+  big: 2,
+  huge: 3,
+};
+
+type RosterSortMode = 'roster' | 'pointsAsc' | 'pointsDesc' | 'sizeDesc' | 'sizeAsc' | 'nameAz';
+
+const ROSTER_SORT_CYCLE: readonly RosterSortMode[] = [
+  'roster',
+  'pointsAsc',
+  'pointsDesc',
+  'sizeDesc',
+  'sizeAsc',
+  'nameAz',
+] as const;
+
+const ROSTER_SORT_BUTTON_TEXT: Record<RosterSortMode, string> = {
+  roster: 'Каталог',
+  pointsAsc: '↑ очки',
+  pointsDesc: '↓ очки',
+  sizeDesc: '↓ разм.',
+  sizeAsc: '↑ разм.',
+  nameAz: 'А–Я',
+};
+
+const ROSTER_SORT_TITLE: Record<RosterSortMode, string> = {
+  roster: 'Порядок как в каталоге лидера. Нажмите — от дешёвых к дорогим.',
+  pointsAsc: 'Сортировка: от дешёвых к дорогим (по очкам). Нажмите — следующий режим.',
+  pointsDesc: 'Сортировка: от дорогих к дешёвым. Нажмите — следующий режим.',
+  sizeDesc: 'Сортировка: от огромных к малым. Нажмите — следующий режим.',
+  sizeAsc: 'Сортировка: от малых к огромным. Нажмите — следующий режим.',
+  nameAz: 'Сортировка: по алфавиту (имя на карте). Нажмите — снова порядок каталога.',
+};
+
+function godCardMatchesArmySearch(c: GodCardDef, q: string): boolean {
+  if (!q) return true;
+  const tags = (c.tags ?? []).join(' ');
+  const cost = c.crystalCost != null ? String(c.crystalCost) : '';
+  const hay = `${c.id} ${c.title} ${c.text} ${tags} ${cost}`.toLowerCase();
+  return hay.includes(q);
 }
 
 function applyInventoryCardSpriteCss(el: HTMLElement, spriteUrl: string): void {
@@ -111,7 +162,10 @@ export class ArmyBuilderPanel {
   private factionTabs: HTMLElement;
   private leadersSection: HTMLElement;
   private leadersListEl: HTMLElement;
-  private searchInput: HTMLInputElement;
+  private rosterSearchInput: HTMLInputElement;
+  private rosterSortBtn: HTMLButtonElement;
+  private rosterSortMode: RosterSortMode = 'roster';
+  private godSearchInput: HTMLInputElement;
   private pointsBlock: HTMLElement;
   private pointsCapBtn: HTMLButtonElement;
   private pointsFillEl: HTMLElement;
@@ -240,13 +294,6 @@ export class ArmyBuilderPanel {
     this.pointsBlock.appendChild(pointsInner);
     this.pointsBlock.appendChild(this.pointsCapMenu);
 
-    this.searchInput = el('input', 'army-search-input') as HTMLInputElement;
-    this.searchInput.type = 'search';
-    this.searchInput.placeholder = 'Имя или ключевое слово…';
-    this.searchInput.setAttribute('aria-label', 'Фильтр по имени или ключевому слову');
-    const searchRow = el('div', 'army-search-row');
-    searchRow.appendChild(this.searchInput);
-
     this.factionTabs = el('div', 'army-faction-tabs');
 
     this.leadersSection = el('div', 'army-leaders-section');
@@ -285,6 +332,27 @@ export class ArmyBuilderPanel {
     this.rosterPanel.id = 'army-main-panel-roster';
     this.rosterPanel.setAttribute('role', 'tabpanel');
     this.rosterPanel.setAttribute('aria-labelledby', 'army-main-tab-roster');
+
+    const rosterToolbar = el('div', 'army-roster-toolbar');
+    this.rosterSearchInput = el('input', 'army-search-input army-roster-search-input') as HTMLInputElement;
+    this.rosterSearchInput.type = 'search';
+    this.rosterSearchInput.placeholder = 'Поиск юнита (имя, id, слова)…';
+    this.rosterSearchInput.setAttribute('aria-label', 'Поиск по юнитам ростера');
+    this.rosterSortBtn = el('button', 'army-roster-sort-btn', ROSTER_SORT_BUTTON_TEXT[this.rosterSortMode]) as HTMLButtonElement;
+    this.rosterSortBtn.type = 'button';
+    this.rosterSortBtn.setAttribute('aria-label', ROSTER_SORT_TITLE[this.rosterSortMode]);
+    this.rosterSortBtn.title = ROSTER_SORT_TITLE[this.rosterSortMode];
+    this.rosterSortBtn.addEventListener('click', () => {
+      const i = ROSTER_SORT_CYCLE.indexOf(this.rosterSortMode);
+      this.rosterSortMode = ROSTER_SORT_CYCLE[(i + 1) % ROSTER_SORT_CYCLE.length]!;
+      this.rosterSortBtn.textContent = ROSTER_SORT_BUTTON_TEXT[this.rosterSortMode];
+      this.rosterSortBtn.setAttribute('aria-label', ROSTER_SORT_TITLE[this.rosterSortMode]);
+      this.rosterSortBtn.title = ROSTER_SORT_TITLE[this.rosterSortMode];
+      this.renderList();
+    });
+    rosterToolbar.appendChild(this.rosterSearchInput);
+    rosterToolbar.appendChild(this.rosterSortBtn);
+    this.rosterPanel.appendChild(rosterToolbar);
     this.rosterPanel.appendChild(this.listEl);
 
     this.godsPanel = el('div', 'army-tab-panel');
@@ -292,6 +360,13 @@ export class ArmyBuilderPanel {
     this.godsPanel.setAttribute('role', 'tabpanel');
     this.godsPanel.setAttribute('aria-labelledby', 'army-main-tab-gods');
     this.godsPanel.hidden = true;
+    const godSearchRow = el('div', 'army-god-search-row');
+    this.godSearchInput = el('input', 'army-search-input') as HTMLInputElement;
+    this.godSearchInput.type = 'search';
+    this.godSearchInput.placeholder = 'Поиск карты бога…';
+    this.godSearchInput.setAttribute('aria-label', 'Поиск по картам богов');
+    godSearchRow.appendChild(this.godSearchInput);
+    this.godsPanel.appendChild(godSearchRow);
     this.godsPanel.appendChild(this.godSection);
 
     this.inventoryPanel = el('div', 'army-tab-panel');
@@ -310,7 +385,6 @@ export class ArmyBuilderPanel {
 
     this.panel.appendChild(header);
     this.panel.appendChild(this.pointsBlock);
-    this.panel.appendChild(searchRow);
     this.panel.appendChild(this.factionTabs);
     this.panel.appendChild(this.leadersSection);
     this.panel.appendChild(this.mainTabBar);
@@ -338,7 +412,8 @@ export class ArmyBuilderPanel {
 
     this.buildFactionTabs();
     this.renderLeaders();
-    this.searchInput.addEventListener('input', () => this.renderList());
+    this.rosterSearchInput.addEventListener('input', () => this.renderList());
+    this.godSearchInput.addEventListener('input', () => this.renderGodSection());
     this.renderList();
     this.renderGodSection();
     this.renderInventorySection();
@@ -822,7 +897,8 @@ export class ArmyBuilderPanel {
     this.listEl.replaceChildren();
     if (!this.selectedLeaderId) return;
 
-    const rows = listRosterRows(this.selectedLeaderId, this.searchInput.value, this.opts.getUsedCount);
+    let rows = listRosterRows(this.selectedLeaderId, this.rosterSearchInput.value, this.opts.getUsedCount);
+    rows = this.applyRosterSort(rows);
     for (const row of rows) {
       this.listEl.appendChild(this.makeTroopRow(row));
     }
@@ -838,6 +914,38 @@ export class ArmyBuilderPanel {
     if (rows.length === 0) {
       this.listEl.appendChild(el('div', 'army-list-empty', 'Нет юнитов по фильтру'));
     }
+  }
+
+  private applyRosterSort(rows: RosterRowView[]): RosterRowView[] {
+    const out = [...rows];
+    const mode = this.rosterSortMode;
+    const cmpPoints = (a: RosterRowView, b: RosterRowView) => a.points - b.points || a.name.localeCompare(b.name, 'ru');
+    const cmpSize = (a: RosterRowView, b: RosterRowView) =>
+      ROSTER_SIZE_RANK[a.card.size] - ROSTER_SIZE_RANK[b.card.size] || a.name.localeCompare(b.name, 'ru');
+    const cmpName = (a: RosterRowView, b: RosterRowView) =>
+      a.name.localeCompare(b.name, 'ru', { sensitivity: 'base' }) || a.unitId.localeCompare(b.unitId);
+    switch (mode) {
+      case 'roster':
+        break;
+      case 'pointsAsc':
+        out.sort(cmpPoints);
+        break;
+      case 'pointsDesc':
+        out.sort((a, b) => -cmpPoints(a, b));
+        break;
+      case 'sizeAsc':
+        out.sort(cmpSize);
+        break;
+      case 'sizeDesc':
+        out.sort((a, b) => -cmpSize(a, b));
+        break;
+      case 'nameAz':
+        out.sort(cmpName);
+        break;
+      default:
+        break;
+    }
+    return out;
   }
 
   private makeTroopRow(row: RosterRowView): HTMLElement {
@@ -930,14 +1038,18 @@ export class ArmyBuilderPanel {
     }
     const inPlay = getArmyRosterGodCardIdsInPlay();
     const cards = godCardsForLeader(leaderId);
-    const groups = groupGodCardsForArmyCatalog(cards);
+    const q = this.godSearchInput.value.trim().toLowerCase();
+    const allGroups = groupGodCardsForArmyCatalog(cards);
+    const groups = allGroups.filter((g) => godCardMatchesArmySearch(g[0]!, q));
     for (const group of groups) {
       this.godCatalogEl.appendChild(this.makeGodCardGroupRow(group, inPlay));
     }
     if (this.godCatalogEl.children.length === 0) {
-      this.godCatalogEl.appendChild(
-        el('div', 'army-list-empty', 'Нет карт богов для этого лидера'),
-      );
+      const emptyMsg =
+        q.length > 0 && allGroups.length > 0
+          ? 'Нет карт богов по фильтру'
+          : 'Нет карт богов для этого лидера';
+      this.godCatalogEl.appendChild(el('div', 'army-list-empty', emptyMsg));
     }
   }
 

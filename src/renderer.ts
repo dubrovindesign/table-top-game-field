@@ -3238,7 +3238,6 @@ export class Renderer {
       if (this.isPeerDraggingEntity('big', i)) return;
       const { layout: lay } = this;
       const baseRadius = Math.min(lay.size.x, lay.size.y) * 1.58;
-      const ringPreviewInner = 0.62 * BIG_MINI_VISUAL_SCALE;
       const badgeRadius = baseRadius * BIG_MINI_VISUAL_SCALE;
       const bigActR = baseRadius * BIG_MINI_VISUAL_SCALE * 0.22;
       if (this.draggingBigMiniIndex === i && this.bigMiniPreviewPosition) {
@@ -3254,15 +3253,6 @@ export class Renderer {
             previewRotModel,
             this.bigMiniSpriteSrcs[i] ?? null,
           );
-          ctx.globalAlpha = 0.6;
-          this.drawBigMiniRingAtPoint(
-            p,
-            ringPreviewInner,
-            config.bigMiniSymbolColor,
-            2,
-            previewRotModel,
-          );
-          ctx.globalAlpha = 1.0;
           this.drawHealthBadgeAt(
             p,
             badgeRadius,
@@ -3298,13 +3288,6 @@ export class Renderer {
     if (this.selectedHugeMiniIndex !== null) {
       const i = this.selectedHugeMiniIndex;
       if (this.isPeerDraggingEntity('huge', i)) return;
-      const cells = this.hugeTriangleLocalCellCenters(layout);
-      const bounds = this.hugeMiniFootprintBoundsLocal(layout);
-      const hugePreviewRingPathScale = this.miniatureSelectionRingPathScale(
-        HUGE_MINI_VISUAL_SCALE,
-        bounds,
-        2,
-      );
       const baseRadius = Math.min(layout.size.x, layout.size.y) * 1.58;
       const badgeRadius = baseRadius * HUGE_MINI_VISUAL_SCALE;
       const hugeActR =
@@ -3326,19 +3309,6 @@ export class Renderer {
             this.hugeMiniSpriteOffsetsLocal[i] ?? { x: 0, y: 0 },
             this.hugeMiniSpriteRotationDegLocal[i] ?? 0,
           );
-          ctx.globalAlpha = 0.6;
-          this.drawShapeRingAtPoint(
-            p,
-            cells,
-            layout,
-            hugePreviewRingPathScale,
-            config.bigMiniSymbolColor,
-            2,
-            previewRotModel,
-            undefined,
-            true,
-          );
-          ctx.globalAlpha = 1.0;
           this.drawHealthBadgeAt(
             p,
             badgeRadius,
@@ -3393,21 +3363,9 @@ export class Renderer {
             boxH,
             config.largeMiniPreviewColor,
             previewRotModel,
-            null,
+            this.largeMiniSpriteSrcs[i] ?? null,
             largeLocalOrigin,
           );
-          ctx.globalAlpha = 0.6;
-          this.drawShapeRingAtPoint(
-            p,
-            cells,
-            layout,
-            0.62 * LARGE_MINI_VISUAL_SCALE,
-            config.bigMiniSymbolColor,
-            2,
-            previewRotModel,
-            largeLocalOrigin,
-          );
-          ctx.globalAlpha = 1.0;
           this.drawHealthBadgeAt(
             p,
             badgeRadius,
@@ -3702,15 +3660,6 @@ export class Renderer {
           previewRotModel,
           bmIdx !== null ? (this.bigMiniSpriteSrcs[bmIdx] ?? null) : null,
         );
-        ctx.globalAlpha = 0.6;
-        this.drawBigMiniRingAtPoint(
-          pv,
-          ringPreviewInner,
-          config.bigMiniSymbolColor,
-          2,
-          previewRotModel,
-        );
-        ctx.globalAlpha = 1.0;
         if (bmIdx !== null) {
           this.drawHealthBadgeAt(
             pv,
@@ -4193,15 +4142,13 @@ export class Renderer {
       this.withTablePieceDragLift(p, () => {
         this.drawLargeMiniShapeAtPoint(
           p, cells, bounds, boxW, boxH,
-          config.largeMiniPreviewColor, previewRotModel, null,
+          config.largeMiniPreviewColor,
+          previewRotModel,
+          this.draggingLargeMiniIndex !== null
+            ? (this.largeMiniSpriteSrcs[this.draggingLargeMiniIndex] ?? null)
+            : null,
           largeLocalOrigin,
         );
-        ctx.globalAlpha = 0.6;
-        this.drawShapeRingAtPoint(
-          p, cells, layout,
-          0.62 * LARGE_MINI_VISUAL_SCALE, config.bigMiniSymbolColor, 2, previewRotModel, largeLocalOrigin,
-        );
-        ctx.globalAlpha = 1.0;
         if (this.draggingLargeMiniIndex !== null) {
           this.drawHealthBadgeAt(
             p, badgeRadius,
@@ -4247,7 +4194,8 @@ export class Renderer {
         ctx.globalAlpha = 0.72;
         this.drawLargeMiniShapeAtPoint(
           p, cells, bounds, boxW, boxH,
-          config.largeMiniPreviewColor, previewRotModel, null,
+          config.largeMiniPreviewColor, previewRotModel,
+          this.largeMiniSpriteSrcs[idx] ?? null,
           largeLocalOrigin,
         );
         ctx.globalAlpha = 0.5;
@@ -4470,19 +4418,6 @@ export class Renderer {
             ? (this.hugeMiniSpriteRotationDegLocal[this.draggingHugeMiniIndex] ?? 0)
             : 0,
         );
-        ctx.globalAlpha = 0.6;
-        this.drawShapeRingAtPoint(
-          p,
-          cells,
-          layout,
-          hugePreviewRingPathScale,
-          config.bigMiniSymbolColor,
-          2,
-          previewRotModel,
-          undefined,
-          true,
-        );
-        ctx.globalAlpha = 1.0;
         if (this.draggingHugeMiniIndex !== null) {
           this.drawHealthBadgeAt(
             p, badgeRadius,

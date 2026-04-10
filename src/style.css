@@ -1931,8 +1931,46 @@ select option {
   color: #fff;
 }
 
-.army-search-row {
-  padding: 0 16px 16px;
+.army-roster-toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 0 12px 10px;
+  flex-shrink: 0;
+}
+
+.army-roster-search-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.army-roster-sort-btn {
+  flex: 0 0 auto;
+  min-width: 76px;
+  padding: 0 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.35);
+  color: #e0e0e8;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+}
+
+.army-roster-sort-btn:hover {
+  border-color: rgba(255, 255, 255, 0.24);
+  background: rgba(0, 0, 0, 0.48);
+}
+
+.army-god-search-row {
+  margin-top: 16px;
+  padding: 4px 12px 10px;
   flex-shrink: 0;
 }
 
@@ -3123,6 +3161,48 @@ select option {
 .mp-invite-input-ingame:focus {
   border-color: rgba(74, 144, 217, 0.55);
   box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.15);
+}
+
+.mp-join-link-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  align-items: stretch;
+}
+
+.mp-join-link-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.45);
+  color: #e8e8f0;
+  font-size: 11px;
+  font-family: inherit;
+  outline: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.mp-join-link-input:focus {
+  border-color: rgba(129, 140, 248, 0.65);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+}
+
+.mp-join-link-input--error {
+  border-color: rgba(248, 113, 113, 0.75);
+  box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.2);
+}
+
+.mp-btn.mp-btn-compact {
+  display: inline-flex;
+  width: auto;
+  margin-top: 0;
+  white-space: nowrap;
+  padding: 8px 12px;
+  align-items: center;
 }
 
 .mp-subtitle {
