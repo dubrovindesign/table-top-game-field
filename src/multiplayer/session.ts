@@ -15,7 +15,26 @@ import {
 } from './tableDragOutbound.ts';
 
 const POINTER_INTERVAL_MS = 1000 / 24;
+const PING_CLIENT_COOLDOWN_MS = 300;
 const VOICE_OUTPUT_STORAGE_KEY = 'mp-voice-output-device';
+
+let lastPingIntentSent = 0;
+
+type PingIntentSendDeps = {
+  send: (msg: ClientToServerMessage) => void;
+  isActive: () => boolean;
+};
+
+let pingIntentSendDeps: PingIntentSendDeps | null = null;
+
+/** Send a board-space ping marker intent to peers (cooldown-enforced). No-op if offline or not in a room. */
+export function sendPingIntentAtBoard(boardX: number, boardY: number): void {
+  if (!pingIntentSendDeps?.isActive()) return;
+  const now = performance.now();
+  if (now - lastPingIntentSent < PING_CLIENT_COOLDOWN_MS) return;
+  lastPingIntentSent = now;
+  pingIntentSendDeps.send({ type: 'pingIntent', boardX, boardY });
+}
 
 type AudioWithSink = HTMLAudioElement & { setSinkId?: (id: string) => Promise<void> };
 
@@ -624,6 +643,10 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
     const send = (m: ClientToServerMessage) => {
       client.send(m);
     };
+    pingIntentSendDeps = {
+      send,
+      isActive: () => client.connected && currentRoomId !== null,
+    };
     roomClientSend = send;
     setBoardSyncTransport(send);
     setMultiplayerBoardSyncActive(true);
@@ -632,6 +655,8 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
   }
 
   function stopTableSync(): void {
+    pingIntentSendDeps = null;
+    lastPingIntentSent = 0;
     stopVoiceStatePoll();
     tearDownVoice();
     myRole = null;
@@ -728,6 +753,12 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       alert(msg.message);
       return;
     }
+    if (msg.type === 'peerPingIntent') {
+      if (msg.fromId === myId) return;
+      renderer.spawnPingMarker(msg.boardX, msg.boardY, colorForPeerId(msg.fromId));
+      scheduleRender();
+      return;
+    }
     if (msg.type === 'pointer') {
       if (msg.fromId === myId) return;
       if (!peerPointers.has(msg.fromId)) {
@@ -818,6 +849,7 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
     const intentSnapshot = pendingWsIntent;
     const run = (): void => {
       lastPointerSent = 0;
+      lastPingIntentSent = 0;
       clearConnectStatus();
       fn();
       armRoomResponseWatchdog(intentSnapshot);
