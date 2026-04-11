@@ -54,6 +54,45 @@ function applyBounds(
   wrap.style.height = `${Math.round(bounds.height)}px`;
 }
 
+/** Точка в полосе рамки (вне «внутреннего прямоугольника», сжатого на borderScreenPx). */
+function pointInBlindBorderBand(
+  clientX: number,
+  clientY: number,
+  layout: GodBlindZoneLayout,
+): boolean {
+  const { container, borderScreenPx: b } = layout;
+  const L = container.left;
+  const T = container.top;
+  const R = L + container.width;
+  const B = T + container.height;
+  if (clientX < L || clientX > R || clientY < T || clientY > B) return false;
+  if (b <= 0) return false;
+  if (clientX >= L + b && clientX <= R - b && clientY >= T + b && clientY <= B - b) return false;
+  return true;
+}
+
+function pointInBlindCards(
+  clientX: number,
+  clientY: number,
+  layout: GodBlindZoneLayout,
+): boolean {
+  const baseL = layout.container.left;
+  const baseT = layout.container.top;
+  for (const c of layout.cards) {
+    const left = baseL + c.left;
+    const top = baseT + c.top;
+    if (
+      clientX >= left &&
+      clientX <= left + c.width &&
+      clientY >= top &&
+      clientY <= top + c.height
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export class GodHandBlindDock {
   private myBlindTableWrap: HTMLElement;
   private myBlindZone: HTMLElement;
@@ -70,6 +109,7 @@ export class GodHandBlindDock {
   private ghostHalfH = 48;
   private lastVm: GodBlindZoneViewModel | null = null;
   private lastMineLayout: GodBlindZoneLayout | null = null;
+  private lastOppLayout: GodBlindZoneLayout | null = null;
 
   constructor(_parent: HTMLElement, opts: GodBlindZoneDockOptions) {
     this.opts = opts;
@@ -108,6 +148,7 @@ export class GodHandBlindDock {
 
   applyDualBlindLayouts(mine: GodBlindZoneLayout, opp: GodBlindZoneLayout): void {
     this.lastMineLayout = mine;
+    this.lastOppLayout = opp;
     this.applyOneBlindLayout(this.myBlindTableWrap, this.myBlindZone, this.myBlindInner, mine);
     this.applyOneBlindLayout(this.oppBlindTableWrap, this.oppBlindZone, this.oppBlindInner, opp);
   }
@@ -150,33 +191,18 @@ export class GodHandBlindDock {
   isPointInsideMyBlindZone(clientX: number, clientY: number): boolean {
     const layout = this.lastMineLayout;
     if (!layout) return false;
-    for (const c of layout.cards) {
-      const left = c.left + layout.container.left;
-      const top = c.top + layout.container.top;
-      if (
-        clientX >= left &&
-        clientX <= left + c.width &&
-        clientY >= top &&
-        clientY <= top + c.height
-      ) {
-        return true;
-      }
-    }
-    return false;
+    return pointInBlindCards(clientX, clientY, layout);
   }
 
-  /** Курсор над слепой зоной (DOM), чтобы хоткеи стола не срабатывали «сквозь» оверлей. */
+  /** Рамка или карты слепой зоны (обе стороны) — чтобы хоткеи стола не срабатывали «сквозь» оверлей. */
   isPointOverBlindZoneChrome(clientX: number, clientY: number): boolean {
-    const inRect = (el: HTMLElement) => {
-      const r = el.getBoundingClientRect();
-      return (
-        clientX >= r.left &&
-        clientX < r.right &&
-        clientY >= r.top &&
-        clientY < r.bottom
-      );
-    };
-    return inRect(this.myBlindTableWrap) || inRect(this.oppBlindTableWrap);
+    if (!this.lastMineLayout && !this.lastOppLayout) return false;
+    for (const layout of [this.lastMineLayout, this.lastOppLayout]) {
+      if (!layout) continue;
+      if (pointInBlindBorderBand(clientX, clientY, layout)) return true;
+      if (pointInBlindCards(clientX, clientY, layout)) return true;
+    }
+    return false;
   }
 
   refresh(vm: GodBlindZoneViewModel): void {

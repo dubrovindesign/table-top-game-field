@@ -3971,7 +3971,8 @@ select option {
   min-width: 0;
   min-height: 0;
   max-width: none;
-  pointer-events: auto;
+  /* Пустая область и рамка не перехватывают указатель — события идут на канвас под оверлеем. */
+  pointer-events: none;
   padding: 0;
   /* Толщина и цвет рамки задаются в JS (масштаб с camera.zoom). */
   border: none;
@@ -3983,6 +3984,12 @@ select option {
   height: 100%;
   box-sizing: border-box;
   overflow: visible;
+  pointer-events: none;
+}
+
+/* Слоты карт ловят указатель для драга из слепой зоны и блокируют клики сквозь рубашки оппонента. */
+.god-blind-table-wrap .god-dock-card--blind-slot {
+  pointer-events: auto;
 }
 
 /*
