@@ -45,6 +45,7 @@ export type ClientToServerMessage =
   | { type: 'createRoom' }
   | { type: 'joinRoom'; roomId: string; role: 'player' | 'spectator' }
   | { type: 'pointer'; boardX: number; boardY: number }
+  | { type: 'pingIntent'; boardX: number; boardY: number }
   | { type: 'tableDrag'; drag: TableDragState }
   | { type: 'syncBoard'; payload: object }
   | { type: 'crystalWalletDelta'; slot: PlayerSlot; crystalId: string; delta: number }
@@ -90,6 +91,7 @@ export type ServerToClientMessage =
       delta: number;
     }
   | { type: 'webrtcSignal'; fromId: string; payload: WebRtcSignalPayload }
+  | { type: 'peerPingIntent'; fromId: string; boardX: number; boardY: number }
   | { type: 'pong'; t: number };
 
 const CRYSTAL_WALLET_IDS = new Set(['yellow', 'black', 'red', 'green', 'ether']);
@@ -111,6 +113,13 @@ export function parseClientMessage(raw: string): ClientToServerMessage | null {
       const boardY = (o as { boardY?: number }).boardY;
       if (typeof boardX !== 'number' || typeof boardY !== 'number') return null;
       return { type: 'pointer', boardX, boardY };
+    }
+    if (t === 'pingIntent') {
+      const boardX = (o as { boardX?: number }).boardX;
+      const boardY = (o as { boardY?: number }).boardY;
+      if (typeof boardX !== 'number' || typeof boardY !== 'number') return null;
+      if (!Number.isFinite(boardX) || !Number.isFinite(boardY)) return null;
+      return { type: 'pingIntent', boardX, boardY };
     }
     if (t === 'tableDrag') {
       const drag = parseTableDragState((o as { drag?: unknown }).drag);
