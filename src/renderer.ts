@@ -726,6 +726,12 @@ export class Renderer {
     });
   }
 
+  /** True while at least one ping marker is still within {@link PING_TTL_MS} (for main-loop integration). */
+  hasTransientPingMarkers(): boolean {
+    const now = performance.now();
+    return this.pingMarkers.some((m) => now - m.startMs < PING_TTL_MS);
+  }
+
   private isPeerDraggingEntity(kind: TableDragKind, index: number): boolean {
     if (kind === 'none') return false;
     return this.remotePeerTableDrags.some(
@@ -973,7 +979,8 @@ export class Renderer {
         alpha = 1;
       } else {
         scale = 1;
-        alpha = 1 - (elapsed - 900) / (PING_TTL_MS - 900);
+        const fadeSpanMs = Math.max(1, PING_TTL_MS - 900);
+        alpha = 1 - (elapsed - 900) / fadeSpanMs;
       }
 
       ctx.save();
