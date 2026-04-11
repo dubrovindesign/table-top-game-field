@@ -108,6 +108,7 @@ import { GodHandBlindDock, type GodBlindZoneLayout } from './godHandBlindDock.ts
 import { getGodCardById, type GodTablePiece } from './godCards';
 import type {
   SerializedBoardStateV1,
+  SerializedCrystalWalletsV1,
   SerializedGodDeckSlotsV1,
   SerializedGodSlotV1,
 } from './multiplayer/boardState.ts';
@@ -120,7 +121,7 @@ import {
 import type { PlayerSlot, TableDragState } from './multiplayer/protocol.ts';
 import { EMPTY_TABLE_DRAG } from './multiplayer/protocol.ts';
 import { tickTableDragOutbound } from './multiplayer/tableDragOutbound.ts';
-import { initMultiplayerSession } from './multiplayer/session.ts';
+import { initMultiplayerSession, sendRoomClientMessage } from './multiplayer/session.ts';
 import { mountAppMoreMenu } from './appMoreMenu.ts';
 import { getWheelBehavior, mountAppSettingsToolbar } from './appSettings.ts';
 import { createPwaInstallMenuFlow } from './pwaInstallUi.ts';
@@ -138,6 +139,12 @@ const BOARD_ROTATION_DEG = -10;
 let viewSeatExtraRotationDeg = 0;
 /** Local seat in room (`null` = solo / disconnected / spectator). Used for roster points / copy limits. */
 let localViewPlayerSlot: PlayerSlot | null = null;
+
+/** Crystal wallet counts per table seat (faith + ether); UI rows map via `crystalWalletSlotsForUi`). */
+const crystalWalletBySlot: { 0: Map<string, number>; 1: Map<string, number> } = {
+  0: new Map(),
+  1: new Map(),
+};
 
 function effectiveBoardRotationDeg(): number {
   return BOARD_ROTATION_DEG + viewSeatExtraRotationDeg;
@@ -2027,8 +2034,87 @@ function resetActivationsForNewTurn(): void {
 const topTurnPanel = mountTopTurnPanel(document.body, {
   onAdvanceTurn: resetActivationsForNewTurn,
 });
-new CrystalWallet(topTurnPanel.localWalletMount, { variant: 'local' });
-new CrystalWallet(topTurnPanel.opponentWalletMount, { variant: 'opponent' });
+
+let crystalWalletLocal: CrystalWallet;
+let crystalWalletOpp: CrystalWallet;
+
+function crystalWalletRecordForSlot(slot: PlayerSlot): Record<string, number> {
+  const m = crystalWalletBySlot[slot];
+  const o: Record<string, number> = {};
+  for (const [k, v] of m) {
+    if (v > 0) o[k] = v;
+  }
+  return o;
+}
+
+function crystalWalletSlotsForUi(): { local: PlayerSlot; opponent: PlayerSlot } {
+  if (localViewPlayerSlot === null) return { local: 0, opponent: 1 };
+  return { local: localViewPlayerSlot, opponent: (1 - localViewPlayerSlot) as PlayerSlot };
+}
+
+function refreshCrystalWalletUis(): void {
+  const { local: slL, opponent: slO } = crystalWalletSlotsForUi();
+  crystalWalletLocal.setBoundSlot(slL);
+  crystalWalletOpp.setBoundSlot(slO);
+  crystalWalletLocal.renderFromState(crystalWalletRecordForSlot(slL));
+  crystalWalletOpp.renderFromState(crystalWalletRecordForSlot(slO));
+}
+
+function applyCrystalWalletDeltaCore(slot: PlayerSlot, crystalId: string, delta: number): void {
+  const m = crystalWalletBySlot[slot];
+  const cur = m.get(crystalId) ?? 0;
+  const sum = cur + delta;
+  if (sum <= 0) m.delete(crystalId);
+  else m.set(crystalId, Math.min(99, sum));
+  refreshCrystalWalletUis();
+}
+
+function applyCrystalWalletUserDelta(slot: PlayerSlot, crystalId: string, delta: number): void {
+  applyCrystalWalletDeltaCore(slot, crystalId, delta);
+  if (isBoardMultiplayerSyncActive() && localViewPlayerSlot !== null) {
+    sendRoomClientMessage({ type: 'crystalWalletDelta', slot, crystalId, delta });
+  }
+  notifyBoardEditLocal();
+}
+
+function onPeerCrystalWalletDeltaFromNetwork(p: {
+  slot: PlayerSlot;
+  crystalId: string;
+  delta: number;
+}): void {
+  applyCrystalWalletDeltaCore(p.slot, p.crystalId, p.delta);
+  notifyBoardEditLocal();
+}
+
+function loadCrystalWalletsFromSnapshot(w: SerializedCrystalWalletsV1 | undefined): void {
+  crystalWalletBySlot[0].clear();
+  crystalWalletBySlot[1].clear();
+  if (w) {
+    for (const [k, v] of Object.entries(w['0'])) {
+      if (typeof v === 'number' && v > 0) crystalWalletBySlot[0].set(k, Math.min(99, v));
+    }
+    for (const [k, v] of Object.entries(w['1'])) {
+      if (typeof v === 'number' && v > 0) crystalWalletBySlot[1].set(k, Math.min(99, v));
+    }
+  }
+  refreshCrystalWalletUis();
+}
+
+crystalWalletLocal = new CrystalWallet(topTurnPanel.localWalletMount, {
+  variant: 'local',
+  boundSlot: 0,
+  onApplyDelta: (slot, crystalId, delta) => {
+    applyCrystalWalletUserDelta(slot, crystalId, delta);
+  },
+});
+crystalWalletOpp = new CrystalWallet(topTurnPanel.opponentWalletMount, {
+  variant: 'opponent',
+  boundSlot: 1,
+  onApplyDelta: (slot, crystalId, delta) => {
+    applyCrystalWalletUserDelta(slot, crystalId, delta);
+  },
+});
+refreshCrystalWalletUis();
 
 canvas.addEventListener('hex-cells-svg-ready', () => scheduleRender());
 canvas.addEventListener('inventory-sprite-ready', () => scheduleRender());
@@ -2042,6 +2128,7 @@ function applyMultiplayerViewSeat(slot: PlayerSlot | null): void {
     boardRotationDeg: effectiveBoardRotationDeg(),
     oppositeSeatUnitRotationCorrectionDeg: slot === 1 ? -180 : 0,
   });
+  refreshCrystalWalletUis();
   scheduleRender();
   refreshGodDock();
 }
@@ -6998,6 +7085,10 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
       '1': serializeGodSlotForCapture(1),
     },
     sharedDice: diceRoller.exportSharedState(),
+    crystalWallets: {
+      '0': crystalWalletRecordForSlot(0),
+      '1': crystalWalletRecordForSlot(1),
+    },
   };
 }
 
@@ -7213,6 +7304,8 @@ function applyBoardSnapshot(raw: unknown): void {
 
   diceRoller.applySharedStateFromBoard(parseSharedDiceState(s.sharedDice));
 
+  loadCrystalWalletsFromSnapshot(s.crystalWallets);
+
   refreshGodDock();
   armyBuilderPanel.refresh();
   updateMovementHighlights();
@@ -7273,6 +7366,7 @@ initMultiplayerSession({
   scheduleRender,
   screenToBoard: screenToBoardWorld,
   onViewPlayerSlot: applyMultiplayerViewSeat,
+  onPeerCrystalWalletDelta: onPeerCrystalWalletDeltaFromNetwork,
   toolbarMount: toolbarMountEl,
 });
 const pwaInstallHandle = createPwaInstallMenuFlow();

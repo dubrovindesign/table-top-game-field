@@ -364,6 +364,22 @@ wss.on('connection', (ws: WebSocket) => {
       return;
     }
 
+    if (msg.type === 'crystalWalletDelta') {
+      if (!meta.roomId) return;
+      broadcastRoom(
+        meta.roomId,
+        {
+          type: 'peerCrystalWalletDelta',
+          fromId: meta.id,
+          slot: msg.slot,
+          crystalId: msg.crystalId,
+          delta: msg.delta,
+        },
+        ws,
+      );
+      return;
+    }
+
     if (msg.type === 'webrtcSignal') {
       if (!meta.roomId) return;
       if (meta.role !== 'player') return;

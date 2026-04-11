@@ -6,7 +6,7 @@ import {
   setBoardSyncTransport,
   setMultiplayerBoardSyncActive,
 } from './boardSync.ts';
-import type { PlayerSlot, ServerToClientMessage, TableDragState } from './protocol.ts';
+import type { ClientToServerMessage, PlayerSlot, ServerToClientMessage, TableDragState } from './protocol.ts';
 import { RoomClient } from './roomClient.ts';
 import { createVoicePeer, type VoicePeer } from './voiceChat.ts';
 import {
@@ -33,6 +33,12 @@ export type MultiplayerSessionOptions = {
    * Call with `null` when leaving the room (spectator or disconnect).
    */
   onViewPlayerSlot?: (slot: PlayerSlot | null) => void;
+  /** Входящая дельта кошелька кристаллов от другого клиента (отправитель исключён сервером). */
+  onPeerCrystalWalletDelta?: (p: {
+    slot: PlayerSlot;
+    crystalId: string;
+    delta: number;
+  }) => void;
   /**
    * Контейнер для кнопки «Мультиплеер» в одном ряду с другими кнопками (например панель армии).
    * Если не задан — кнопка и всплывающая панель закрепляются в правом верхнем углу.
@@ -91,8 +97,17 @@ function setRoomInUrl(roomId: string): void {
 /**
  * Live multiplayer: lobby UI, room join, remote pointers on the renderer.
  */
+
+/** Отправка сообщений в комнату (когда активен wireTableSync). */
+let roomClientSend: ((msg: ClientToServerMessage) => void) | null = null;
+
+export function sendRoomClientMessage(msg: ClientToServerMessage): void {
+  roomClientSend?.(msg);
+}
+
 export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
-  const { renderer, scheduleRender, screenToBoard, onViewPlayerSlot, toolbarMount } = opts;
+  const { renderer, scheduleRender, screenToBoard, onViewPlayerSlot, onPeerCrystalWalletDelta, toolbarMount } =
+    opts;
   const client = new RoomClient();
 
   const toolbarAnchor = document.createElement('div');
@@ -606,13 +621,13 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
   }
 
   function wireTableSync(): void {
-    setBoardSyncTransport((m) => {
+    const send = (m: ClientToServerMessage) => {
       client.send(m);
-    });
+    };
+    roomClientSend = send;
+    setBoardSyncTransport(send);
     setMultiplayerBoardSyncActive(true);
-    setTableDragOutboundTransport((m) => {
-      client.send(m);
-    });
+    setTableDragOutboundTransport(send);
     setTableDragOutboundActive(true);
   }
 
@@ -627,6 +642,7 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
     setTableDragOutboundActive(false);
     setTableDragOutboundTransport(null);
     setBoardSyncTransport(null);
+    roomClientSend = null;
     setMultiplayerBoardSyncActive(false);
     peerTableDragById.clear();
     renderer.setRemotePeerTableDrags([]);
@@ -774,6 +790,15 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
         peerTableDragById.set(msg.fromId, msg.drag);
       }
       applyPeerTableDragsToRenderer();
+      return;
+    }
+    if (msg.type === 'peerCrystalWalletDelta') {
+      onPeerCrystalWalletDelta?.({
+        slot: msg.slot,
+        crystalId: msg.crystalId,
+        delta: msg.delta,
+      });
+      scheduleRender();
       return;
     }
     if (msg.type === 'webrtcSignal') {

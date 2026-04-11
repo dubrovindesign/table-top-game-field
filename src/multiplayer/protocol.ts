@@ -47,6 +47,7 @@ export type ClientToServerMessage =
   | { type: 'pointer'; boardX: number; boardY: number }
   | { type: 'tableDrag'; drag: TableDragState }
   | { type: 'syncBoard'; payload: object }
+  | { type: 'crystalWalletDelta'; slot: PlayerSlot; crystalId: string; delta: number }
   | { type: 'ping'; t: number }
   | { type: 'webrtcSignal'; payload: WebRtcSignalPayload };
 
@@ -81,8 +82,17 @@ export type ServerToClientMessage =
   | { type: 'peerJoined'; id: string; role: 'player' | 'spectator'; playerSlot: PlayerSlot | null }
   | { type: 'boardState'; payload: object }
   | { type: 'peerTableDrag'; fromId: string; drag: TableDragState }
+  | {
+      type: 'peerCrystalWalletDelta';
+      fromId: string;
+      slot: PlayerSlot;
+      crystalId: string;
+      delta: number;
+    }
   | { type: 'webrtcSignal'; fromId: string; payload: WebRtcSignalPayload }
   | { type: 'pong'; t: number };
+
+const CRYSTAL_WALLET_IDS = new Set(['yellow', 'black', 'red', 'green', 'ether']);
 
 export function parseClientMessage(raw: string): ClientToServerMessage | null {
   try {
@@ -111,6 +121,16 @@ export function parseClientMessage(raw: string): ClientToServerMessage | null {
       const payload = (o as { payload?: unknown }).payload;
       if (payload === null || typeof payload !== 'object') return null;
       return { type: 'syncBoard', payload: payload as object };
+    }
+    if (t === 'crystalWalletDelta') {
+      const slot = (o as { slot?: unknown }).slot;
+      const crystalId = (o as { crystalId?: unknown }).crystalId;
+      const delta = (o as { delta?: unknown }).delta;
+      if (slot !== 0 && slot !== 1) return null;
+      if (typeof crystalId !== 'string' || !CRYSTAL_WALLET_IDS.has(crystalId)) return null;
+      if (typeof delta !== 'number' || !Number.isInteger(delta) || (delta !== -1 && delta !== 1))
+        return null;
+      return { type: 'crystalWalletDelta', slot, crystalId, delta };
     }
     if (t === 'ping') {
       const tt = (o as { t?: number }).t;

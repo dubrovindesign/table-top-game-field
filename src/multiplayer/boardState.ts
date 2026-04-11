@@ -141,6 +141,24 @@ export type SerializedSharedDiceStateV2 = {
 
 export type SerializedSharedDiceBoardField = SerializedSharedDiceMergedLegacyV1 | SerializedSharedDiceStateV2;
 
+/** Faith + ether crystal counts per seated player (multiplayer wallet UI). */
+export type SerializedCrystalWalletsV1 = {
+  '0': Record<string, number>;
+  '1': Record<string, number>;
+};
+
+const CRYSTAL_WALLET_ID_SET = new Set(['yellow', 'black', 'red', 'green', 'ether']);
+
+function validCrystalWalletSlotRecord(o: unknown): boolean {
+  if (!o || typeof o !== 'object') return false;
+  const rec = o as Record<string, unknown>;
+  for (const [k, v] of Object.entries(rec)) {
+    if (!CRYSTAL_WALLET_ID_SET.has(k)) return false;
+    if (typeof v !== 'number' || !Number.isInteger(v) || v < 0 || v > 99) return false;
+  }
+  return true;
+}
+
 export type SerializedBoardStateV1 = {
   v: 1;
   units: SerializedUnit[];
@@ -169,6 +187,8 @@ export type SerializedBoardStateV1 = {
   godDeckSlots?: SerializedGodDeckSlotsV1;
   /** Общая зона броска и история (мультиплеер). */
   sharedDice?: SerializedSharedDiceBoardField;
+  /** Кошельки кристаллов по слотам стола (мультиплеер). */
+  crystalWallets?: SerializedCrystalWalletsV1;
 };
 
 /** Снимок одного слота: у чужого слота `handIds`/`deckIds`/`blindCardIds` могут отсутствовать (скрыто). */
@@ -412,6 +432,12 @@ export function isSerializedBoardStateV1(raw: unknown): raw is SerializedBoardSt
       if (typeof w.x !== 'number' || typeof w.y !== 'number') return false;
       if (!validOptionalArmyOwnerSlot(q.armyOwnerPlayerSlot)) return false;
     }
+  }
+  const cw = (o as { crystalWallets?: unknown }).crystalWallets;
+  if (cw !== undefined) {
+    if (!cw || typeof cw !== 'object') return false;
+    const z = cw as Record<string, unknown>;
+    if (!validCrystalWalletSlotRecord(z['0']) || !validCrystalWalletSlotRecord(z['1'])) return false;
   }
   return true;
 }
