@@ -37,7 +37,8 @@
     "import-game-structure": "tsx scripts/import-game-structure-catalog.ts --root D:/Downloads/parsing",
     "import-game-structure:ocr": "tsx scripts/import-game-structure-catalog.ts --root D:/Downloads/parsing --ocr",
     "import-game-structure:ocr-blackthorn": "tsx scripts/import-game-structure-catalog.ts --root D:/Downloads/parsing --ingest-only --ocr --ocr-faction blackthorn",
-    "import-game-structure:god-cards": "tsx scripts/import-game-structure-catalog.ts --root D:/Downloads/parsing --only-god-cards"
+    "import-game-structure:god-cards": "tsx scripts/import-game-structure-catalog.ts --root D:/Downloads/parsing --only-god-cards",
+    "test:protocol": "tsx --test tests/multiplayer/protocol.test.ts"
   },
   "dependencies": {
     "tesseract.js": "^7.0.0",

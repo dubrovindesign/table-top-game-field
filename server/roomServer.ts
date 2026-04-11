@@ -354,6 +354,21 @@ wss.on('connection', (ws: WebSocket) => {
       return;
     }
 
+    if (msg.type === 'pingIntent') {
+      if (!meta.roomId) return;
+      broadcastRoom(
+        meta.roomId,
+        {
+          type: 'peerPingIntent',
+          fromId: meta.id,
+          boardX: msg.boardX,
+          boardY: msg.boardY,
+        },
+        ws,
+      );
+      return;
+    }
+
     if (msg.type === 'tableDrag') {
       if (!meta.roomId) return;
       broadcastRoom(

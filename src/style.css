@@ -3822,6 +3822,79 @@ select option {
   background: rgba(40, 40, 48, 0.96);
 }
 
+/* ── Ping intent (floating FAB: arm, then tap board) ─────────── */
+
+.ping-intent-fab-host {
+  position: fixed;
+  right: max(12px, env(safe-area-inset-right, 0px));
+  bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  z-index: 10020;
+  pointer-events: auto;
+}
+
+.ping-intent-fab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 16px;
+  margin: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(22, 22, 26, 0.92);
+  color: #e8e8e8;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    color 0.15s ease;
+}
+
+.ping-intent-fab:hover {
+  background: rgba(36, 36, 42, 0.96);
+}
+
+.ping-intent-fab:focus {
+  outline: none;
+}
+
+.ping-intent-fab:focus-visible {
+  box-shadow:
+    0 6px 24px rgba(0, 0, 0, 0.45),
+    0 0 0 2px rgba(74, 144, 217, 0.45);
+}
+
+.ping-intent-fab.ping-intent-armed,
+.ping-intent-fab[aria-pressed='true'] {
+  border-color: rgba(96, 182, 242, 0.65);
+  background: rgba(18, 36, 58, 0.94);
+  color: #e8f4ff;
+  box-shadow:
+    0 6px 28px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(96, 182, 242, 0.35);
+}
+
+@media (pointer: coarse) {
+  .ping-intent-fab {
+    min-width: 52px;
+    min-height: 52px;
+    padding: 0 20px;
+    font-size: 14px;
+    border-radius: 12px;
+  }
+}
+
 /* ── App settings (toolbar, рядом с мультиплеером) ─────────────── */
 
 .app-settings-toolbar-anchor {

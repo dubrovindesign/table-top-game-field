@@ -121,7 +121,7 @@ import {
 import type { PlayerSlot, TableDragState } from './multiplayer/protocol.ts';
 import { EMPTY_TABLE_DRAG } from './multiplayer/protocol.ts';
 import { tickTableDragOutbound } from './multiplayer/tableDragOutbound.ts';
-import { initMultiplayerSession, sendRoomClientMessage } from './multiplayer/session.ts';
+import { initMultiplayerSession, sendPingIntentAtBoard, sendRoomClientMessage } from './multiplayer/session.ts';
 import { mountAppMoreMenu } from './appMoreMenu.ts';
 import { getWheelBehavior, mountAppSettingsToolbar } from './appSettings.ts';
 import { createPwaInstallMenuFlow } from './pwaInstallUi.ts';
@@ -2225,6 +2225,7 @@ function loop(): void {
   }
   if (godPieceFlipAnim !== null) needsRender = true;
   if (godDeckShuffleAnim !== null) needsRender = true;
+  if (renderer.hasTransientPingMarkers()) needsRender = true;
   tickTableDragOutbound(captureTableDragForNetwork);
   requestAnimationFrame(loop);
 }
@@ -2282,6 +2283,14 @@ let etherVortexDragPendingStartX = 0;
 let etherVortexDragPendingStartY = 0;
 let etherVortexPreviewWorld: Point | null = null;
 let etherVortexDragOverCenter: Hex | null = null;
+
+/** Space held (desktop): arms ping intent while keydown; disarms on keyup. */
+let pingIntentFromSpace = false;
+/** FAB (touch or mouse/pen tap): armed until the next valid board primary click (single-shot). */
+let pingIntentTouchSingleShot = false;
+/** Local ping marker color (peers use {@link colorForPeerId} in session). */
+const LOCAL_PING_INTENT_COLOR = 'hsl(205 85% 62%)';
+let pingIntentControlEl: HTMLButtonElement | null = null;
 
 let godLooseCapturePointerId: number | null = null;
 /** Pointer captured during board piece drag (touch / pen) so move events keep firing. */
@@ -5398,6 +5407,101 @@ function isPointOverCanvas(clientX: number, clientY: number): boolean {
   return clientX >= r.left && clientX < r.right && clientY >= r.top && clientY < r.bottom;
 }
 
+function isCommonInteractiveFocusTarget(el: Element | null): boolean {
+  if (!(el instanceof HTMLElement)) return false;
+  const tag = el.tagName;
+  if (tag === 'BUTTON' || tag === 'A') return true;
+  const role = el.getAttribute('role');
+  if (role === 'button' || role === 'link' || role === 'menuitem') return true;
+  return false;
+}
+
+function shouldBlockPingKeyboardArm(): boolean {
+  if (document.activeElement === pingIntentControlEl) return false;
+  return isEditableTarget(document.activeElement) || isCommonInteractiveFocusTarget(document.activeElement);
+}
+
+function pingIntentArmed(): boolean {
+  const spaceOn = pingIntentFromSpace && !shouldBlockPingKeyboardArm();
+  return spaceOn || pingIntentTouchSingleShot;
+}
+
+function disarmAllPingIntent(): void {
+  pingIntentFromSpace = false;
+  pingIntentTouchSingleShot = false;
+  syncPingIntentUi();
+}
+
+function syncPingIntentUi(): void {
+  const armed = pingIntentArmed();
+  pingIntentControlEl?.classList.toggle('ping-intent-armed', armed);
+  pingIntentControlEl?.setAttribute('aria-pressed', armed ? 'true' : 'false');
+}
+
+function tryConsumePingIntentBoardPrimary(
+  clientX: number,
+  clientY: number,
+  ev: MouseEvent | PointerEvent,
+): boolean {
+  if (!pingIntentArmed()) return false;
+  if (ev.button !== 0) return false;
+  if (ev.ctrlKey) return false;
+  if (!isPointOverCanvas(clientX, clientY)) return false;
+  if (armyBuilderPanel.isScreenPointOverPanel(clientX, clientY)) return false;
+  if (godHandBlindDock?.isPointOverBlindZoneChrome(clientX, clientY)) return false;
+
+  const { x, y } = screenToBoardWorld(clientX, clientY);
+  renderer.spawnPingMarker(x, y, LOCAL_PING_INTENT_COLOR);
+  sendPingIntentAtBoard(x, y);
+  disarmAllPingIntent();
+  clearEffectMarkerLongPressTimer();
+  ev.preventDefault();
+  ev.stopPropagation();
+  scheduleRender();
+  return true;
+}
+
+function mountPingIntentControl(): void {
+  const wrap = document.createElement('div');
+  wrap.className = 'ping-intent-fab-host';
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'ping-intent-fab';
+  btn.setAttribute('aria-pressed', 'false');
+  btn.setAttribute('aria-label', 'Ping');
+  btn.title = 'Ping: tap here or hold Space, then click the board';
+  btn.textContent = 'Ping';
+  pingIntentControlEl = btn;
+
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  btn.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    if (e.pointerType === 'touch') return;
+    try {
+      btn.setPointerCapture(e.pointerId);
+    } catch {
+      /* ignore */
+    }
+  });
+  btn.addEventListener('pointerup', (e) => {
+    if (e.button !== 0) return;
+    pingIntentTouchSingleShot = true;
+    syncPingIntentUi();
+  });
+  btn.addEventListener('pointercancel', () => {
+    syncPingIntentUi();
+  });
+
+  wrap.appendChild(btn);
+  document.body.appendChild(wrap);
+  syncPingIntentUi();
+}
+
 function releaseGodLoosePointerCaptureIfAny(): void {
   if (godLooseCapturePointerId == null) return;
   try {
@@ -5617,6 +5721,9 @@ canvas.addEventListener('dblclick', (e: MouseEvent) => {
 
 canvas.addEventListener('pointerdown', (e: PointerEvent) => {
   if (e.button !== 0 || e.ctrlKey) return;
+  if (tryConsumePingIntentBoardPrimary(e.clientX, e.clientY, e)) {
+    return;
+  }
   const looseTapI = godLooseHitIndex(e.clientX, e.clientY);
   if (looseTapI !== null && (e.pointerType === 'touch' || e.pointerType === 'pen')) {
     const now = Date.now();
@@ -5736,6 +5843,9 @@ canvas.addEventListener('mousedown', (e) => {
 
   // Left-click: select piece; double-click: pin card + walk/run (Alt+hover still previews ranges)
   if (e.button === 0) {
+    if (tryConsumePingIntentBoardPrimary(e.clientX, e.clientY, e)) {
+      return;
+    }
     if (touchUnitDoubleTapSuppressMouseDown) {
       touchUnitDoubleTapSuppressMouseDown = false;
       e.preventDefault();
@@ -6354,6 +6464,18 @@ window.addEventListener('pointercancel', onWindowPointerUpOrCancel);
 
 window.addEventListener('keydown', (e) => {
   if (isEditableTarget(e.target)) return;
+  if (e.code === 'Space') {
+    if (!shouldBlockPingKeyboardArm()) {
+      if (!e.repeat) {
+        pingIntentFromSpace = true;
+        syncPingIntentUi();
+      }
+      if (!e.repeat || pingIntentFromSpace) {
+        e.preventDefault();
+      }
+    }
+    return;
+  }
   // Use e.code (physical key) so Ctrl+C/V/D work with non-Latin keyboard layouts (e.g. Russian).
   const mod = e.ctrlKey || e.metaKey;
   if (mod && !e.shiftKey && e.code === 'KeyC') {
@@ -6421,6 +6543,11 @@ window.addEventListener('keydown', (e) => {
 });
 
 window.addEventListener('keyup', (e) => {
+  if (e.code === 'Space') {
+    pingIntentFromSpace = false;
+    syncPingIntentUi();
+    return;
+  }
   if (e.key === 'Alt' || e.code === 'AltLeft' || e.code === 'AltRight') {
     altKeyHeld = false;
     altHoverTarget = null;
@@ -6436,6 +6563,7 @@ window.addEventListener('keyup', (e) => {
 });
 
 window.addEventListener('blur', () => {
+  disarmAllPingIntent();
   releaseGodLoosePointerCaptureIfAny();
   godPieceFlipAnim = null;
   godDragWholeGodDeck = false;
@@ -7388,6 +7516,7 @@ function mountTouchBoardActionsBar(): void {
 }
 
 const toolbarMountEl = armyBuilderPanel.getToolbarMount();
+mountPingIntentControl();
 initMultiplayerSession({
   renderer,
   scheduleRender,
