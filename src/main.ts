@@ -7092,6 +7092,31 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
   };
 }
 
+/**
+ * Пока true, входящий `boardState` не должен вызывать `resetTransientMultiplayerInteractionState`,
+ * иначе синк оппонента сбрасывает локальный драг/превью (см. спеку local-drag-remote-board-sync).
+ */
+function shouldPreserveLocalInteractionState(): boolean {
+  if (unitDragPendingIndex !== null) return true;
+  if (draggingUnitIndex !== null) return true;
+  if (bigMiniDragPendingIndex !== null) return true;
+  if (draggingBigMiniIndex !== null) return true;
+  if (largeMiniDragPendingIndex !== null) return true;
+  if (draggingLargeMiniIndex !== null) return true;
+  if (hugeMiniDragPendingIndex !== null) return true;
+  if (draggingHugeMiniIndex !== null) return true;
+  if (terrainDragPending) return true;
+  if (isDraggingTerrain) return true;
+  if (etherVortexDragPending) return true;
+  if (isDraggingEtherVortex) return true;
+  if (godLooseDragPending) return true;
+  if (isDraggingGodLoose) return true;
+  if (godDragWholeGodDeck) return true;
+  if (isDraggingInventoryLoose) return true;
+  if (inventoryLooseDragPending) return true;
+  return false;
+}
+
 function resetTransientMultiplayerInteractionState(): void {
   draggingUnitIndex = null;
   dragOverHex = null;
@@ -7157,7 +7182,9 @@ function applyBoardSnapshot(raw: unknown): void {
     return;
   }
   const s = raw;
-  resetTransientMultiplayerInteractionState();
+  if (!shouldPreserveLocalInteractionState()) {
+    resetTransientMultiplayerInteractionState();
+  }
 
   units.length = 0;
   for (const u of s.units) {
