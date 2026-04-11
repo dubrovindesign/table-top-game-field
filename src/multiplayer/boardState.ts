@@ -189,6 +189,8 @@ export type SerializedBoardStateV1 = {
   sharedDice?: SerializedSharedDiceBoardField;
   /** Кошельки кристаллов по слотам стола (мультиплеер). */
   crystalWallets?: SerializedCrystalWalletsV1;
+  /** Счётчик хода в верхней панели («Ход N»), 1…6. */
+  tableTurnNumber?: number;
 };
 
 /** Снимок одного слота: у чужого слота `handIds`/`deckIds`/`blindCardIds` могут отсутствовать (скрыто). */
@@ -438,6 +440,10 @@ export function isSerializedBoardStateV1(raw: unknown): raw is SerializedBoardSt
     if (!cw || typeof cw !== 'object') return false;
     const z = cw as Record<string, unknown>;
     if (!validCrystalWalletSlotRecord(z['0']) || !validCrystalWalletSlotRecord(z['1'])) return false;
+  }
+  const ttn = (o as { tableTurnNumber?: unknown }).tableTurnNumber;
+  if (ttn !== undefined) {
+    if (typeof ttn !== 'number' || !Number.isInteger(ttn) || ttn < 1 || ttn > 6) return false;
   }
   return true;
 }

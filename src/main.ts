@@ -126,7 +126,12 @@ import { mountAppMoreMenu } from './appMoreMenu.ts';
 import { getWheelBehavior, mountAppSettingsToolbar } from './appSettings.ts';
 import { createPwaInstallMenuFlow } from './pwaInstallUi.ts';
 import './style.css';
-import { playBoardDragDrop, playBoardDragLift, playGodDeckShuffle } from './boardDragSfx';
+import {
+  playBoardDragDrop,
+  playBoardDragLift,
+  playGodDeckShuffle,
+  playPingIntentSfx,
+} from './boardDragSfx';
 import { loadCatalogBundle } from './catalog/index.ts';
 
 await loadCatalogBundle();
@@ -326,6 +331,8 @@ function mountTopTurnPanel(
 ): {
   localWalletMount: HTMLElement;
   opponentWalletMount: HTMLElement;
+  getTableTurnNumber: () => number;
+  setTableTurnNumber: (n: number) => void;
 } {
   const panel = document.createElement('div');
   panel.className = 'turn-top-panel';
@@ -341,6 +348,13 @@ function mountTopTurnPanel(
 
   let turn = 1;
   const maxTurn = 6;
+
+  const getTableTurnNumber = (): number => turn;
+  const setTableTurnNumber = (n: number): void => {
+    const v = Math.floor(Number(n));
+    turn = Number.isFinite(v) ? Math.max(1, Math.min(maxTurn, v)) : 1;
+    syncTurnUi();
+  };
 
   const turnButton = document.createElement('button');
   turnButton.type = 'button';
@@ -392,7 +406,7 @@ function mountTopTurnPanel(
   parent.appendChild(panel);
 
   syncTurnUi();
-  return { localWalletMount, opponentWalletMount };
+  return { localWalletMount, opponentWalletMount, getTableTurnNumber, setTableTurnNumber };
 }
 
 // ── Create grid & layout ───────────────────────────────────────
@@ -2286,10 +2300,12 @@ let etherVortexDragOverCenter: Hex | null = null;
 
 /** Space held (desktop): arms ping intent while keydown; disarms on keyup. */
 let pingIntentFromSpace = false;
-/** FAB (touch or mouse/pen tap): armed until the next valid board primary click (single-shot). */
+/** FAB quick arm (mouse/pen tap): armed until the next valid board primary click (single-shot). */
 let pingIntentTouchSingleShot = false;
+/** FAB touch hold (tablet): while pressed, allows placing multiple pings. */
+let pingIntentTouchHold = false;
 /** Local ping marker color (peers use {@link colorForPeerId} in session). */
-const LOCAL_PING_INTENT_COLOR = 'hsl(205 85% 62%)';
+const LOCAL_PING_INTENT_COLOR = '#ffffff';
 let pingIntentControlEl: HTMLButtonElement | null = null;
 
 let godLooseCapturePointerId: number | null = null;
@@ -5423,13 +5439,24 @@ function shouldBlockPingKeyboardArm(): boolean {
 
 function pingIntentArmed(): boolean {
   const spaceOn = pingIntentFromSpace && !shouldBlockPingKeyboardArm();
-  return spaceOn || pingIntentTouchSingleShot;
+  return spaceOn || pingIntentTouchSingleShot || pingIntentTouchHold;
 }
 
 function disarmAllPingIntent(): void {
   pingIntentFromSpace = false;
   pingIntentTouchSingleShot = false;
+  pingIntentTouchHold = false;
   syncPingIntentUi();
+}
+
+function consumePingIntentAfterPlacement(): void {
+  // While Space or touch-hold is active, keep ping armed for rapid multi-placement.
+  if ((pingIntentFromSpace && !shouldBlockPingKeyboardArm()) || pingIntentTouchHold) {
+    pingIntentTouchSingleShot = false;
+    syncPingIntentUi();
+    return;
+  }
+  disarmAllPingIntent();
 }
 
 function syncPingIntentUi(): void {
@@ -5452,8 +5479,9 @@ function tryConsumePingIntentBoardPrimary(
 
   const { x, y } = screenToBoardWorld(clientX, clientY);
   renderer.spawnPingMarker(x, y, LOCAL_PING_INTENT_COLOR);
+  playPingIntentSfx();
   sendPingIntentAtBoard(x, y);
-  disarmAllPingIntent();
+  consumePingIntentAfterPlacement();
   clearEffectMarkerLongPressTimer();
   ev.preventDefault();
   ev.stopPropagation();
@@ -5481,7 +5509,11 @@ function mountPingIntentControl(): void {
   btn.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return;
     e.preventDefault();
-    if (e.pointerType === 'touch') return;
+    if (e.pointerType === 'touch') {
+      pingIntentTouchHold = true;
+      syncPingIntentUi();
+      return;
+    }
     try {
       btn.setPointerCapture(e.pointerId);
     } catch {
@@ -5490,10 +5522,16 @@ function mountPingIntentControl(): void {
   });
   btn.addEventListener('pointerup', (e) => {
     if (e.button !== 0) return;
+    if (e.pointerType === 'touch') {
+      pingIntentTouchHold = false;
+      syncPingIntentUi();
+      return;
+    }
     pingIntentTouchSingleShot = true;
     syncPingIntentUi();
   });
   btn.addEventListener('pointercancel', () => {
+    pingIntentTouchHold = false;
     syncPingIntentUi();
   });
 
@@ -7217,6 +7255,7 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
       '0': crystalWalletRecordForSlot(0),
       '1': crystalWalletRecordForSlot(1),
     },
+    tableTurnNumber: topTurnPanel.getTableTurnNumber(),
   };
 }
 
@@ -7460,6 +7499,8 @@ function applyBoardSnapshot(raw: unknown): void {
   diceRoller.applySharedStateFromBoard(parseSharedDiceState(s.sharedDice));
 
   loadCrystalWalletsFromSnapshot(s.crystalWallets);
+
+  topTurnPanel.setTableTurnNumber(s.tableTurnNumber ?? 1);
 
   refreshGodDock();
   armyBuilderPanel.refresh();
