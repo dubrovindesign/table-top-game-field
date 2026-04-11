@@ -5417,6 +5417,7 @@ function isCommonInteractiveFocusTarget(el: Element | null): boolean {
 }
 
 function shouldBlockPingKeyboardArm(): boolean {
+  if (document.activeElement === pingIntentControlEl) return false;
   return isEditableTarget(document.activeElement) || isCommonInteractiveFocusTarget(document.activeElement);
 }
 
