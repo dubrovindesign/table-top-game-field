@@ -63,6 +63,8 @@ export const INVENTORY_TABLE_MARKER_HH = 48;
 export const GOD_TABLE_CARD_ROT_CW_DEG = 10;
 /** Double-click flip duration (ms). */
 export const GOD_TABLE_CARD_FLIP_MS = 400;
+/** Transient ping intent arrow — full lifetime including fade-out (ms). */
+export const PING_TTL_MS = 1200;
 /** Uniform scale at flip midpoint: first 50% of flip anim 1→this, last 50% this→1 (subtle «подлёт»). */
 const GOD_TABLE_CARD_FLIP_POP_SCALE = 1.12;
 
@@ -77,6 +79,14 @@ export type RemotePeerTableDragPaint = {
   fromId: string;
   color: string;
   drag: TableDragState;
+};
+
+/** One transient ping marker (world/board coordinates); fades and is removed after {@link PING_TTL_MS}. */
+export type TransientPingMarker = {
+  boardX: number;
+  boardY: number;
+  color: string;
+  startMs: number;
 };
 
 // ── Camera ─────────────────────────────────────────────────────
@@ -255,6 +265,9 @@ export class Renderer {
     color: string;
     label?: string;
   }> = [];
+
+  /** Local / transient intent pings (animated arrow); independent TTL per marker. */
+  private pingMarkers: TransientPingMarker[] = [];
 
   /** In-flight table drags from other peers (ghost previews). */
   private remotePeerTableDrags: RemotePeerTableDragPaint[] = [];
@@ -703,6 +716,16 @@ export class Renderer {
     this.remotePeerTableDrags = [...peers];
   }
 
+  /** Spawn a transient upward ping arrow at board/world coordinates; coexists with other markers. */
+  spawnPingMarker(boardX: number, boardY: number, color: string): void {
+    this.pingMarkers.push({
+      boardX,
+      boardY,
+      color,
+      startMs: performance.now(),
+    });
+  }
+
   private isPeerDraggingEntity(kind: TableDragKind, index: number): boolean {
     if (kind === 'none') return false;
     return this.remotePeerTableDrags.some(
@@ -819,6 +842,7 @@ export class Renderer {
     }
 
     this.drawRemoteBoardPointers();
+    this.drawPingMarkers();
 
     ctx.restore();
   }
@@ -922,6 +946,65 @@ export class Renderer {
         ctx.strokeText(p.label, tx, ty);
         ctx.fillText(p.label, tx, ty);
       }
+    }
+  }
+
+  /** Intent ping arrows — fixed screen-sized stroke/fill via `1/camera.zoom` like remote pointers. */
+  private drawPingMarkers(): void {
+    const now = performance.now();
+    this.pingMarkers = this.pingMarkers.filter((m) => now - m.startMs < PING_TTL_MS);
+    if (this.pingMarkers.length === 0) return;
+
+    const { ctx } = this;
+    const z = this.camera.zoom;
+    const base = 26 / z;
+    const lw = 2.25 / z;
+
+    for (const m of this.pingMarkers) {
+      const elapsed = now - m.startMs;
+      let scale: number;
+      let alpha: number;
+      if (elapsed < 150) {
+        const u = elapsed / 150;
+        scale = 0.85 + u * 0.15;
+        alpha = u;
+      } else if (elapsed < 900) {
+        scale = 1;
+        alpha = 1;
+      } else {
+        scale = 1;
+        alpha = 1 - (elapsed - 900) / (PING_TTL_MS - 900);
+      }
+
+      ctx.save();
+      ctx.translate(m.boardX, m.boardY);
+      ctx.scale(scale, scale);
+      ctx.globalAlpha = alpha;
+
+      // Upward arrow (screen-up); tip at negative Y in world space.
+      const tipY = -base * 0.48;
+      const headW = base * 0.42;
+      const neckY = base * 0.02;
+      const tailW = base * 0.16;
+      const tailY = base * 0.5;
+
+      ctx.beginPath();
+      ctx.moveTo(0, tipY);
+      ctx.lineTo(headW, neckY);
+      ctx.lineTo(tailW, neckY);
+      ctx.lineTo(tailW, tailY);
+      ctx.lineTo(-tailW, tailY);
+      ctx.lineTo(-tailW, neckY);
+      ctx.lineTo(-headW, neckY);
+      ctx.closePath();
+
+      ctx.fillStyle = m.color;
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+      ctx.lineWidth = lw;
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+      ctx.restore();
     }
   }
 
