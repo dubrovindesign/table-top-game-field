@@ -2286,9 +2286,7 @@ let etherVortexDragOverCenter: Hex | null = null;
 
 /** Space held (desktop): arms ping intent while keydown; disarms on keyup. */
 let pingIntentFromSpace = false;
-/** Floating Ping button held (mouse/pen). */
-let pingIntentPingButtonHeld = false;
-/** Touch: one tap on Ping arms until the next valid board tap (single-shot). */
+/** FAB (touch or mouse/pen tap): armed until the next valid board primary click (single-shot). */
 let pingIntentTouchSingleShot = false;
 /** Local ping marker color (peers use {@link colorForPeerId} in session). */
 const LOCAL_PING_INTENT_COLOR = 'hsl(205 85% 62%)';
@@ -5409,18 +5407,26 @@ function isPointOverCanvas(clientX: number, clientY: number): boolean {
   return clientX >= r.left && clientX < r.right && clientY >= r.top && clientY < r.bottom;
 }
 
+function isCommonInteractiveFocusTarget(el: Element | null): boolean {
+  if (!(el instanceof HTMLElement)) return false;
+  const tag = el.tagName;
+  if (tag === 'BUTTON' || tag === 'A') return true;
+  const role = el.getAttribute('role');
+  if (role === 'button' || role === 'link' || role === 'menuitem') return true;
+  return false;
+}
+
 function shouldBlockPingKeyboardArm(): boolean {
-  return isEditableTarget(document.activeElement);
+  return isEditableTarget(document.activeElement) || isCommonInteractiveFocusTarget(document.activeElement);
 }
 
 function pingIntentArmed(): boolean {
   const spaceOn = pingIntentFromSpace && !shouldBlockPingKeyboardArm();
-  return spaceOn || pingIntentPingButtonHeld || pingIntentTouchSingleShot;
+  return spaceOn || pingIntentTouchSingleShot;
 }
 
 function disarmAllPingIntent(): void {
   pingIntentFromSpace = false;
-  pingIntentPingButtonHeld = false;
   pingIntentTouchSingleShot = false;
   syncPingIntentUi();
 }
@@ -5462,7 +5468,7 @@ function mountPingIntentControl(): void {
   btn.className = 'ping-intent-fab';
   btn.setAttribute('aria-pressed', 'false');
   btn.setAttribute('aria-label', 'Ping');
-  btn.title = 'Ping: hold here or Space, then click the board';
+  btn.title = 'Ping: tap here or hold Space, then click the board';
   btn.textContent = 'Ping';
   pingIntentControlEl = btn;
 
@@ -5480,20 +5486,13 @@ function mountPingIntentControl(): void {
     } catch {
       /* ignore */
     }
-    pingIntentPingButtonHeld = true;
-    syncPingIntentUi();
   });
   btn.addEventListener('pointerup', (e) => {
     if (e.button !== 0) return;
-    if (e.pointerType === 'touch') {
-      pingIntentTouchSingleShot = true;
-    } else {
-      pingIntentPingButtonHeld = false;
-    }
+    pingIntentTouchSingleShot = true;
     syncPingIntentUi();
   });
   btn.addEventListener('pointercancel', () => {
-    pingIntentPingButtonHeld = false;
     syncPingIntentUi();
   });
 
@@ -6465,10 +6464,14 @@ window.addEventListener('pointercancel', onWindowPointerUpOrCancel);
 window.addEventListener('keydown', (e) => {
   if (isEditableTarget(e.target)) return;
   if (e.code === 'Space') {
-    if (!e.repeat && !shouldBlockPingKeyboardArm()) {
-      pingIntentFromSpace = true;
-      syncPingIntentUi();
-      e.preventDefault();
+    if (!shouldBlockPingKeyboardArm()) {
+      if (!e.repeat) {
+        pingIntentFromSpace = true;
+        syncPingIntentUi();
+      }
+      if (!e.repeat || pingIntentFromSpace) {
+        e.preventDefault();
+      }
     }
     return;
   }
