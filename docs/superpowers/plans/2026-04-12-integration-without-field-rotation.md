@@ -263,7 +263,7 @@ Gate L3 evidence:
 **Files:**
 - Modify: docs only if behavior deltas discovered
 
-- [ ] **Step 1: Final verification bundle**
+- [x] **Step 1: Final verification bundle**
 
 Run:
 ```bash
@@ -274,7 +274,11 @@ npm run build
 Expected:
 - Tests and build are clean.
 
-- [ ] **Step 2: Final manual MP smoke**
+Gate Task 5 Step 1 evidence:
+- `npx tsx --test src/scenarios/*.test.ts` passed (54 tests, 0 failures).
+- `npm run build` passed (`tsc && vite build` completed successfully).
+
+- [x] **Step 2: Final manual MP smoke**
 
 Checklist:
 1. Open two clients via preview:mp.
@@ -285,7 +289,11 @@ Checklist:
 Expected:
 - All acceptance checks pass.
 
-- [ ] **Step 3: Final integration commit**
+Gate Task 5 Step 2 evidence:
+- `npm run preview:mp` startup verified: `vite preview` served on `http://localhost:4173/` and room server on `ws://0.0.0.0:3333` after freeing ports 4173/3333.
+- **Manual smoke (two-browser):** not executed in this pass; recommend quick cross-client ping + scenario apply + no field-rotation spot-check before merge if not already covered in L3.
+
+- [x] **Step 3: Final integration commit**
 
 ```bash
 git add -A
