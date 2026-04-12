@@ -1,0 +1,738 @@
+{
+  "catalogUpdatedAt": "2026-04-12T09:36:44.477Z",
+  "scenarios": [
+    {
+      "id": "official-01",
+      "version": 1,
+      "kind": "official",
+      "meta": {
+        "name": "Official Scenario 1",
+        "description": "Minimal official placeholder scenario 1.",
+        "tags": [
+          "official"
+        ],
+        "difficulty": "easy",
+        "updatedAt": "2026-04-12T09:36:44.477Z"
+      },
+      "boardOrientation": "vertical",
+      "snapshot": {
+        "v": 1,
+        "boardOrientation": "vertical",
+        "units": [
+          {
+            "position": {
+              "q": 7,
+              "r": 5
+            },
+            "walk": 3,
+            "run": 6,
+            "rotationDeg": 0,
+            "health": 5,
+            "activated": true,
+            "effectMarkers": [],
+            "spawnedFromArmyPanel": true,
+            "catalogUnitId": "blackthorn-aldvin_book",
+            "rosterLeaderId": "blackthorn-drago_mort"
+          },
+          {
+            "position": {
+              "q": 8,
+              "r": 5
+            },
+            "walk": 3,
+            "run": 6,
+            "rotationDeg": 0,
+            "health": 5,
+            "activated": true,
+            "effectMarkers": [],
+            "spawnedFromArmyPanel": true,
+            "catalogUnitId": "blackthorn-aldvin_beast",
+            "rosterLeaderId": "blackthorn-drago_mort"
+          },
+          {
+            "position": {
+              "q": 9,
+              "r": 5
+            },
+            "walk": 3,
+            "run": 6,
+            "rotationDeg": 0,
+            "health": 5,
+            "activated": true,
+            "effectMarkers": [],
+            "spawnedFromArmyPanel": true,
+            "catalogUnitId": "krigmark-kristoff_keller_who_discovered_life",
+            "rosterLeaderId": "blackthorn-drago_mort"
+          }
+        ],
+        "unitCardData": [
+          {
+            "attacks": [
+              {
+                "attackRange": "melee",
+                "damage": 1,
+                "damageType": "physical",
+                "dice": {
+                  "black": 0,
+                  "green": 0,
+                  "red": 1,
+                  "white": 0
+                },
+                "name": "—",
+                "range": 1
+              }
+            ],
+            "catalogUnitId": "blackthorn-aldvin_book",
+            "concentration": {
+              "black": 0,
+              "green": 0,
+              "red": 0,
+              "white": 0
+            },
+            "defense": {
+              "green": 0,
+              "white": 0
+            },
+            "defenseReaction": {
+              "green": 0,
+              "white": 0
+            },
+            "domains": [
+              "creation"
+            ],
+            "exploration": {
+              "black": 0,
+              "green": 0,
+              "red": 0,
+              "white": 0
+            },
+            "explorationRange": 0,
+            "flagSprite": "/engeln.webp",
+            "grabRange": 1,
+            "health": 5,
+            "keywords": [
+              "Ангельн"
+            ],
+            "maxHealth": 5,
+            "miniatureSprite": "/catalog-units/blackthorn-aldvin_book/miniature.jpg",
+            "name": "Алдвин Летописец",
+            "run": 6,
+            "size": "small",
+            "sprite": "/catalog-units/blackthorn-aldvin_book/image.jpg",
+            "walk": 3
+          },
+          {
+            "attacks": [
+              {
+                "attackRange": "melee",
+                "damage": 1,
+                "damageType": "physical",
+                "dice": {
+                  "black": 0,
+                  "green": 0,
+                  "red": 1,
+                  "white": 0
+                },
+                "name": "—",
+                "range": 1
+              }
+            ],
+            "catalogUnitId": "blackthorn-aldvin_beast",
+            "concentration": {
+              "black": 0,
+              "green": 0,
+              "red": 0,
+              "white": 0
+            },
+            "defense": {
+              "green": 0,
+              "white": 0
+            },
+            "defenseReaction": {
+              "green": 0,
+              "white": 0
+            },
+            "domains": [
+              "creation"
+            ],
+            "exploration": {
+              "black": 0,
+              "green": 0,
+              "red": 0,
+              "white": 0
+            },
+            "explorationRange": 0,
+            "flagSprite": "/engeln.webp",
+            "grabRange": 1,
+            "health": 5,
+            "keywords": [
+              "Ангельн"
+            ],
+            "maxHealth": 5,
+            "miniatureSprite": "/catalog-units/blackthorn-aldvin_beast/miniature.jpg",
+            "name": "Алдвин Искатель Истины",
+            "run": 6,
+            "size": "small",
+            "sprite": "/catalog-units/blackthorn-aldvin_beast/image.jpg",
+            "walk": 3
+          },
+          {
+            "attacks": [
+              {
+                "attackRange": "melee",
+                "damage": 1,
+                "damageType": "physical",
+                "dice": {
+                  "black": 0,
+                  "green": 0,
+                  "red": 1,
+                  "white": 0
+                },
+                "name": "—",
+                "range": 1
+              }
+            ],
+            "catalogUnitId": "krigmark-kristoff_keller_who_discovered_life",
+            "concentration": {
+              "black": 0,
+              "green": 0,
+              "red": 0,
+              "white": 0
+            },
+            "defense": {
+              "green": 0,
+              "white": 0
+            },
+            "defenseReaction": {
+              "green": 0,
+              "white": 0
+            },
+            "domains": [
+              "death"
+            ],
+            "exploration": {
+              "black": 0,
+              "green": 0,
+              "red": 0,
+              "white": 0
+            },
+            "explorationRange": 0,
+            "flagSprite": "/krigmark.webp",
+            "grabRange": 1,
+            "health": 5,
+            "keywords": [
+              "Кригмарк"
+            ],
+            "maxHealth": 5,
+            "miniatureSprite": "/catalog-units/krigmark-kristoff_keller_who_discovered_life/miniature.jpg",
+            "name": "Кристоф Келлер, Познавший Жизнь",
+            "run": 6,
+            "size": "small",
+            "sprite": "/catalog-units/krigmark-kristoff_keller_who_discovered_life/image.jpg",
+            "walk": 3
+          }
+        ],
+        "bigMiniatures": [],
+        "bigMiniCardData": [],
+        "largeMiniatures": [],
+        "largeMiniCardData": [],
+        "hugeMiniatures": [],
+        "hugeMiniCardData": [],
+        "terrains": [],
+        "terrainOffBoardWorlds": [],
+        "terrainRotationDegs": [],
+        "etherVortexes": [],
+        "godTablePieces": [],
+        "inventoryTablePieces": [],
+        "ephiriumOpenSpriteIndices": [],
+        "godDeckSlots": {
+          "0": {
+            "discardIds": [],
+            "deckCount": 0,
+            "deckIds": [],
+            "handCount": 0,
+            "handIds": [],
+            "blindCount": 0,
+            "blindCardIds": []
+          },
+          "1": {
+            "discardIds": [],
+            "deckCount": 0,
+            "handCount": 0,
+            "blindCount": 0
+          }
+        },
+        "sharedDice": {
+          "v": 2,
+          "bySlot": {
+            "0": {
+              "rollCounter": 0,
+              "log": [],
+              "active": null
+            },
+            "1": {
+              "rollCounter": 0,
+              "log": [],
+              "active": null
+            }
+          }
+        },
+        "crystalWallets": {
+          "0": {},
+          "1": {}
+        },
+        "tableTurnNumber": 1
+      }
+    },
+    {
+      "id": "official-02",
+      "version": 1,
+      "kind": "official",
+      "meta": {
+        "name": "Official Scenario 2",
+        "description": "Minimal official placeholder scenario 2.",
+        "tags": [
+          "official"
+        ],
+        "difficulty": "normal"
+      },
+      "boardOrientation": "horizontal",
+      "snapshot": {
+        "v": 1,
+        "units": [],
+        "unitCardData": [],
+        "bigMiniatures": [],
+        "bigMiniCardData": [],
+        "largeMiniatures": [],
+        "largeMiniCardData": [],
+        "hugeMiniatures": [],
+        "hugeMiniCardData": [],
+        "terrains": [],
+        "terrainOffBoardWorlds": [],
+        "terrainRotationDegs": [],
+        "etherVortexes": [],
+        "godTablePieces": []
+      }
+    },
+    {
+      "id": "official-03",
+      "version": 1,
+      "kind": "official",
+      "meta": {
+        "name": "Official Scenario 3",
+        "description": "Minimal official placeholder scenario 3.",
+        "tags": [
+          "official"
+        ],
+        "difficulty": "hard"
+      },
+      "boardOrientation": "vertical",
+      "snapshot": {
+        "v": 1,
+        "units": [],
+        "unitCardData": [],
+        "bigMiniatures": [],
+        "bigMiniCardData": [],
+        "largeMiniatures": [],
+        "largeMiniCardData": [],
+        "hugeMiniatures": [],
+        "hugeMiniCardData": [],
+        "terrains": [],
+        "terrainOffBoardWorlds": [],
+        "terrainRotationDegs": [],
+        "etherVortexes": [],
+        "godTablePieces": []
+      }
+    },
+    {
+      "id": "official-04",
+      "version": 1,
+      "kind": "official",
+      "meta": {
+        "name": "Official Scenario 4",
+        "description": "Minimal official placeholder scenario 4.",
+        "tags": [
+          "official"
+        ],
+        "difficulty": "normal"
+      },
+      "boardOrientation": "horizontal",
+      "snapshot": {
+        "v": 1,
+        "units": [],
+        "unitCardData": [],
+        "bigMiniatures": [],
+        "bigMiniCardData": [],
+        "largeMiniatures": [],
+        "largeMiniCardData": [],
+        "hugeMiniatures": [],
+        "hugeMiniCardData": [],
+        "terrains": [],
+        "terrainOffBoardWorlds": [],
+        "terrainRotationDegs": [],
+        "etherVortexes": [],
+        "godTablePieces": []
+      }
+    },
+    {
+      "id": "official-05",
+      "version": 1,
+      "kind": "official",
+      "meta": {
+        "name": "Official Scenario 5",
+        "description": "Minimal official placeholder scenario 5.",
+        "tags": [
+          "official"
+        ],
+        "difficulty": "easy"
+      },
+      "boardOrientation": "vertical",
+      "snapshot": {
+        "v": 1,
+        "units": [],
+        "unitCardData": [],
+        "bigMiniatures": [],
+        "bigMiniCardData": [],
+        "largeMiniatures": [],
+        "largeMiniCardData": [],
+        "hugeMiniatures": [],
+        "hugeMiniCardData": [],
+        "terrains": [],
+        "terrainOffBoardWorlds": [],
+        "terrainRotationDegs": [],
+        "etherVortexes": [],
+        "godTablePieces": []
+      }
+    },
+    {
+      "id": "official-06",
+      "version": 1,
+      "kind": "official",
+      "meta": {
+        "name": "Official Scenario 6",
+        "description": "Minimal official placeholder scenario 6.",
+        "tags": [
+          "official"
+        ],
+        "difficulty": "hard"
+      },
+      "boardOrientation": "horizontal",
+      "snapshot": {
+        "v": 1,
+        "units": [],
+        "unitCardData": [],
+        "bigMiniatures": [],
+        "bigMiniCardData": [],
+        "largeMiniatures": [],
+        "largeMiniCardData": [],
+        "hugeMiniatures": [],
+        "hugeMiniCardData": [],
+        "terrains": [],
+        "terrainOffBoardWorlds": [],
+        "terrainRotationDegs": [],
+        "etherVortexes": [],
+        "godTablePieces": []
+      }
+    },
+    {
+      "id": "official-07",
+      "version": 1,
+      "kind": "official",
+      "meta": {
+        "name": "Official Scenario 7",
+        "description": "Minimal official placeholder scenario 7.",
+        "tags": [
+          "official"
+        ],
+        "difficulty": "easy"
+      },
+      "boardOrientation": "vertical",
+      "snapshot": {
+        "v": 1,
+        "units": [],
+        "unitCardData": [],
+        "bigMiniatures": [],
+        "bigMiniCardData": [],
+        "largeMiniatures": [],
+        "largeMiniCardData": [],
+        "hugeMiniatures": [],
+        "hugeMiniCardData": [],
+        "terrains": [],
+        "terrainOffBoardWorlds": [],
+        "terrainRotationDegs": [],
+        "etherVortexes": [],
+        "godTablePieces": []
+      }
+    },
+    {
+      "id": "official-08",
+      "version": 1,
+      "kind": "official",
+      "meta": {
+        "name": "Official Scenario 8",
+        "description": "Minimal official placeholder scenario 8.",
+        "tags": [
+          "official"
+        ],
+        "difficulty": "normal"
+      },
+      "boardOrientation": "horizontal",
+      "snapshot": {
+        "v": 1,
+        "units": [],
+        "unitCardData": [],
+        "bigMiniatures": [],
+        "bigMiniCardData": [],
+        "largeMiniatures": [],
+        "largeMiniCardData": [],
+        "hugeMiniatures": [],
+        "hugeMiniCardData": [],
+        "terrains": [],
+        "terrainOffBoardWorlds": [],
+        "terrainRotationDegs": [],
+        "etherVortexes": [],
+        "godTablePieces": []
+      }
+    },
+    {
+      "id": "official-09",
+      "version": 1,
+      "kind": "official",
+      "meta": {
+        "name": "Official Scenario 9",
+        "description": "Minimal official placeholder scenario 9.",
+        "tags": [
+          "official"
+        ],
+        "difficulty": "hard"
+      },
+      "boardOrientation": "vertical",
+      "snapshot": {
+        "v": 1,
+        "units": [],
+        "unitCardData": [],
+        "bigMiniatures": [],
+        "bigMiniCardData": [],
+        "largeMiniatures": [],
+        "largeMiniCardData": [],
+        "hugeMiniatures": [],
+        "hugeMiniCardData": [],
+        "terrains": [],
+        "terrainOffBoardWorlds": [],
+        "terrainRotationDegs": [],
+        "etherVortexes": [],
+        "godTablePieces": []
+      }
+    },
+    {
+      "id": "official-10",
+      "version": 1,
+      "kind": "official",
+      "meta": {
+        "name": "Official Scenario 10",
+        "description": "Minimal official placeholder scenario 10.",
+        "tags": [
+          "official"
+        ],
+        "difficulty": "normal"
+      },
+      "boardOrientation": "horizontal",
+      "snapshot": {
+        "v": 1,
+        "units": [],
+        "unitCardData": [],
+        "bigMiniatures": [],
+        "bigMiniCardData": [],
+        "largeMiniatures": [],
+        "largeMiniCardData": [],
+        "hugeMiniatures": [],
+        "hugeMiniCardData": [],
+        "terrains": [],
+        "terrainOffBoardWorlds": [],
+        "terrainRotationDegs": [],
+        "etherVortexes": [],
+        "godTablePieces": []
+      }
+    },
+    {
+      "id": "official-11",
+      "version": 1,
+      "kind": "official",
+      "meta": {
+        "name": "Official Scenario 11",
+        "description": "Minimal official placeholder scenario 11.",
+        "tags": [
+          "official"
+        ],
+        "difficulty": "easy"
+      },
+      "boardOrientation": "vertical",
+      "snapshot": {
+        "v": 1,
+        "units": [],
+        "unitCardData": [],
+        "bigMiniatures": [],
+        "bigMiniCardData": [],
+        "largeMiniatures": [],
+        "largeMiniCardData": [],
+        "hugeMiniatures": [],
+        "hugeMiniCardData": [],
+        "terrains": [],
+        "terrainOffBoardWorlds": [],
+        "terrainRotationDegs": [],
+        "etherVortexes": [],
+        "godTablePieces": []
+      }
+    },
+    {
+      "id": "official-12",
+      "version": 1,
+      "kind": "official",
+      "meta": {
+        "name": "Official Scenario 12",
+        "description": "Minimal official placeholder scenario 12.",
+        "tags": [
+          "official"
+        ],
+        "difficulty": "hard"
+      },
+      "boardOrientation": "horizontal",
+      "snapshot": {
+        "v": 1,
+        "units": [],
+        "unitCardData": [],
+        "bigMiniatures": [],
+        "bigMiniCardData": [],
+        "largeMiniatures": [],
+        "largeMiniCardData": [],
+        "hugeMiniatures": [],
+        "hugeMiniCardData": [],
+        "terrains": [],
+        "terrainOffBoardWorlds": [],
+        "terrainRotationDegs": [],
+        "etherVortexes": [],
+        "godTablePieces": []
+      }
+    },
+    {
+      "id": "official-13",
+      "version": 1,
+      "kind": "official",
+      "meta": {
+        "name": "Official Scenario 13",
+        "description": "Minimal official placeholder scenario 13.",
+        "tags": [
+          "official"
+        ],
+        "difficulty": "easy"
+      },
+      "boardOrientation": "vertical",
+      "snapshot": {
+        "v": 1,
+        "units": [],
+        "unitCardData": [],
+        "bigMiniatures": [],
+        "bigMiniCardData": [],
+        "largeMiniatures": [],
+        "largeMiniCardData": [],
+        "hugeMiniatures": [],
+        "hugeMiniCardData": [],
+        "terrains": [],
+        "terrainOffBoardWorlds": [],
+        "terrainRotationDegs": [],
+        "etherVortexes": [],
+        "godTablePieces": []
+      }
+    },
+    {
+      "id": "official-14",
+      "version": 1,
+      "kind": "official",
+      "meta": {
+        "name": "Official Scenario 14",
+        "description": "Minimal official placeholder scenario 14.",
+        "tags": [
+          "official"
+        ],
+        "difficulty": "normal"
+      },
+      "boardOrientation": "horizontal",
+      "snapshot": {
+        "v": 1,
+        "units": [],
+        "unitCardData": [],
+        "bigMiniatures": [],
+        "bigMiniCardData": [],
+        "largeMiniatures": [],
+        "largeMiniCardData": [],
+        "hugeMiniatures": [],
+        "hugeMiniCardData": [],
+        "terrains": [],
+        "terrainOffBoardWorlds": [],
+        "terrainRotationDegs": [],
+        "etherVortexes": [],
+        "godTablePieces": []
+      }
+    },
+    {
+      "id": "official-15",
+      "version": 1,
+      "kind": "official",
+      "meta": {
+        "name": "Official Scenario 15",
+        "description": "Minimal official placeholder scenario 15.",
+        "tags": [
+          "official"
+        ],
+        "difficulty": "hard"
+      },
+      "boardOrientation": "vertical",
+      "snapshot": {
+        "v": 1,
+        "units": [],
+        "unitCardData": [],
+        "bigMiniatures": [],
+        "bigMiniCardData": [],
+        "largeMiniatures": [],
+        "largeMiniCardData": [],
+        "hugeMiniatures": [],
+        "hugeMiniCardData": [],
+        "terrains": [],
+        "terrainOffBoardWorlds": [],
+        "terrainRotationDegs": [],
+        "etherVortexes": [],
+        "godTablePieces": []
+      }
+    },
+    {
+      "id": "official-16",
+      "version": 1,
+      "kind": "official",
+      "meta": {
+        "name": "Official Scenario 16",
+        "description": "Minimal official placeholder scenario 16.",
+        "tags": [
+          "official"
+        ],
+        "difficulty": "normal"
+      },
+      "boardOrientation": "horizontal",
+      "snapshot": {
+        "v": 1,
+        "units": [],
+        "unitCardData": [],
+        "bigMiniatures": [],
+        "bigMiniCardData": [],
+        "largeMiniatures": [],
+        "largeMiniCardData": [],
+        "hugeMiniatures": [],
+        "hugeMiniCardData": [],
+        "terrains": [],
+        "terrainOffBoardWorlds": [],
+        "terrainRotationDegs": [],
+        "etherVortexes": [],
+        "godTablePieces": []
+      }
+    }
+  ]
+}

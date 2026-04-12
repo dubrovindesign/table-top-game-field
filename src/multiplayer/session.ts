@@ -48,6 +48,12 @@ export type MultiplayerSessionOptions = {
     crystalId: string;
     delta: number;
   }) => void;
+  /** Сервер сообщил, что каталог официальных сценариев обновился (для рефреша списка / LWW в UI). */
+  onOfficialScenariosUpdated?: (msg: { catalogUpdatedAt: string; changedIds: string[] }) => void;
+  /** WebSocket transport connected (used by callers for refresh/poll fallback orchestration). */
+  onServerConnectionOpen?: () => void;
+  /** WebSocket transport disconnected (used by callers for refresh/poll fallback orchestration). */
+  onServerConnectionClose?: () => void;
   /**
    * Контейнер для кнопки «Мультиплеер» в одном ряду с другими кнопками (например панель армии).
    * Если не задан — кнопка и всплывающая панель закрепляются в правом верхнем углу.
@@ -115,8 +121,17 @@ export function sendRoomClientMessage(msg: ClientToServerMessage): void {
 }
 
 export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
-  const { renderer, scheduleRender, screenToBoard, onViewPlayerSlot, onPeerCrystalWalletDelta, toolbarMount } =
-    opts;
+  const {
+    renderer,
+    scheduleRender,
+    screenToBoard,
+    onViewPlayerSlot,
+    onPeerCrystalWalletDelta,
+    onOfficialScenariosUpdated,
+    onServerConnectionOpen,
+    onServerConnectionClose,
+    toolbarMount,
+  } = opts;
   const client = new RoomClient();
 
   const toolbarAnchor = document.createElement('div');
@@ -837,6 +852,10 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       }
       return;
     }
+    if (msg.type === 'officialScenariosUpdated') {
+      onOfficialScenariosUpdated?.(msg);
+      return;
+    }
     console.warn('[mp] неизвестный тип сообщения сервера', msg);
   }
 
@@ -856,9 +875,11 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
     setConnectStatus('Подключение к серверу комнат…', true);
     client.connect(wsUrl, {
       onOpen: () => {
+        onServerConnectionOpen?.();
         run();
       },
       onClose: () => {
+        onServerConnectionClose?.();
         const intent = pendingWsIntent;
         const hadRoom = currentRoomId !== null;
         pendingWsIntent = null;

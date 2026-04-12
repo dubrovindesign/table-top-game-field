@@ -36,6 +36,10 @@ const mpWsProxy = {
     changeOrigin: true,
     ws: true,
   },
+  '/api/scenarios': {
+    target: `http://127.0.0.1:${MP_PORT}`,
+    changeOrigin: true,
+  },
 } as const;
 
 export default defineConfig({

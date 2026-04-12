@@ -4,7 +4,7 @@
 
 import type { ApplyScenarioResult } from './apply.ts';
 import { downloadScenarioJson, importScenariosFromJsonText } from './io.ts';
-import { loadOfficialScenarioDocuments } from './official.ts';
+import { OfficialApiError } from './officialApi.ts';
 import { list as listCustomScenarios, removeById, upsert } from './store.ts';
 import type { ImportConflictStrategy } from './store.ts';
 import type { ScenarioDocument } from './types.ts';
@@ -13,18 +13,33 @@ import {
   newScenarioDocumentId,
   parseTagsInput,
   scenarioOrientationLabelRu,
+  type EditableScenarioMeta,
 } from './panelHelpers.ts';
 
 export type ScenariosPanelOptions = {
-  buildCustomScenarioDocument: (meta: {
-    name: string;
-    description: string;
-    tags: string[];
-    difficulty: 'easy' | 'normal' | 'hard';
-  }) => ScenarioDocument;
+  buildCustomScenarioDocument: (meta: EditableScenarioMeta) => ScenarioDocument;
   applyScenario: (raw: unknown) => ApplyScenarioResult;
   /** After applying a scenario to the live board (e.g. scheduleRender). */
   afterScenarioMutation?: () => void;
+  /** Runtime official catalog from HTTP API (not static seed). */
+  loadOfficialScenarios: () => Promise<ScenarioDocument[]>;
+  updateOfficialScenario: (doc: ScenarioDocument) => Promise<ScenarioDocument>;
+  /** Full official document for PUT: base + form meta + live board snapshot/orientation (from `main`). */
+  buildEditedOfficialScenarioDocument: (base: ScenarioDocument, meta: EditableScenarioMeta) => ScenarioDocument;
+};
+
+export type ScenariosPanelHandle = {
+  open: () => void;
+  close: () => void;
+  readonly root: HTMLElement;
+  /**
+   * When the server broadcasts official catalog changes — refresh list and, if the user is editing
+   * that official scenario, arm the LWW save confirmation.
+   */
+  onOfficialScenariosRemoteInvalidation: (
+    changedIds: readonly string[],
+    options?: { silent?: boolean },
+  ) => void;
 };
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -53,19 +68,35 @@ const APPLY_CONFIRM =
 const DELETE_CONFIRM = 'Удалить этот сценарий из «Моих»? Это действие нельзя отменить.';
 const IMPORT_CONFLICT_HINT =
   'При совпадении id с уже сохранёнными сценариями: OK — заменить существующие, Отмена — импортировать копии с новыми id.';
+const OFFICIAL_SAVE_GLOBAL_CONFIRM =
+  'Сохранить изменения официального сценария? Они будут видны всем пользователям и заменят текущую опубликованную версию.';
+const OFFICIAL_LWW_CONFIRM =
+  'Сценарий уже был изменён (другим пользователем или в другой вкладке). Сохранить и перезаписать последнюю версию?';
 
 function showStorageFailure(actionLabel: string, error: unknown): void {
   const detail = error instanceof Error ? ` ${error.message}` : '';
   window.alert(`Не удалось ${actionLabel}. Ошибка сохранения в localStorage.${detail}`);
 }
 
-export function createScenariosPanel(opts: ScenariosPanelOptions): {
-  open: () => void;
-  close: () => void;
-  readonly root: HTMLElement;
-} {
+type MetaEditorState =
+  | null
+  | { kind: 'custom'; id: string }
+  | {
+      kind: 'official';
+      base: ScenarioDocument;
+      baselineUpdatedAt: string | undefined;
+    };
+
+export function createScenariosPanel(opts: ScenariosPanelOptions): ScenariosPanelHandle {
   let officialDocs: ScenarioDocument[] = [];
   let activeTab: 'official' | 'custom' = 'official';
+  let metaEditorState: MetaEditorState = null;
+  /** True when a remote change may have superseded the baseline snapshot for the open official editor. */
+  let officialLwwPending = false;
+  /** Guards against overlapping loads (latest response wins). */
+  let officialLoadSeq = 0;
+  /** Prevents duplicate save submits from the same dialog state. */
+  let metaSaveInFlight = false;
 
   const backdrop = el('div', 'scenarios-panel-backdrop scenarios-panel-backdrop--hidden');
   backdrop.setAttribute('role', 'presentation');
@@ -147,7 +178,7 @@ export function createScenariosPanel(opts: ScenariosPanelOptions): {
       showStorageFailure('сохранить сценарий', error);
       return;
     }
-    refreshAndRender();
+    void refreshAndRender();
   });
   createSection.appendChild(createName);
   createSection.appendChild(createDesc);
@@ -176,48 +207,16 @@ export function createScenariosPanel(opts: ScenariosPanelOptions): {
     editDiff.appendChild(o);
   }
   const metaActions = el('div', 'scenarios-meta-actions');
-  let editingId: string | null = null;
-  metaActions.appendChild(
-    btn('Отмена', 'scenarios-panel-btn scenarios-panel-btn--secondary', () => closeMetaEditor()),
+  const metaCancelBtn = btn(
+    'Отмена',
+    'scenarios-panel-btn scenarios-panel-btn--secondary',
+    () => closeMetaEditor(),
   );
-  metaActions.appendChild(
-    btn('Сохранить', 'scenarios-panel-btn scenarios-panel-btn--primary', () => {
-      if (!editingId) return;
-      const existing = listCustomScenarios().find((d) => d.id === editingId);
-      if (!existing) {
-        closeMetaEditor();
-        return;
-      }
-      const name = editName.value.trim();
-      if (!name) {
-        window.alert('Укажите название.');
-        return;
-      }
-      const description = editDesc.value.trim();
-      if (!description) {
-        window.alert('Укажите описание.');
-        return;
-      }
-      try {
-        upsert({
-          ...existing,
-          meta: {
-            ...existing.meta,
-            name,
-            description,
-            tags: parseTagsInput(editTags.value),
-            difficulty: editDiff.value as 'easy' | 'normal' | 'hard',
-            updatedAt: new Date().toISOString(),
-          },
-        });
-      } catch (error) {
-        showStorageFailure('обновить сценарий', error);
-        return;
-      }
-      closeMetaEditor();
-      refreshAndRender();
-    }),
-  );
+  const metaSaveBtn = btn('Сохранить', 'scenarios-panel-btn scenarios-panel-btn--primary', () => {
+    void commitMetaEditor();
+  });
+  metaActions.appendChild(metaCancelBtn);
+  metaActions.appendChild(metaSaveBtn);
   metaDialog.appendChild(editName);
   metaDialog.appendChild(editDesc);
   metaDialog.appendChild(editTags);
@@ -225,8 +224,17 @@ export function createScenariosPanel(opts: ScenariosPanelOptions): {
   metaDialog.appendChild(metaActions);
   metaOverlay.appendChild(metaDialog);
 
-  function openMetaEditor(doc: ScenarioDocument): void {
-    editingId = doc.id;
+  function openMetaEditor(doc: ScenarioDocument, mode: 'custom' | 'official'): void {
+    if (mode === 'official') {
+      metaEditorState = {
+        kind: 'official',
+        base: doc,
+        baselineUpdatedAt: doc.meta.updatedAt,
+      };
+      officialLwwPending = false;
+    } else {
+      metaEditorState = { kind: 'custom', id: doc.id };
+    }
     editName.value = doc.meta.name;
     editDesc.value = doc.meta.description;
     editTags.value = doc.meta.tags.join(', ');
@@ -235,8 +243,89 @@ export function createScenariosPanel(opts: ScenariosPanelOptions): {
   }
 
   function closeMetaEditor(): void {
-    editingId = null;
+    if (metaSaveInFlight) return;
+    metaEditorState = null;
+    officialLwwPending = false;
     metaOverlay.classList.add('scenarios-meta-overlay--hidden');
+  }
+
+  function setMetaEditorSavingState(inFlight: boolean): void {
+    metaSaveInFlight = inFlight;
+    metaSaveBtn.disabled = inFlight;
+    metaCancelBtn.disabled = inFlight;
+  }
+
+  async function commitMetaEditor(): Promise<void> {
+    if (metaSaveInFlight) return;
+    const state = metaEditorState;
+    if (!state) return;
+
+    const name = editName.value.trim();
+    if (!name) {
+      window.alert('Укажите название.');
+      return;
+    }
+    const description = editDesc.value.trim();
+    if (!description) {
+      window.alert('Укажите описание.');
+      return;
+    }
+    const meta: EditableScenarioMeta = {
+      name,
+      description,
+      tags: parseTagsInput(editTags.value),
+      difficulty: editDiff.value as 'easy' | 'normal' | 'hard',
+    };
+
+    if (state.kind === 'custom') {
+      const existing = listCustomScenarios().find((d) => d.id === state.id);
+      if (!existing) {
+        closeMetaEditor();
+        return;
+      }
+      try {
+        upsert({
+          ...existing,
+          meta: {
+            ...existing.meta,
+            ...meta,
+            updatedAt: new Date().toISOString(),
+          },
+        });
+      } catch (error) {
+        showStorageFailure('обновить сценарий', error);
+        return;
+      }
+      closeMetaEditor();
+      void refreshAndRender();
+      return;
+    }
+
+    if (officialLwwPending && !window.confirm(OFFICIAL_LWW_CONFIRM)) {
+      return;
+    }
+    if (!window.confirm(OFFICIAL_SAVE_GLOBAL_CONFIRM)) {
+      return;
+    }
+
+    const built = opts.buildEditedOfficialScenarioDocument(state.base, meta);
+    setMetaEditorSavingState(true);
+    try {
+      await opts.updateOfficialScenario(built);
+    } catch (error) {
+      const msg =
+        error instanceof OfficialApiError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : String(error);
+      window.alert(`Не удалось сохранить официальный сценарий. ${msg}`);
+      setMetaEditorSavingState(false);
+      return;
+    }
+    setMetaEditorSavingState(false);
+    closeMetaEditor();
+    void refreshAndRender();
   }
 
   metaOverlay.addEventListener('click', (e) => {
@@ -281,7 +370,7 @@ export function createScenariosPanel(opts: ScenariosPanelOptions): {
         return;
       }
       window.alert(`Импортировано сценариев: ${result.value.imported}.`);
-      refreshAndRender();
+      void refreshAndRender();
     };
     reader.onerror = () => {
       const reason =
@@ -316,9 +405,14 @@ export function createScenariosPanel(opts: ScenariosPanelOptions): {
         tryApply(doc),
       ),
     );
+    if (mode === 'official') {
+      actions.appendChild(
+        btn('Редактировать', 'scenarios-panel-btn scenarios-panel-btn--small', () => openMetaEditor(doc, 'official')),
+      );
+    }
     if (mode === 'custom') {
       actions.appendChild(
-        btn('Правка', 'scenarios-panel-btn scenarios-panel-btn--small', () => openMetaEditor(doc)),
+        btn('Правка', 'scenarios-panel-btn scenarios-panel-btn--small', () => openMetaEditor(doc, 'custom')),
       );
       actions.appendChild(
         btn('Дубль', 'scenarios-panel-btn scenarios-panel-btn--small', () => {
@@ -338,7 +432,7 @@ export function createScenariosPanel(opts: ScenariosPanelOptions): {
             showStorageFailure('создать копию сценария', error);
             return;
           }
-          refreshAndRender();
+          void refreshAndRender();
         }),
       );
       actions.appendChild(
@@ -356,7 +450,7 @@ export function createScenariosPanel(opts: ScenariosPanelOptions): {
             showStorageFailure('удалить сценарий', error);
             return;
           }
-          refreshAndRender();
+          void refreshAndRender();
         }),
       );
     }
@@ -377,7 +471,11 @@ export function createScenariosPanel(opts: ScenariosPanelOptions): {
       const custom = listCustomScenarios();
       if (custom.length === 0) {
         listEl.appendChild(
-          el('div', 'scenarios-panel-empty', 'Пока нет сохранённых сценариев — создайте из поля или импортируйте JSON.'),
+          el(
+            'div',
+            'scenarios-panel-empty',
+            'Пока нет сохранённых сценариев — создайте из поля или импортируйте JSON.',
+          ),
         );
       } else {
         for (const d of custom) listEl.appendChild(renderCard(d, 'custom'));
@@ -386,28 +484,56 @@ export function createScenariosPanel(opts: ScenariosPanelOptions): {
     body.appendChild(listEl);
   }
 
-  function refreshAndRender(): void {
+  function syncOfficialLwwFromLoadedList(): void {
+    if (metaEditorState?.kind !== 'official') return;
+    const { base, baselineUpdatedAt } = metaEditorState;
+    const loaded = officialDocs.find((d) => d.id === base.id);
+    if (!loaded) return;
+    if (loaded.meta.updatedAt !== baselineUpdatedAt) {
+      officialLwwPending = true;
+    }
+  }
+
+  async function refreshAndRender(options?: { silent?: boolean }): Promise<void> {
+    const silent = options?.silent ?? false;
+    const loadSeq = ++officialLoadSeq;
     try {
-      officialDocs = loadOfficialScenarioDocuments();
+      const loaded = await opts.loadOfficialScenarios();
+      if (loadSeq !== officialLoadSeq) return;
+      officialDocs = loaded;
     } catch (e) {
+      if (loadSeq !== officialLoadSeq) return;
       officialDocs = [];
       const msg = e instanceof Error ? e.message : String(e);
-      console.error('[scenarios] loadOfficialScenarioDocuments', e);
-      window.alert(`Не удалось загрузить официальные сценарии: ${msg}`);
+      console.error('[scenarios] loadOfficialScenarios', e);
+      if (!silent) {
+        window.alert(`Не удалось загрузить официальные сценарии: ${msg}`);
+      }
     }
+    syncOfficialLwwFromLoadedList();
     renderCardList();
   }
 
   function open(): void {
     backdrop.classList.remove('scenarios-panel-backdrop--hidden');
     closeMetaEditor();
-    refreshAndRender();
     setTab(activeTab);
+    void refreshAndRender();
   }
 
   function close(): void {
     closeMetaEditor();
     backdrop.classList.add('scenarios-panel-backdrop--hidden');
+  }
+
+  function onOfficialScenariosRemoteInvalidation(
+    changedIds: readonly string[],
+    options?: { silent?: boolean },
+  ): void {
+    if (metaEditorState?.kind === 'official' && changedIds.includes(metaEditorState.base.id)) {
+      officialLwwPending = true;
+    }
+    void refreshAndRender({ silent: options?.silent ?? false });
   }
 
   panel.appendChild(header);
@@ -442,5 +568,5 @@ export function createScenariosPanel(opts: ScenariosPanelOptions): {
     true,
   );
 
-  return { open, close, root: backdrop };
+  return { open, close, root: backdrop, onOfficialScenariosRemoteInvalidation };
 }

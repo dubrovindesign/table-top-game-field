@@ -1,4 +1,35 @@
-import type { ScenarioOrientation } from './types.ts';
+import type { SerializedBoardStateV1 } from '../multiplayer/boardState.ts';
+import type { ScenarioDocument, ScenarioOrientation } from './types.ts';
+
+/** Meta fields edited in the scenarios panel (custom create + official/custom edit). */
+export type EditableScenarioMeta = {
+  name: string;
+  description: string;
+  tags: string[];
+  difficulty: 'easy' | 'normal' | 'hard';
+};
+
+/**
+ * Builds a full official {@link ScenarioDocument} for PUT: base identity + new meta,
+ * current board orientation and snapshot supplied by the caller (live board in `main`).
+ */
+export function mergeOfficialEditIntoDocument(
+  base: ScenarioDocument,
+  meta: EditableScenarioMeta,
+  boardOrientation: ScenarioOrientation,
+  snapshot: SerializedBoardStateV1,
+): ScenarioDocument {
+  return {
+    ...base,
+    meta: {
+      ...base.meta,
+      ...meta,
+      updatedAt: new Date().toISOString(),
+    },
+    boardOrientation,
+    snapshot,
+  };
+}
 
 /** Stable id for new custom scenarios (browser `crypto.randomUUID` when available). */
 export function newScenarioDocumentId(): string {

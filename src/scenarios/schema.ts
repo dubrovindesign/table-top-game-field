@@ -107,3 +107,14 @@ export function parseScenarioDocument(raw: unknown): ParseResult<ScenarioDocumen
 
   return { ok: true, value: doc };
 }
+
+/**
+ * Validates `raw` with {@link parseScenarioDocument} and returns the document, or throws with `label` in the message.
+ */
+export function validateScenarioDocumentStrict(raw: unknown, label: string): ScenarioDocument {
+  const parsed = parseScenarioDocument(raw);
+  if (!parsed.ok) {
+    throw new Error(`${label}: ${parsed.error}`);
+  }
+  return parsed.value;
+}

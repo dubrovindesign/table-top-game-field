@@ -123,9 +123,15 @@ import { EMPTY_TABLE_DRAG } from './multiplayer/protocol.ts';
 import { tickTableDragOutbound } from './multiplayer/tableDragOutbound.ts';
 import { initMultiplayerSession, sendPingIntentAtBoard, sendRoomClientMessage } from './multiplayer/session.ts';
 import { applyScenarioDocument, type ApplyScenarioResult } from './scenarios/apply.ts';
+import { fetchOfficialScenarios, updateOfficialScenario } from './scenarios/officialApi.ts';
 import { createScenariosPanel } from './scenarios/panel.ts';
-import { newScenarioDocumentId } from './scenarios/panelHelpers.ts';
+import {
+  mergeOfficialEditIntoDocument,
+  newScenarioDocumentId,
+  type EditableScenarioMeta,
+} from './scenarios/panelHelpers.ts';
 import { deriveRotationModel } from './scenarios/rotationModel.ts';
+import { deriveMiniVisualFacingDeg } from './scenarios/miniatureRotationModel.ts';
 import type { ScenarioDocument, ScenarioOrientation } from './scenarios/types.ts';
 import { mountAppMoreMenu } from './appMoreMenu.ts';
 import { getWheelBehavior, mountAppSettingsToolbar } from './appSettings.ts';
@@ -138,6 +144,12 @@ import {
   playPingIntentSfx,
 } from './boardDragSfx';
 import { loadCatalogBundle } from './catalog/index.ts';
+import {
+  defaultBoardInstance,
+  defaultBoardTemplateFromHexes,
+  type BoardInstance,
+  type BoardTemplate,
+} from './board/boardModel.ts';
 
 await loadCatalogBundle();
 
@@ -161,7 +173,7 @@ const crystalWalletBySlot: { 0: Map<string, number>; 1: Map<string, number> } = 
   1: new Map(),
 };
 
-function effectiveFieldRotationDeg(): number {
+function baseFieldRotationDeg(): number {
   return deriveRotationModel({
     baseDeg: BOARD_ROTATION_DEG,
     seatExtraDeg: viewSeatExtraRotationDeg,
@@ -169,8 +181,14 @@ function effectiveFieldRotationDeg(): number {
   }).fieldDeg;
 }
 
+function effectiveFieldRotationDeg(): number {
+  return baseFieldRotationDeg() + getActiveBoardInstance().rotationDeg;
+}
+
 /** Seat + base board tilt for content-facing transforms (no scenario vertical bonus). */
 export function effectiveContentRotationDeg(): number {
+  // Content layer (unit art, HP digits, status markers, god-card art) stays player-facing.
+  // So board instance rotation affects the field/grid, but not the content visual basis.
   return deriveRotationModel({
     baseDeg: BOARD_ROTATION_DEG,
     seatExtraDeg: viewSeatExtraRotationDeg,
@@ -187,13 +205,14 @@ function contentFieldRotationDeltaDeg(): number {
   return effectiveContentRotationDeg() - effectiveFieldRotationDeg();
 }
 
-/** Model rotation + seat + content-vs-field delta — HP / activation / effect anchors (matches renderer `rotRadVisual`). */
-function unitRotationDegForMiniatureLocalUi(modelDeg: number): number {
-  return modelDeg + oppositeSeatUnitRotationCorrectionDeg() + contentFieldRotationDeltaDeg();
-}
-
-function unitRotationRadForMiniatureLocalUi(modelDeg: number): number {
-  return (unitRotationDegForMiniatureLocalUi(modelDeg) * Math.PI) / 180;
+/** Small-mini physical silhouette basis (must match renderer `smallUnitVisualRotationDeg`). */
+function smallUnitPhysicalRotationRad(modelDeg: number): number {
+  const deg = deriveMiniVisualFacingDeg({
+    logicalDeg: modelDeg,
+    seatExtraDeg: oppositeSeatUnitRotationCorrectionDeg(),
+    scenarioOrientation: 'horizontal',
+  });
+  return (deg * Math.PI) / 180;
 }
 
 /**
@@ -475,6 +494,156 @@ const layout = new Layout(
   { x: 0, y: 0 },
 );
 
+const LEGACY_BOARD_TEMPLATE_ID = 'legacy-main-board-template';
+const boardTemplates = new Map<string, BoardTemplate>();
+boardTemplates.set(
+  LEGACY_BOARD_TEMPLATE_ID,
+  defaultBoardTemplateFromHexes(LEGACY_BOARD_TEMPLATE_ID, grid.allHexes(), {
+    backgroundImageSrc: '/greenfield.png',
+    cellsSvgOverlaySrc: `/cellscontrast.svg?${CELLS_SVG_CACHE_KEY}`,
+  }),
+);
+let boardInstances: BoardInstance[] = [defaultBoardInstance(LEGACY_BOARD_TEMPLATE_ID)];
+let activeBoardInstanceId: string = boardInstances[0]?.id ?? 'board-1';
+
+function getBoardInstanceById(id: string | undefined): BoardInstance | null {
+  if (!id) return null;
+  return boardInstances.find((b) => b.id === id) ?? null;
+}
+
+function getActiveBoardInstance(): BoardInstance {
+  return (
+    getBoardInstanceById(activeBoardInstanceId) ??
+    boardInstances[0] ?? {
+      id: 'board-1',
+      templateId: LEGACY_BOARD_TEMPLATE_ID,
+      worldX: 0,
+      worldY: 0,
+      rotationDeg: 0,
+      scale: 1,
+      zIndex: 0,
+    }
+  );
+}
+
+function syncActiveBoardVisualsToRenderConfig(): void {
+  const active = getActiveBoardInstance();
+  const tpl = boardTemplates.get(active.templateId);
+  if (!tpl) return;
+  renderConfig.backgroundImageSrc = tpl.backgroundImageSrc ?? '/greenfield.png';
+  renderConfig.cellsSvgOverlaySrc = tpl.cellsSvgOverlaySrc ?? `/cellscontrast.svg?${CELLS_SVG_CACHE_KEY}`;
+}
+
+function setActiveBoardInstance(id: string): void {
+  if (!getBoardInstanceById(id)) return;
+  activeBoardInstanceId = id;
+  syncActiveBoardVisualsToRenderConfig();
+}
+
+function nextBoardId(): string {
+  let n = boardInstances.length + 1;
+  while (boardInstances.some((b) => b.id === `board-${n}`)) n += 1;
+  return `board-${n}`;
+}
+
+function addBoardInstanceNearActive(): void {
+  const base = getActiveBoardInstance();
+  const extra: BoardInstance = {
+    ...base,
+    id: nextBoardId(),
+    worldX: base.worldX + HEX_SIZE * 6,
+    worldY: base.worldY + HEX_SIZE * 3,
+    zIndex: Math.max(...boardInstances.map((b) => b.zIndex), 0) + 1,
+  };
+  boardInstances.push(extra);
+  setActiveBoardInstance(extra.id);
+}
+
+function rotatePointAroundBoardCenter(p: Point, deltaDeg: number): Point {
+  const c = getBoardCenterWorld();
+  const rad = (deltaDeg * Math.PI) / 180;
+  const dx = p.x - c.x;
+  const dy = p.y - c.y;
+  return {
+    x: c.x + dx * Math.cos(rad) - dy * Math.sin(rad),
+    y: c.y + dx * Math.sin(rad) + dy * Math.cos(rad),
+  };
+}
+
+function preserveDetachedTablePiecesOnBoardRotate(deltaDeg: number): void {
+  // Detached/off-board pieces should stay fixed on screen when board rotates.
+  const compensateDeg = -deltaDeg;
+  for (const u of units) {
+    if (u.offBoardWorld) u.offBoardWorld = rotatePointAroundBoardCenter(u.offBoardWorld, compensateDeg);
+  }
+  for (const m of bigMiniatures) {
+    if (m.offBoardWorld) m.offBoardWorld = rotatePointAroundBoardCenter(m.offBoardWorld, compensateDeg);
+  }
+  for (const m of largeMiniatures) {
+    if (m.offBoardWorld) m.offBoardWorld = rotatePointAroundBoardCenter(m.offBoardWorld, compensateDeg);
+  }
+  for (const m of hugeMiniatures) {
+    if (m.offBoardWorld) m.offBoardWorld = rotatePointAroundBoardCenter(m.offBoardWorld, compensateDeg);
+  }
+  for (let i = 0; i < terrainOffBoardWorlds.length; i++) {
+    const p = terrainOffBoardWorlds[i];
+    if (p) terrainOffBoardWorlds[i] = rotatePointAroundBoardCenter(p, compensateDeg);
+  }
+  for (const v of etherVortexes) {
+    if (v.offBoardWorld) v.offBoardWorld = rotatePointAroundBoardCenter(v.offBoardWorld, compensateDeg);
+  }
+  for (const g of godTablePieces) {
+    g.world = rotatePointAroundBoardCenter(g.world, compensateDeg);
+  }
+  for (const it of inventoryTablePieces) {
+    it.world = rotatePointAroundBoardCenter(it.world, compensateDeg);
+  }
+  if (dragPreviewPosition) dragPreviewPosition = rotatePointAroundBoardCenter(dragPreviewPosition, compensateDeg);
+  if (bigMiniPreviewPosition) bigMiniPreviewPosition = rotatePointAroundBoardCenter(bigMiniPreviewPosition, compensateDeg);
+  if (largeMiniPreviewPosition) largeMiniPreviewPosition = rotatePointAroundBoardCenter(largeMiniPreviewPosition, compensateDeg);
+  if (hugeMiniPreviewPosition) hugeMiniPreviewPosition = rotatePointAroundBoardCenter(hugeMiniPreviewPosition, compensateDeg);
+  if (terrainPreviewWorld) terrainPreviewWorld = rotatePointAroundBoardCenter(terrainPreviewWorld, compensateDeg);
+  if (etherVortexPreviewWorld) etherVortexPreviewWorld = rotatePointAroundBoardCenter(etherVortexPreviewWorld, compensateDeg);
+  if (godLooseDragPreviewWorld) godLooseDragPreviewWorld = rotatePointAroundBoardCenter(godLooseDragPreviewWorld, compensateDeg);
+  if (inventoryLooseDragPreviewWorld) {
+    inventoryLooseDragPreviewWorld = rotatePointAroundBoardCenter(inventoryLooseDragPreviewWorld, compensateDeg);
+  }
+}
+
+function rotateActiveBoard(stepDeg: number): void {
+  const active = getBoardInstanceById(activeBoardInstanceId);
+  if (!active) return;
+  preserveDetachedTablePiecesOnBoardRotate(stepDeg);
+  active.rotationDeg += stepDeg;
+}
+
+function selectNextBoardInstance(): void {
+  if (boardInstances.length <= 1) return;
+  const idx = boardInstances.findIndex((b) => b.id === activeBoardInstanceId);
+  const next = boardInstances[(idx + 1) % boardInstances.length];
+  if (next) setActiveBoardInstance(next.id);
+}
+
+function removeActiveBoardInstance(): void {
+  if (boardInstances.length <= 1) return;
+  const idx = boardInstances.findIndex((b) => b.id === activeBoardInstanceId);
+  if (idx < 0) return;
+  boardInstances.splice(idx, 1);
+  const fallback = boardInstances[Math.max(0, idx - 1)] ?? boardInstances[0];
+  if (fallback) setActiveBoardInstance(fallback.id);
+}
+
+function cycleActiveBoardVisualPreset(): void {
+  const active = getActiveBoardInstance();
+  const tpl = boardTemplates.get(active.templateId);
+  if (!tpl) return;
+  const presets = ['/greenfield.png', '/terrain3.jpg'];
+  const current = tpl.backgroundImageSrc ?? presets[0]!;
+  const idx = Math.max(0, presets.indexOf(current));
+  tpl.backgroundImageSrc = presets[(idx + 1) % presets.length]!;
+  syncActiveBoardVisualsToRenderConfig();
+}
+
 // ── Camera — center grid on screen ────────────────────────────
 
 const camera = new Camera();
@@ -665,7 +834,7 @@ function godTableCardScreenAabb(worldCenter: { x: number; y: number }): {
   for (const lc of locals) {
     const wx = worldCenter.x + lc.x * Math.cos(C) - lc.y * Math.sin(C);
     const wy = worldCenter.y + lc.x * Math.sin(C) + lc.y * Math.cos(C);
-    const s = boardWorldToScreen({ x: wx, y: wy });
+    const s = boardWorldToScreenBase({ x: wx, y: wy });
     minSX = Math.min(minSX, s.x);
     minSY = Math.min(minSY, s.y);
     maxSX = Math.max(maxSX, s.x);
@@ -689,9 +858,9 @@ function getGodBlindFieldEdgeMidAndOutward(slot: PlayerSlot): {
     { x: ext.maxX, y: ext.cy },
   ];
   let best = edgeMids[0]!;
-  let bestSy = boardWorldToScreen(best).y;
+  let bestSy = boardWorldToScreenBase(best).y;
   for (const p of edgeMids) {
-    const sy = boardWorldToScreen(p).y;
+    const sy = boardWorldToScreenBase(p).y;
     const better = preferMaxScreenY ? sy > bestSy : sy < bestSy;
     if (better) {
       best = p;
@@ -731,7 +900,7 @@ function computeBlindZoneLayoutForSlot(slot: PlayerSlot): GodBlindZoneLayout {
   const Ws = abb.maxSX - abb.minSX;
   const Hs = abb.maxSY - abb.minSY;
 
-  const anchorS = boardWorldToScreen(anchorW);
+  const anchorS = boardWorldToScreenBase(anchorW);
   /** Ряд в экране — строго по горизонтали (иначе проекция касательной даёт «лестницу»). */
 
   const cardsAbs: Array<{ left: number; top: number; width: number; height: number }> = [];
@@ -826,6 +995,7 @@ const renderConfig = {
   boardRotationDeg: BOARD_ROTATION_DEG,
   contentFieldRotationDeltaDeg: 0,
 };
+syncActiveBoardVisualsToRenderConfig();
 
 const renderer = new Renderer(
   canvas,
@@ -839,6 +1009,7 @@ const renderer = new Renderer(
 
 type Unit = {
   position: Hex;
+  boardInstanceId?: string;
   /** If set, unit is off-board and renders at this world position instead. */
   offBoardWorld?: Point;
   walk: number;
@@ -905,6 +1076,7 @@ let lastPasteOffsetStep = 0;
 
 type BigMini = {
   center: Hex;
+  boardInstanceId?: string;
   /** If set, miniature is off-board at this world position. */
   offBoardWorld?: Point;
   walk: number;
@@ -929,6 +1101,7 @@ let openHealthControlsBigMiniIndex: number | null = null;
 
 type LargeMini = {
   anchor: Hex;
+  boardInstanceId?: string;
   offBoardWorld?: Point;
   walk: number;
   run: number;
@@ -966,6 +1139,7 @@ let openHealthControlsLargeMiniIndex: number | null = null;
 
 type HugeMini = {
   anchor: Hex;
+  boardInstanceId?: string;
   offBoardWorld?: Point;
   walk: number;
   run: number;
@@ -2272,7 +2446,11 @@ function loop(): void {
         rotDeg: effectiveFieldRotationDeg() + GRID_OVERLAY_EXTRA_ROTATION_DEG,
       });
     }
+    renderer.setBoardInstances(boardInstances);
     renderer.updateConfig({
+      boardRotationDeg: effectiveFieldRotationDeg(),
+      contentFieldRotationDeltaDeg: contentFieldRotationDeltaDeg(),
+      oppositeSeatUnitRotationCorrectionDeg: oppositeSeatUnitRotationCorrectionDeg(),
       backgroundImageRotationDeg:
         renderConfig.backgroundImageRotationDeg + desertUnderlayExtraRotationDeg,
     });
@@ -2451,9 +2629,10 @@ function commitBoardDragStateAsPointerUpAt(clientX: number, clientY: number): vo
     etherVortexDragPendingIndex = null;
   }
   if (draggingUnitIndex !== null) {
-    if (dragOverHex && !isHexOccupiedByOtherUnit(dragOverHex, draggingUnitIndex)) {
+    if (dragOverHex && !isHexBlockedForSmallDragTarget(dragOverHex)) {
       units[draggingUnitIndex].position = dragOverHex;
       units[draggingUnitIndex].offBoardWorld = undefined;
+      moveSmallUnitToTop(draggingUnitIndex);
     } else if (!dragOverHex && dragPreviewPosition) {
       units[draggingUnitIndex].offBoardWorld = { ...dragPreviewPosition };
     }
@@ -2474,6 +2653,7 @@ function commitBoardDragStateAsPointerUpAt(clientX: number, clientY: number): vo
     } else if (bigMiniPreviewPosition) {
       bigMiniatures[draggingBigMiniIndex].offBoardWorld = { ...bigMiniPreviewPosition };
     }
+    moveBigMiniToTop(draggingBigMiniIndex);
     draggingBigMiniIndex = null;
     bigMiniPreviewPosition = null;
     bigMiniDragOverCenter = null;
@@ -2491,6 +2671,7 @@ function commitBoardDragStateAsPointerUpAt(clientX: number, clientY: number): vo
     } else if (!dropHex && largeMiniPreviewPosition) {
       largeMiniatures[draggingLargeMiniIndex].offBoardWorld = { ...largeMiniPreviewPosition };
     }
+    moveLargeMiniToTop(draggingLargeMiniIndex);
     draggingLargeMiniIndex = null;
     largeMiniPreviewPosition = null;
     largeMiniDragOverAnchor = null;
@@ -2819,8 +3000,123 @@ function hexUnderGlobalPointer(): Hex | null {
   return hexAtScreen(pointerScreenX, pointerScreenY);
 }
 
-function isHexOccupiedByOtherUnit(target: Hex, movingUnitIndex: number): boolean {
-  return units.some((unit, index) => index !== movingUnitIndex && unit.position.key === target.key);
+function isHexBlockedForSmallDragTarget(target: Hex): boolean {
+  return !grid.has(target);
+}
+
+/** Topmost small mini in hex (LIFO by units array order). */
+function findTopSmallUnitAtHex(hex: Hex): number {
+  for (let i = units.length - 1; i >= 0; i--) {
+    const unit = units[i]!;
+    if (unit.position.key === hex.key && grid.has(unit.position)) return i;
+  }
+  return -1;
+}
+
+/** Move one small mini to top render/hit layer (end of `units`). */
+function moveSmallUnitToTop(unitIndex: number): number {
+  const last = units.length - 1;
+  if (unitIndex < 0 || unitIndex > last) return unitIndex;
+  if (unitIndex === last) return unitIndex;
+
+  const [unit] = units.splice(unitIndex, 1);
+  const [card] = unitCardData.splice(unitIndex, 1);
+  if (!unit || !card) return unitIndex;
+  units.push(unit);
+  unitCardData.push(card);
+
+  const remapUnitIndex = (index: number | null): number | null => {
+    if (index === null) return null;
+    if (index === unitIndex) return last;
+    if (index > unitIndex) return index - 1;
+    return index;
+  };
+
+  selectedUnitIndex = remapUnitIndex(selectedUnitIndex);
+  openHealthControlsUnitIndex = remapUnitIndex(openHealthControlsUnitIndex);
+  unitDragPendingIndex = remapUnitIndex(unitDragPendingIndex);
+  draggingUnitIndex = remapUnitIndex(draggingUnitIndex);
+
+  if (altHoverTarget?.kind === 'small') {
+    const remapped = remapUnitIndex(altHoverTarget.index);
+    altHoverTarget = remapped === null ? null : { kind: 'small', index: remapped };
+  }
+  if (shiftHoverTarget?.kind === 'small') {
+    const remapped = remapUnitIndex(shiftHoverTarget.index);
+    shiftHoverTarget = remapped === null ? null : { kind: 'small', index: remapped };
+  }
+
+  return last;
+}
+
+/** Move one big mini to top render/hit layer (end of `bigMiniatures`). */
+function moveBigMiniToTop(index: number): number {
+  const last = bigMiniatures.length - 1;
+  if (index < 0 || index > last) return index;
+  if (index === last) return index;
+
+  const [mini] = bigMiniatures.splice(index, 1);
+  const [card] = bigMiniCardData.splice(index, 1);
+  if (!mini || !card) return index;
+  bigMiniatures.push(mini);
+  bigMiniCardData.push(card);
+
+  const remap = (value: number | null): number | null => {
+    if (value === null) return null;
+    if (value === index) return last;
+    if (value > index) return value - 1;
+    return value;
+  };
+
+  selectedBigMiniIndex = remap(selectedBigMiniIndex);
+  openHealthControlsBigMiniIndex = remap(openHealthControlsBigMiniIndex);
+  bigMiniDragPendingIndex = remap(bigMiniDragPendingIndex);
+  draggingBigMiniIndex = remap(draggingBigMiniIndex);
+
+  if (altHoverTarget?.kind === 'big') {
+    const mapped = remap(altHoverTarget.index);
+    altHoverTarget = mapped === null ? null : { kind: 'big', index: mapped };
+  }
+  if (shiftHoverTarget?.kind === 'big') {
+    const mapped = remap(shiftHoverTarget.index);
+    shiftHoverTarget = mapped === null ? null : { kind: 'big', index: mapped };
+  }
+  return last;
+}
+
+/** Move one large mini to top render/hit layer (end of `largeMiniatures`). */
+function moveLargeMiniToTop(index: number): number {
+  const last = largeMiniatures.length - 1;
+  if (index < 0 || index > last) return index;
+  if (index === last) return index;
+
+  const [mini] = largeMiniatures.splice(index, 1);
+  const [card] = largeMiniCardData.splice(index, 1);
+  if (!mini || !card) return index;
+  largeMiniatures.push(mini);
+  largeMiniCardData.push(card);
+
+  const remap = (value: number | null): number | null => {
+    if (value === null) return null;
+    if (value === index) return last;
+    if (value > index) return value - 1;
+    return value;
+  };
+
+  selectedLargeMiniIndex = remap(selectedLargeMiniIndex);
+  openHealthControlsLargeMiniIndex = remap(openHealthControlsLargeMiniIndex);
+  largeMiniDragPendingIndex = remap(largeMiniDragPendingIndex);
+  draggingLargeMiniIndex = remap(draggingLargeMiniIndex);
+
+  if (altHoverTarget?.kind === 'large') {
+    const mapped = remap(altHoverTarget.index);
+    altHoverTarget = mapped === null ? null : { kind: 'large', index: mapped };
+  }
+  if (shiftHoverTarget?.kind === 'large') {
+    const mapped = remap(shiftHoverTarget.index);
+    shiftHoverTarget = mapped === null ? null : { kind: 'large', index: mapped };
+  }
+  return last;
 }
 
 function hexonCells(center: Hex): Hex[] {
@@ -2834,21 +3130,27 @@ function findTerrainAtHex(hex: Hex): number {
 }
 
 function findBigMiniAtHex(hex: Hex): number {
-  return bigMiniatures.findIndex((m) =>
-    hexonCells(m.center).some((cell) => cell.key === hex.key),
-  );
+  for (let i = bigMiniatures.length - 1; i >= 0; i--) {
+    const m = bigMiniatures[i]!;
+    if (hexonCells(m.center).some((cell) => cell.key === hex.key)) return i;
+  }
+  return -1;
 }
 
 function findLargeMiniAtHex(hex: Hex): number {
-  return largeMiniatures.findIndex((m) =>
-    largeMiniFootprint(m).some((cell) => cell.key === hex.key),
-  );
+  for (let i = largeMiniatures.length - 1; i >= 0; i--) {
+    const m = largeMiniatures[i]!;
+    if (largeMiniFootprint(m).some((cell) => cell.key === hex.key)) return i;
+  }
+  return -1;
 }
 
 function findHugeMiniAtHex(hex: Hex): number {
-  return hugeMiniatures.findIndex((m) =>
-    hugeMiniAllCells(m).some((cell) => cell.key === hex.key),
-  );
+  for (let i = hugeMiniatures.length - 1; i >= 0; i--) {
+    const m = hugeMiniatures[i]!;
+    if (hugeMiniAllCells(m).some((cell) => cell.key === hex.key)) return i;
+  }
+  return -1;
 }
 
 function hugeMiniPivotWorld(m: HugeMini): Point {
@@ -2901,7 +3203,7 @@ const OFF_BOARD_HUGE_HIT_RADIUS = HEX_SIZE * 3.5;
 
 function findOffBoardUnitAtScreen(sx: number, sy: number): number {
   const world = screenToBoardWorld(sx, sy);
-  for (let i = 0; i < units.length; i++) {
+  for (let i = units.length - 1; i >= 0; i--) {
     const ob = units[i].offBoardWorld;
     if (!ob) continue;
     const dx = world.x - ob.x;
@@ -2913,7 +3215,7 @@ function findOffBoardUnitAtScreen(sx: number, sy: number): number {
 
 function findOffBoardBigMiniAtScreen(sx: number, sy: number): number {
   const world = screenToBoardWorld(sx, sy);
-  for (let i = 0; i < bigMiniatures.length; i++) {
+  for (let i = bigMiniatures.length - 1; i >= 0; i--) {
     const ob = bigMiniatures[i].offBoardWorld;
     if (!ob) continue;
     const dx = world.x - ob.x;
@@ -2949,7 +3251,7 @@ function findOffBoardEtherVortexAtScreen(sx: number, sy: number): number {
 
 function findOffBoardLargeMiniAtScreen(sx: number, sy: number): number {
   const world = screenToBoardWorld(sx, sy);
-  for (let i = 0; i < largeMiniatures.length; i++) {
+  for (let i = largeMiniatures.length - 1; i >= 0; i--) {
     const ob = largeMiniatures[i].offBoardWorld;
     if (!ob) continue;
     const dx = world.x - ob.x;
@@ -2961,7 +3263,7 @@ function findOffBoardLargeMiniAtScreen(sx: number, sy: number): number {
 
 function findOffBoardHugeMiniAtScreen(sx: number, sy: number): number {
   const world = screenToBoardWorld(sx, sy);
-  for (let i = 0; i < hugeMiniatures.length; i++) {
+  for (let i = hugeMiniatures.length - 1; i >= 0; i--) {
     const ob = hugeMiniatures[i].offBoardWorld;
     if (!ob) continue;
     const dx = world.x - ob.x;
@@ -3086,18 +3388,7 @@ function sumArmyPoints(): number {
 }
 
 function isHexBlockedForSmall(hex: Hex): boolean {
-  if (!grid.has(hex)) return true;
-  if (units.some((u) => u.position.key === hex.key)) return true;
-  for (const m of bigMiniatures) {
-    if (hexonCells(m.center).some((c) => c.key === hex.key)) return true;
-  }
-  for (const m of largeMiniatures) {
-    if (largeMiniFootprint(m).some((c) => c.key === hex.key)) return true;
-  }
-  for (const m of hugeMiniatures) {
-    if (hugeMiniAllCells(m).some((c) => c.key === hex.key)) return true;
-  }
-  return false;
+  return !grid.has(hex);
 }
 
 function canPlaceBigMiniAt(center: Hex): boolean {
@@ -3124,10 +3415,6 @@ function canPlaceLargeMiniAt(anchor: Hex, excludeIndex = -1, candidateRotationDe
   for (const h of cells) {
     if (!grid.has(h)) return false;
     if (units.some((u) => u.position.key === h.key)) return false;
-  }
-  for (const m of bigMiniatures) {
-    const keys = new Set(hexonCells(m.center).map((c) => c.key));
-    if (cells.some((c) => keys.has(c.key))) return false;
   }
   for (let i = 0; i < largeMiniatures.length; i++) {
     if (i === excludeIndex) continue;
@@ -3311,6 +3598,7 @@ function placeArmyCatalogUnitOnBoard(
       if (isHexBlockedForSmall(hex)) return false;
       units.push({
         position: hex,
+        boardInstanceId: activeBoardInstanceId,
         walk: card.walk,
         run: card.run,
         rotationDeg: 0,
@@ -3323,6 +3611,7 @@ function placeArmyCatalogUnitOnBoard(
     } else {
       units.push({
         position: layout.pixelToHex(world),
+        boardInstanceId: activeBoardInstanceId,
         offBoardWorld: { ...world },
         walk: card.walk,
         run: card.run,
@@ -3350,6 +3639,7 @@ function placeArmyCatalogUnitOnBoard(
       if (!anchor) return false;
       largeMiniatures.push({
         anchor,
+        boardInstanceId: activeBoardInstanceId,
         walk: card.walk,
         run: card.run,
         rotationDeg: 0,
@@ -3362,6 +3652,7 @@ function placeArmyCatalogUnitOnBoard(
     } else {
       largeMiniatures.push({
         anchor: layout.pixelToHex(world),
+        boardInstanceId: activeBoardInstanceId,
         offBoardWorld: { ...world },
         walk: card.walk,
         run: card.run,
@@ -3389,6 +3680,7 @@ function placeArmyCatalogUnitOnBoard(
       if (!anchor) return false;
       hugeMiniatures.push({
         anchor,
+        boardInstanceId: activeBoardInstanceId,
         walk: card.walk,
         run: card.run,
         rotationDeg: 0,
@@ -3403,6 +3695,7 @@ function placeArmyCatalogUnitOnBoard(
       const anchor = nearestHexonCenterFromWorld(world);
       hugeMiniatures.push({
         anchor,
+        boardInstanceId: activeBoardInstanceId,
         offBoardWorld: { ...world },
         walk: card.walk,
         run: card.run,
@@ -3431,6 +3724,7 @@ function placeArmyCatalogUnitOnBoard(
     if (!canPlaceBigMiniAt(center)) return false;
     bigMiniatures.push({
       center,
+      boardInstanceId: activeBoardInstanceId,
       walk: card.walk,
       run: card.run,
       rotationDeg: 0,
@@ -3443,6 +3737,7 @@ function placeArmyCatalogUnitOnBoard(
   } else {
     bigMiniatures.push({
       center,
+      boardInstanceId: activeBoardInstanceId,
       offBoardWorld: { ...world },
       walk: card.walk,
       run: card.run,
@@ -3605,28 +3900,12 @@ function refreshAltHoverTarget(hex: Hex | null): void {
     altHoverTarget = null;
     return;
   }
-  const unitIdx = units.findIndex(
-    (unit) => unit.position.key === hex.key && grid.has(unit.position),
-  );
+  const unitIdx = findTopSmallUnitAtHex(hex);
   if (unitIdx !== -1) {
     altHoverTarget = { kind: 'small', index: unitIdx };
     return;
   }
   const wHover = screenToBoardWorld(pointerScreenX, pointerScreenY);
-  const bigIdx = findBigMiniAtHex(hex);
-  if (bigIdx !== -1) {
-    if (
-      isWorldPointInBigMiniSilhouette(
-        wHover,
-        bigMiniPivotWorldForHit(bigIdx),
-        bigMiniatures[bigIdx]!.rotationDeg,
-        layout,
-      )
-    ) {
-      altHoverTarget = { kind: 'big', index: bigIdx };
-      return;
-    }
-  }
   const largeIdx = findLargeMiniAtHex(hex);
   if (largeIdx !== -1) {
     if (
@@ -3638,6 +3917,20 @@ function refreshAltHoverTarget(hex: Hex | null): void {
       )
     ) {
       altHoverTarget = { kind: 'large', index: largeIdx };
+      return;
+    }
+  }
+  const bigIdx = findBigMiniAtHex(hex);
+  if (bigIdx !== -1) {
+    if (
+      isWorldPointInBigMiniSilhouette(
+        wHover,
+        bigMiniPivotWorldForHit(bigIdx),
+        bigMiniatures[bigIdx]!.rotationDeg,
+        layout,
+      )
+    ) {
+      altHoverTarget = { kind: 'big', index: bigIdx };
       return;
     }
   }
@@ -3654,28 +3947,12 @@ function refreshShiftHoverTarget(hex: Hex | null): void {
     shiftHoverTarget = null;
     return;
   }
-  const unitIdx = units.findIndex(
-    (unit) => unit.position.key === hex.key && grid.has(unit.position),
-  );
+  const unitIdx = findTopSmallUnitAtHex(hex);
   if (unitIdx !== -1) {
     shiftHoverTarget = { kind: 'small', index: unitIdx };
     return;
   }
   const wShift = screenToBoardWorld(pointerScreenX, pointerScreenY);
-  const bigIdx = findBigMiniAtHex(hex);
-  if (bigIdx !== -1) {
-    if (
-      isWorldPointInBigMiniSilhouette(
-        wShift,
-        bigMiniPivotWorldForHit(bigIdx),
-        bigMiniatures[bigIdx]!.rotationDeg,
-        layout,
-      )
-    ) {
-      shiftHoverTarget = { kind: 'big', index: bigIdx };
-      return;
-    }
-  }
   const largeIdx = findLargeMiniAtHex(hex);
   if (largeIdx !== -1) {
     if (
@@ -3687,6 +3964,20 @@ function refreshShiftHoverTarget(hex: Hex | null): void {
       )
     ) {
       shiftHoverTarget = { kind: 'large', index: largeIdx };
+      return;
+    }
+  }
+  const bigIdx = findBigMiniAtHex(hex);
+  if (bigIdx !== -1) {
+    if (
+      isWorldPointInBigMiniSilhouette(
+        wShift,
+        bigMiniPivotWorldForHit(bigIdx),
+        bigMiniatures[bigIdx]!.rotationDeg,
+        layout,
+      )
+    ) {
+      shiftHoverTarget = { kind: 'big', index: bigIdx };
       return;
     }
   }
@@ -3750,7 +4041,7 @@ function tryPromoteUnitDragFromPending(e: ClientXY, pointerId?: number): void {
   draggingUnitIndex = idx;
   unitCard.setPassthrough(showSelectedDetails);
   const hex = hexAtScreen(e.clientX, e.clientY);
-  dragOverHex = hex && !isHexOccupiedByOtherUnit(hex, idx) ? hex : null;
+  dragOverHex = hex && !isHexBlockedForSmallDragTarget(hex) ? hex : null;
   dragPreviewPosition = screenToBoardWorld(e.clientX, e.clientY);
   renderer.setDragState(draggingUnitIndex, dragOverHex, dragPreviewPosition);
   captureBoardDragPointer(pointerId);
@@ -4134,6 +4425,7 @@ function pasteClipboard(): void {
     units.push({
       ...clipboardEntity.unit,
       ...rosterPasteOwnerOverride(clipboardEntity.unit),
+      boardInstanceId: activeBoardInstanceId,
       position: nextPos,
       effectMarkers: new Set(clipboardEntity.unit.effectMarkers),
     });
@@ -4151,6 +4443,7 @@ function pasteClipboard(): void {
     bigMiniatures.push({
       ...clipboardEntity.unit,
       ...rosterPasteOwnerOverride(clipboardEntity.unit),
+      boardInstanceId: activeBoardInstanceId,
       center: nextCenter,
       effectMarkers: new Set(clipboardEntity.unit.effectMarkers),
     });
@@ -4181,6 +4474,7 @@ function pasteClipboard(): void {
     largeMiniatures.push({
       ...clipboardEntity.unit,
       ...rosterPasteOwnerOverride(clipboardEntity.unit),
+      boardInstanceId: activeBoardInstanceId,
       anchor: nextAnchor,
       effectMarkers: new Set(clipboardEntity.unit.effectMarkers),
     });
@@ -4208,6 +4502,7 @@ function pasteClipboard(): void {
     hugeMiniatures.push({
       ...clipboardEntity.unit,
       ...rosterPasteOwnerOverride(clipboardEntity.unit),
+      boardInstanceId: activeBoardInstanceId,
       anchor: nextAnchor,
       effectMarkers: new Set(clipboardEntity.unit.effectMarkers),
     });
@@ -4305,9 +4600,12 @@ function deleteSelected(): void {
   clearSelection();
 }
 
-function boardWorldToScreen(world: { x: number; y: number }): { x: number; y: number } {
+function boardWorldToScreenByDeg(
+  world: { x: number; y: number },
+  rotationDeg: number,
+): { x: number; y: number } {
   const boardCenter = getBoardCenterWorld();
-  const angleRad = (effectiveFieldRotationDeg() * Math.PI) / 180;
+  const angleRad = (rotationDeg * Math.PI) / 180;
   const dx = world.x - boardCenter.x;
   const dy = world.y - boardCenter.y;
   const rotatedX = boardCenter.x + dx * Math.cos(angleRad) - dy * Math.sin(angleRad);
@@ -4316,6 +4614,14 @@ function boardWorldToScreen(world: { x: number; y: number }): { x: number; y: nu
     x: rotatedX * camera.zoom + camera.offsetX,
     y: rotatedY * camera.zoom + camera.offsetY,
   };
+}
+
+function boardWorldToScreen(world: { x: number; y: number }): { x: number; y: number } {
+  return boardWorldToScreenByDeg(world, effectiveFieldRotationDeg());
+}
+
+function boardWorldToScreenBase(world: { x: number; y: number }): { x: number; y: number } {
+  return boardWorldToScreenByDeg(world, baseFieldRotationDeg());
 }
 
 /** Общие размеры/центр декоративных слоёв «поле» (пустыня + сетка). */
@@ -4382,7 +4688,7 @@ function getUnitHealthUiGeometry(unitIndex: number): {
   const unitCenterWorld = draggingPreview
     ? dragPreviewPosition!
     : layout.hexToPixel(units[unitIndex].position);
-  const rotRad = unitRotationRadForMiniatureLocalUi(units[unitIndex].rotationDeg);
+  const rotRad = smallUnitPhysicalRotationRad(units[unitIndex].rotationDeg);
   const expanded = openHealthControlsUnitIndex === unitIndex;
   const effectiveR =
     halfH *
@@ -4426,7 +4732,7 @@ function getBigMiniHealthUiGeometry(
     0.48;
   const badgeCenterWorld = bigMiniHealthBadgeCenterWorld(
     centerWorld,
-    unitRotationDegForMiniatureLocalUi(rotationDeg),
+    rotationDeg,
     layout,
   );
   const buttonRadiusWorld =
@@ -4469,10 +4775,9 @@ function getLargeMiniHealthUiGeometry(
     LARGE_MINI_VISUAL_SCALE *
     LARGE_UNIT_HEALTH_UI_SCALE *
     0.48;
-  // Model + content-vs-field delta — matches renderer large tri (see drawLargeMiniatures).
   const badgeCenterWorld = largeMiniHealthBadgeCenterWorld(
     anchorWorld,
-    rotationDeg + contentFieldRotationDeltaDeg(),
+    rotationDeg,
     layout,
   );
   const buttonRadiusWorld =
@@ -4535,7 +4840,7 @@ function getHugeMiniHealthUiGeometry(
     0.48;
   const badgeCenterWorld = hugeMiniHealthBadgeCenterWorld(
     anchorWorld,
-    rotationDeg + contentFieldRotationDeltaDeg(),
+    rotationDeg,
     layout,
   );
   const buttonRadiusWorld =
@@ -4586,7 +4891,7 @@ function getUnitActivationToggleGeometry(unitIndex: number): {
 } {
   const { halfH } = smallUnitHexHalfExtent();
   const cw = unitCenterWorldForHud(unitIndex);
-  const rotRad = unitRotationRadForMiniatureLocalUi(units[unitIndex]!.rotationDeg);
+  const rotRad = smallUnitPhysicalRotationRad(units[unitIndex]!.rotationDeg);
   const world = smallUnitActivationToggleCenterWorldRad(cw, rotRad, layout);
   const rw = halfH * 0.2175;
   return {
@@ -4610,7 +4915,7 @@ function getBigMiniActivationToggleGeometry(
 ): { center: Point; radiusScreen: number } {
   const w = bigMiniActivationToggleCenterWorld(
     centerWorld,
-    unitRotationDegForMiniatureLocalUi(rotationDeg),
+    rotationDeg,
     layout,
   );
   const rw = bigActivationToggleRadiusWorld();
@@ -4650,7 +4955,7 @@ function getHugeMiniActivationToggleGeometry(
 ): { center: Point; radiusScreen: number } {
   const w = hugeMiniActivationToggleCenterFromPivotWorld(
     pivotWorld,
-    unitRotationDegForMiniatureLocalUi(rotationDeg),
+    rotationDeg,
     layout,
   );
   const rw = hugeActivationToggleRadiusWorld();
@@ -4660,7 +4965,7 @@ function getHugeMiniActivationToggleGeometry(
 function getUnitBroomgarHungerGeometry(unitIndex: number): { center: Point; radiusScreen: number } {
   const { halfH } = smallUnitHexHalfExtent();
   const cw = unitCenterWorldForHud(unitIndex);
-  const rotRad = unitRotationRadForMiniatureLocalUi(units[unitIndex]!.rotationDeg);
+  const rotRad = smallUnitPhysicalRotationRad(units[unitIndex]!.rotationDeg);
   const world = smallUnitBroomgarHungerCenterWorldRad(cw, rotRad, layout);
   const rw = halfH * 0.2175;
   return {
@@ -4671,7 +4976,7 @@ function getUnitBroomgarHungerGeometry(unitIndex: number): { center: Point; radi
 
 function getBigMiniBroomgarHungerGeometry(bigMiniIndex: number): { center: Point; radiusScreen: number } {
   const rotDeg = bigMiniatures[bigMiniIndex]!.rotationDeg;
-  const rotDegVis = unitRotationDegForMiniatureLocalUi(rotDeg);
+  const rotDegVis = rotDeg;
   const cw = bigMiniHealthCenterWorld(bigMiniIndex);
   const w = bigMiniBroomgarHungerCenterWorld(cw, rotDegVis, layout);
   const rw = bigActivationToggleRadiusWorld();
@@ -4989,10 +5294,10 @@ function resolveMiniatureTapKeyForDoubleTap(clientX: number, clientY: number): s
   if (!hex) {
     const obUnit = findOffBoardUnitAtScreen(clientX, clientY);
     if (obUnit !== -1) return `os:${obUnit}`;
-    const obBig = findOffBoardBigMiniAtScreen(clientX, clientY);
-    if (obBig !== -1) return `ob:${obBig}`;
     const obLarge = findOffBoardLargeMiniAtScreen(clientX, clientY);
     if (obLarge !== -1) return `ol:${obLarge}`;
+    const obBig = findOffBoardBigMiniAtScreen(clientX, clientY);
+    if (obBig !== -1) return `ob:${obBig}`;
     const obHuge = findOffBoardHugeMiniAtScreen(clientX, clientY);
     if (obHuge !== -1) return `oh:${obHuge}`;
     return null;
@@ -5001,21 +5306,9 @@ function resolveMiniatureTapKeyForDoubleTap(clientX: number, clientY: number): s
     const altTerrainIdx = findTerrainAtHex(hex);
     if (altTerrainIdx !== -1) return null;
   }
-  const clickedUnitIndex = units.findIndex((unit) => unit.position.key === hex.key);
+  const clickedUnitIndex = findTopSmallUnitAtHex(hex);
   if (clickedUnitIndex !== -1) return `s:${clickedUnitIndex}`;
   const wTap = screenToBoardWorld(clientX, clientY);
-  const bigMiniIdx = findBigMiniAtHex(hex);
-  if (
-    bigMiniIdx !== -1 &&
-    isWorldPointInBigMiniSilhouette(
-      wTap,
-      bigMiniPivotWorldForHit(bigMiniIdx),
-      bigMiniatures[bigMiniIdx]!.rotationDeg,
-      layout,
-    )
-  ) {
-    return `b:${bigMiniIdx}`;
-  }
   const largeMiniIdx = findLargeMiniAtHex(hex);
   if (
     largeMiniIdx !== -1 &&
@@ -5027,6 +5320,18 @@ function resolveMiniatureTapKeyForDoubleTap(clientX: number, clientY: number): s
     )
   ) {
     return `l:${largeMiniIdx}`;
+  }
+  const bigMiniIdx = findBigMiniAtHex(hex);
+  if (
+    bigMiniIdx !== -1 &&
+    isWorldPointInBigMiniSilhouette(
+      wTap,
+      bigMiniPivotWorldForHit(bigMiniIdx),
+      bigMiniatures[bigMiniIdx]!.rotationDeg,
+      layout,
+    )
+  ) {
+    return `b:${bigMiniIdx}`;
   }
   const hugeMiniIdx = resolveHugeMiniIndexAtPointer(hex, wTap);
   if (hugeMiniIdx !== -1) return `h:${hugeMiniIdx}`;
@@ -5351,7 +5656,7 @@ function handleCanvasPointerMove(clientX: number, clientY: number, pointerId?: n
   refreshShiftHoverTarget(hex);
 
   if (draggingUnitIndex !== null && !isDraggingGodLoose) {
-    dragOverHex = isHexOccupiedByOtherUnit(hex, draggingUnitIndex) ? null : hex;
+    dragOverHex = isHexBlockedForSmallDragTarget(hex) ? null : hex;
     dragPreviewPosition = screenToBoardWorld(clientX, clientY);
     renderer.setDragState(draggingUnitIndex, dragOverHex, dragPreviewPosition);
   }
@@ -6018,30 +6323,6 @@ canvas.addEventListener('mousedown', (e) => {
         scheduleRender();
         return;
       }
-      const obBig = findOffBoardBigMiniAtScreen(e.clientX, e.clientY);
-      if (obBig !== -1) {
-        unitDragPendingIndex = null;
-        terrainDragPendingIndex = null;
-        etherVortexDragPendingIndex = null;
-        openHealthControlsUnitIndex = null;
-        openHealthControlsBigMiniIndex = null;
-        selectedEtherVortexIndex = null;
-        showSelectedDetails = e.detail === 2;
-        bigMiniDragPendingIndex = obBig;
-        bigMiniDragPendingStartX = e.clientX;
-        bigMiniDragPendingStartY = e.clientY;
-        if (selectedBigMiniIndex !== obBig) {
-          selectedUnitIndex = null;
-          updateMovementHighlights();
-          selectedBigMiniIndex = obBig;
-          selectedTerrainIndex = null;
-          selectedGodTablePieceIndex = null;
-          selectedInventoryTablePieceIndex = null;
-          updateBigMiniMovementHighlights();
-        }
-        scheduleRender();
-        return;
-      }
       const obLarge = findOffBoardLargeMiniAtScreen(e.clientX, e.clientY);
       if (obLarge !== -1) {
         unitDragPendingIndex = null;
@@ -6069,6 +6350,30 @@ canvas.addEventListener('mousedown', (e) => {
           updateBigMiniMovementHighlights();
           updateLargeMiniMovementHighlights();
           updateHugeMiniMovementHighlights();
+        }
+        scheduleRender();
+        return;
+      }
+      const obBig = findOffBoardBigMiniAtScreen(e.clientX, e.clientY);
+      if (obBig !== -1) {
+        unitDragPendingIndex = null;
+        terrainDragPendingIndex = null;
+        etherVortexDragPendingIndex = null;
+        openHealthControlsUnitIndex = null;
+        openHealthControlsBigMiniIndex = null;
+        selectedEtherVortexIndex = null;
+        showSelectedDetails = e.detail === 2;
+        bigMiniDragPendingIndex = obBig;
+        bigMiniDragPendingStartX = e.clientX;
+        bigMiniDragPendingStartY = e.clientY;
+        if (selectedBigMiniIndex !== obBig) {
+          selectedUnitIndex = null;
+          updateMovementHighlights();
+          selectedBigMiniIndex = obBig;
+          selectedTerrainIndex = null;
+          selectedGodTablePieceIndex = null;
+          selectedInventoryTablePieceIndex = null;
+          updateBigMiniMovementHighlights();
         }
         scheduleRender();
         return;
@@ -6192,7 +6497,7 @@ canvas.addEventListener('mousedown', (e) => {
       }
     }
 
-    const clickedUnitIndex = units.findIndex((unit) => unit.position.key === hex.key);
+    const clickedUnitIndex = findTopSmallUnitAtHex(hex);
     if (clickedUnitIndex !== -1) {
       bigMiniDragPendingIndex = null;
       terrainDragPendingIndex = null;
@@ -6223,40 +6528,6 @@ canvas.addEventListener('mousedown', (e) => {
     }
 
     const boardWorldAtClick = screenToBoardWorld(e.clientX, e.clientY);
-    const bigMiniIdx = findBigMiniAtHex(hex);
-    if (bigMiniIdx !== -1) {
-      if (
-        isWorldPointInBigMiniSilhouette(
-          boardWorldAtClick,
-          bigMiniPivotWorldForHit(bigMiniIdx),
-          bigMiniatures[bigMiniIdx]!.rotationDeg,
-          layout,
-        )
-      ) {
-        unitDragPendingIndex = null;
-        terrainDragPendingIndex = null;
-        etherVortexDragPendingIndex = null;
-        largeMiniDragPendingIndex = null;
-        hugeMiniDragPendingIndex = null;
-        openHealthControlsUnitIndex = null;
-        openHealthControlsBigMiniIndex = null;
-        selectedEtherVortexIndex = null;
-        bigMiniDragPendingIndex = bigMiniIdx;
-        bigMiniDragPendingStartX = e.clientX;
-        bigMiniDragPendingStartY = e.clientY;
-        if (selectedBigMiniIndex !== bigMiniIdx) {
-          clearSelection();
-          selectedBigMiniIndex = bigMiniIdx;
-          updateMovementHighlights();
-          updateBigMiniMovementHighlights();
-        }
-        // After clearSelection — it resets showSelectedDetails
-        showSelectedDetails = e.detail === 2;
-        scheduleRender();
-        return;
-      }
-    }
-
     const largeMiniIdx = findLargeMiniAtHex(hex);
     if (largeMiniIdx !== -1) {
       if (
@@ -6285,6 +6556,40 @@ canvas.addEventListener('mousedown', (e) => {
           updateMovementHighlights();
           updateLargeMiniMovementHighlights();
         }
+        showSelectedDetails = e.detail === 2;
+        scheduleRender();
+        return;
+      }
+    }
+
+    const bigMiniIdx = findBigMiniAtHex(hex);
+    if (bigMiniIdx !== -1) {
+      if (
+        isWorldPointInBigMiniSilhouette(
+          boardWorldAtClick,
+          bigMiniPivotWorldForHit(bigMiniIdx),
+          bigMiniatures[bigMiniIdx]!.rotationDeg,
+          layout,
+        )
+      ) {
+        unitDragPendingIndex = null;
+        terrainDragPendingIndex = null;
+        etherVortexDragPendingIndex = null;
+        largeMiniDragPendingIndex = null;
+        hugeMiniDragPendingIndex = null;
+        openHealthControlsUnitIndex = null;
+        openHealthControlsBigMiniIndex = null;
+        selectedEtherVortexIndex = null;
+        bigMiniDragPendingIndex = bigMiniIdx;
+        bigMiniDragPendingStartX = e.clientX;
+        bigMiniDragPendingStartY = e.clientY;
+        if (selectedBigMiniIndex !== bigMiniIdx) {
+          clearSelection();
+          selectedBigMiniIndex = bigMiniIdx;
+          updateMovementHighlights();
+          updateBigMiniMovementHighlights();
+        }
+        // After clearSelection — it resets showSelectedDetails
         showSelectedDetails = e.detail === 2;
         scheduleRender();
         return;
@@ -6427,10 +6732,11 @@ function onWindowPointerUpOrCancel(e: PointerEvent): void {
     etherVortexDragPendingIndex = null;
     scheduleRender();
   } else if (e.button === 0 && draggingUnitIndex !== null) {
-    if (dragOverHex && !isHexOccupiedByOtherUnit(dragOverHex, draggingUnitIndex)) {
+    if (dragOverHex && !isHexBlockedForSmallDragTarget(dragOverHex)) {
       // Dropped on a valid hex → place on board
       units[draggingUnitIndex].position = dragOverHex;
       units[draggingUnitIndex].offBoardWorld = undefined;
+      moveSmallUnitToTop(draggingUnitIndex);
     } else if (!dragOverHex && dragPreviewPosition) {
       // Dropped off-board → store world position
       units[draggingUnitIndex].offBoardWorld = { ...dragPreviewPosition };
@@ -6455,6 +6761,7 @@ function onWindowPointerUpOrCancel(e: PointerEvent): void {
       // Dropped off-board → store world position
       bigMiniatures[draggingBigMiniIndex].offBoardWorld = { ...dropWorld };
     }
+    moveBigMiniToTop(draggingBigMiniIndex);
     draggingBigMiniIndex = null;
     bigMiniPreviewPosition = null;
     bigMiniDragOverCenter = null;
@@ -6473,6 +6780,7 @@ function onWindowPointerUpOrCancel(e: PointerEvent): void {
     } else if (!dropHex && largeMiniPreviewPosition) {
       largeMiniatures[draggingLargeMiniIndex].offBoardWorld = { ...largeMiniPreviewPosition };
     }
+    moveLargeMiniToTop(draggingLargeMiniIndex);
     draggingLargeMiniIndex = null;
     largeMiniPreviewPosition = null;
     largeMiniDragOverAnchor = null;
@@ -6838,6 +7146,43 @@ window.addEventListener('keydown', (e) => {
       return;
     }
   }
+  if (e.ctrlKey && e.shiftKey && !e.altKey && !e.metaKey) {
+    if (e.code === 'KeyB') {
+      addBoardInstanceNearActive();
+      notifyBoardEditLocal();
+      scheduleRender();
+      e.preventDefault();
+      return;
+    }
+    if (e.code === 'KeyR') {
+      rotateActiveBoard(90);
+      notifyBoardEditLocal();
+      scheduleRender();
+      e.preventDefault();
+      return;
+    }
+    if (e.code === 'KeyN') {
+      selectNextBoardInstance();
+      notifyBoardEditLocal();
+      scheduleRender();
+      e.preventDefault();
+      return;
+    }
+    if (e.code === 'Delete' || e.code === 'Backspace') {
+      removeActiveBoardInstance();
+      notifyBoardEditLocal();
+      scheduleRender();
+      e.preventDefault();
+      return;
+    }
+    if (e.code === 'KeyV') {
+      cycleActiveBoardVisualPreset();
+      notifyBoardEditLocal();
+      scheduleRender();
+      e.preventDefault();
+      return;
+    }
+  }
   const moveStep = e.shiftKey ? BG_CALIBRATION_STEP_FAST : BG_CALIBRATION_STEP;
   const scaleStep = e.shiftKey ? BG_CALIBRATION_SCALE_STEP * 2 : BG_CALIBRATION_SCALE_STEP;
   const elementRotStep = e.shiftKey ? ELEMENT_ROT_STEP_FAST : ELEMENT_ROT_STEP;
@@ -7057,10 +7402,9 @@ function showBoardContextMenuAt(clientX: number, clientY: number): boolean {
       });
       return true;
     }
-    const obBig = findOffBoardBigMiniAtScreen(clientX, clientY);
-    if (obBig !== -1) {
-      const bm = bigMiniatures[obBig];
-      effectMarkerMenu.show(clientX, clientY, bm.effectMarkers, {
+    const obLarge = findOffBoardLargeMiniAtScreen(clientX, clientY);
+    if (obLarge !== -1) {
+      effectMarkerMenu.show(clientX, clientY, largeMiniatures[obLarge].effectMarkers, {
         onToggle: () => {
           syncEffectMarkersToRenderer();
           scheduleRender();
@@ -7068,9 +7412,10 @@ function showBoardContextMenuAt(clientX: number, clientY: number): boolean {
       });
       return true;
     }
-    const obLarge = findOffBoardLargeMiniAtScreen(clientX, clientY);
-    if (obLarge !== -1) {
-      effectMarkerMenu.show(clientX, clientY, largeMiniatures[obLarge].effectMarkers, {
+    const obBig = findOffBoardBigMiniAtScreen(clientX, clientY);
+    if (obBig !== -1) {
+      const bm = bigMiniatures[obBig];
+      effectMarkerMenu.show(clientX, clientY, bm.effectMarkers, {
         onToggle: () => {
           syncEffectMarkersToRenderer();
           scheduleRender();
@@ -7091,7 +7436,7 @@ function showBoardContextMenuAt(clientX: number, clientY: number): boolean {
     return false;
   }
 
-  const clickedUnitIndex = units.findIndex((unit) => unit.position.key === hex.key);
+  const clickedUnitIndex = findTopSmallUnitAtHex(hex);
   if (clickedUnitIndex !== -1) {
     const unit = units[clickedUnitIndex];
     effectMarkerMenu.show(clientX, clientY, unit.effectMarkers, {
@@ -7104,6 +7449,25 @@ function showBoardContextMenuAt(clientX: number, clientY: number): boolean {
   }
 
   const wCtx = screenToBoardWorld(clientX, clientY);
+  const largeIdx = findLargeMiniAtHex(hex);
+  if (
+    largeIdx !== -1 &&
+    isWorldPointInLargeMiniSilhouette(
+      wCtx,
+      largeMiniPivotWorldForHit(largeIdx),
+      largeMiniatures[largeIdx]!.rotationDeg,
+      layout,
+    )
+  ) {
+    effectMarkerMenu.show(clientX, clientY, largeMiniatures[largeIdx].effectMarkers, {
+      onToggle: () => {
+        syncEffectMarkersToRenderer();
+        scheduleRender();
+      },
+    });
+    return true;
+  }
+
   const bigIdx = findBigMiniAtHex(hex);
   if (
     bigIdx !== -1 &&
@@ -7116,25 +7480,6 @@ function showBoardContextMenuAt(clientX: number, clientY: number): boolean {
   ) {
     const bm = bigMiniatures[bigIdx];
     effectMarkerMenu.show(clientX, clientY, bm.effectMarkers, {
-      onToggle: () => {
-        syncEffectMarkersToRenderer();
-        scheduleRender();
-      },
-    });
-    return true;
-  }
-
-  const largeIdx = findLargeMiniAtHex(hex);
-  if (
-    largeIdx !== -1 &&
-    isWorldPointInLargeMiniSilhouette(
-      wCtx,
-      largeMiniPivotWorldForHit(largeIdx),
-      largeMiniatures[largeIdx]!.rotationDeg,
-      layout,
-    )
-  ) {
-    effectMarkerMenu.show(clientX, clientY, largeMiniatures[largeIdx].effectMarkers, {
       onToggle: () => {
         syncEffectMarkersToRenderer();
         scheduleRender();
@@ -7202,9 +7547,25 @@ function parseEtherDomain(d: unknown): EtherVortexDomainId | null {
 function captureBoardSnapshot(): SerializedBoardStateV1 {
   return {
     v: 1,
+    boardTemplates: [...boardTemplates.values()].map((t) => ({
+      id: t.id,
+      hexes: t.hexes.map((h) => ({ q: h.q, r: h.r })),
+      backgroundImageSrc: t.backgroundImageSrc,
+      cellsSvgOverlaySrc: t.cellsSvgOverlaySrc,
+    })),
+    boardInstances: boardInstances.map((b) => ({
+      id: b.id,
+      templateId: b.templateId,
+      world: { x: b.worldX, y: b.worldY },
+      rotationDeg: b.rotationDeg,
+      scale: b.scale,
+      zIndex: b.zIndex,
+    })),
+    activeBoardInstanceId,
     boardOrientation: scenarioBoardOrientation,
     units: units.map((u) => ({
       position: { q: u.position.q, r: u.position.r },
+      boardInstanceId: u.boardInstanceId,
       offBoardWorld: u.offBoardWorld,
       walk: u.walk,
       run: u.run,
@@ -7223,6 +7584,7 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
     unitCardData: structuredClone(unitCardData),
     bigMiniatures: bigMiniatures.map((m) => ({
       center: { q: m.center.q, r: m.center.r },
+      boardInstanceId: m.boardInstanceId,
       offBoardWorld: m.offBoardWorld,
       walk: m.walk,
       run: m.run,
@@ -7241,6 +7603,7 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
     bigMiniCardData: structuredClone(bigMiniCardData),
     largeMiniatures: largeMiniatures.map((m) => ({
       anchor: { q: m.anchor.q, r: m.anchor.r },
+      boardInstanceId: m.boardInstanceId,
       offBoardWorld: m.offBoardWorld,
       walk: m.walk,
       run: m.run,
@@ -7259,6 +7622,7 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
     largeMiniCardData: structuredClone(largeMiniCardData),
     hugeMiniatures: hugeMiniatures.map((m) => ({
       anchor: { q: m.anchor.q, r: m.anchor.r },
+      boardInstanceId: m.boardInstanceId,
       offBoardWorld: m.offBoardWorld,
       walk: m.walk,
       run: m.run,
@@ -7401,6 +7765,43 @@ function applyBoardSnapshot(raw: unknown): void {
     return;
   }
   const s = raw;
+  boardTemplates.clear();
+  if (Array.isArray(s.boardTemplates) && s.boardTemplates.length > 0) {
+    for (const t of s.boardTemplates) {
+      boardTemplates.set(t.id, {
+        id: t.id,
+        hexes: t.hexes.map((h) => new Hex(h.q, h.r)),
+        backgroundImageSrc: t.backgroundImageSrc ?? null,
+        cellsSvgOverlaySrc: t.cellsSvgOverlaySrc ?? null,
+      });
+    }
+  } else {
+    boardTemplates.set(
+      LEGACY_BOARD_TEMPLATE_ID,
+      defaultBoardTemplateFromHexes(LEGACY_BOARD_TEMPLATE_ID, grid.allHexes(), {
+        backgroundImageSrc: renderConfig.backgroundImageSrc,
+        cellsSvgOverlaySrc: renderConfig.cellsSvgOverlaySrc,
+      }),
+    );
+  }
+  if (Array.isArray(s.boardInstances) && s.boardInstances.length > 0) {
+    boardInstances = s.boardInstances.map((b) => ({
+      id: b.id,
+      templateId: b.templateId,
+      worldX: b.world.x,
+      worldY: b.world.y,
+      rotationDeg: b.rotationDeg,
+      scale: b.scale,
+      zIndex: b.zIndex,
+    }));
+  } else {
+    boardInstances = [defaultBoardInstance(LEGACY_BOARD_TEMPLATE_ID)];
+  }
+  activeBoardInstanceId =
+    (s.activeBoardInstanceId && boardInstances.some((b) => b.id === s.activeBoardInstanceId)
+      ? s.activeBoardInstanceId
+      : boardInstances[0]?.id) ?? 'board-1';
+  syncActiveBoardVisualsToRenderConfig();
   setScenarioBoardOrientation(s.boardOrientation ?? 'horizontal');
   if (!shouldPreserveLocalInteractionState()) {
     resetTransientMultiplayerInteractionState();
@@ -7411,6 +7812,7 @@ function applyBoardSnapshot(raw: unknown): void {
     const bh = broomgarHungerPhaseAfterMercenaryStrip(u.catalogUnitId, u.broomgarHungerPhase);
     units.push({
       position: new Hex(u.position.q, u.position.r),
+      boardInstanceId: u.boardInstanceId,
       offBoardWorld: u.offBoardWorld,
       walk: u.walk,
       run: u.run,
@@ -7434,6 +7836,7 @@ function applyBoardSnapshot(raw: unknown): void {
     const bh = broomgarHungerPhaseAfterMercenaryStrip(m.catalogUnitId, m.broomgarHungerPhase);
     bigMiniatures.push({
       center: new Hex(m.center.q, m.center.r),
+      boardInstanceId: m.boardInstanceId,
       offBoardWorld: m.offBoardWorld,
       walk: m.walk,
       run: m.run,
@@ -7456,6 +7859,7 @@ function applyBoardSnapshot(raw: unknown): void {
     const bh = broomgarHungerPhaseAfterMercenaryStrip(m.catalogUnitId, m.broomgarHungerPhase);
     largeMiniatures.push({
       anchor: new Hex(m.anchor.q, m.anchor.r),
+      boardInstanceId: m.boardInstanceId,
       offBoardWorld: m.offBoardWorld,
       walk: m.walk,
       run: m.run,
@@ -7478,6 +7882,7 @@ function applyBoardSnapshot(raw: unknown): void {
     const bh = broomgarHungerPhaseAfterMercenaryStrip(m.catalogUnitId, m.broomgarHungerPhase);
     hugeMiniatures.push({
       anchor: new Hex(m.anchor.q, m.anchor.r),
+      boardInstanceId: m.boardInstanceId,
       offBoardWorld: m.offBoardWorld,
       walk: m.walk,
       run: m.run,
@@ -7597,13 +8002,48 @@ function buildCustomScenarioDocument(meta: {
   };
 }
 
+function buildEditedOfficialScenarioDocument(
+  base: ScenarioDocument,
+  meta: EditableScenarioMeta,
+): ScenarioDocument {
+  return mergeOfficialEditIntoDocument(base, meta, scenarioBoardOrientation, captureBoardSnapshot());
+}
+
 const scenariosPanel = createScenariosPanel({
   buildCustomScenarioDocument,
   applyScenario: applyScenarioPayload,
   afterScenarioMutation: () => {
     scheduleRender();
   },
+  loadOfficialScenarios: async () => {
+    const { scenarios } = await fetchOfficialScenarios();
+    return scenarios;
+  },
+  updateOfficialScenario: (doc) => updateOfficialScenario(doc),
+  buildEditedOfficialScenarioDocument,
 });
+
+const OFFICIAL_SCENARIOS_POLL_MS = 30_000;
+let officialScenariosPollingTimer: ReturnType<typeof setInterval> | null = null;
+let officialScenariosWsConnected = false;
+
+function refreshOfficialScenariosFromSync(changedIds: readonly string[]): void {
+  scenariosPanel.onOfficialScenariosRemoteInvalidation(changedIds, { silent: true });
+}
+
+function startOfficialScenariosPollingIfNeeded(): void {
+  if (officialScenariosWsConnected) return;
+  if (officialScenariosPollingTimer !== null) return;
+  officialScenariosPollingTimer = setInterval(() => {
+    refreshOfficialScenariosFromSync([]);
+  }, OFFICIAL_SCENARIOS_POLL_MS);
+}
+
+function stopOfficialScenariosPolling(): void {
+  if (officialScenariosPollingTimer === null) return;
+  clearInterval(officialScenariosPollingTimer);
+  officialScenariosPollingTimer = null;
+}
 
 function mountTouchBoardActionsBar(): void {
   const bar = document.createElement('div');
@@ -7652,8 +8092,22 @@ initMultiplayerSession({
   screenToBoard: screenToBoardWorld,
   onViewPlayerSlot: applyMultiplayerViewSeat,
   onPeerCrystalWalletDelta: onPeerCrystalWalletDeltaFromNetwork,
+  onOfficialScenariosUpdated: (msg) => {
+    refreshOfficialScenariosFromSync(msg.changedIds);
+  },
+  onServerConnectionOpen: () => {
+    officialScenariosWsConnected = true;
+    stopOfficialScenariosPolling();
+    // Reconnect safety: refresh once even if update events were missed while offline.
+    refreshOfficialScenariosFromSync([]);
+  },
+  onServerConnectionClose: () => {
+    officialScenariosWsConnected = false;
+    startOfficialScenariosPollingIfNeeded();
+  },
   toolbarMount: toolbarMountEl,
 });
+startOfficialScenariosPollingIfNeeded();
 const pwaInstallHandle = createPwaInstallMenuFlow();
 const appSettingsHandle = mountAppSettingsToolbar(null, {
   getAlt: () => touchAltSticky,

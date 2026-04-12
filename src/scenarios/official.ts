@@ -1,5 +1,7 @@
-import { parseScenarioDocument } from './schema.ts';
+import { validateScenarioDocumentStrict } from './schema.ts';
 import type { ScenarioDocument } from './types.ts';
+
+export { validateScenarioDocumentStrict };
 
 import manifest from './data/official/index.json';
 
@@ -19,10 +21,6 @@ import official13 from './data/official/official-13.json';
 import official14 from './data/official/official-14.json';
 import official15 from './data/official/official-15.json';
 import official16 from './data/official/official-16.json';
-import official17 from './data/official/official-17.json';
-import official18 from './data/official/official-18.json';
-import official19 from './data/official/official-19.json';
-import official20 from './data/official/official-20.json';
 
 const scenarioFiles: Record<string, unknown> = {
   'official-01.json': official01,
@@ -41,10 +39,6 @@ const scenarioFiles: Record<string, unknown> = {
   'official-14.json': official14,
   'official-15.json': official15,
   'official-16.json': official16,
-  'official-17.json': official17,
-  'official-18.json': official18,
-  'official-19.json': official19,
-  'official-20.json': official20,
 };
 
 function parseOfficialManifest(raw: unknown): { scenarios: string[] } {
@@ -59,21 +53,10 @@ function parseOfficialManifest(raw: unknown): { scenarios: string[] } {
 }
 
 /**
- * Validates `raw` with {@link parseScenarioDocument} and returns the document, or throws with `label` in the message.
+ * Loads bundled official scenario JSON from `data/official/index.json` (static seed for server/offline).
+ * Each file is validated with the strict scenario parser; the first failure throws.
  */
-export function validateScenarioDocumentStrict(raw: unknown, label: string): ScenarioDocument {
-  const parsed = parseScenarioDocument(raw);
-  if (!parsed.ok) {
-    throw new Error(`${label}: ${parsed.error}`);
-  }
-  return parsed.value;
-}
-
-/**
- * Loads official scenarios in manifest order from `data/official/index.json`.
- * Each file is validated with {@link parseScenarioDocument}; the first failure throws.
- */
-export function loadOfficialScenarioDocuments(): ScenarioDocument[] {
+export function loadOfficialScenarioSeedDocuments(): ScenarioDocument[] {
   const { scenarios } = parseOfficialManifest(manifest);
   const out: ScenarioDocument[] = [];
   for (const fileName of scenarios) {

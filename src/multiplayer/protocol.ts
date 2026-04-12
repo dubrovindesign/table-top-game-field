@@ -92,7 +92,12 @@ export type ServerToClientMessage =
     }
   | { type: 'webrtcSignal'; fromId: string; payload: WebRtcSignalPayload }
   | { type: 'peerPingIntent'; fromId: string; boardX: number; boardY: number }
-  | { type: 'pong'; t: number };
+  | { type: 'pong'; t: number }
+  | {
+      type: 'officialScenariosUpdated';
+      catalogUpdatedAt: string;
+      changedIds: string[];
+    };
 
 const CRYSTAL_WALLET_IDS = new Set(['yellow', 'black', 'red', 'green', 'ether']);
 

@@ -10,9 +10,24 @@ import type { PlayerSlot } from './protocol.ts';
 
 export type SerializedHex = { q: number; r: number };
 export type SerializedPoint = { x: number; y: number };
+export type SerializedBoardTemplateV1 = {
+  id: string;
+  hexes: SerializedHex[];
+  backgroundImageSrc?: string | null;
+  cellsSvgOverlaySrc?: string | null;
+};
+export type SerializedBoardInstanceV1 = {
+  id: string;
+  templateId: string;
+  world: SerializedPoint;
+  rotationDeg: number;
+  scale: number;
+  zIndex: number;
+};
 
 export type SerializedUnit = {
   position: SerializedHex;
+  boardInstanceId?: string;
   offBoardWorld?: SerializedPoint;
   walk: number;
   run: number;
@@ -30,6 +45,7 @@ export type SerializedUnit = {
 
 export type SerializedBigMini = {
   center: SerializedHex;
+  boardInstanceId?: string;
   offBoardWorld?: SerializedPoint;
   walk: number;
   run: number;
@@ -46,6 +62,7 @@ export type SerializedBigMini = {
 
 export type SerializedLargeMini = {
   anchor: SerializedHex;
+  boardInstanceId?: string;
   offBoardWorld?: SerializedPoint;
   walk: number;
   run: number;
@@ -62,6 +79,7 @@ export type SerializedLargeMini = {
 
 export type SerializedHugeMini = {
   anchor: SerializedHex;
+  boardInstanceId?: string;
   offBoardWorld?: SerializedPoint;
   walk: number;
   run: number;
@@ -91,6 +109,7 @@ export type SerializedInventoryTablePiece = {
 
 export type SerializedEtherVortex = {
   center: SerializedHex;
+  boardInstanceId?: string;
   etherCrystals: number;
   domain: 'life' | 'creation' | 'death' | 'destruction' | null;
   rotationDeg?: number;
@@ -161,6 +180,10 @@ function validCrystalWalletSlotRecord(o: unknown): boolean {
 
 export type SerializedBoardStateV1 = {
   v: 1;
+  /** Optional scene-level board templates/instances; legacy snapshots can omit them. */
+  boardTemplates?: SerializedBoardTemplateV1[];
+  boardInstances?: SerializedBoardInstanceV1[];
+  activeBoardInstanceId?: string;
   /** Scenario-level board orientation; optional for backward compatibility with legacy snapshots. */
   boardOrientation?: 'horizontal' | 'vertical';
   units: SerializedUnit[];
@@ -226,6 +249,11 @@ function validOptionalArmyOwnerSlot(x: unknown): boolean {
 }
 
 const GOD_BLIND_MAX = 12;
+const BOARD_ID_MAX = 80;
+
+function validBoardId(x: unknown): x is string {
+  return typeof x === 'string' && x.length > 0 && x.length <= BOARD_ID_MAX;
+}
 
 function validSerializedGodSlotV1(o: unknown): boolean {
   if (!o || typeof o !== 'object') return false;
@@ -390,6 +418,40 @@ export function isSerializedBoardStateV1(raw: unknown): raw is SerializedBoardSt
     return false;
   }
   if (!Array.isArray(o.etherVortexes) || !Array.isArray(o.godTablePieces)) return false;
+  if (o.activeBoardInstanceId !== undefined && !validBoardId(o.activeBoardInstanceId)) return false;
+  if (o.boardTemplates !== undefined) {
+    if (!Array.isArray(o.boardTemplates)) return false;
+    for (const t of o.boardTemplates) {
+      if (!t || typeof t !== 'object') return false;
+      if (!validBoardId(t.id)) return false;
+      if (!Array.isArray(t.hexes) || !t.hexes.every(isHex)) return false;
+      if (
+        t.backgroundImageSrc !== undefined &&
+        t.backgroundImageSrc !== null &&
+        typeof t.backgroundImageSrc !== 'string'
+      )
+        return false;
+      if (
+        t.cellsSvgOverlaySrc !== undefined &&
+        t.cellsSvgOverlaySrc !== null &&
+        typeof t.cellsSvgOverlaySrc !== 'string'
+      )
+        return false;
+    }
+  }
+  if (o.boardInstances !== undefined) {
+    if (!Array.isArray(o.boardInstances)) return false;
+    for (const b of o.boardInstances) {
+      if (!b || typeof b !== 'object') return false;
+      if (!validBoardId(b.id) || !validBoardId(b.templateId)) return false;
+      if (!b.world || typeof b.world !== 'object') return false;
+      const w = b.world as { x?: unknown; y?: unknown };
+      if (typeof w.x !== 'number' || typeof w.y !== 'number') return false;
+      if (typeof b.rotationDeg !== 'number') return false;
+      if (typeof b.scale !== 'number' || b.scale <= 0) return false;
+      if (typeof b.zIndex !== 'number') return false;
+    }
+  }
   const ephIdx = (o as { ephiriumOpenSpriteIndices?: unknown }).ephiriumOpenSpriteIndices;
   if (ephIdx !== undefined) {
     if (!Array.isArray(ephIdx) || ephIdx.length > 2) return false;
@@ -405,24 +467,37 @@ export function isSerializedBoardStateV1(raw: unknown): raw is SerializedBoardSt
     if (em != null && !Array.isArray(em)) return false;
     const aos = (u as { armyOwnerPlayerSlot?: unknown }).armyOwnerPlayerSlot;
     if (!validOptionalArmyOwnerSlot(aos)) return false;
+    const bid = (u as { boardInstanceId?: unknown }).boardInstanceId;
+    if (bid !== undefined && !validBoardId(bid)) return false;
   }
   for (const m of o.bigMiniatures) {
     if (!m || typeof m !== 'object') return false;
     const aos = (m as { armyOwnerPlayerSlot?: unknown }).armyOwnerPlayerSlot;
     if (!validOptionalArmyOwnerSlot(aos)) return false;
+    const bid = (m as { boardInstanceId?: unknown }).boardInstanceId;
+    if (bid !== undefined && !validBoardId(bid)) return false;
   }
   for (const m of o.largeMiniatures) {
     if (!m || typeof m !== 'object') return false;
     const aos = (m as { armyOwnerPlayerSlot?: unknown }).armyOwnerPlayerSlot;
     if (!validOptionalArmyOwnerSlot(aos)) return false;
+    const bid = (m as { boardInstanceId?: unknown }).boardInstanceId;
+    if (bid !== undefined && !validBoardId(bid)) return false;
   }
   for (const m of o.hugeMiniatures) {
     if (!m || typeof m !== 'object') return false;
     const aos = (m as { armyOwnerPlayerSlot?: unknown }).armyOwnerPlayerSlot;
     if (!validOptionalArmyOwnerSlot(aos)) return false;
+    const bid = (m as { boardInstanceId?: unknown }).boardInstanceId;
+    if (bid !== undefined && !validBoardId(bid)) return false;
   }
   for (const t of o.terrains) {
     if (!isHex(t)) return false;
+  }
+  for (const v of o.etherVortexes) {
+    if (!v || typeof v !== 'object') return false;
+    const bid = (v as { boardInstanceId?: unknown }).boardInstanceId;
+    if (bid !== undefined && !validBoardId(bid)) return false;
   }
   const gds = (o as { godDeckSlots?: unknown }).godDeckSlots;
   if (gds !== undefined) {
