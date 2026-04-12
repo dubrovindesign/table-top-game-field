@@ -207,7 +207,7 @@ Gate L2 evidence:
 **Files:**
 - Modify: `src/main.ts`, `src/renderer.ts`, `src/renderConfig.ts`, `src/scenarios/rotationModel.ts`, related orientation tests as needed
 
-- [ ] **Step 1: Write/adjust failing tests for no-field-rotation expectation**
+- [x] **Step 1: Write/adjust failing tests for no-field-rotation expectation**
 
 Run/update tests in:
 - `src/scenarios/orientation.test.ts`
@@ -217,7 +217,7 @@ Target expectation:
 - Scenario orientation does not apply runtime field rotation behavior.
 - Content and baseline features remain intact.
 
-- [ ] **Step 2: Remove only field-rotation runtime behavior**
+- [x] **Step 2: Remove only field-rotation runtime behavior**
 
 Use focused patching:
 ```bash
@@ -229,7 +229,7 @@ Or edit directly with strict scope:
 - keep ping/cursor
 - remove only runtime field rotation path
 
-- [ ] **Step 3: Gate L3 verification**
+- [x] **Step 3: Gate L3 verification**
 
 Run:
 ```bash
@@ -244,12 +244,17 @@ Manual smoke:
 - No undesired field rotation behavior remains.
 - MP scenario apply still syncs.
 
-- [ ] **Step 4: Commit Layer 3**
+- [x] **Step 4: Commit Layer 3**
 
 ```bash
 git add -A
 git commit -m "fix(integration): remove field rotation behavior while preserving scenarios and baseline features"
 ```
+
+Gate L3 evidence:
+- `npx tsx --test src/scenarios/*.test.ts` passed (54 tests, 0 failures).
+- `npm run build` passed (`tsc && vite build` completed successfully).
+- `npm run preview:mp` startup succeeded (`vite preview` on `http://localhost:4173/` and room server on `ws://0.0.0.0:3333`).
 
 ---
 
