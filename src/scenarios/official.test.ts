@@ -193,6 +193,21 @@ test('fetchOfficialScenarios throws OfficialApiError on invalid 200 payload', as
   );
 });
 
+test('fetchOfficialScenarios reports proxy hint when HTML is returned instead of JSON', async () => {
+  const fetchImpl: typeof fetch = async () =>
+    new Response('<!doctype html><html><body>index</body></html>', {
+      status: 200,
+      headers: { 'content-type': 'text/html; charset=utf-8' },
+    });
+  await assert.rejects(
+    async () => fetchOfficialScenarios({ fetchImpl }),
+    (e: unknown) =>
+      e instanceof OfficialApiError &&
+      /reverse proxy/i.test(e.message) &&
+      /\/api\/scenarios/i.test(e.message),
+  );
+});
+
 test('fetchOfficialScenarioById parses envelope on success', async () => {
   const [one] = loadOfficialScenarioSeedDocuments();
   const fetchImpl: typeof fetch = async (input) => {

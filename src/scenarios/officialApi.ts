@@ -160,12 +160,20 @@ async function readResponseBodyText(res: Response): Promise<string> {
   }
 }
 
-function parseJsonBodyOrThrow(bodyText: string, message: string): unknown {
+function looksLikeHtml(text: string): boolean {
+  const sample = text.slice(0, 256).toLowerCase();
+  return sample.includes('<!doctype html') || sample.includes('<html');
+}
+
+function parseJsonBodyOrThrow(bodyText: string, message: string, requestUrl: string): unknown {
   try {
     return bodyText ? JSON.parse(bodyText) : null;
   } catch {
-    throw new OfficialApiError(500, 'unknown', message, {
-      bodyText,
+    const hint = looksLikeHtml(bodyText)
+      ? ` Вероятно, этот URL отдает страницу приложения вместо API JSON: ${requestUrl}. Проверьте reverse proxy для /api/scenarios -> roomServer.`
+      : '';
+    throw new OfficialApiError(500, 'unknown', `${message}${hint}`, {
+      bodyText: `${bodyText}${hint}`,
     });
   }
 }
@@ -193,14 +201,19 @@ function officialByIdUrl(baseUrl: string | undefined, id: string): string {
  */
 export async function fetchOfficialScenarios(deps?: OfficialApiFetchDeps): Promise<OfficialScenariosListPayload> {
   const fetchFn = deps?.fetchImpl ?? globalThis.fetch.bind(globalThis);
-  const res = await fetchFn(officialListUrl(deps?.baseUrl), {
+  const url = officialListUrl(deps?.baseUrl);
+  const res = await fetchFn(url, {
     headers: { accept: 'application/json' },
   });
   const bodyText = await readResponseBodyText(res);
   if (!res.ok) {
     throw OfficialApiError.fromHttpStatus(res.status, bodyText);
   }
-  const raw = parseJsonBodyOrThrow(bodyText, 'Ответ списка официальных сценариев не является JSON.');
+  const raw = parseJsonBodyOrThrow(
+    bodyText,
+    'Ответ списка официальных сценариев не является JSON.',
+    url,
+  );
   const parsed = parseOfficialScenariosListResponse(raw);
   if (!parsed.ok) {
     throw new OfficialApiError(res.status, 'unknown', parsed.error, { bodyText });
@@ -216,14 +229,19 @@ export async function fetchOfficialScenarioById(
   deps?: OfficialApiFetchDeps,
 ): Promise<ScenarioDocument> {
   const fetchFn = deps?.fetchImpl ?? globalThis.fetch.bind(globalThis);
-  const res = await fetchFn(officialByIdUrl(deps?.baseUrl, id), {
+  const url = officialByIdUrl(deps?.baseUrl, id);
+  const res = await fetchFn(url, {
     headers: { accept: 'application/json' },
   });
   const bodyText = await readResponseBodyText(res);
   if (!res.ok) {
     throw OfficialApiError.fromHttpStatus(res.status, bodyText);
   }
-  const raw = parseJsonBodyOrThrow(bodyText, 'Ответ загрузки официального сценария не является JSON.');
+  const raw = parseJsonBodyOrThrow(
+    bodyText,
+    'Ответ загрузки официального сценария не является JSON.',
+    url,
+  );
   const parsed = parseOfficialScenarioEnvelopeResponse(raw);
   if (!parsed.ok) {
     throw new OfficialApiError(res.status, 'unknown', parsed.error, { bodyText });
@@ -239,7 +257,8 @@ export async function updateOfficialScenario(
   deps?: OfficialApiFetchDeps,
 ): Promise<ScenarioDocument> {
   const fetchFn = deps?.fetchImpl ?? globalThis.fetch.bind(globalThis);
-  const res = await fetchFn(officialByIdUrl(deps?.baseUrl, doc.id), {
+  const url = officialByIdUrl(deps?.baseUrl, doc.id);
+  const res = await fetchFn(url, {
     method: 'PUT',
     headers: { 'content-type': 'application/json', accept: 'application/json' },
     body: JSON.stringify(doc),
@@ -248,7 +267,11 @@ export async function updateOfficialScenario(
   if (!res.ok) {
     throw OfficialApiError.fromHttpStatus(res.status, bodyText);
   }
-  const raw = parseJsonBodyOrThrow(bodyText, 'Ответ сохранения официального сценария не является JSON.');
+  const raw = parseJsonBodyOrThrow(
+    bodyText,
+    'Ответ сохранения официального сценария не является JSON.',
+    url,
+  );
   const parsed = parseOfficialScenarioEnvelopeResponse(raw);
   if (!parsed.ok) {
     throw new OfficialApiError(res.status, 'unknown', parsed.error, { bodyText });

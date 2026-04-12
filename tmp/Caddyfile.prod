@@ -1,47 +1,40 @@
-# Example Caddy v2 site: static SPA from dist/ + WebSocket proxy to roomServer.
-# Copy to your server, adjust domain and paths, then: caddy run --config Caddyfile
-#
-# Prerequisites on the server:
-#   - `npm ci && VITE_MP_WS_URL=wss://game.example.com/__mp_ws npm run build`
-#   - roomServer running on 127.0.0.1:3333 (see systemd unit or docker-compose)
-#   - root points to the `dist` folder from the build
-#
-# Cache policy: long-lived cache only for hashed /assets/* and workbox-*.js; shell
-# (HTML, sw.js, manifest, catalog-data.json) must revalidate after deploy.
+# Production Caddy site (tornscape). Keep in sync with Caddyfile.example patterns.
+# Install: sudo tee /etc/caddy/Caddyfile < deploy/Caddyfile.tornscape && sudo caddy validate --config /etc/caddy/Caddyfile && sudo systemctl reload caddy
 
-game.example.com {
+tornscape.dubrovindesign.ru {
 	root * /var/www/hex-board-game/dist
 	encode gzip
 
-	# WebSocket upgrade → room server (path must match client default /__mp_ws)
 	handle /__mp_ws* {
 		reverse_proxy 127.0.0.1:3333
 	}
 
-	# Official scenarios HTTP API must hit the same room server.
+	# Official scenarios API (HTTP) must hit roomServer too.
 	handle /api/scenarios* {
 		reverse_proxy 127.0.0.1:3333
 	}
 
-	# Hashed Vite bundles: missing file must be 404, never index.html (otherwise the
-	# browser executes HTML as JS after a deploy — blank app / “site won’t load”).
+	# Hashed Vite bundles: 404 if missing (never SPA HTML); safe to cache forever.
 	handle /assets/* {
 		header Cache-Control "public, max-age=31536000, immutable"
 		file_server
 	}
 
+	# Fixed-name / build-output paths: revalidate so deploys are visible without hard reload.
 	@entry path /sw.js /registerSW.js /manifest.webmanifest /generated/catalog-data.json
 	handle @entry {
 		header Cache-Control "no-cache, must-revalidate"
 		file_server
 	}
 
+	# HTML shells (direct URL)
 	@html path /index.html /card-hotspot-test.html
 	handle @html {
 		header Cache-Control "no-cache, must-revalidate"
 		file_server
 	}
 
+	# Workbox runtime script (hashed filename per build)
 	@workbox path_regexp ^/workbox-.+\.js$
 	handle @workbox {
 		header Cache-Control "public, max-age=31536000, immutable"
@@ -62,3 +55,4 @@ game.example.com {
 		}
 	}
 }
+

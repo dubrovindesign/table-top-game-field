@@ -76,6 +76,7 @@ const ROSTER_SIZE_RANK: Record<UnitSize, number> = {
   large: 1,
   big: 2,
   huge: 3,
+  huge2: 4,
 };
 
 type RosterSortMode = 'roster' | 'pointsAsc' | 'pointsDesc' | 'sizeDesc' | 'sizeAsc' | 'nameAz';

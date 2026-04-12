@@ -1,0 +1,144 @@
+[
+  {
+    "id": "domain-badge-life",
+    "name": "Domain Badge: Life",
+    "category": "domain-badges",
+    "sprite": "/objects/domain-badge-life.jpg",
+    "footprint": "hex"
+  },
+  {
+    "id": "domain-badge-creation",
+    "name": "Domain Badge: Creation",
+    "category": "domain-badges",
+    "sprite": "/objects/domain-badge-creation.jpg",
+    "footprint": "hex"
+  },
+  {
+    "id": "domain-badge-death",
+    "name": "Domain Badge: Death",
+    "category": "domain-badges",
+    "sprite": "/objects/domain-badge-death.jpg",
+    "footprint": "hex"
+  },
+  {
+    "id": "domain-badge-destruction",
+    "name": "Domain Badge: Destruction",
+    "category": "domain-badges",
+    "sprite": "/objects/domain-badge-destruction.jpg",
+    "footprint": "hex"
+  },
+  {
+    "id": "smoke",
+    "name": "Smoke",
+    "category": "smoke",
+    "sprite": "/objects/smoke.png",
+    "footprint": "hex"
+  },
+  {
+    "id": "poison-smoke",
+    "name": "Poison Smoke",
+    "category": "smoke",
+    "sprite": "/objects/poison-smoke.png",
+    "footprint": "hex"
+  },
+  {
+    "id": "smoke_hexon",
+    "name": "smoke_hexon",
+    "category": "smoke",
+    "sprite": "/objects/terrain-smokehexon.png",
+    "footprint": "hexon"
+  },
+  {
+    "id": "poison_smoke_hexon",
+    "name": "poison_smoke_hexon",
+    "category": "smoke",
+    "sprite": "/objects/poison-smokehexon.png",
+    "footprint": "hexon"
+  },
+  {
+    "id": "prisoner-krig",
+    "name": "Prisoner: Krig",
+    "category": "prisoners",
+    "sprite": "/objects/prisoner-krig.png",
+    "footprint": "hex",
+    "keepImagePlayerFacing": true,
+    "defaultHealth": 5
+  },
+  {
+    "id": "prisoner-engeln",
+    "name": "Prisoner: Engeln",
+    "category": "prisoners",
+    "sprite": "/objects/prisoner-engeln.png",
+    "footprint": "hex",
+    "keepImagePlayerFacing": true,
+    "defaultHealth": 5
+  },
+  {
+    "id": "prisoner-keld",
+    "name": "Prisoner: Keld",
+    "category": "prisoners",
+    "sprite": "/objects/prisoner-keld.png",
+    "footprint": "hex",
+    "keepImagePlayerFacing": true,
+    "defaultHealth": 5
+  },
+  {
+    "id": "prisoner-kastillia",
+    "name": "Prisoner: Kastillia",
+    "category": "prisoners",
+    "sprite": "/objects/prisoner-kastillia.png",
+    "footprint": "hex",
+    "keepImagePlayerFacing": true,
+    "defaultHealth": 5
+  },
+  {
+    "id": "terrain-classic",
+    "name": "Terrain: Classic",
+    "category": "terrain",
+    "sprite": "/terrain3.jpg",
+    "footprint": "hexon",
+    "imageRotationDeg": 30
+  },
+  {
+    "id": "terrain-grass",
+    "name": "Terrain: Grass",
+    "category": "terrain",
+    "sprite": "/objects/terrain-grass.png",
+    "footprint": "hexon",
+    "imageRotationDeg": 27
+  },
+  {
+    "id": "terrain-lava",
+    "name": "Terrain: Lava",
+    "category": "terrain",
+    "sprite": "/objects/terrain-lava.png",
+    "footprint": "hexon",
+    "imageRotationDeg": 211
+  },
+  {
+    "id": "terrain-crystals",
+    "name": "Terrain: Crystals",
+    "category": "terrain",
+    "sprite": "/objects/terrain-crystals.png",
+    "footprint": "hexon",
+    "imageRotationDeg": 269
+  },
+  {
+    "id": "ether-vortex-classic",
+    "name": "Ether Vortex: Classic",
+    "category": "terrain",
+    "sprite": "/terrain2.png",
+    "footprint": "hexon",
+    "spawnAs": "etherVortex",
+    "imageRotationDeg": 1
+  },
+  {
+    "id": "terrain-ephyriumstorm",
+    "name": "Ether Vortex: Ephyrium Storm",
+    "category": "terrain",
+    "sprite": "/objects/terrain-ephyriumstorm.png",
+    "footprint": "hexon",
+    "spawnAs": "etherVortex",
+    "imageRotationDeg": 30
+  }
+]

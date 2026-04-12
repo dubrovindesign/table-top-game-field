@@ -51,6 +51,11 @@
     "name": "Великий Аэнт-Страж",
     "run": 2,
     "size": "huge",
+    "hugeSpriteOffsetLocal": {
+      "x": 67.2,
+      "y": -32.2
+    },
+    "hugeSpriteRotationDeg": 60,
     "sprite": "/catalog-units/keld-aent/image.jpg",
     "walk": 1
   },

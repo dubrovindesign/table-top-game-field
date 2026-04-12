@@ -12,6 +12,8 @@ const minimalValidSnapshot = {
   largeMiniCardData: [],
   hugeMiniatures: [],
   hugeMiniCardData: [],
+  huge2Miniatures: [],
+  huge2MiniCardData: [],
   terrains: [],
   terrainOffBoardWorlds: [],
   terrainRotationDegs: [],

@@ -35,7 +35,13 @@ npm run build
    npm run build
    ```
 3. Поднять **roomServer** постоянно (см. [deploy/hex-room-server.service](deploy/hex-room-server.service) — поправьте `User`, `WorkingDirectory`, путь к `npx`).
-4. Настроить HTTPS и раздачу `dist/` + прокси WebSocket на `127.0.0.1:3333`:
+4. Настроить HTTPS и раздачу `dist/` + прокси `127.0.0.1:3333` для:
+   - WebSocket ` /__mp_ws`
+   - HTTP API ` /api/scenarios/*`
+   
+   Иначе список официальных сценариев в клиенте будет получать HTML (SPA fallback) вместо JSON.
+   
+   Готовые примеры:
    - пример Caddy: [deploy/Caddyfile.example](deploy/Caddyfile.example)
    - пример nginx: [deploy/nginx-site.example.conf](deploy/nginx-site.example.conf)
 

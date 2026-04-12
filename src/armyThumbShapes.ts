@@ -136,7 +136,7 @@ function computeClipPaths(): Record<UnitSize, string> {
   const huge = vertsToPolygonClipPath(
     outerBoundaryVerticesFromCells(hugeTriangleLocalCellCenters(L), L, 1),
   );
-  return { small, big, large, huge };
+  return { small, big, large, huge, huge2: huge };
 }
 
 const CLIP_BY_SIZE = computeClipPaths();

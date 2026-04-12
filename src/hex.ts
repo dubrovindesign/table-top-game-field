@@ -285,6 +285,25 @@ export function hugeTriangleAllCells(anchor: Hex): Hex[] {
   return hugeTriangleAllCellsOriented(anchor, 0);
 }
 
+const HUGE2_DOMINO_HEX_NEIGHBOR = new Hex(3, -1);
+
+/**
+ * Huge2 unit: 2 adjacent hexon centers on the hexon lattice.
+ * Rotation follows the same 60° CW stepping as other oriented multi-cell helpers.
+ */
+export function huge2DominoHexonCentersOriented(anchor: Hex, rotationDeg: number): Hex[] {
+  const steps = ((Math.round(rotationDeg / 60) % 6) + 6) % 6;
+  return [anchor, anchor.add(rotateAxialOffsetCWSteps(HUGE2_DOMINO_HEX_NEIGHBOR, steps))];
+}
+
+/** All small hex cells covered by a huge2 mini (2×7 cells, without overlap). */
+export function huge2DominoAllCellsOriented(anchor: Hex, rotationDeg: number): Hex[] {
+  return huge2DominoHexonCentersOriented(anchor, rotationDeg).flatMap((hc) => [
+    hc,
+    ...Hex.directions.map((d) => hc.add(d)),
+  ]);
+}
+
 const CORNER_MATCH_EPS2 = 1e-4;
 
 /**
