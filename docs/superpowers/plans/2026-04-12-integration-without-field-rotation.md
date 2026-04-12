@@ -140,7 +140,7 @@ Gate L1 evidence:
 **Files:**
 - Modify: `src/scenarios/**`, `src/main.ts`, `src/appMoreMenu.ts`, `src/style.css`, `src/multiplayer/boardState.ts`, other scenario integration touchpoints
 
-- [ ] **Step 1: Transfer scenario pack from scenarios source**
+- [x] **Step 1: Transfer scenario pack from scenarios source**
 
 Preferred operation:
 ```bash
@@ -156,7 +156,7 @@ git checkout feat/scenarios-system -- src/scenarios src/appMoreMenu.ts src/main.
 Expected:
 - Scenario system appears in integration branch.
 
-- [ ] **Step 2: Resolve overlap files with fixed precedence**
+- [x] **Step 2: Resolve overlap files with fixed precedence**
 
 Rule:
 1. Keep Layer 1 baseline behavior.
@@ -171,7 +171,7 @@ git diff --name-only --diff-filter=U
 
 Resolve only conflicting hunks; stage resolved files.
 
-- [ ] **Step 3: Gate L2 verification**
+- [x] **Step 3: Gate L2 verification**
 
 Run:
 ```bash
@@ -188,12 +188,17 @@ Manual smoke:
 Expected:
 - Scenario suite green; build and preview:mp green.
 
-- [ ] **Step 4: Commit Layer 2**
+- [x] **Step 4: Commit Layer 2**
 
 ```bash
 git add -A
 git commit -m "feat(integration): apply layer 2 maximal scenario pack"
 ```
+
+Gate L2 evidence:
+- `npx tsx --test src/scenarios/*.test.ts` passed (54 tests, 0 failures).
+- `npm run build` passed (`tsc && vite build` completed successfully).
+- `npm run preview:mp` startup succeeded after freeing occupied ports; `vite preview` served on `http://localhost:4173/` and room server listened on `ws://0.0.0.0:3333`.
 
 ---
 
