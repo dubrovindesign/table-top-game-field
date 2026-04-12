@@ -23,7 +23,7 @@
 **Files:**
 - Modify: git history/state only (no code edits expected)
 
-- [ ] **Step 1: Collect source-of-truth inventory**
+- [x] **Step 1: Collect source-of-truth inventory**
 
 Run:
 ```bash
@@ -37,7 +37,7 @@ git -C ".worktrees/scenarios-system" log --oneline -n 30
 Expected:
 - Clear list of where baseline/ping/scenario changes currently live.
 
-- [ ] **Step 2: Create backup branch pointers before integration**
+- [x] **Step 2: Create backup branch pointers before integration**
 
 Run:
 ```bash
@@ -50,7 +50,7 @@ git -C ".worktrees/scenarios-system" switch feat/scenarios-system
 Expected:
 - Recoverable branch refs for both source states.
 
-- [ ] **Step 3: Commit safety checkpoints for dirty trees (if needed)**
+- [x] **Step 3: Commit safety checkpoints for dirty trees (if needed)**
 
 Run:
 ```bash
@@ -63,7 +63,7 @@ git -C ".worktrees/scenarios-system" commit -m "wip: snapshot scenarios state be
 Expected:
 - No uncommitted source changes before transfer work begins.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/superpowers/plans/2026-04-12-integration-without-field-rotation.md
