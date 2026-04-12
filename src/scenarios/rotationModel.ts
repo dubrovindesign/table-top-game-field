@@ -26,9 +26,10 @@ export type RotationModelInput = {
 export function deriveRotationModel(
   input: RotationModelInput,
 ): { fieldDeg: number; contentDeg: number } {
-  const orientationExtra = input.orientation === 'vertical' ? 90 : 0;
+  void input.orientation;
+  const deg = input.baseDeg + input.seatExtraDeg;
   return {
-    fieldDeg: input.baseDeg + input.seatExtraDeg + orientationExtra,
-    contentDeg: input.baseDeg + input.seatExtraDeg,
+    fieldDeg: deg,
+    contentDeg: deg,
   };
 }

@@ -10,9 +10,9 @@ export interface RenderConfig {
   hexonBorderWidth: number;
   boardRotationDeg: number;
   /**
-   * `effectiveContentRotationDeg − effectiveFieldRotationDeg` (typically 0 or −90° for vertical scenario).
-   * Cancels scenario orientation on content-facing draws (miniatures, god cards, HP text) while the field
-   * layer uses {@link boardRotationDeg}.
+   * `effectiveContentRotationDeg − effectiveFieldRotationDeg` (normally 0 when field and content share the same basis).
+   * Used so content-facing draws (miniatures, god cards, HP text) can compensate if field vs content rotation diverge;
+   * scenario orientation alone does not rotate the field at runtime.
    */
   contentFieldRotationDeltaDeg: number;
   /**

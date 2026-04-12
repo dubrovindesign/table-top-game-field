@@ -148,8 +148,8 @@ const BOARD_ROTATION_DEG = -10;
 /** +180° for multiplayer `playerSlot === 1` (opposite seat); 0 otherwise. */
 let viewSeatExtraRotationDeg = 0;
 /**
- * Scenario-level field orientation (additive on top of `BOARD_ROTATION_DEG` and seat rotation).
- * `vertical` maps to +90° per scenario spec; `horizontal` adds 0°.
+ * Scenario board orientation (`horizontal` / `vertical`) — stored, synced, and shown in the scenario UI;
+ * it does not change runtime canvas field rotation (only base board tilt + multiplayer seat apply).
  */
 let scenarioBoardOrientation: ScenarioOrientation = 'horizontal';
 /** Local seat in room (`null` = solo / disconnected / spectator). Used for roster points / copy limits. */
@@ -2180,7 +2180,7 @@ function applyMultiplayerViewSeat(slot: PlayerSlot | null): void {
   refreshGodDock();
 }
 
-/** Updates renderer board rotation and DOM overlays for scenario `horizontal` / `vertical` (default: horizontal). */
+/** Syncs scenario orientation metadata and DOM overlays; does not rotate the field canvas (see `scenarioBoardOrientation`). */
 export function setScenarioBoardOrientation(orientation: ScenarioOrientation): void {
   scenarioBoardOrientation = orientation;
   renderer.updateConfig({

@@ -7,10 +7,11 @@ import {
   godTableCardContentVisualRotationDeg,
 } from './rotationModel.ts';
 
-test('vertical orientation affects field rotation', () => {
-  const r = deriveRotationModel({ baseDeg: -10, seatExtraDeg: 0, orientation: 'vertical' });
-  assert.equal(r.fieldDeg, 80);
-  assert.equal(r.contentDeg, -10);
+test('vertical scenario orientation does not rotate the field at runtime', () => {
+  const v = deriveRotationModel({ baseDeg: -10, seatExtraDeg: 0, orientation: 'vertical' });
+  const h = deriveRotationModel({ baseDeg: -10, seatExtraDeg: 0, orientation: 'horizontal' });
+  assert.equal(v.fieldDeg, h.fieldDeg);
+  assert.equal(v.fieldDeg, v.contentDeg);
 });
 
 test('content overlays do not consume vertical orientation bonus', () => {
@@ -44,7 +45,7 @@ test('miniature visual facing matches seat combination and ignores scenario orie
   assert.equal(h, v);
 });
 
-test('god card flip sandwich rotation follows content visual basis, not raw field rotation', () => {
+test('god card flip sandwich rotation follows content visual basis, not raw field rotation alone', () => {
   const baseDeg = -10;
   const seatExtraDeg = 0;
   const h = deriveRotationModel({ baseDeg, seatExtraDeg, orientation: 'horizontal' });
@@ -61,9 +62,11 @@ test('god card flip sandwich rotation follows content visual basis, not raw fiel
     contentFieldRotationDeltaDeg: deltaV,
   });
 
+  assert.equal(deltaH, 0);
+  assert.equal(deltaV, 0);
+  assert.equal(flipH, flipV);
   assert.equal(flipH, GOD_TABLE_CARD_ROT_CW_DEG + deltaH);
-  assert.equal(flipV, GOD_TABLE_CARD_ROT_CW_DEG + deltaV);
-  assert.notEqual(h.fieldDeg, v.fieldDeg);
+  assert.equal(h.fieldDeg, v.fieldDeg);
   const fieldCoupledVertical = GOD_TABLE_CARD_ROT_CW_DEG + v.fieldDeg;
   assert.notEqual(flipV, fieldCoupledVertical);
 });

@@ -225,11 +225,11 @@ test('applyScenarioDocument rejects invalid snapshot.boardOrientation via parse 
   assert.deepEqual(calls, []);
 });
 
-test('vertical scenario orientation adds field-only delta vs horizontal (content seat-driven)', () => {
+test('vertical scenario orientation does not add field-only delta vs horizontal (content seat-driven)', () => {
   const baseDeg = -10;
   const seatExtraDeg = 180;
   const horizontal = deriveRotationModel({ baseDeg, seatExtraDeg, orientation: 'horizontal' });
   const vertical = deriveRotationModel({ baseDeg, seatExtraDeg, orientation: 'vertical' });
   assert.equal(horizontal.contentDeg, vertical.contentDeg);
-  assert.equal(vertical.fieldDeg, horizontal.fieldDeg + 90);
+  assert.equal(vertical.fieldDeg, horizontal.fieldDeg);
 });
