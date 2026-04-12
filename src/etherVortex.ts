@@ -17,6 +17,10 @@ export type EtherVortexState = {
   domain: EtherVortexDomainId | null;
   /** Visual rotation of the hexon texture (degrees), independent per vortex. */
   rotationDeg: number;
+  /** Optional sprite override per-vortex (defaults to render config image). */
+  spriteSrc?: string;
+  /** Optional texture-only rotation (degrees), independent from footprint rotation. */
+  imageRotationDeg?: number;
   /** If set, vortex is off-board at this world position. */
   offBoardWorld?: { x: number; y: number };
 };

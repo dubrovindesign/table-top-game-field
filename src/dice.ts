@@ -1,7 +1,7 @@
 /**
  * Dice rolling UI — slot-machine style animation.
  *
- * Dice colors: red, green, black, white.
+ * Dice colors: red, black, green, white.
  * Each die is a d6 (1–6). The result panel slides up
  * with a spinning slot animation lasting ~2 seconds.
  *
@@ -42,8 +42,8 @@ interface DieConfig {
 
 const DIE_CONFIGS: DieConfig[] = [
   { color: 'red', label: 'Red', bg: '#d32f2f', fg: '#ffffff', border: '#b71c1c' },
-  { color: 'green', label: 'Green', bg: '#388e3c', fg: '#ffffff', border: '#1b5e20' },
   { color: 'black', label: 'Black', bg: '#424242', fg: '#ffffff', border: '#212121' },
+  { color: 'green', label: 'Green', bg: '#388e3c', fg: '#ffffff', border: '#1b5e20' },
   { color: 'white', label: 'White', bg: '#f5f5f5', fg: '#212121', border: '#bdbdbd' },
 ];
 

@@ -11,6 +11,7 @@ export type TableDragKind =
   | 'big'
   | 'large'
   | 'huge'
+  | 'huge2'
   | 'terrain'
   | 'ether'
   | 'godLoose';
@@ -168,6 +169,7 @@ const TABLE_DRAG_KINDS = new Set<TableDragKind>([
   'big',
   'large',
   'huge',
+  'huge2',
   'terrain',
   'ether',
   'godLoose',

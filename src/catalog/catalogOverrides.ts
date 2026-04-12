@@ -730,7 +730,7 @@ export function getMergedCatalogUnit(unitId: string): CatalogUnitDef | undefined
     const staticU = CATALOG_UNITS[unitId];
     if (
       staticU &&
-      def.card?.size === 'huge' &&
+      (def.card?.size === 'huge' || def.card?.size === 'huge2') &&
       (def.card.hugeSpriteOffsetLocal === undefined || def.card.hugeSpriteRotationDeg === undefined)
     ) {
       def = mergeCatalogUnitDef(staticU, def);

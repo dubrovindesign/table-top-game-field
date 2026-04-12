@@ -847,7 +847,7 @@ export class CatalogEditorPanel {
     this.cardName.type = 'text';
 
     this.cardSize = el('select', 'catalog-editor-select') as HTMLSelectElement;
-    for (const s of ['small', 'large', 'big', 'huge'] as const) {
+    for (const s of ['small', 'large', 'big', 'huge', 'huge2'] as const) {
       this.cardSize.appendChild(new Option(s, s));
     }
     appendMainRow(
@@ -1046,7 +1046,8 @@ export class CatalogEditorPanel {
     this.cardGrabRangeUnit.appendChild(new Option('по умолчанию', ''));
     this.cardGrabRangeUnit.appendChild(new Option('гекс', 'hex'));
     this.cardGrabRangeUnit.appendChild(new Option('гексон', 'hexon'));
-    this.cardGrabRangeUnit.title = 'Малая / large: по умолчанию гекс; big / huge: по умолчанию гексон';
+    this.cardGrabRangeUnit.title =
+      'Малая / large: по умолчанию гекс; big / huge / huge2: по умолчанию гексон';
     const grabGrabRow = el('div', 'catalog-editor-field');
     grabGrabRow.appendChild(el('span', 'catalog-editor-field-label', 'Дальность «взять»'));
     const grabInner = el('div', 'ce-hs-range-row');
@@ -1911,7 +1912,7 @@ export class CatalogEditorPanel {
     this.lmTemplateSel.appendChild(new Option('Шаблон карточки (опц.)', ''));
     lmMk('Шаблон', this.lmTemplateSel);
     this.lmSize = el('select', 'catalog-editor-select') as HTMLSelectElement;
-    for (const s of ['small', 'large', 'big', 'huge'] as const) {
+    for (const s of ['small', 'large', 'big', 'huge', 'huge2'] as const) {
       this.lmSize.appendChild(new Option(s, s));
     }
     lmMk('Размер', this.lmSize);
@@ -3868,7 +3869,7 @@ export class CatalogEditorPanel {
     const h = Math.max(0, Math.floor(Number.isFinite(next.health) ? next.health : 0));
     const walk = Math.max(0, Math.floor(Number.isFinite(next.walk) ? next.walk : 0));
     const run = Math.max(0, Math.floor(Number.isFinite(next.run) ? next.run : 0));
-    const sizes: UnitCardData['size'][] = ['small', 'large', 'big', 'huge'];
+    const sizes: UnitCardData['size'][] = ['small', 'large', 'big', 'huge', 'huge2'];
     const size = sizes.includes(next.size) ? next.size : def.card.size;
 
     const cardRaw: UnitCardData = {
@@ -3937,7 +3938,7 @@ export class CatalogEditorPanel {
     const sizeSel = el('select', 'catalog-editor-select ce-unit-lib-inline-size') as HTMLSelectElement;
     sizeSel.draggable = false;
     sizeSel.title = 'Размер миниатюры';
-    for (const s of ['small', 'large', 'big', 'huge'] as const) {
+    for (const s of ['small', 'large', 'big', 'huge', 'huge2'] as const) {
       sizeSel.appendChild(new Option(s, s));
     }
     sizeSel.value = card.size;

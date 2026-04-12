@@ -98,6 +98,26 @@ export type SerializedHugeMini = {
   spriteRotationDeg?: number;
 };
 
+/** Two-adjacent-hexon miniature; snapshot shape mirrors {@link SerializedHugeMini}. */
+export type SerializedHuge2Mini = {
+  anchor: SerializedHex;
+  boardInstanceId?: string;
+  offBoardWorld?: SerializedPoint;
+  walk: number;
+  run: number;
+  rotationDeg: number;
+  health: number;
+  activated?: boolean;
+  effectMarkers: string[];
+  spawnedFromArmyPanel?: boolean;
+  catalogUnitId?: string;
+  rosterLeaderId?: string;
+  armyOwnerPlayerSlot?: PlayerSlot;
+  broomgarHungerPhase?: 0 | 1 | 2;
+  spriteOffsetLocal?: SerializedPoint;
+  spriteRotationDeg?: number;
+};
+
 /** Inventory item token on the board (catalog `itemId`). */
 export type SerializedInventoryTablePiece = {
   rosterLeaderId: string;
@@ -113,7 +133,22 @@ export type SerializedEtherVortex = {
   etherCrystals: number;
   domain: 'life' | 'creation' | 'death' | 'destruction' | null;
   rotationDeg?: number;
+  spriteSrc?: string;
+  imageRotationDeg?: number;
   offBoardWorld?: SerializedPoint;
+};
+
+export type SerializedBoardObjectPiece = {
+  objectId: string;
+  stackObjectIds?: string[];
+  footprint: 'hex' | 'hexon';
+  center: SerializedHex;
+  offBoardWorld?: SerializedPoint;
+  rotationDeg?: number;
+  imageRotationDeg?: number;
+  faceUp?: boolean;
+  health?: number;
+  boardInstanceId?: string;
 };
 
 /** Одна кость в общей зоне броска (синхронизация между игроками). */
@@ -194,12 +229,17 @@ export type SerializedBoardStateV1 = {
   largeMiniCardData: UnitCardData[];
   hugeMiniatures: SerializedHugeMini[];
   hugeMiniCardData: UnitCardData[];
+  /** Present in new saves; omit on legacy snapshots (treated as `[]` at load). */
+  huge2Miniatures?: SerializedHuge2Mini[];
+  /** Present in new saves; omit on legacy snapshots (treated as `[]` at load). */
+  huge2MiniCardData?: UnitCardData[];
   terrains: SerializedHex[];
   terrainOffBoardWorlds: Array<SerializedPoint | undefined>;
   /** Per-terrain hexon rotation; length must match `terrains` when present. */
   terrainRotationDegs?: number[];
   /** @deprecated If `terrainRotationDegs` is absent, applied to every terrain (load-only). */
   terrainRotationDeg?: number;
+  boardObjects?: SerializedBoardObjectPiece[];
   etherVortexes: SerializedEtherVortex[];
   godTablePieces: GodTablePiece[];
   /** Предметы инвентаря на столе (опционально для старых снимков). */
@@ -409,6 +449,11 @@ export function isSerializedBoardStateV1(raw: unknown): raw is SerializedBoardSt
   if (!Array.isArray(o.bigMiniatures) || !Array.isArray(o.bigMiniCardData)) return false;
   if (!Array.isArray(o.largeMiniatures) || !Array.isArray(o.largeMiniCardData)) return false;
   if (!Array.isArray(o.hugeMiniatures) || !Array.isArray(o.hugeMiniCardData)) return false;
+  const h2m = o.huge2Miniatures;
+  const h2c = o.huge2MiniCardData;
+  if (h2m !== undefined || h2c !== undefined) {
+    if (!Array.isArray(h2m) || !Array.isArray(h2c)) return false;
+  }
   if (!Array.isArray(o.terrains) || !Array.isArray(o.terrainOffBoardWorlds)) return false;
   const trs = (o as SerializedBoardStateV1).terrainRotationDegs;
   const trLegacy = (o as SerializedBoardStateV1).terrainRotationDeg;
@@ -491,6 +536,14 @@ export function isSerializedBoardStateV1(raw: unknown): raw is SerializedBoardSt
     const bid = (m as { boardInstanceId?: unknown }).boardInstanceId;
     if (bid !== undefined && !validBoardId(bid)) return false;
   }
+  const huge2MiniaturesList = h2m !== undefined && h2c !== undefined ? h2m : [];
+  for (const m of huge2MiniaturesList) {
+    if (!m || typeof m !== 'object') return false;
+    const aos = (m as { armyOwnerPlayerSlot?: unknown }).armyOwnerPlayerSlot;
+    if (!validOptionalArmyOwnerSlot(aos)) return false;
+    const bid = (m as { boardInstanceId?: unknown }).boardInstanceId;
+    if (bid !== undefined && !validBoardId(bid)) return false;
+  }
   for (const t of o.terrains) {
     if (!isHex(t)) return false;
   }
@@ -498,6 +551,35 @@ export function isSerializedBoardStateV1(raw: unknown): raw is SerializedBoardSt
     if (!v || typeof v !== 'object') return false;
     const bid = (v as { boardInstanceId?: unknown }).boardInstanceId;
     if (bid !== undefined && !validBoardId(bid)) return false;
+    const spriteSrc = (v as { spriteSrc?: unknown }).spriteSrc;
+    if (spriteSrc !== undefined && typeof spriteSrc !== 'string') return false;
+    const imageRotationDeg = (v as { imageRotationDeg?: unknown }).imageRotationDeg;
+    if (imageRotationDeg !== undefined && typeof imageRotationDeg !== 'number') return false;
+  }
+  const boardObjects = (o as { boardObjects?: unknown }).boardObjects;
+  if (boardObjects !== undefined) {
+    if (!Array.isArray(boardObjects)) return false;
+    for (const b of boardObjects) {
+      if (!b || typeof b !== 'object') return false;
+      const p = b as Record<string, unknown>;
+      if (typeof p.objectId !== 'string' || p.objectId.length === 0) return false;
+      if (p.stackObjectIds !== undefined) {
+        if (!Array.isArray(p.stackObjectIds)) return false;
+        if (!p.stackObjectIds.every((id) => typeof id === 'string' && id.length > 0)) return false;
+      }
+      if (p.footprint !== 'hex' && p.footprint !== 'hexon') return false;
+      if (!isHex(p.center)) return false;
+      if (p.offBoardWorld !== undefined) {
+        if (!p.offBoardWorld || typeof p.offBoardWorld !== 'object') return false;
+        const w = p.offBoardWorld as { x?: unknown; y?: unknown };
+        if (typeof w.x !== 'number' || typeof w.y !== 'number') return false;
+      }
+      if (p.rotationDeg !== undefined && typeof p.rotationDeg !== 'number') return false;
+      if (p.imageRotationDeg !== undefined && typeof p.imageRotationDeg !== 'number') return false;
+      if (p.faceUp !== undefined && typeof p.faceUp !== 'boolean') return false;
+      if (p.health !== undefined && typeof p.health !== 'number') return false;
+      if (p.boardInstanceId !== undefined && !validBoardId(p.boardInstanceId)) return false;
+    }
   }
   const gds = (o as { godDeckSlots?: unknown }).godDeckSlots;
   if (gds !== undefined) {

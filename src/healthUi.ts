@@ -16,6 +16,9 @@ export const LARGE_MINI_VISUAL_SCALE = 0.92;
 /** Huge mini (3-hexon triangle) draw scale. */
 export const HUGE_MINI_VISUAL_SCALE = 0.88;
 
+/** Huge2 domino (two adjacent hexons): per-hexon silhouette scale (matches {@link BIG_MINI_VISUAL_SCALE}). */
+export const HUGE2_MINI_VISUAL_SCALE = BIG_MINI_VISUAL_SCALE;
+
 /**
  * HP badge for big miniatures: scale vs `baseRadius` (renderer + hit-test).
  */
@@ -63,7 +66,7 @@ export function smallUnitHealthBadgeCenterWorldRad(
 }
 
 /** Rightmost vertex (corner 0, flat-top), almost at the tip — inset keeps the dot inside the hex. */
-export const SMALL_UNIT_ACTIVATION_INSET_FRAC = 0.92;
+export const SMALL_UNIT_ACTIVATION_INSET_FRAC = 0.8;
 
 export function smallUnitActivationToggleCenterWorldRad(
   hexCenterWorld: Point,
@@ -104,6 +107,8 @@ export function smallUnitBroomgarHungerCenterWorldRad(
 /**
  * Big miniature: activation dot on the east peripheral hex, right edge (same local rule as small).
  */
+export const BIG_MINI_ACTIVATION_INSET_FRAC = 0.5;
+
 export function bigMiniActivationToggleCenterWorld(
   hexonCenterWorld: Point,
   rotationDeg: number,
@@ -117,11 +122,15 @@ export function bigMiniActivationToggleCenterWorld(
     y: hexonCenterWorld.y + (pe.y - o.y),
   };
   const rotRad = (rotationDeg * Math.PI) / 180;
-  return smallUnitActivationToggleCenterWorldRad(
-    eastCellCenterWorld,
-    rotRad,
-    layout,
-  );
+  const v = layout.hexCornerOffset(0);
+  const x0 = v.x * BIG_MINI_ACTIVATION_INSET_FRAC;
+  const y0 = v.y * BIG_MINI_ACTIVATION_INSET_FRAC;
+  const c = Math.cos(rotRad);
+  const s = Math.sin(rotRad);
+  return {
+    x: eastCellCenterWorld.x + c * x0 - s * y0,
+    y: eastCellCenterWorld.y + s * x0 + c * y0,
+  };
 }
 
 /** Big miniature: Broomgar disc on west peripheral hex (mirror of activation). */
@@ -142,13 +151,15 @@ export function bigMiniBroomgarHungerCenterWorld(
 }
 
 /** Large triangle: right side of silhouette, vertically centered. Use model `rotationDeg` on all seats. */
+export const LARGE_MINI_ACTIVATION_PAD_FRAC = 0.14;
+
 export function largeMiniActivationToggleCenterWorld(
   anchorHexCenterWorld: Point,
   rotationDeg: number,
   layout: Layout,
 ): Point {
   const b = largeTriangleBoundsLocal(layout);
-  const pad = Math.min(layout.size.x, layout.size.y) * 0.1;
+  const pad = Math.min(layout.size.x, layout.size.y) * LARGE_MINI_ACTIVATION_PAD_FRAC;
   const lx = b.maxX - pad;
   const ly = (b.minY + b.maxY) / 2;
   const dx = lx * LARGE_MINI_VISUAL_SCALE;
@@ -184,6 +195,8 @@ export function largeMiniBroomgarHungerCenterWorld(
 }
 
 /** Huge triangle: same idea as large; `pivotWorld` matches health badge anchor. */
+export const HUGE_MINI_ACTIVATION_PAD_FRAC = 0.14;
+
 export function hugeMiniActivationToggleCenterFromPivotWorld(
   pivotWorld: Point,
   rotationDeg: number,
@@ -192,7 +205,7 @@ export function hugeMiniActivationToggleCenterFromPivotWorld(
   const b = hugeTriangleBoundsLocal(layout);
   const cx = (b.minX + b.maxX) / 2;
   const cy = (b.minY + b.maxY) / 2;
-  const pad = Math.min(layout.size.x, layout.size.y) * 0.1;
+  const pad = Math.min(layout.size.x, layout.size.y) * HUGE_MINI_ACTIVATION_PAD_FRAC;
   const lx = b.maxX - pad;
   const ly = (b.minY + b.maxY) / 2;
   const dx = (lx - cx) * HUGE_MINI_VISUAL_SCALE;
@@ -528,6 +541,121 @@ export function hugeMiniDrawPivotWorld(anchor: Hex, rotationDeg: number, layout:
   return {
     x: T.x - (c * dx - s * dy),
     y: T.y - (s * dx + c * dy),
+  };
+}
+
+// ── Huge2 mini (2-hexon domino) ─────────────────────────────────
+
+function huge2DominoLocalCellCenters(layout: Layout): Point[] {
+  const zero = new Hex(0, 0);
+  const o = layout.hexToPixel(zero);
+  const hexonCenters = [zero, zero.add(new Hex(3, -1))];
+  const cells: Point[] = [];
+  for (const hOff of hexonCenters) {
+    const hc = layout.hexToPixel(hOff);
+    cells.push({ x: hc.x - o.x, y: hc.y - o.y });
+    for (const d of Hex.directions) {
+      const nb = hOff.add(d);
+      const np = layout.hexToPixel(nb);
+      cells.push({ x: np.x - o.x, y: np.y - o.y });
+    }
+  }
+  return cells;
+}
+
+function huge2DominoBoundsLocal(layout: Layout): {
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+} {
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (const cell of huge2DominoLocalCellCenters(layout)) {
+    for (let i = 0; i < 6; i++) {
+      const off = layout.hexCornerOffset(i);
+      const x = cell.x + off.x;
+      const y = cell.y + off.y;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+  }
+  return { minX, maxX, minY, maxY };
+}
+
+/** HP badge scale for huge2 (same baseline as huge). */
+export const HUGE2_UNIT_HEALTH_UI_SCALE = HUGE_UNIT_HEALTH_UI_SCALE;
+
+export const HUGE2_MINI_ACTIVATION_PAD_FRAC = HUGE_MINI_ACTIVATION_PAD_FRAC;
+
+export function huge2MiniHealthBadgeCenterWorld(
+  pivotWorld: Point,
+  rotationDeg: number,
+  layout: Layout,
+): Point {
+  const b = huge2DominoBoundsLocal(layout);
+  const cx = (b.minX + b.maxX) / 2;
+  const cy = (b.minY + b.maxY) / 2;
+  // Tuned per request: place HP badge deeper inside huge2 footprint.
+  const insetFrac = 0.5;
+  const lx = (b.minX + b.maxX) / 2;
+  const ly = b.maxY * insetFrac;
+  const dx = (lx - cx) * HUGE2_MINI_VISUAL_SCALE;
+  const dy = (ly - cy) * HUGE2_MINI_VISUAL_SCALE;
+  const rotRad = (rotationDeg * Math.PI) / 180;
+  const c = Math.cos(rotRad);
+  const s = Math.sin(rotRad);
+  return {
+    x: pivotWorld.x + c * dx - s * dy,
+    y: pivotWorld.y + s * dx + c * dy,
+  };
+}
+
+export function huge2MiniActivationToggleCenterFromPivotWorld(
+  pivotWorld: Point,
+  rotationDeg: number,
+  layout: Layout,
+): Point {
+  const b = huge2DominoBoundsLocal(layout);
+  const cx = (b.minX + b.maxX) / 2;
+  const cy = (b.minY + b.maxY) / 2;
+  const pad = Math.min(layout.size.x, layout.size.y) * HUGE2_MINI_ACTIVATION_PAD_FRAC;
+  const lx = b.maxX - pad;
+  const ly = (b.minY + b.maxY) / 2;
+  const dx = (lx - cx) * HUGE2_MINI_VISUAL_SCALE;
+  const dy = (ly - cy) * HUGE2_MINI_VISUAL_SCALE;
+  const rotRad = (rotationDeg * Math.PI) / 180;
+  const c = Math.cos(rotRad);
+  const s = Math.sin(rotRad);
+  return {
+    x: pivotWorld.x + c * dx - s * dy,
+    y: pivotWorld.y + s * dx + c * dy,
+  };
+}
+
+export function huge2MiniBroomgarHungerCenterFromPivotWorld(
+  pivotWorld: Point,
+  rotationDeg: number,
+  layout: Layout,
+): Point {
+  const b = huge2DominoBoundsLocal(layout);
+  const cx = (b.minX + b.maxX) / 2;
+  const cy = (b.minY + b.maxY) / 2;
+  const pad = Math.min(layout.size.x, layout.size.y) * 0.1;
+  const lx = b.minX + pad;
+  const ly = (b.minY + b.maxY) / 2;
+  const dx = (lx - cx) * HUGE2_MINI_VISUAL_SCALE;
+  const dy = (ly - cy) * HUGE2_MINI_VISUAL_SCALE;
+  const rotRad = (rotationDeg * Math.PI) / 180;
+  const c = Math.cos(rotRad);
+  const s = Math.sin(rotRad);
+  return {
+    x: pivotWorld.x + c * dx - s * dy,
+    y: pivotWorld.y + s * dx + c * dy,
   };
 }
 

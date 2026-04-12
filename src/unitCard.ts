@@ -12,7 +12,7 @@ import type { HotspotFile, HotspotRegion, LegacyHotspotBinding } from './catalog
 
 // ── Types ──────────────────────────────────────────────────────
 
-export type UnitSize = 'small' | 'big' | 'large' | 'huge';
+export type UnitSize = 'small' | 'big' | 'large' | 'huge' | 'huge2';
 
 export type DamageType = 'physical' | 'fire' | 'mental' | 'poison' | 'cold' | 'electric';
 export type AttackRange = 'melee' | 'ranged';
@@ -77,7 +77,7 @@ export interface UnitCardData {
   run: number;
   /**
    * Explicit movement distance unit (hexes vs hexons). When omitted, walk/run labels follow `size`
-   * like before (small/large → hexes, big/huge → hexons).
+   * like before (small/large → hexes, big/huge/huge2 → hexons).
    */
   movementDistanceUnit?: 'hex' | 'hexon';
   /** Faction / location banner on the card (path under `public/`). */
@@ -113,10 +113,10 @@ export interface UnitCardData {
   explorationRange?: number;
   /**
    * Max distance for “take / pick up” interactions.
-   * Display unit: `grabRangeUnit`, or by default hex for small/large, hexon for big/huge (same rule as walk/run without override).
+   * Display unit: `grabRangeUnit`, or by default hex for small/large, hexon for big/huge/huge2 (same rule as walk/run without override).
    */
   grabRange?: number;
-  /** Явная единица для «взять»; без поля — гекс для малой/large, гексон для big/huge. */
+  /** Явная единица для «взять»; без поля — гекс для малой/large, гексон для big/huge/huge2. */
   grabRangeUnit?: 'hex' | 'hexon';
   /** Optional ether cost on the «взять» tile. */
   grabEtherCost?: EtherCrystalPool;
@@ -288,7 +288,7 @@ const HEXON_DISTANCE_ICON_SRC = '/hexon-icon.svg';
 function movementDistanceUnit(data: UnitCardData): 'hex' | 'hexon' {
   if (data.movementDistanceUnit === 'hex') return 'hex';
   if (data.movementDistanceUnit === 'hexon') return 'hexon';
-  return data.size === 'big' || data.size === 'huge' ? 'hexon' : 'hex';
+  return data.size === 'big' || data.size === 'huge' || data.size === 'huge2' ? 'hexon' : 'hex';
 }
 
 function attackRangeDistanceUnit(data: UnitCardData, atk: AttackAbility): 'hex' | 'hexon' {
@@ -300,7 +300,7 @@ function attackRangeDistanceUnit(data: UnitCardData, atk: AttackAbility): 'hex' 
 function grabRangeDistanceUnit(data: UnitCardData): 'hex' | 'hexon' {
   if (data.grabRangeUnit === 'hex') return 'hex';
   if (data.grabRangeUnit === 'hexon') return 'hexon';
-  return data.size === 'big' || data.size === 'huge' ? 'hexon' : 'hex';
+  return data.size === 'big' || data.size === 'huge' || data.size === 'huge2' ? 'hexon' : 'hex';
 }
 
 /** Range in hexes/hexons: outline icon with the number centered inside. */
@@ -666,7 +666,16 @@ export class UnitCard {
     headerInfo.appendChild(name);
 
     const badges = el('div', 'uc-badges');
-    const sizeLabel = data.size === 'big' ? 'Large' : data.size === 'large' ? 'Heavy' : data.size === 'huge' ? 'Colossal' : 'Infantry';
+    const sizeLabel =
+      data.size === 'big'
+        ? 'Large'
+        : data.size === 'large'
+          ? 'Heavy'
+          : data.size === 'huge2'
+            ? 'Gargantuan'
+            : data.size === 'huge'
+              ? 'Colossal'
+              : 'Infantry';
     const sizeBadge = el('span', `uc-badge uc-badge-${data.size}`, sizeLabel);
     badges.appendChild(sizeBadge);
     headerInfo.appendChild(badges);

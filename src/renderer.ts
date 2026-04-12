@@ -2,7 +2,7 @@
  * Canvas renderer for the hex grid with hexon visualisation.
  */
 
-import { Hex, Layout, type Point } from './hex';
+import { Hex, Layout, type Point, huge2DominoHexonCentersOriented } from './hex';
 import { type HexGrid } from './grid';
 import {
   BIG_MINI_VISUAL_SCALE,
@@ -15,8 +15,13 @@ import {
   largeMiniActivationToggleCenterWorld,
   largeMiniBroomgarHungerCenterWorld,
   largeMiniHealthBadgeCenterWorld,
+  HUGE2_MINI_VISUAL_SCALE,
+  HUGE2_UNIT_HEALTH_UI_SCALE,
   HUGE_MINI_VISUAL_SCALE,
   HUGE_UNIT_HEALTH_UI_SCALE,
+  huge2MiniActivationToggleCenterFromPivotWorld,
+  huge2MiniBroomgarHungerCenterFromPivotWorld,
+  huge2MiniHealthBadgeCenterWorld,
   hugeMiniActivationToggleCenterFromPivotWorld,
   hugeMiniBroomgarHungerCenterFromPivotWorld,
   hugeMiniDrawPivotWorld,
@@ -160,11 +165,35 @@ export class Renderer {
   private bigMiniSpriteSrcs: (string | null)[] = [];
   private terrainRotationDegs: number[] = [];
   private terrainOffBoardWorlds: (Point | undefined)[] = [];
+  private boardObjects: Array<{
+    center: Hex;
+    offBoardWorld?: Point;
+    footprint: 'hex' | 'hexon';
+    spriteSrc: string | null;
+    backSpriteSrc: string | null;
+    faceUp: boolean;
+    stackCount: number;
+    rotationDeg: number;
+    imageRotationDeg?: number;
+    keepImagePlayerFacing?: boolean;
+    health?: number;
+    showHealthBadge?: boolean;
+    showHealthControls?: boolean;
+  }> = [];
+  private selectedBoardObjectIndex: number | null = null;
+  private boardObjectFlipAnim: {
+    index: number;
+    startMs: number;
+    durationMs: number;
+    fromFaceUp: boolean;
+  } | null = null;
   private etherVortexEntries: Array<{
     center: Hex;
     etherCrystals: number;
     domain: EtherVortexDomainId | null;
     rotationDeg: number;
+    spriteSrc?: string;
+    imageRotationDeg?: number;
     offBoardWorld?: Point;
   }> = [];
   private draggingEtherVortexIndex: number | null = null;
@@ -217,6 +246,23 @@ export class Renderer {
   private bigMiniBroomgarHungerPhase: Array<BroomgarHungerPhase | null> = [];
   private largeMiniBroomgarHungerPhase: Array<BroomgarHungerPhase | null> = [];
   private hugeMiniBroomgarHungerPhase: Array<BroomgarHungerPhase | null> = [];
+  // ── Huge2 mini (2 hexon domino) state ──
+  private huge2MiniAnchors: Hex[] = [];
+  private huge2MiniOffBoardWorlds: (Point | undefined)[] = [];
+  private huge2MiniPreviewPosition: Point | null = null;
+  private draggingHuge2MiniIndex: number | null = null;
+  private huge2MiniWalkHexonCenters: Hex[] = [];
+  private huge2MiniRunHexonCenters: Hex[] = [];
+  private selectedHuge2MiniIndex: number | null = null;
+  private huge2MiniRotationDeg: number[] = [];
+  private huge2MiniHealthValues: number[] = [];
+  private openHealthControlsHuge2MiniIndex: number | null = null;
+  private huge2MiniEffectMarkers: EffectMarkerId[][] = [];
+  private huge2MiniSpriteSrcs: (string | null)[] = [];
+  private huge2MiniSpriteOffsetsLocal: Point[] = [];
+  private huge2MiniSpriteRotationDegLocal: number[] = [];
+  private huge2MiniActivated: boolean[] = [];
+  private huge2MiniBroomgarHungerPhase: Array<BroomgarHungerPhase | null> = [];
 
   private spriteImageCache = new Map<string, HTMLImageElement>();
   private spriteImageLoading = new Set<string>();
@@ -426,12 +472,61 @@ export class Renderer {
     this.terrainOffBoardWorlds = offBoardWorlds ? [...offBoardWorlds] : [];
   }
 
+  setBoardObjects(
+    pieces: ReadonlyArray<{
+      center: Hex;
+      offBoardWorld?: Point;
+      footprint: 'hex' | 'hexon';
+      spriteSrc: string | null;
+      backSpriteSrc: string | null;
+      faceUp: boolean;
+      stackCount: number;
+      rotationDeg?: number;
+      imageRotationDeg?: number;
+      keepImagePlayerFacing?: boolean;
+      health?: number;
+      showHealthBadge?: boolean;
+      showHealthControls?: boolean;
+    }>,
+    selectedIndex: number | null,
+  ): void {
+    this.boardObjects = pieces.map((p) => ({
+      center: new Hex(p.center.q, p.center.r),
+      offBoardWorld: p.offBoardWorld ? { ...p.offBoardWorld } : undefined,
+      footprint: p.footprint,
+      spriteSrc: p.spriteSrc,
+      backSpriteSrc: p.backSpriteSrc,
+      faceUp: p.faceUp,
+      stackCount: p.stackCount,
+      rotationDeg: p.rotationDeg ?? 0,
+      imageRotationDeg: p.imageRotationDeg,
+      keepImagePlayerFacing: p.keepImagePlayerFacing,
+      health: p.health,
+      showHealthBadge: p.showHealthBadge,
+      showHealthControls: p.showHealthControls,
+    }));
+    this.selectedBoardObjectIndex = selectedIndex;
+  }
+
+  setBoardObjectFlipAnim(
+    anim: {
+      index: number;
+      startMs: number;
+      durationMs: number;
+      fromFaceUp: boolean;
+    } | null,
+  ): void {
+    this.boardObjectFlipAnim = anim ? { ...anim } : null;
+  }
+
   setEtherVortexes(
     entries: ReadonlyArray<{
       center: Hex;
       etherCrystals: number;
       domain: EtherVortexDomainId | null;
       rotationDeg: number;
+      spriteSrc?: string;
+      imageRotationDeg?: number;
       offBoardWorld?: { x: number; y: number };
     }>,
     selectedIndex: number | null = null,
@@ -441,6 +536,8 @@ export class Renderer {
       etherCrystals: e.etherCrystals,
       domain: e.domain,
       rotationDeg: e.rotationDeg,
+      spriteSrc: e.spriteSrc,
+      imageRotationDeg: e.imageRotationDeg,
       offBoardWorld: e.offBoardWorld ? { ...e.offBoardWorld } : undefined,
     }));
     this.selectedEtherVortexIndex = selectedIndex;
@@ -720,6 +817,62 @@ export class Renderer {
     this.hugeMiniSpriteRotationDegLocal = [...degrees];
   }
 
+  setHuge2Miniatures(
+    anchors: Hex[],
+    previewPosition: Point | null,
+    draggingIndex: number | null,
+    _dragOverAnchor: Hex | null,
+    offBoardWorlds?: (Point | undefined)[],
+  ): void {
+    this.huge2MiniAnchors = [...anchors];
+    this.huge2MiniPreviewPosition = previewPosition;
+    this.draggingHuge2MiniIndex = draggingIndex;
+    this.huge2MiniOffBoardWorlds = offBoardWorlds ? [...offBoardWorlds] : [];
+  }
+
+  setHuge2MiniMovement(
+    selectedIndex: number | null,
+    walkHexonCenters: Hex[],
+    runHexonCenters: Hex[],
+  ): void {
+    this.selectedHuge2MiniIndex = selectedIndex;
+    this.huge2MiniWalkHexonCenters = [...walkHexonCenters];
+    this.huge2MiniRunHexonCenters = [...runHexonCenters];
+  }
+
+  setHuge2MiniRotations(degrees: number[]): void {
+    this.huge2MiniRotationDeg = [...degrees];
+  }
+
+  setHuge2MiniHealth(values: number[], openControlsIndex: number | null): void {
+    this.huge2MiniHealthValues = [...values];
+    this.openHealthControlsHuge2MiniIndex = openControlsIndex;
+  }
+
+  setHuge2MiniEffectMarkers(markers: EffectMarkerId[][]): void {
+    this.huge2MiniEffectMarkers = markers;
+  }
+
+  setHuge2MiniSpriteSources(srcs: (string | null)[]): void {
+    this.huge2MiniSpriteSrcs = [...srcs];
+  }
+
+  setHuge2MiniSpriteOffsets(offsets: Point[]): void {
+    this.huge2MiniSpriteOffsetsLocal = [...offsets];
+  }
+
+  setHuge2MiniSpriteLocalRotations(degrees: number[]): void {
+    this.huge2MiniSpriteRotationDegLocal = [...degrees];
+  }
+
+  setHuge2MiniActivated(values: boolean[]): void {
+    this.huge2MiniActivated = [...values];
+  }
+
+  setHuge2MiniBroomgarHungerPhase(phases: Array<BroomgarHungerPhase | null>): void {
+    this.huge2MiniBroomgarHungerPhase = [...phases];
+  }
+
   updateConfig(patch: Partial<RenderConfig>): void {
     this.config = { ...this.config, ...patch };
   }
@@ -855,6 +1008,9 @@ export class Renderer {
     // Pass 4: ether vortexes (silhouette + tint + crystal chip in world space)
     this.drawEtherVortexes();
 
+    // Pass 4a: custom board objects (hex / hexon sprites)
+    this.drawBoardObjects();
+
     // Pass 5: optional thick border for a highlighted hexon
     if (config.hexonBorderWidth > 0) {
       this.drawHexonBorders();
@@ -869,12 +1025,16 @@ export class Renderer {
 
     // Pass 7a: huge mini movement range (hexon-level, 3-hexon triangles)
     this.drawHugeMiniMovement();
+    this.drawHuge2MiniMovement();
 
     // Pass 7b: attack range for big miniatures (on top of walk/run rings)
     this.drawAttackRangeBigHighlights();
 
     // Pass 8: huge miniatures (3-hexon triangle) — lowest miniature layer
     this.drawHugeMiniatures();
+
+    // Pass 8a0: huge2 domino miniatures (two hexons)
+    this.drawHuge2Miniatures();
 
     // Pass 8a: big miniatures (hexon-sized)
     this.drawBigMiniatures();
@@ -1203,6 +1363,7 @@ export class Renderer {
       this.draggingBigMiniIndex === null &&
       this.draggingLargeMiniIndex === null &&
       this.draggingHugeMiniIndex === null &&
+      this.draggingHuge2MiniIndex === null &&
       !this.terrainDragging;
     const isHovered = showBaseHover && this.hoveredHex !== null && hex.key === this.hoveredHex.key;
 
@@ -2213,7 +2374,8 @@ export class Renderer {
       | 'insideHexSmallUnit'
       | 'insideHexBigUnitBottom'
       | 'insideHexLargeUnit'
-      | 'insideHexHugeUnit' = 'above',
+      | 'insideHexHugeUnit'
+      | 'insideHexHuge2Unit' = 'above',
     rotationRad = 0,
   ): void {
     const { ctx } = this;
@@ -2239,6 +2401,12 @@ export class Renderer {
       );
     } else if (verticalPlacement === 'insideHexHugeUnit') {
       badgeCenter = hugeMiniHealthBadgeCenterWorld(
+        miniatureCenter,
+        (rotationRad * 180) / Math.PI,
+        this.layout,
+      );
+    } else if (verticalPlacement === 'insideHexHuge2Unit') {
+      badgeCenter = huge2MiniHealthBadgeCenterWorld(
         miniatureCenter,
         (rotationRad * 180) / Math.PI,
         this.layout,
@@ -2439,7 +2607,7 @@ export class Renderer {
   /** Multi-hex mini silhouettes: effect markers sit on the left edge, same pivot as draw. */
   private effectMarkerMultiFootprintBounds(
     layout: Layout,
-    footprint: 'bigHexon' | 'largeTri' | 'hugeTri',
+    footprint: 'bigHexon' | 'largeTri' | 'hugeTri' | 'huge2Dom',
   ): { b: { minX: number; maxX: number; minY: number; maxY: number }; vis: number } {
     if (footprint === 'bigHexon') {
       return { b: this.bigMiniHexonBoundsLocal(layout), vis: BIG_MINI_VISUAL_SCALE };
@@ -2447,6 +2615,10 @@ export class Renderer {
     if (footprint === 'largeTri') {
       const cells = this.largeTriangleLocalCellCenters(layout);
       return { b: this.boundsFromCells(cells, layout), vis: LARGE_MINI_VISUAL_SCALE };
+    }
+    if (footprint === 'huge2Dom') {
+      const cells = this.huge2DominoLocalCellCenters(layout);
+      return { b: this.boundsFromCells(cells, layout), vis: HUGE2_MINI_VISUAL_SCALE };
     }
     return {
       b: this.hugeMiniFootprintBoundsLocal(layout),
@@ -2744,6 +2916,131 @@ export class Renderer {
   }
 
   /**
+   * Huge2 (2 hexons): same placement strategy as {@link hugeTriEffectMarkerLocalScaledPositions},
+   * choosing the better of two hexon lobes by distance to HP / activation badges.
+   */
+  private huge2DomEffectMarkerLocalScaledPositions(
+    layout: Layout,
+    count: number,
+    rotationDeg: number,
+    pivotWorld: Point,
+    inwardBase: number,
+  ): Point[] | null {
+    if (count <= 0) return [];
+    const S = HUGE2_MINI_VISUAL_SCALE;
+    const b = this.boundsFromCells(this.huge2DominoLocalCellCenters(layout), layout);
+    const cx0 = (b.minX + b.maxX) / 2;
+    const cy0 = (b.minY + b.maxY) / 2;
+
+    const hpW = huge2MiniHealthBadgeCenterWorld(pivotWorld, rotationDeg, layout);
+    const actW = huge2MiniActivationToggleCenterFromPivotWorld(
+      pivotWorld,
+      rotationDeg,
+      layout,
+    );
+    const rotRad = (rotationDeg * Math.PI) / 180;
+    const c = Math.cos(rotRad);
+    const s = Math.sin(rotRad);
+    const toWorld = (lx: number, ly: number): Point => ({
+      x: pivotWorld.x + c * lx - s * ly,
+      y: pivotWorld.y + s * lx + c * ly,
+    });
+    const blockR =
+      Math.min(layout.size.x, layout.size.y) * HUGE2_MINI_VISUAL_SCALE * 0.52;
+
+    const hexonCenters = this.huge2DominoLocalHexonCenters(layout);
+    const hexonBlocked = (H: Point): boolean => {
+      const lx = (H.x - cx0) * S;
+      const ly = (H.y - cy0) * S;
+      const w = toWorld(lx, ly);
+      return (
+        Math.hypot(w.x - hpW.x, w.y - hpW.y) < blockR ||
+        Math.hypot(w.x - actW.x, w.y - actW.y) < blockR
+      );
+    };
+
+    let bestH: Point | null = null;
+    let bestScore = -Infinity;
+    for (const H of hexonCenters) {
+      const lx = (H.x - cx0) * S;
+      const ly = (H.y - cy0) * S;
+      const w = toWorld(lx, ly);
+      const dHp = Math.hypot(w.x - hpW.x, w.y - hpW.y);
+      const dAct = Math.hypot(w.x - actW.x, w.y - actW.y);
+      const score = Math.min(dHp, dAct);
+      if (!hexonBlocked(H) && score > bestScore) {
+        bestScore = score;
+        bestH = H;
+      }
+    }
+    if (bestH === null) {
+      for (const H of hexonCenters) {
+        const lx = (H.x - cx0) * S;
+        const ly = (H.y - cy0) * S;
+        const w = toWorld(lx, ly);
+        const dHp = Math.hypot(w.x - hpW.x, w.y - hpW.y);
+        const dAct = Math.hypot(w.x - actW.x, w.y - actW.y);
+        const score = Math.min(dHp, dAct);
+        if (score > bestScore) {
+          bestScore = score;
+          bestH = H;
+        }
+      }
+    }
+    if (bestH === null) return null;
+
+    const zero = new Hex(0, 0);
+    const origin = layout.hexToPixel(zero);
+    const cells: Point[] = [
+      ...Hex.directions.map((d) => {
+        const p = layout.hexToPixel(zero.add(d));
+        return { x: p.x - origin.x, y: p.y - origin.y };
+      }),
+      { x: 0, y: 0 },
+    ];
+
+    const out: Point[] = [];
+    for (let i = 0; i < count; i++) {
+      const cell = cells[i % 7]!;
+      const lap = Math.floor(i / 7);
+
+      let ax = bestH.x + cell.x;
+      let ay = bestH.y + cell.y;
+
+      const tox = bestH.x - ax;
+      const toy = bestH.y - ay;
+      const distHex = Math.hypot(tox, toy);
+      if (distHex > 1e-9) {
+        const pull = Math.min(inwardBase * 0.48, distHex * 0.36);
+        ax += (tox / distHex) * pull;
+        ay += (toy / distHex) * pull;
+      }
+
+      if (lap > 0) {
+        if (distHex > 1e-9) {
+          const extra = Math.min(lap * inwardBase * 0.2, distHex * 0.28);
+          ax += (tox / distHex) * extra;
+          ay += (toy / distHex) * extra;
+        } else {
+          const dir = Hex.directions[(lap - 1) % 6]!;
+          const tp = layout.hexToPixel(zero.add(dir));
+          const dx = tp.x - origin.x;
+          const dy = tp.y - origin.y;
+          const dl = Math.hypot(dx, dy);
+          if (dl > 1e-9) {
+            const off = lap * inwardBase * 0.26;
+            ax += (dx / dl) * off;
+            ay += (dy / dl) * off;
+          }
+        }
+      }
+
+      out.push({ x: (ax - cx0) * S, y: (ay - cy0) * S });
+    }
+    return out.length === count ? out : null;
+  }
+
+  /**
    * Effect markers: small units on single-hex perimeter (bottom-left, CCW);
    * big / large fallback: column on the left silhouette edge (pivot = bbox center);
    * huge: one hexon’s seven small hex cells when `hugeTriEffectMarkerLocalScaledPositions` succeeds.
@@ -2752,7 +3049,7 @@ export class Renderer {
     center: Point,
     markers: EffectMarkerId[],
     miniatureRadius: number,
-    footprint: 'small' | 'bigHexon' | 'largeTri' | 'hugeTri',
+    footprint: 'small' | 'bigHexon' | 'largeTri' | 'hugeTri' | 'huge2Dom',
     rotationRad = 0,
   ): void {
     if (markers.length === 0) return;
@@ -2765,13 +3062,63 @@ export class Renderer {
         ? Math.max(6, miniatureRadius * 0.45)
         : Math.max(10, miniatureRadius * 0.28 * 1.5);
     const iconSize =
-      footprint === 'largeTri' || footprint === 'hugeTri'
+      footprint === 'largeTri' || footprint === 'hugeTri' || footprint === 'huge2Dom'
         ? iconSizeBase * 0.8
         : iconSizeBase;
     const drawIconSize =
-      footprint === 'hugeTri' ? iconSize * 2 : iconSize;
+      footprint === 'hugeTri' || footprint === 'huge2Dom' ? iconSize * 2 : iconSize;
 
     if (footprint !== 'small') {
+      if (footprint === 'huge2Dom') {
+        const rotDeg = (rotationRad * 180) / Math.PI;
+        const drawable = markers.filter((id) =>
+          EFFECT_MARKERS.some((m) => m.id === id),
+        );
+        const inwardHalf =
+          drawIconSize * 0.5 + 2.5 / this.camera.zoom;
+        const locals = this.huge2DomEffectMarkerLocalScaledPositions(
+          layout,
+          drawable.length,
+          rotDeg,
+          center,
+          inwardHalf,
+        );
+        if (locals && locals.length === drawable.length) {
+          let di = 0;
+          for (let i = 0; i < markers.length; i++) {
+            const markerId = markers[i];
+            const def = EFFECT_MARKERS.find((m) => m.id === markerId);
+            if (!def) continue;
+            const img = this.getEffectMarkerImage(def.iconSrc);
+            const { x: sx, y: sy } = locals[di]!;
+            di++;
+            const cx = center.x + cosR * sx - sinR * sy;
+            const cy = center.y + sinR * sx + cosR * sy;
+            const half = drawIconSize / 2;
+
+            ctx.beginPath();
+            ctx.arc(cx, cy, half + 1 / this.camera.zoom, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(17, 24, 39, 0.85)';
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.35 / this.camera.zoom;
+            ctx.stroke();
+
+            if (img) {
+              this.drawImageUprightForOppositeSeat(
+                ctx,
+                img,
+                cx,
+                cy,
+                drawIconSize,
+                drawIconSize,
+              );
+            }
+          }
+          return;
+        }
+      }
+
       if (footprint === 'hugeTri') {
         const rotDeg = (rotationRad * 180) / Math.PI;
         const drawable = markers.filter((id) =>
@@ -3095,7 +3442,7 @@ export class Renderer {
   private drawEtherVortexes(): void {
     const { layout } = this;
     const drag = this.draggingEtherVortexIndex !== null;
-    const etherImgSrc = this.config.etherVortexImageSrc ?? this.config.terrainImageSrc;
+    const fallbackEtherImgSrc = this.config.etherVortexImageSrc ?? this.config.terrainImageSrc;
     this.etherVortexEntries.forEach((v, index) => {
       if (drag && this.draggingEtherVortexIndex === index) return;
       if (index === this.selectedEtherVortexIndex) return;
@@ -3105,7 +3452,8 @@ export class Renderer {
       const rotRad = (v.rotationDeg * Math.PI) / 180;
       this.drawTerrainStyleHexonAtWorldPivot(pivot, rotRad, {
         domainBlendColor: blend,
-        imageSrc: etherImgSrc,
+        imageSrc: v.spriteSrc ?? fallbackEtherImgSrc,
+        imageRotationDeg: v.imageRotationDeg,
       });
     });
     if (drag && this.etherVortexPreviewWorld) {
@@ -3115,11 +3463,13 @@ export class Renderer {
         const blend = draggedEntry ? getEtherVortexBlendColor(draggedEntry.domain) : null;
         const previewRotDeg = draggedEntry?.rotationDeg ?? 0;
         const rotRad = (previewRotDeg * Math.PI) / 180;
+        const previewSprite = draggedEntry?.spriteSrc ?? fallbackEtherImgSrc;
         const pv = this.etherVortexPreviewWorld;
         this.withTablePieceDragLift(pv, () => {
           this.drawTerrainStyleHexonAtWorldPivot(pv, rotRad, {
             domainBlendColor: blend,
-            imageSrc: etherImgSrc,
+            imageSrc: previewSprite,
+            imageRotationDeg: draggedEntry?.imageRotationDeg,
           });
         });
       }
@@ -3139,12 +3489,187 @@ export class Renderer {
       this.withTablePieceDragLift(p, () => {
         this.drawTerrainStyleHexonAtWorldPivot(p, rotRad, {
           domainBlendColor: blend,
-          imageSrc: etherImgSrc,
+          imageSrc: entry.spriteSrc ?? fallbackEtherImgSrc,
+          imageRotationDeg: entry.imageRotationDeg,
         });
       });
       ctx.restore();
     }
     this.drawEtherVortexCrystalBadgesWorld();
+  }
+
+  private drawBoardObjects(): void {
+    const { ctx, layout, config } = this;
+    const selStrokeW = 3;
+    const hexonSelRingScale = this.miniatureSelectionRingPathScale(
+      1,
+      this.bigMiniHexonBoundsLocal(layout),
+      selStrokeW,
+    );
+    for (let i = 0; i < this.boardObjects.length; i++) {
+      const p = this.boardObjects[i]!;
+      const pivot = p.offBoardWorld ?? layout.hexToPixel(p.center);
+      const drawPiece = (faceUp: boolean): boolean => {
+        const spriteSrc = faceUp ? p.spriteSrc : (p.backSpriteSrc ?? p.spriteSrc);
+        const sprite = this.getSpriteImage(spriteSrc);
+        if (!sprite) return false;
+        ctx.save();
+        ctx.translate(pivot.x, pivot.y);
+        if (p.rotationDeg) {
+          ctx.rotate((p.rotationDeg * Math.PI) / 180);
+        }
+        if (p.stackCount > 1) {
+          const layers = Math.min(3, p.stackCount - 1);
+          const step = 2.2 / this.camera.zoom;
+          for (let layer = layers; layer >= 1; layer--) {
+            const o = layer * step;
+            ctx.save();
+            ctx.translate(-o, -o);
+            ctx.fillStyle = 'rgba(12, 12, 18, 0.45)';
+            ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+            ctx.lineWidth = 1 / this.camera.zoom;
+            if (p.footprint === 'hexon') {
+              ctx.beginPath();
+              this.addBigMiniHexonOuterPath(ctx, layout, 1);
+              ctx.fill();
+              ctx.stroke();
+            } else {
+              const corners = layout.hexCorners(new Hex(0, 0));
+              ctx.beginPath();
+              this.roundHexPathLocal(ctx, corners, this.smallUnitHexCornerRadius());
+              ctx.fill();
+              ctx.stroke();
+            }
+            ctx.restore();
+          }
+        }
+        if (p.footprint === 'hexon') {
+          const bounds = this.bigMiniHexonBoundsLocal(layout);
+          const w = bounds.maxX - bounds.minX;
+          const h = bounds.maxY - bounds.minY;
+          ctx.beginPath();
+          this.addBigMiniHexonOuterPath(ctx, layout, 1);
+          ctx.clip();
+          ctx.save();
+          const playerFacingRad = p.keepImagePlayerFacing
+            ? this.contentFieldRotationDeltaRad - this.oppositeSeatMiniatureRadFix
+            : 0;
+          const imageRotRad = ((p.imageRotationDeg ?? 0) * Math.PI) / 180 + playerFacingRad;
+          if (imageRotRad !== 0) ctx.rotate(imageRotRad);
+          ctx.drawImage(sprite, bounds.minX, bounds.minY, w, h);
+          ctx.restore();
+          ctx.beginPath();
+          this.addBigMiniHexonOuterPath(ctx, layout, 1);
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = config.unitStrokeColor;
+          ctx.stroke();
+        } else {
+          const corners = layout.hexCorners(new Hex(0, 0));
+          ctx.beginPath();
+          this.roundHexPathLocal(ctx, corners, this.smallUnitHexCornerRadius());
+          ctx.clip();
+          const size = Math.max(layout.size.x, layout.size.y) * 2;
+          ctx.save();
+          const playerFacingRad = p.keepImagePlayerFacing
+            ? this.contentFieldRotationDeltaRad - this.oppositeSeatMiniatureRadFix
+            : 0;
+          const imageRotRad = ((p.imageRotationDeg ?? 0) * Math.PI) / 180 + playerFacingRad;
+          if (imageRotRad !== 0) ctx.rotate(imageRotRad);
+          ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
+          ctx.restore();
+          ctx.beginPath();
+          this.roundHexPathLocal(ctx, corners, this.smallUnitHexCornerRadius());
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = config.unitStrokeColor;
+          ctx.stroke();
+        }
+        if (p.stackCount > 1) {
+          const text = String(p.stackCount);
+          const pad = 4;
+          const h = 14;
+          ctx.font = 'bold 10px system-ui,sans-serif';
+          const tw = ctx.measureText(text).width;
+          const w = Math.max(14, tw + pad * 2);
+          const size = Math.max(layout.size.x, layout.size.y) * 2;
+          // Hex corners are clipped; keep the badge deeper inside top-right area.
+          const bx = size * 0.5 - w - 10;
+          const by = -size * 0.5 + 10;
+          ctx.fillStyle = 'rgba(12, 12, 18, 0.82)';
+          ctx.beginPath();
+          ctx.roundRect(bx, by, w, h, 3);
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.fillStyle = 'rgba(255,255,255,0.96)';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(text, bx + pad, by + h * 0.52);
+        }
+        if (i === this.selectedBoardObjectIndex) {
+          if (p.footprint === 'hexon') {
+            if (p.offBoardWorld) {
+              this.drawBigMiniRingAtPoint(p.offBoardWorld, hexonSelRingScale, '#4caf50', selStrokeW, p.rotationDeg);
+            } else {
+              this.drawBigMiniRing(p.center, hexonSelRingScale, '#4caf50', selStrokeW, p.rotationDeg);
+            }
+          } else {
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#4caf50';
+            ctx.beginPath();
+            const corners = layout.hexCorners(new Hex(0, 0));
+            this.roundHexPathLocal(ctx, corners, this.smallUnitHexCornerRadius());
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
+        if (p.showHealthBadge && typeof p.health === 'number') {
+          if (p.footprint === 'hex') {
+            const { halfH } = this.hexHalfExtentFromLayout();
+            this.drawHealthBadgeAt(
+              pivot,
+              halfH,
+              p.health,
+              p.showHealthControls === true,
+              SMALL_UNIT_HEALTH_BADGE_SCALE,
+              'insideHexSmallUnit',
+              (p.rotationDeg * Math.PI) / 180,
+            );
+          } else {
+            const baseR = Math.min(layout.size.x, layout.size.y) * 1.58;
+            this.drawHealthBadgeAt(
+              pivot,
+              baseR,
+              p.health,
+              p.showHealthControls === true,
+              BIG_UNIT_HEALTH_UI_SCALE,
+              'insideHexBigUnitBottom',
+              (p.rotationDeg * Math.PI) / 180,
+            );
+          }
+        }
+        return true;
+      };
+      const anim = this.boardObjectFlipAnim;
+      if (anim && anim.index === i) {
+        const elapsed = performance.now() - anim.startMs;
+        if (elapsed < anim.durationMs) {
+          const t = Math.min(1, elapsed / anim.durationMs);
+          const scaleX = Math.max(0.06, Math.abs(Math.cos(Math.PI * t)));
+          const pop = godFlipPopUniformScale(t);
+          const faceUp = t < 0.5 ? anim.fromFaceUp : p.faceUp;
+          ctx.save();
+          ctx.translate(pivot.x, pivot.y);
+          ctx.scale(pop, pop);
+          ctx.scale(scaleX, 1);
+          ctx.translate(-pivot.x, -pivot.y);
+          const drawn = drawPiece(faceUp);
+          ctx.restore();
+          if (drawn) continue;
+        }
+      }
+      drawPiece(p.faceUp);
+    }
   }
 
   /** Crystal count rhombus in board space (scales with zoom like the vortex hexon). */
@@ -3212,7 +3737,7 @@ export class Renderer {
   private drawTerrainStyleHexonAtWorldPivot(
     worldPivot: Point,
     rotRad: number,
-    opts: { domainBlendColor: string | null; imageSrc?: string | null },
+    opts: { domainBlendColor: string | null; imageSrc?: string | null; imageRotationDeg?: number },
   ): void {
     const { ctx, layout, config } = this;
     const p = worldPivot;
@@ -3234,11 +3759,13 @@ export class Renderer {
       const dw = iw * cover;
       const dh = ih * cover;
       const texRotRad = (config.terrainTextureRotationDeg * Math.PI) / 180;
+      const imageRotRad = ((opts.imageRotationDeg ?? 0) * Math.PI) / 180;
       ctx.save();
       ctx.beginPath();
       this.addBigMiniHexonOuterPath(ctx, layout, 1);
       ctx.clip();
       ctx.rotate(texRotRad);
+      if (imageRotRad !== 0) ctx.rotate(imageRotRad);
       ctx.drawImage(sprite, -dw / 2, -dh / 2, dw, dh);
       if (opts.domainBlendColor) {
         ctx.rotate(-texRotRad);
@@ -3286,7 +3813,7 @@ export class Renderer {
    */
   private drawSelectedLiftPass(): void {
     const { ctx, layout, config } = this;
-    const etherImgSrc = config.etherVortexImageSrc ?? config.terrainImageSrc;
+    const fallbackEtherImgSrc = config.etherVortexImageSrc ?? config.terrainImageSrc;
     /** Same silhouette as `drawTerrainStyleHexonAtWorldPivot` (scale 1); ring hugs art like big-minis, not fixed 1.08 gap. */
     const terrainVortexSelStrokeW = 3;
     const terrainVortexRingScale = this.miniatureSelectionRingPathScale(
@@ -3336,6 +3863,7 @@ export class Renderer {
       const rotDeg = entry.rotationDeg;
       const rotRad = (rotDeg * Math.PI) / 180;
       const blend = getEtherVortexBlendColor(entry.domain);
+      const etherImgSrc = entry.spriteSrc ?? fallbackEtherImgSrc;
       const v = entry;
       const vi = index;
       const remoteEther = this.remotePeerTableDrags.find(
@@ -3354,6 +3882,7 @@ export class Renderer {
           this.drawTerrainStyleHexonAtWorldPivot(pv, rotRad, {
             domainBlendColor: blend,
             imageSrc: etherImgSrc,
+            imageRotationDeg: entry.imageRotationDeg,
           });
           ctx.save();
           ctx.translate(world.x, world.y);
@@ -3393,6 +3922,7 @@ export class Renderer {
       this.drawTerrainStyleHexonAtWorldPivot(placePivot, rotRad, {
         domainBlendColor: blend,
         imageSrc: etherImgSrc,
+        imageRotationDeg: entry.imageRotationDeg,
       });
 
       const badgePivot = remoteEther
@@ -3499,6 +4029,57 @@ export class Renderer {
         return;
       }
       this.drawBigMiniPlacedAtIndex(i, true);
+      return;
+    }
+
+    if (this.selectedHuge2MiniIndex !== null) {
+      const i = this.selectedHuge2MiniIndex;
+      if (this.isPeerDraggingEntity('huge2', i)) return;
+      const baseRadius = Math.min(layout.size.x, layout.size.y) * 1.58;
+      const badgeRadius = baseRadius * HUGE2_MINI_VISUAL_SCALE;
+      const huge2ActR =
+        Math.min(layout.size.x, layout.size.y) *
+        1.58 *
+        HUGE2_MINI_VISUAL_SCALE *
+        0.22;
+      if (this.draggingHuge2MiniIndex === i && this.huge2MiniPreviewPosition) {
+        const previewRotModel = this.huge2MiniRotationDeg[i] ?? 0;
+        const previewRotContent = previewRotModel;
+        const previewRotRadModel = (previewRotContent * Math.PI) / 180;
+        const p = this.huge2MiniPreviewPosition;
+        this.withTablePieceDragLift(p, () => {
+          this.drawHuge2MiniShapeAtPoint(
+            p,
+            layout,
+            config.hugeMiniPreviewColor,
+            previewRotModel,
+            this.huge2MiniSpriteSrcs[i] ?? null,
+            this.huge2MiniSpriteOffsetsLocal[i] ?? { x: 0, y: 0 },
+            this.huge2MiniSpriteRotationDegLocal[i] ?? 0,
+          );
+          this.drawHealthBadgeAt(
+            p,
+            badgeRadius,
+            this.huge2MiniHealthValues[i] ?? 0,
+            this.openHealthControlsHuge2MiniIndex === i,
+            HUGE2_UNIT_HEALTH_UI_SCALE,
+            'insideHexHuge2Unit',
+            previewRotRadModel,
+          );
+          const dragMarkers = this.huge2MiniEffectMarkers[i];
+          if (dragMarkers && dragMarkers.length > 0) {
+            this.drawEffectMarkers(p, dragMarkers, badgeRadius, 'huge2Dom', previewRotRadModel);
+          }
+          this.drawActivationToggle(
+            huge2MiniActivationToggleCenterFromPivotWorld(p, previewRotContent, layout),
+            huge2ActR,
+            this.huge2MiniActivated[i] !== false,
+          );
+          this.drawHuge2MiniBroomgarHungerIfAny(p, previewRotContent, i, huge2ActR);
+        });
+        return;
+      }
+      this.drawHuge2MiniPlacedAtIndex(i, true);
       return;
     }
 
@@ -4141,6 +4722,67 @@ export class Renderer {
     });
   }
 
+  /** 2-hexon domino (≤14 cells) in local space (anchor = first hexon center, rotation 0). */
+  private huge2DominoLocalCellCenters(layout: Layout): Point[] {
+    const zero = new Hex(0, 0);
+    const o = layout.hexToPixel(zero);
+    const hexonCenters = [zero, zero.add(new Hex(3, -1))];
+    const cells: Point[] = [];
+    for (const hOff of hexonCenters) {
+      const hc = layout.hexToPixel(hOff);
+      cells.push({ x: hc.x - o.x, y: hc.y - o.y });
+      for (const d of Hex.directions) {
+        const nb = hOff.add(d);
+        const np = layout.hexToPixel(nb);
+        cells.push({ x: np.x - o.x, y: np.y - o.y });
+      }
+    }
+    return cells;
+  }
+
+  /** Two hexon centers (matches `huge2DominoHexonCentersOriented` at anchor 0,0, rotation 0). */
+  private huge2DominoLocalHexonCenters(layout: Layout): Point[] {
+    const zero = new Hex(0, 0);
+    const o = layout.hexToPixel(zero);
+    const second = zero.add(new Hex(3, -1));
+    const p1 = layout.hexToPixel(second);
+    return [
+      { x: 0, y: 0 },
+      { x: p1.x - o.x, y: p1.y - o.y },
+    ];
+  }
+
+  private huge2DominoFootprintBoundsLocal(layout: Layout): {
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+  } {
+    return this.boundsFromCells(this.huge2DominoLocalCellCenters(layout), layout);
+  }
+
+  /** Midpoint between the two domino hexon centers (same pivot as `main` off-board / on-board midpoint). */
+  private huge2DominoHexonMidpointLocal(layout: Layout): Point {
+    const [a, b] = this.huge2DominoLocalHexonCenters(layout);
+    return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  }
+
+  /**
+   * Huge2 footprint = two merged big-hexon outlines (same geometry as big miniature),
+   * translated to the two hexon centers.
+   */
+  private addHuge2DominoDoubleHexonOuterPath(
+    ctx: CanvasRenderingContext2D,
+    layout: Layout,
+    scale: number,
+  ): void {
+    for (const c of this.huge2DominoLocalHexonCenters(layout)) {
+      ctx.translate(scale * c.x, scale * c.y);
+      this.addBigMiniHexonOuterPath(ctx, layout, scale);
+      ctx.translate(-scale * c.x, -scale * c.y);
+    }
+  }
+
   /** Bbox of the 21-cell huge footprint (same as `hugeTriangleBoundsLocal` in healthUi). */
   private hugeMiniFootprintBoundsLocal(layout: Layout): {
     minX: number;
@@ -4507,6 +5149,324 @@ export class Renderer {
     ctx.restore();
   }
 
+  // ── Huge2 miniatures (2 hexon domino) ───────────────────────────
+
+  private drawHuge2MiniShapeAtPoint(
+    point: Point,
+    layout: Layout,
+    fillColor: string,
+    rotationDeg: number,
+    spriteSrc: string | null,
+    spriteOffsetLocal: Point = { x: 0, y: 0 },
+    spriteRotationLocalDeg = 0,
+  ): void {
+    const { ctx, config } = this;
+    const bounds = this.huge2DominoFootprintBoundsLocal(layout);
+    const boxW = bounds.maxX - bounds.minX;
+    const boxH = bounds.maxY - bounds.minY;
+    const midLocal = this.huge2DominoHexonMidpointLocal(layout);
+    const { x: bcx, y: bcy } = this.localBoundsCenter(bounds);
+    const rcx = bcx - midLocal.x;
+    const rcy = bcy - midLocal.y;
+    const rr = this.smallUnitHexCornerRadius();
+    const artPad = Math.max(rr * 0.08, 0.012 * Math.max(boxW, boxH));
+    const artW = boxW + 2 * artPad;
+    const artH = boxH + 2 * artPad;
+    const rotRad = (rotationDeg * Math.PI) / 180;
+    const lw = 2 / HUGE2_MINI_VISUAL_SCALE;
+    const hs = HUGE2_MINI_VISUAL_SCALE;
+
+    ctx.save();
+    ctx.translate(point.x, point.y);
+    ctx.rotate(rotRad);
+    ctx.scale(hs, hs);
+    ctx.translate(-midLocal.x, -midLocal.y);
+
+    const sprite = this.getSpriteImage(spriteSrc);
+    if (sprite && sprite.naturalWidth > 0 && sprite.naturalHeight > 0) {
+      ctx.save();
+      ctx.beginPath();
+      this.addHuge2DominoDoubleHexonOuterPath(ctx, layout, 1);
+      ctx.clip();
+      // Huge2 art rotates with the miniature/board; no seat-upright compensation.
+      if (spriteRotationLocalDeg !== 0) {
+        ctx.translate(rcx, rcy);
+        ctx.rotate((spriteRotationLocalDeg * Math.PI) / 180);
+        ctx.translate(-rcx, -rcy);
+      }
+      const ox = spriteOffsetLocal.x;
+      const oy = spriteOffsetLocal.y;
+      ctx.drawImage(sprite, rcx - artW / 2 + ox, rcy - artH / 2 + oy, artW, artH);
+      ctx.restore();
+    } else {
+      ctx.beginPath();
+      this.addHuge2DominoDoubleHexonOuterPath(ctx, layout, 1);
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+    }
+    ctx.beginPath();
+    this.addHuge2DominoDoubleHexonOuterPath(ctx, layout, 1);
+    ctx.strokeStyle = config.unitStrokeColor;
+    ctx.lineWidth = lw;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  private drawHuge2MiniBroomgarHungerIfAny(
+    pivotWorld: Point,
+    rotDegModel: number,
+    index: number,
+    actRadiusWorld: number,
+  ): void {
+    const ph = this.huge2MiniBroomgarHungerPhase[index];
+    if (ph === null || ph === undefined) return;
+    const tc = huge2MiniBroomgarHungerCenterFromPivotWorld(pivotWorld, rotDegModel, this.layout);
+    this.drawBroomgarHungerDisc(tc, actRadiusWorld, ph);
+  }
+
+  private drawHuge2MiniMovement(): void {
+    const { ctx, layout, config } = this;
+    const walkKeys = new Set(this.huge2MiniWalkHexonCenters.map((c) => c.key));
+    for (const center of this.huge2MiniRunHexonCenters) {
+      if (walkKeys.has(center.key)) continue;
+      const hCells = [center, ...Hex.directions.map((d) => center.add(d))];
+      for (const hex of hCells) {
+        const corners = layout.hexCorners(hex);
+        ctx.beginPath();
+        ctx.moveTo(corners[0].x, corners[0].y);
+        for (let i = 1; i < 6; i++) ctx.lineTo(corners[i].x, corners[i].y);
+        ctx.closePath();
+        ctx.fillStyle = config.runRangeFillColor;
+        ctx.fill();
+      }
+    }
+    for (const center of this.huge2MiniWalkHexonCenters) {
+      const hCells = [center, ...Hex.directions.map((d) => center.add(d))];
+      for (const hex of hCells) {
+        const corners = layout.hexCorners(hex);
+        ctx.beginPath();
+        ctx.moveTo(corners[0].x, corners[0].y);
+        for (let i = 1; i < 6; i++) ctx.lineTo(corners[i].x, corners[i].y);
+        ctx.closePath();
+        ctx.fillStyle = config.walkRangeFillColor;
+        ctx.fill();
+      }
+    }
+  }
+
+  private drawHuge2MiniPlacedAtIndex(index: number, drawSelectionRing: boolean): void {
+    const { config, layout } = this;
+    const anchor = this.huge2MiniAnchors[index];
+    if (!anchor) return;
+    const baseRadius = Math.min(layout.size.x, layout.size.y) * 1.58;
+    const selStrokeW = 3;
+    const h2Bounds = this.huge2DominoFootprintBoundsLocal(layout);
+    const ringSel = this.miniatureSelectionRingPathScale(
+      HUGE2_MINI_VISUAL_SCALE,
+      h2Bounds,
+      selStrokeW,
+    );
+    const midLocal = this.huge2DominoHexonMidpointLocal(layout);
+    const cells = this.huge2DominoLocalCellCenters(layout);
+    const badgeRadius = baseRadius * HUGE2_MINI_VISUAL_SCALE;
+    const huge2ActR =
+      Math.min(layout.size.x, layout.size.y) *
+      1.58 *
+      HUGE2_MINI_VISUAL_SCALE *
+      0.22;
+    const offBoard = this.huge2MiniOffBoardWorlds[index];
+    const rotDegModel = this.huge2MiniRotationDeg[index] ?? 0;
+    const rotDegContent = rotDegModel;
+    const rotRadContent = (rotDegContent * Math.PI) / 180;
+    const centers = huge2DominoHexonCentersOriented(anchor, rotDegModel);
+    const p0w = layout.hexToPixel(centers[0]!);
+    const p1w = layout.hexToPixel(centers[1]!);
+    const midOn = { x: (p0w.x + p1w.x) / 2, y: (p0w.y + p1w.y) / 2 };
+    const pivotWorld = offBoard ?? midOn;
+
+    this.drawHuge2MiniShapeAtPoint(
+      pivotWorld,
+      layout,
+      config.bigMiniFillColor,
+      rotDegModel,
+      this.huge2MiniSpriteSrcs[index] ?? null,
+      this.huge2MiniSpriteOffsetsLocal[index] ?? { x: 0, y: 0 },
+      this.huge2MiniSpriteRotationDegLocal[index] ?? 0,
+    );
+    if (drawSelectionRing) {
+      this.drawShapeRingAtPoint(
+        pivotWorld,
+        cells,
+        layout,
+        ringSel,
+        '#4caf50',
+        selStrokeW,
+        rotDegModel,
+        midLocal,
+        false,
+        true,
+      );
+    }
+    this.drawHealthBadgeAt(
+      pivotWorld,
+      badgeRadius,
+      this.huge2MiniHealthValues[index] ?? 0,
+      this.openHealthControlsHuge2MiniIndex === index,
+      HUGE2_UNIT_HEALTH_UI_SCALE,
+      'insideHexHuge2Unit',
+      rotRadContent,
+    );
+    this.drawActivationToggle(
+      huge2MiniActivationToggleCenterFromPivotWorld(pivotWorld, rotDegContent, layout),
+      huge2ActR,
+      this.huge2MiniActivated[index] !== false,
+    );
+    this.drawHuge2MiniBroomgarHungerIfAny(pivotWorld, rotDegContent, index, huge2ActR);
+    const markers = this.huge2MiniEffectMarkers[index];
+    if (markers && markers.length > 0) {
+      this.drawEffectMarkers(pivotWorld, markers, badgeRadius, 'huge2Dom', rotRadContent);
+    }
+  }
+
+  private drawHuge2Miniatures(): void {
+    const { ctx, config, layout } = this;
+    const baseRadius = Math.min(layout.size.x, layout.size.y) * 1.58;
+    const cells = this.huge2DominoLocalCellCenters(layout);
+    const h2Bounds = this.huge2DominoFootprintBoundsLocal(layout);
+    const huge2PreviewRingScale = this.miniatureSelectionRingPathScale(
+      HUGE2_MINI_VISUAL_SCALE,
+      h2Bounds,
+      2,
+    );
+    const midLocal = this.huge2DominoHexonMidpointLocal(layout);
+    const badgeRadius = baseRadius * HUGE2_MINI_VISUAL_SCALE;
+    const huge2ActR =
+      Math.min(layout.size.x, layout.size.y) *
+      1.58 *
+      HUGE2_MINI_VISUAL_SCALE *
+      0.22;
+
+    this.huge2MiniAnchors.forEach((_anchor, index) => {
+      if (this.draggingHuge2MiniIndex === index) return;
+      if (index === this.selectedHuge2MiniIndex) return;
+      if (this.isPeerDraggingEntity('huge2', index)) return;
+      this.drawHuge2MiniPlacedAtIndex(index, false);
+    });
+
+    if (
+      this.huge2MiniPreviewPosition &&
+      !(
+        this.draggingHuge2MiniIndex !== null &&
+        this.draggingHuge2MiniIndex === this.selectedHuge2MiniIndex
+      )
+    ) {
+      const previewRotModel =
+        this.draggingHuge2MiniIndex !== null
+          ? (this.huge2MiniRotationDeg[this.draggingHuge2MiniIndex] ?? 0)
+          : 0;
+      const previewRotContent = previewRotModel;
+      const previewRotRadModel = (previewRotContent * Math.PI) / 180;
+      const p = this.huge2MiniPreviewPosition;
+      const idx = this.draggingHuge2MiniIndex;
+      this.withTablePieceDragLift(p, () => {
+        if (idx !== null) {
+          const anchor = this.huge2MiniAnchors[idx];
+          if (anchor) {
+            this.drawHuge2MiniShapeAtPoint(
+              p,
+              layout,
+              config.hugeMiniPreviewColor,
+              previewRotModel,
+              this.huge2MiniSpriteSrcs[idx] ?? null,
+              this.huge2MiniSpriteOffsetsLocal[idx] ?? { x: 0, y: 0 },
+              this.huge2MiniSpriteRotationDegLocal[idx] ?? 0,
+            );
+          }
+        }
+        if (this.draggingHuge2MiniIndex !== null) {
+          const di = this.draggingHuge2MiniIndex;
+          this.drawHealthBadgeAt(
+            p,
+            badgeRadius,
+            this.huge2MiniHealthValues[di] ?? 0,
+            this.openHealthControlsHuge2MiniIndex === di,
+            HUGE2_UNIT_HEALTH_UI_SCALE,
+            'insideHexHuge2Unit',
+            previewRotRadModel,
+          );
+          const dragMarkers = this.huge2MiniEffectMarkers[di];
+          if (dragMarkers && dragMarkers.length > 0) {
+            this.drawEffectMarkers(p, dragMarkers, badgeRadius, 'huge2Dom', previewRotRadModel);
+          }
+          this.drawActivationToggle(
+            huge2MiniActivationToggleCenterFromPivotWorld(p, previewRotContent, layout),
+            huge2ActR,
+            this.huge2MiniActivated[di] !== false,
+          );
+          this.drawHuge2MiniBroomgarHungerIfAny(p, previewRotContent, di, huge2ActR);
+        }
+      });
+    }
+
+    for (const rp of this.remotePeerTableDrags) {
+      const d = rp.drag;
+      if (d.kind !== 'huge2' || d.index === null || d.worldX === null || d.worldY === null) continue;
+      if (d.index < 0 || d.index >= this.huge2MiniAnchors.length) continue;
+      const idx = d.index;
+      const previewRotModel = this.huge2MiniRotationDeg[idx] ?? 0;
+      const previewRotContent = previewRotModel;
+      const previewRotRadModel = (previewRotContent * Math.PI) / 180;
+      const p = { x: d.worldX, y: d.worldY };
+      ctx.save();
+      this.withTablePieceDragLift(p, () => {
+        ctx.globalAlpha = 0.72;
+        this.drawHuge2MiniShapeAtPoint(
+          p,
+          layout,
+          config.hugeMiniPreviewColor,
+          previewRotModel,
+          this.huge2MiniSpriteSrcs[idx] ?? null,
+          this.huge2MiniSpriteOffsetsLocal[idx] ?? { x: 0, y: 0 },
+          this.huge2MiniSpriteRotationDegLocal[idx] ?? 0,
+        );
+        ctx.globalAlpha = 0.5;
+        this.drawShapeRingAtPoint(
+          p,
+          cells,
+          layout,
+          huge2PreviewRingScale,
+          rp.color,
+          2.2,
+          previewRotModel,
+          midLocal,
+          false,
+          true,
+        );
+        ctx.globalAlpha = 1;
+        this.drawHealthBadgeAt(
+          p,
+          badgeRadius,
+          this.huge2MiniHealthValues[idx] ?? 0,
+          false,
+          HUGE2_UNIT_HEALTH_UI_SCALE,
+          'insideHexHuge2Unit',
+          previewRotRadModel,
+        );
+        const rHm = this.huge2MiniEffectMarkers[idx];
+        if (rHm && rHm.length > 0) {
+          this.drawEffectMarkers(p, rHm, badgeRadius, 'huge2Dom', previewRotRadModel);
+        }
+        this.drawActivationToggle(
+          huge2MiniActivationToggleCenterFromPivotWorld(p, previewRotContent, layout),
+          huge2ActR,
+          this.huge2MiniActivated[idx] !== false,
+        );
+        this.drawHuge2MiniBroomgarHungerIfAny(p, previewRotContent, idx, huge2ActR);
+      });
+      ctx.restore();
+    }
+  }
+
   // ── Huge miniatures (3-hexon triangle) ──
 
   private drawHugeMiniMovement(): void {
@@ -4773,8 +5733,7 @@ export class Renderer {
       ctx.beginPath();
       this.addHugeMiniTripleHexonOuterPath(ctx, layout, 1);
       ctx.clip();
-      const uprightRad = this.oppositeSeatMiniatureRadFix + this.contentFieldRotationDeltaRad;
-      if (uprightRad !== 0) ctx.rotate(uprightRad);
+      // Huge art rotates with the miniature/board; no seat-upright compensation.
       if (spriteRotationLocalDeg !== 0) {
         ctx.rotate((spriteRotationLocalDeg * Math.PI) / 180);
       }
@@ -4809,12 +5768,16 @@ export class Renderer {
     localOriginInCellSpace?: Point,
     /** Huge mini: three merged hexon blobs (same as sprite clip), not 21-cell hull. */
     hugeTripleHexon?: boolean,
+    /** Huge2 domino: two merged hexon blobs (same as sprite clip). */
+    hugeDoubleHexon?: boolean,
   ): void {
     const { ctx } = this;
     const rotRad = (rotationDeg * Math.PI) / 180;
     const b = hugeTripleHexon
       ? this.hugeMiniFootprintBoundsLocal(layout)
-      : this.boundsFromCells(cells, layout);
+      : hugeDoubleHexon
+        ? this.huge2DominoFootprintBoundsLocal(layout)
+        : this.boundsFromCells(cells, layout);
     const d = localOriginInCellSpace ?? this.localBoundsCenter(b);
     const cx = d.x;
     const cy = d.y;
@@ -4827,6 +5790,8 @@ export class Renderer {
     ctx.beginPath();
     if (hugeTripleHexon) {
       this.addHugeMiniTripleHexonOuterPath(ctx, layout, 1);
+    } else if (hugeDoubleHexon) {
+      this.addHuge2DominoDoubleHexonOuterPath(ctx, layout, 1);
     } else {
       this.addOuterPathFromCells(ctx, layout, cells, 1);
     }

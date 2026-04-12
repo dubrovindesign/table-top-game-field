@@ -16,6 +16,10 @@ function catalogBundlePlugin(): Plugin {
     execSync('node scripts/build-catalog-bundle.mjs', { cwd: __dirname, stdio: 'inherit' });
     execSync('node scripts/verify-catalog-public-assets.mjs', { cwd: __dirname, stdio: 'inherit' });
   };
+  const isCatalogSourcePath = (filePath: string): boolean => {
+    const normalized = filePath.replace(/\\/g, '/');
+    return normalized.includes('/src/catalog/');
+  };
   return {
     name: 'catalog-bundle',
     buildStart() {
@@ -23,6 +27,12 @@ function catalogBundlePlugin(): Plugin {
     },
     configureServer() {
       runBundle();
+    },
+    handleHotUpdate(ctx) {
+      if (!isCatalogSourcePath(ctx.file)) return;
+      runBundle();
+      // Catalog payload is fetched as a single JSON bundle; reload to apply refreshed data.
+      ctx.server.ws.send({ type: 'full-reload' });
     },
   };
 }
