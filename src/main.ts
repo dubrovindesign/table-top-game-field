@@ -116,11 +116,13 @@ import {
   shuffleIds,
   type GodSlotPile,
 } from './godDeckState.ts';
+import { DeadUnitDock, type DeadZoneLayout } from './deadUnitDock.ts';
 import { GodHandBlindDock, type GodBlindZoneLayout } from './godHandBlindDock.ts';
 import { getGodCardById, type GodTablePiece } from './godCards';
 import type {
   SerializedBoardStateV1,
   SerializedCrystalWalletsV1,
+  SerializedDeadEntryV1,
   SerializedGodDeckSlotsV1,
   SerializedGodSlotV1,
 } from './multiplayer/boardState.ts';
@@ -135,6 +137,15 @@ import type { PlayerSlot, TableDragState } from './multiplayer/protocol.ts';
 import { EMPTY_TABLE_DRAG } from './multiplayer/protocol.ts';
 import { tickTableDragOutbound } from './multiplayer/tableDragOutbound.ts';
 import { initMultiplayerSession, sendPingIntentAtBoard, sendRoomClientMessage } from './multiplayer/session.ts';
+import {
+  bigMiniRestorePlacementCollides,
+  commitDeadRestoreIfLegal,
+  moveDeadEntryBetweenZones,
+  normalizeDeadByZone,
+  resolveDeadZoneScoredPoints,
+  upsertDeadEntry,
+  type DeadByZone,
+} from './deadUnitState.ts';
 import { applyScenarioDocument, type ApplyScenarioResult } from './scenarios/apply.ts';
 import { fetchOfficialScenarios, updateOfficialScenario } from './scenarios/officialApi.ts';
 import { createScenariosPanel } from './scenarios/panel.ts';
@@ -189,6 +200,58 @@ const crystalWalletBySlot: { 0: Map<string, number>; 1: Map<string, number> } = 
   0: new Map(),
   1: new Map(),
 };
+
+/** Dead-unit zone entries per table seat; UI mirrors via `crystalWalletSlotsForUi` (same as wallets). */
+const deadByZone: [SerializedDeadEntryV1[], SerializedDeadEntryV1[]] = [[], []];
+type DeadZoneOffsetWorld = { x: number; y: number };
+const DEAD_ZONE_OFFSET_STORAGE_KEY = 'hex-board.dead-zone-offsets-world.v4';
+const deadZoneOffsetBySlot: { 0: DeadZoneOffsetWorld; 1: DeadZoneOffsetWorld } = {
+  0: { x: 0, y: 0 },
+  1: { x: 0, y: 0 },
+};
+
+function loadDeadZoneOffsetsFromStorage(): void {
+  try {
+    const raw = window.localStorage.getItem(DEAD_ZONE_OFFSET_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw) as {
+      '0'?: { x?: unknown; y?: unknown };
+      '1'?: { x?: unknown; y?: unknown };
+    };
+    for (const slot of [0, 1] as const) {
+      const item = parsed[String(slot) as '0' | '1'];
+      if (!item) continue;
+      const x = typeof item.x === 'number' && Number.isFinite(item.x) ? item.x : 0;
+      const y = typeof item.y === 'number' && Number.isFinite(item.y) ? item.y : 0;
+      deadZoneOffsetBySlot[slot] = { x, y };
+    }
+  } catch {
+    /* ignore invalid persisted dead-zone offsets */
+  }
+}
+
+function saveDeadZoneOffsetsToStorage(): void {
+  try {
+    window.localStorage.setItem(
+      DEAD_ZONE_OFFSET_STORAGE_KEY,
+      JSON.stringify({
+        '0': deadZoneOffsetBySlot[0],
+        '1': deadZoneOffsetBySlot[1],
+      }),
+    );
+  } catch {
+    /* ignore storage failures */
+  }
+}
+
+loadDeadZoneOffsetsFromStorage();
+
+/** Sentinel off-board world position for minis held in the dead zone (not user off-board placement). */
+const DEAD_ZONE_OFFBOARD_HIDE: Point = { x: -987_654_321, y: -987_654_322 };
+
+function isDeadZoneHideWorld(p: Point | undefined): boolean {
+  return p !== undefined && p.x === DEAD_ZONE_OFFBOARD_HIDE.x && p.y === DEAD_ZONE_OFFBOARD_HIDE.y;
+}
 
 function baseFieldRotationDeg(): number {
   return deriveRotationModel({
@@ -334,8 +397,8 @@ const canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
 if (!canvas) throw new Error('#game-canvas not found');
 
 /**
- * `cells.svg`: поворот сетки только из констант (`GRID_OVERLAY_EXTRA_ROTATION_DEG`); горячих клавиш поворота/смещения нет.
- * Alt+P — в консоль смещения/размеры.
+ * `cells.svg`: поворот сетки только из констант (`GRID_OVERLAY_EXTRA_ROTATION_DEG`); горячих клавиш поворота нет.
+ * Alt+стрелки — смещение сетки; Alt+P — в консоль/буфер координаты оверлеев (включая зоны потерь).
  * `public/greenfield.png` — текстура поля; угол поля задаётся в коде (`FIELD_BG_PRESET` / `desertUnderlayExtraRotationDeg`), не клавишами.
  */
 const GRID_OVERLAY_EXTRA_ROTATION_DEG = BOARD_FIELD_ART_EXTRA_ROTATION_DEG;
@@ -394,12 +457,29 @@ function resizeCanvas(): void {
 }
 resizeCanvas();
 
+function mountDeadScorePill(mount: HTMLElement, variant: 'local' | 'opponent'): void {
+  mount.className = `dead-score-mount dead-score-mount--${variant}`;
+  const pill = document.createElement('div');
+  pill.className = 'dead-score-pill';
+  pill.setAttribute(
+    'aria-label',
+    variant === 'local' ? 'Dead zone score (your side)' : 'Dead zone score (opponent side)',
+  );
+  const valueEl = document.createElement('span');
+  valueEl.className = 'dead-score-pill__value';
+  valueEl.textContent = '☠ 0';
+  pill.appendChild(valueEl);
+  mount.appendChild(pill);
+}
+
 function mountTopTurnPanel(
   parent: HTMLElement,
   opts?: { onAdvanceTurn?: () => void },
 ): {
   localWalletMount: HTMLElement;
   opponentWalletMount: HTMLElement;
+  localDeadScoreMount: HTMLElement;
+  opponentDeadScoreMount: HTMLElement;
   getTableTurnNumber: () => number;
   setTableTurnNumber: (n: number) => void;
 } {
@@ -463,11 +543,26 @@ function mountTopTurnPanel(
   const localWalletMount = document.createElement('div');
   localWalletMount.className = 'turn-wallet-mount turn-wallet-mount-local';
 
+  const opponentDeadScoreMount = document.createElement('div');
+  const localDeadScoreMount = document.createElement('div');
+  mountDeadScorePill(opponentDeadScoreMount, 'opponent');
+  mountDeadScorePill(localDeadScoreMount, 'local');
+
+  const opponentWingStack = document.createElement('div');
+  opponentWingStack.className = 'turn-wing-stack';
+  opponentWingStack.appendChild(opponentWalletMount);
+  opponentWingStack.appendChild(opponentDeadScoreMount);
+
+  const localWingStack = document.createElement('div');
+  localWingStack.className = 'turn-wing-stack';
+  localWingStack.appendChild(localWalletMount);
+  localWingStack.appendChild(localDeadScoreMount);
+
   const wingRight = document.createElement('div');
   wingRight.className = 'turn-wing turn-wing--right';
 
-  wingLeft.appendChild(opponentWalletMount);
-  wingRight.appendChild(localWalletMount);
+  wingLeft.appendChild(opponentWingStack);
+  wingRight.appendChild(localWingStack);
 
   panel.appendChild(wingLeft);
   panel.appendChild(center);
@@ -475,7 +570,14 @@ function mountTopTurnPanel(
   parent.appendChild(panel);
 
   syncTurnUi();
-  return { localWalletMount, opponentWalletMount, getTableTurnNumber, setTableTurnNumber };
+  return {
+    localWalletMount,
+    opponentWalletMount,
+    localDeadScoreMount,
+    opponentDeadScoreMount,
+    getTableTurnNumber,
+    setTableTurnNumber,
+  };
 }
 
 // ── Create grid & layout ───────────────────────────────────────
@@ -742,6 +844,7 @@ let inventoryTablePieces: InventoryTablePiece[] = [];
 /** Колода / рука / сброс / слепая зона по слотам 0 и 1. */
 let godPiles: [GodSlotPile, GodSlotPile] = createInitialGodPiles();
 let godHandBlindDock: GodHandBlindDock | null = null;
+let deadUnitDock: DeadUnitDock | null = null;
 /** Selected loose god piece index (same pattern as terrain / big mini). */
 let selectedGodTablePieceIndex: number | null = null;
 let selectedInventoryTablePieceIndex: number | null = null;
@@ -786,6 +889,8 @@ let inventoryLooseDragPreviewWorld: Point | null = null;
 const GOD_BLIND_ZONE_GAP_FROM_BOARD = 28;
 /** Дополнительный отступ слепой зоны от поля в экранных px при zoom=1 (далее × camera.zoom). */
 const GOD_BLIND_EXTRA_OFFSET_BASE_SCREEN = 40;
+/** Dead-zone offset from blind frame in world units (zoom-stable like blind zone). */
+const DEAD_ZONE_EXTRA_OUTWARD_WORLD = 86;
 /** Базовый зазор между картами в экранных px при zoom=1 (далее × camera.zoom). */
 const GOD_BLIND_CARD_GAP_BASE_SCREEN = 8;
 /** Базовый внутренний отступ рамки от карт при zoom=1 (далее × camera.zoom). */
@@ -807,6 +912,10 @@ function godBlindZoneBorderScreenPx(): number {
 
 function godBlindExtraOffsetScreenPx(): number {
   return GOD_BLIND_EXTRA_OFFSET_BASE_SCREEN * camera.zoom;
+}
+
+function deadZoneExtraOutwardWorld(): number {
+  return DEAD_ZONE_EXTRA_OUTWARD_WORLD;
 }
 
 function getBoardWorldExtentsForGodBlind(): {
@@ -1024,6 +1133,78 @@ function godBlindZoneContainsWorldForSlot(
   return false;
 }
 
+function deadZoneCardCountForSlot(slot: PlayerSlot): number {
+  return deadByZone[slot].length;
+}
+
+/** Dead-unit row layout mirrors the god blind zone frame (same edge anchor + card footprint). */
+function computeDeadZoneLayoutForSlot(slot: PlayerSlot): DeadZoneLayout {
+  const n = deadZoneCardCountForSlot(slot);
+  const { anchor: blindAnchorW } = getGodBlindRowFrameWorld(slot);
+  const { nx, ny } = getGodBlindFieldEdgeMidAndOutward(slot);
+  const dragOffset = deadZoneOffsetBySlot[slot];
+  const anchorW = {
+    x: blindAnchorW.x + nx * deadZoneExtraOutwardWorld() + dragOffset.x,
+    y: blindAnchorW.y + ny * deadZoneExtraOutwardWorld() + dragOffset.y,
+  };
+  const abb = godTableCardScreenAabb(anchorW);
+  const Ws = abb.maxSX - abb.minSX;
+  const Hs = abb.maxSY - abb.minSY;
+
+  const anchorS = boardWorldToScreenBase(anchorW);
+
+  const cardsAbs: Array<{ left: number; top: number; width: number; height: number }> = [];
+  const gapPx = Math.max(0, Math.round(godBlindCardGapScreenPx()));
+  const step = Ws + gapPx;
+
+  if (n === 0) {
+    cardsAbs.push({
+      left: anchorS.x - Ws / 2,
+      top: anchorS.y - Hs / 2,
+      width: Ws,
+      height: Hs,
+    });
+  } else {
+    const rowY = anchorS.y;
+    const mine = effectiveMyGodSlot();
+    const dir = slot === mine ? 1 : -1;
+    for (let i = 0; i < n; i++) {
+      const cx = anchorS.x + dir * i * step;
+      const cy = rowY;
+      cardsAbs.push({ left: cx - Ws / 2, top: cy - Hs / 2, width: Ws, height: Hs });
+    }
+  }
+
+  let minL = Infinity;
+  let minT = Infinity;
+  let maxR = -Infinity;
+  let maxB = -Infinity;
+  for (const c of cardsAbs) {
+    minL = Math.min(minL, c.left);
+    minT = Math.min(minT, c.top);
+    maxR = Math.max(maxR, c.left + c.width);
+    maxB = Math.max(maxB, c.top + c.height);
+  }
+
+  const m = Math.max(0, Math.round(godBlindHugMarginScreenPx()));
+  const b = Math.max(0, Math.round(godBlindZoneBorderScreenPx()));
+  const container = {
+    left: minL - m - b,
+    top: minT - m - b,
+    width: maxR - minL + 2 * (m + b),
+    height: maxB - minT + 2 * (m + b),
+  };
+
+  const cards = cardsAbs.map((c) => ({
+    left: c.left - container.left,
+    top: c.top - container.top,
+    width: c.width,
+    height: c.height,
+  }));
+
+  return { container, cards, borderScreenPx: b, zoom: camera.zoom };
+}
+
 // ── Renderer ───────────────────────────────────────────────────
 
 const renderConfig = {
@@ -1063,6 +1244,8 @@ const renderer = new Renderer(
 type Unit = {
   position: Hex;
   boardInstanceId?: string;
+  /** Runtime-stable id for dead-zone tracking (must be unique per miniature copy). */
+  deadPieceId?: string;
   /** If set, unit is off-board and renders at this world position instead. */
   offBoardWorld?: Point;
   walk: number;
@@ -1152,6 +1335,7 @@ let lastPasteOffsetStep = 0;
 type BigMini = {
   center: Hex;
   boardInstanceId?: string;
+  deadPieceId?: string;
   /** If set, miniature is off-board at this world position. */
   offBoardWorld?: Point;
   walk: number;
@@ -1177,6 +1361,7 @@ let openHealthControlsBigMiniIndex: number | null = null;
 type LargeMini = {
   anchor: Hex;
   boardInstanceId?: string;
+  deadPieceId?: string;
   offBoardWorld?: Point;
   walk: number;
   run: number;
@@ -1215,6 +1400,7 @@ let openHealthControlsLargeMiniIndex: number | null = null;
 type HugeMini = {
   anchor: Hex;
   boardInstanceId?: string;
+  deadPieceId?: string;
   offBoardWorld?: Point;
   walk: number;
   run: number;
@@ -2614,6 +2800,12 @@ godHandBlindDock = new GodHandBlindDock(document.body, {
 });
 refreshGodDock();
 
+deadUnitDock = new DeadUnitDock(document.body, {
+  isInteractive: isGodDockInteractive,
+  onDragEnd: handleDeadDockDragEnd,
+});
+refreshDeadUnitDock();
+
 // ── Render loop ────────────────────────────────────────────────
 
 let needsRender = true;
@@ -2648,6 +2840,359 @@ const topTurnPanel = mountTopTurnPanel(document.body, {
   onAdvanceTurn: resetActivationsForNewTurn,
 });
 
+function deadZoneStatsForSlot(slot: PlayerSlot): { count: number; points: number } {
+  const list = deadByZone[slot];
+  let points = 0;
+  for (const e of list) points += e.scoredPoints;
+  return { count: list.length, points };
+}
+
+function refreshDeadScorePills(): void {
+  const { local: slL, opponent: slO } = crystalWalletSlotsForUi();
+  const localStats = deadZoneStatsForSlot(slL);
+  const oppStats = deadZoneStatsForSlot(slO);
+  const locEl = topTurnPanel.localDeadScoreMount.querySelector('.dead-score-pill__value');
+  const oppEl = topTurnPanel.opponentDeadScoreMount.querySelector('.dead-score-pill__value');
+  if (locEl) locEl.textContent = `☠ ${localStats.points}`;
+  if (oppEl) oppEl.textContent = `☠ ${oppStats.points}`;
+}
+
+function deadZoneTuple(): DeadByZone {
+  return [[...deadByZone[0]], [...deadByZone[1]]];
+}
+
+let deadPieceIdSeq = 1;
+function allocDeadPieceId(): string {
+  const id = `dead-piece-${deadPieceIdSeq}`;
+  deadPieceIdSeq += 1;
+  return id;
+}
+
+function ensureDeadPieceId(piece: { deadPieceId?: string }): string {
+  if (piece.deadPieceId && piece.deadPieceId.length > 0) return piece.deadPieceId;
+  const id = allocDeadPieceId();
+  piece.deadPieceId = id;
+  return id;
+}
+
+function getRosterPointsOverrideForCatalog(
+  rosterLeaderId: string | undefined,
+  catalogUnitId: string | undefined,
+): number | undefined {
+  if (!rosterLeaderId || !catalogUnitId) return undefined;
+  const leader = getLeader(rosterLeaderId);
+  const def = getCatalogUnit(catalogUnitId);
+  if (!leader || !def) return undefined;
+  if (leader.catalogUnitId === catalogUnitId && leader.points !== undefined) return leader.points;
+  const slot = leader.roster.find((s) => s.unitId === catalogUnitId);
+  if (slot && slot.points !== undefined) return slot.points;
+  return undefined;
+}
+
+function catalogPointsForCatalogId(catalogUnitId: string | undefined): number | undefined {
+  if (!catalogUnitId) return undefined;
+  return getCatalogUnit(catalogUnitId)?.points;
+}
+
+function replaceDeadZoneState(next: DeadByZone): void {
+  const norm = normalizeDeadByZone(next);
+  deadByZone[0].length = 0;
+  deadByZone[1].length = 0;
+  deadByZone[0].push(...norm[0]);
+  deadByZone[1].push(...norm[1]);
+  applyDeadZoneHideFromDeadLists();
+  refreshDeadScorePills();
+  refreshDeadUnitDock();
+  notifyBoardEditLocal();
+}
+
+function applyDeadZoneHideFromDeadLists(): void {
+  const needById = new Map<string, number>();
+  for (const z of deadByZone) {
+    for (const e of z) {
+      needById.set(e.boardInstanceId, (needById.get(e.boardInstanceId) ?? 0) + 1);
+    }
+  }
+  type DeadPieceRef = {
+    id: string;
+    getOffBoardWorld: () => Point | undefined;
+    setOffBoardWorld: (p: Point | undefined) => void;
+  };
+  const pieces: DeadPieceRef[] = [];
+  for (const u of units) {
+    const id = ensureDeadPieceId(u);
+    pieces.push({
+      id,
+      getOffBoardWorld: () => u.offBoardWorld,
+      setOffBoardWorld: (p) => {
+        u.offBoardWorld = p;
+      },
+    });
+  }
+  for (const m of bigMiniatures) {
+    const id = ensureDeadPieceId(m);
+    pieces.push({
+      id,
+      getOffBoardWorld: () => m.offBoardWorld,
+      setOffBoardWorld: (p) => {
+        m.offBoardWorld = p;
+      },
+    });
+  }
+  for (const m of largeMiniatures) {
+    const id = ensureDeadPieceId(m);
+    pieces.push({
+      id,
+      getOffBoardWorld: () => m.offBoardWorld,
+      setOffBoardWorld: (p) => {
+        m.offBoardWorld = p;
+      },
+    });
+  }
+  for (const m of hugeMiniatures) {
+    const id = ensureDeadPieceId(m);
+    pieces.push({
+      id,
+      getOffBoardWorld: () => m.offBoardWorld,
+      setOffBoardWorld: (p) => {
+        m.offBoardWorld = p;
+      },
+    });
+  }
+  const groups = new Map<string, DeadPieceRef[]>();
+  for (const p of pieces) {
+    const arr = groups.get(p.id);
+    if (arr) arr.push(p);
+    else groups.set(p.id, [p]);
+  }
+  for (const [id, arr] of groups) {
+    const need = needById.get(id) ?? 0;
+    arr.sort((a, b) => {
+      const ah = isDeadZoneHideWorld(a.getOffBoardWorld()) ? 0 : 1;
+      const bh = isDeadZoneHideWorld(b.getOffBoardWorld()) ? 0 : 1;
+      return ah - bh;
+    });
+    const hideCount = Math.min(need, arr.length);
+    for (let i = 0; i < arr.length; i++) {
+      const piece = arr[i]!;
+      if (i < hideCount) {
+        piece.setOffBoardWorld({ ...DEAD_ZONE_OFFBOARD_HIDE });
+      } else if (isDeadZoneHideWorld(piece.getOffBoardWorld())) {
+        piece.setOffBoardWorld(undefined);
+      }
+    }
+  }
+}
+
+function labelForDeadPieceId(deadPieceId: string): string {
+  const ui = (name: string | undefined) => (name && name.trim().length > 0 ? name.trim() : '?');
+  const iu = units.findIndex((u) => u.deadPieceId === deadPieceId);
+  if (iu !== -1) return ui(unitCardData[iu]?.name);
+  const ib = bigMiniatures.findIndex((m) => m.deadPieceId === deadPieceId);
+  if (ib !== -1) return ui(bigMiniCardData[ib]?.name);
+  const il = largeMiniatures.findIndex((m) => m.deadPieceId === deadPieceId);
+  if (il !== -1) return ui(largeMiniCardData[il]?.name);
+  const ih = hugeMiniatures.findIndex((m) => m.deadPieceId === deadPieceId);
+  if (ih !== -1) return ui(hugeMiniCardData[ih]?.name);
+  return '?';
+}
+
+function refreshDeadUnitDock(): void {
+  if (!deadUnitDock) return;
+  const mySlot = effectiveMyGodSlot();
+  const oppSlot = effectiveOpponentGodSlot();
+  const entriesFor = (slot: PlayerSlot) =>
+    deadByZone[slot].map((e) => ({
+      boardInstanceId: e.boardInstanceId,
+      label: labelForDeadPieceId(e.boardInstanceId),
+      points: e.scoredPoints,
+    }));
+  deadUnitDock.refresh({
+    interactive: isGodDockInteractive(),
+    myEntries: entriesFor(mySlot),
+    opponentEntries: entriesFor(oppSlot),
+  });
+}
+
+function handleDeadDockDragEnd(p: {
+  side: 'mine' | 'opp';
+  cardIndex: number;
+  clientX: number;
+  clientY: number;
+}): void {
+  if (!isGodDockInteractive()) return;
+  const mySlot = effectiveMyGodSlot();
+  const oppSlot = effectiveOpponentGodSlot();
+  const fromSlot: PlayerSlot = p.side === 'mine' ? mySlot : oppSlot;
+  const fromEntry = deadByZone[fromSlot][p.cardIndex];
+  if (!fromEntry) return;
+  const id = fromEntry.boardInstanceId;
+
+  const hit = deadUnitDock?.hitTestDeadZoneCards(p.clientX, p.clientY);
+  if (hit) {
+    const toSlot: PlayerSlot = hit.side === 'mine' ? mySlot : oppSlot;
+    if (toSlot !== fromSlot) {
+      const next = moveDeadEntryBetweenZones(deadZoneTuple(), id, toSlot);
+      replaceDeadZoneState(next);
+      playBoardDragDrop();
+      scheduleRender();
+    }
+    return;
+  }
+
+  if (tryRestoreDeadPieceToBoard(id, p.clientX, p.clientY)) {
+    playBoardDragDrop();
+    scheduleRender();
+  }
+}
+
+function tryRestoreDeadPieceToBoard(id: string, clientX: number, clientY: number): boolean {
+  const dropWorld = screenToBoardWorld(clientX, clientY);
+  const dropHex = hexAtScreen(clientX, clientY);
+  const uIdx = units.findIndex((u) => u.deadPieceId === id);
+  if (uIdx !== -1) {
+    const legal = dropHex === null || (!isHexBlockedForSmallDragTarget(dropHex) && (() => {
+      const occ = findTopSmallUnitAtHex(dropHex);
+      return occ === -1 || occ === uIdx;
+    })());
+    const cur = deadZoneTuple();
+    const next = commitDeadRestoreIfLegal(cur, id, legal);
+    if (!legal) return false;
+    if (dropHex) {
+      units[uIdx].position = dropHex;
+      units[uIdx].offBoardWorld = undefined;
+    } else {
+      units[uIdx].offBoardWorld = { ...dropWorld };
+    }
+    moveSmallUnitToTop(uIdx);
+    replaceDeadZoneState(next);
+    clearSelectionAfterMiniatureDragEnd();
+    return true;
+  }
+
+  const bIdx = bigMiniatures.findIndex((m) => m.deadPieceId === id);
+  if (bIdx !== -1) {
+    const center = nearestHexonCenterFromWorld(dropWorld);
+    const legal = dropHex === null ? true : canPlaceBigMiniAt(center, bIdx);
+    const cur = deadZoneTuple();
+    const next = commitDeadRestoreIfLegal(cur, id, legal);
+    if (!legal) return false;
+    if (dropHex) {
+      bigMiniatures[bIdx].center = center;
+      bigMiniatures[bIdx].offBoardWorld = undefined;
+    } else {
+      bigMiniatures[bIdx].offBoardWorld = { ...dropWorld };
+    }
+    moveBigMiniToTop(bIdx);
+    replaceDeadZoneState(next);
+    clearSelectionAfterMiniatureDragEnd();
+    return true;
+  }
+
+  const lIdx = largeMiniatures.findIndex((m) => m.deadPieceId === id);
+  if (lIdx !== -1) {
+    const anchor = dropHex ? bestLargeMiniAnchorForPointer(dropHex, dropWorld, lIdx) : null;
+    const legal = dropHex === null || anchor !== null;
+    const cur = deadZoneTuple();
+    const next = commitDeadRestoreIfLegal(cur, id, legal);
+    if (!legal) return false;
+    if (dropHex && anchor) {
+      largeMiniatures[lIdx].anchor = anchor;
+      largeMiniatures[lIdx].offBoardWorld = undefined;
+    } else {
+      largeMiniatures[lIdx].offBoardWorld = { ...dropWorld };
+    }
+    moveLargeMiniToTop(lIdx);
+    replaceDeadZoneState(next);
+    clearSelectionAfterMiniatureDragEnd();
+    return true;
+  }
+
+  const hIdx = hugeMiniatures.findIndex((m) => m.deadPieceId === id);
+  if (hIdx !== -1) {
+    const anchor = dropHex
+      ? findHugeMiniAnchorForPivotWorld(dropWorld, hugeMiniatures[hIdx]!.rotationDeg, hIdx)
+      : null;
+    const legal = dropHex === null || anchor !== null;
+    const cur = deadZoneTuple();
+    const next = commitDeadRestoreIfLegal(cur, id, legal);
+    if (!legal) return false;
+    if (dropHex && anchor) {
+      hugeMiniatures[hIdx].offBoardWorld = undefined;
+      hugeMiniatures[hIdx].anchor = anchor;
+    } else {
+      hugeMiniatures[hIdx].offBoardWorld = { ...dropWorld };
+    }
+    moveHugeMiniToTop(hIdx);
+    replaceDeadZoneState(next);
+    clearSelectionAfterMiniatureDragEnd();
+    return true;
+  }
+
+  return false;
+}
+
+type DeadDragLane = 'unit' | 'big' | 'large' | 'huge';
+
+function tryCommitBoardDragToDeadZone(
+  lane: DeadDragLane,
+  index: number,
+  clientX: number,
+  clientY: number,
+): boolean {
+  if (!isGodDockInteractive()) return false;
+  const hit = deadUnitDock?.hitTestDeadZoneCards(clientX, clientY);
+  if (!hit) return false;
+
+  const mySlot = effectiveMyGodSlot();
+  const oppSlot = effectiveOpponentGodSlot();
+  const targetSlot: PlayerSlot = hit.side === 'mine' ? mySlot : oppSlot;
+
+  let deadPieceId: string | undefined;
+  let rosterLeaderId: string | undefined;
+  let catalogUnitId: string | undefined;
+
+  if (lane === 'unit') {
+    const u = units[index];
+    deadPieceId = ensureDeadPieceId(u);
+    rosterLeaderId = u.rosterLeaderId;
+    catalogUnitId = u.catalogUnitId;
+  } else if (lane === 'big') {
+    const m = bigMiniatures[index];
+    deadPieceId = ensureDeadPieceId(m);
+    rosterLeaderId = m.rosterLeaderId;
+    catalogUnitId = m.catalogUnitId;
+  } else if (lane === 'large') {
+    const m = largeMiniatures[index];
+    deadPieceId = ensureDeadPieceId(m);
+    rosterLeaderId = m.rosterLeaderId;
+    catalogUnitId = m.catalogUnitId;
+  } else {
+    const m = hugeMiniatures[index];
+    deadPieceId = ensureDeadPieceId(m);
+    rosterLeaderId = m.rosterLeaderId;
+    catalogUnitId = m.catalogUnitId;
+  }
+
+  if (!deadPieceId || !catalogUnitId) return false;
+
+  const scoredPoints = resolveDeadZoneScoredPoints(
+    getRosterPointsOverrideForCatalog(rosterLeaderId, catalogUnitId),
+    catalogPointsForCatalogId(catalogUnitId),
+    deadPieceId,
+  ).scoredPoints;
+
+  const next = upsertDeadEntry(deadZoneTuple(), targetSlot, { boardInstanceId: deadPieceId, scoredPoints });
+
+  if (lane === 'unit') units[index].offBoardWorld = { ...DEAD_ZONE_OFFBOARD_HIDE };
+  else if (lane === 'big') bigMiniatures[index].offBoardWorld = { ...DEAD_ZONE_OFFBOARD_HIDE };
+  else if (lane === 'large') largeMiniatures[index].offBoardWorld = { ...DEAD_ZONE_OFFBOARD_HIDE };
+  else hugeMiniatures[index].offBoardWorld = { ...DEAD_ZONE_OFFBOARD_HIDE };
+
+  replaceDeadZoneState(next);
+  return true;
+}
+
 let crystalWalletLocal: CrystalWallet;
 let crystalWalletOpp: CrystalWallet;
 
@@ -2671,6 +3216,8 @@ function refreshCrystalWalletUis(): void {
   crystalWalletOpp.setBoundSlot(slO);
   crystalWalletLocal.renderFromState(crystalWalletRecordForSlot(slL));
   crystalWalletOpp.renderFromState(crystalWalletRecordForSlot(slO));
+  refreshDeadScorePills();
+  refreshDeadUnitDock();
 }
 
 function applyCrystalWalletDeltaCore(slot: PlayerSlot, crystalId: string, delta: number): void {
@@ -2865,6 +3412,10 @@ function loop(): void {
       computeBlindZoneLayoutForSlot(effectiveMyGodSlot()),
       computeBlindZoneLayoutForSlot(effectiveOpponentGodSlot()),
     );
+    deadUnitDock?.applyDualLayouts(
+      computeDeadZoneLayoutForSlot(effectiveMyGodSlot()),
+      computeDeadZoneLayoutForSlot(effectiveOpponentGodSlot()),
+    );
     updateBoardDesertUnderlayTransform();
     updateBoardGridOverlayTransform();
     needsRender = false;
@@ -2883,6 +3434,11 @@ requestAnimationFrame(loop);
 let isPanning = false;
 let panStartX = 0;
 let panStartY = 0;
+let isDraggingDeadZone = false;
+let deadZoneDragSlot: PlayerSlot | null = null;
+let deadZoneDragStartWorld: Point | null = null;
+let deadZoneDragStartOffsetX = 0;
+let deadZoneDragStartOffsetY = 0;
 let draggingUnitIndex: number | null = null;
 let dragOverHex: Hex | null = null;
 let dragPreviewPosition: { x: number; y: number } | null = null;
@@ -3698,6 +4254,7 @@ function isHexBlockedForSmallDragTarget(target: Hex): boolean {
 function findTopSmallUnitAtHex(hex: Hex): number {
   for (let i = units.length - 1; i >= 0; i--) {
     const unit = units[i]!;
+    if (isDeadZoneHideWorld(unit.offBoardWorld)) continue;
     if (unit.position.key === hex.key && grid.has(unit.position)) return i;
   }
   return -1;
@@ -3809,6 +4366,41 @@ function moveLargeMiniToTop(index: number): number {
   return last;
 }
 
+/** Move one huge mini to top render/hit layer (end of `hugeMiniatures`). */
+function moveHugeMiniToTop(index: number): number {
+  const last = hugeMiniatures.length - 1;
+  if (index < 0 || index > last) return index;
+  if (index === last) return index;
+
+  const [mini] = hugeMiniatures.splice(index, 1);
+  const [card] = hugeMiniCardData.splice(index, 1);
+  if (!mini || !card) return index;
+  hugeMiniatures.push(mini);
+  hugeMiniCardData.push(card);
+
+  const remap = (value: number | null): number | null => {
+    if (value === null) return null;
+    if (value === index) return last;
+    if (value > index) return value - 1;
+    return value;
+  };
+
+  selectedHugeMiniIndex = remap(selectedHugeMiniIndex);
+  openHealthControlsHugeMiniIndex = remap(openHealthControlsHugeMiniIndex);
+  hugeMiniDragPendingIndex = remap(hugeMiniDragPendingIndex);
+  draggingHugeMiniIndex = remap(draggingHugeMiniIndex);
+
+  if (altHoverTarget?.kind === 'huge') {
+    const mapped = remap(altHoverTarget.index);
+    altHoverTarget = mapped === null ? null : { kind: 'huge', index: mapped };
+  }
+  if (shiftHoverTarget?.kind === 'huge') {
+    const mapped = remap(shiftHoverTarget.index);
+    shiftHoverTarget = mapped === null ? null : { kind: 'huge', index: mapped };
+  }
+  return last;
+}
+
 function hexonCells(center: Hex): Hex[] {
   return [center, ...Hex.directions.map((direction) => center.add(direction))];
 }
@@ -3835,6 +4427,7 @@ function findBoardObjectAtHex(hex: Hex): number {
 function findBigMiniAtHex(hex: Hex): number {
   for (let i = bigMiniatures.length - 1; i >= 0; i--) {
     const m = bigMiniatures[i]!;
+    if (isDeadZoneHideWorld(m.offBoardWorld)) continue;
     if (hexonCells(m.center).some((cell) => cell.key === hex.key)) return i;
   }
   return -1;
@@ -3843,6 +4436,7 @@ function findBigMiniAtHex(hex: Hex): number {
 function findLargeMiniAtHex(hex: Hex): number {
   for (let i = largeMiniatures.length - 1; i >= 0; i--) {
     const m = largeMiniatures[i]!;
+    if (isDeadZoneHideWorld(m.offBoardWorld)) continue;
     if (largeMiniFootprint(m).some((cell) => cell.key === hex.key)) return i;
   }
   return -1;
@@ -3851,6 +4445,7 @@ function findLargeMiniAtHex(hex: Hex): number {
 function findHugeMiniAtHex(hex: Hex): number {
   for (let i = hugeMiniatures.length - 1; i >= 0; i--) {
     const m = hugeMiniatures[i]!;
+    if (isDeadZoneHideWorld(m.offBoardWorld)) continue;
     if (hugeMiniAllCells(m).some((cell) => cell.key === hex.key)) return i;
   }
   return -1;
@@ -3875,6 +4470,7 @@ function findHugeMiniIndexNearPivotWorld(world: Point): number {
   let bestD = Infinity;
   for (let i = 0; i < hugeMiniatures.length; i++) {
     const m = hugeMiniatures[i]!;
+    if (isDeadZoneHideWorld(m.offBoardWorld)) continue;
     const p = hugeMiniPivotWorld(m);
     const d2 = (p.x - world.x) ** 2 + (p.y - world.y) ** 2;
     if (d2 > r2) continue;
@@ -4199,15 +4795,22 @@ function isHexBlockedForSmall(hex: Hex): boolean {
   return !grid.has(hex);
 }
 
-function canPlaceBigMiniAt(center: Hex): boolean {
+function canPlaceBigMiniAt(center: Hex, excludeBigIndex: number = -1): boolean {
   const cells = hexonCells(center);
+  const footprintKeys = cells.map((c) => c.key);
   for (const h of cells) {
     if (!grid.has(h)) return false;
-    if (units.some((u) => u.position.key === h.key)) return false;
   }
-  for (const m of bigMiniatures) {
-    const keys = new Set(hexonCells(m.center).map((c) => c.key));
-    if (cells.some((c) => keys.has(c.key))) return false;
+  const unitOccupiedKeys = new Set(
+    units.filter((u) => !isDeadZoneHideWorld(u.offBoardWorld)).map((u) => u.position.key),
+  );
+  const bigFootprints = bigMiniatures.map((m) =>
+    isDeadZoneHideWorld(m.offBoardWorld)
+      ? new Set<string>()
+      : new Set(hexonCells(m.center).map((c) => c.key)),
+  );
+  if (bigMiniRestorePlacementCollides(footprintKeys, unitOccupiedKeys, bigFootprints, excludeBigIndex)) {
+    return false;
   }
   return true;
 }
@@ -4222,10 +4825,17 @@ function canPlaceLargeMiniAt(anchor: Hex, excludeIndex = -1, candidateRotationDe
   const cells = largeTriangleCellsOriented(anchor, rot);
   for (const h of cells) {
     if (!grid.has(h)) return false;
-    if (units.some((u) => u.position.key === h.key)) return false;
+    if (
+      units.some(
+        (u) => !isDeadZoneHideWorld(u.offBoardWorld) && u.position.key === h.key,
+      )
+    ) {
+      return false;
+    }
   }
   for (let i = 0; i < largeMiniatures.length; i++) {
     if (i === excludeIndex) continue;
+    if (isDeadZoneHideWorld(largeMiniatures[i]!.offBoardWorld)) continue;
     const keys = new Set(largeMiniFootprint(largeMiniatures[i]).map((c) => c.key));
     if (cells.some((c) => keys.has(c.key))) return false;
   }
@@ -4328,6 +4938,7 @@ function canPlaceHugeMiniAt(anchor: Hex, excludeIndex = -1, candidateRotationDeg
   const centerKeys = new Set(centers.map((c) => c.key));
   for (let i = 0; i < hugeMiniatures.length; i++) {
     if (i === excludeIndex) continue;
+    if (isDeadZoneHideWorld(hugeMiniatures[i]!.offBoardWorld)) continue;
     const otherCenters = new Set(hugeMiniFootprintCenters(hugeMiniatures[i]).map((c) => c.key));
     if (centers.some((c) => otherCenters.has(c.key))) return false;
   }
@@ -5562,10 +6173,20 @@ function pasteClipboard(): void {
   if (clipboardEntity.kind === 'small') {
     const cursorHex = hexUnderGlobalPointer();
     let nextPos = cursorHex ?? offsetHexForPaste(clipboardEntity.unit.position);
-    if (units.some((u) => u.position.key === nextPos.key)) {
+    if (
+      units.some(
+        (u) => !isDeadZoneHideWorld(u.offBoardWorld) && u.position.key === nextPos.key,
+      )
+    ) {
       nextPos = offsetHexForPaste(clipboardEntity.unit.position);
     }
-    if (!grid.has(nextPos) || units.some((u) => u.position.key === nextPos.key)) return;
+    if (
+      !grid.has(nextPos) ||
+      units.some(
+        (u) => !isDeadZoneHideWorld(u.offBoardWorld) && u.position.key === nextPos.key,
+      )
+    )
+      return;
     units.push({
       ...clipboardEntity.unit,
       ...rosterPasteOwnerOverride(clipboardEntity.unit),
@@ -7253,6 +7874,18 @@ window.addEventListener('pointermove', (e) => {
     camera.offsetY = e.clientY - panStartY;
     scheduleRender();
   }
+  if (isDraggingDeadZone && deadZoneDragSlot !== null) {
+    const startW = deadZoneDragStartWorld;
+    if (startW) {
+      const nowW = screenToBoardWorld(e.clientX, e.clientY);
+      deadZoneOffsetBySlot[deadZoneDragSlot] = {
+        x: deadZoneDragStartOffsetX + (nowW.x - startW.x),
+        y: deadZoneDragStartOffsetY + (nowW.y - startW.y),
+      };
+    }
+    scheduleRender();
+    return;
+  }
   pointerScreenX = e.clientX;
   pointerScreenY = e.clientY;
   tryPromoteGodLooseDrag(e);
@@ -7371,6 +8004,7 @@ function tryConsumePingIntentBoardPrimary(
   if (!isPointOverCanvas(clientX, clientY)) return false;
   if (armyBuilderPanel.isScreenPointOverPanel(clientX, clientY)) return false;
   if (godHandBlindDock?.isPointOverBlindZoneChrome(clientX, clientY)) return false;
+  if (deadUnitDock?.isPointOverDeadZoneChrome(clientX, clientY)) return false;
 
   const { x, y } = screenToBoardWorld(clientX, clientY);
   renderer.spawnPingMarker(x, y, LOCAL_PING_INTENT_COLOR);
@@ -7767,7 +8401,24 @@ canvas.addEventListener('pointerdown', (e: PointerEvent) => {
 
 // ── Input: mousedown ───────────────────────────────────────────
 
+function tryStartDeadZoneMoveFromMouseDown(e: MouseEvent): boolean {
+  if (e.button !== 0 || !deadUnitDock) return false;
+  if (godHandBlindDock?.isPointOverBlindZoneChrome(e.clientX, e.clientY)) return false;
+  const side = deadUnitDock.hitTestDeadZoneBorder(e.clientX, e.clientY);
+  if (!side) return false;
+  const slot: PlayerSlot = side === 'mine' ? effectiveMyGodSlot() : effectiveOpponentGodSlot();
+  const base = deadZoneOffsetBySlot[slot];
+  isDraggingDeadZone = true;
+  deadZoneDragSlot = slot;
+  deadZoneDragStartWorld = screenToBoardWorld(e.clientX, e.clientY);
+  deadZoneDragStartOffsetX = base.x;
+  deadZoneDragStartOffsetY = base.y;
+  e.preventDefault();
+  return true;
+}
+
 function tryStartCameraPanFromMouseDown(e: MouseEvent): boolean {
+  if (tryStartDeadZoneMoveFromMouseDown(e)) return true;
   if (!(e.button === 1 || (e.button === 0 && e.ctrlKey))) return false;
   if (!isPointOverCanvas(e.clientX, e.clientY)) return false;
   if (armyBuilderPanel.isScreenPointOverPanel(e.clientX, e.clientY)) return false;
@@ -8372,6 +9023,12 @@ canvas.addEventListener('mousedown', (e) => {
 // ── Input: pointerup / cancel (touch + mouse) ─────────────────
 
 function onWindowPointerUpOrCancel(e: PointerEvent): void {
+  if (isDraggingDeadZone) {
+    isDraggingDeadZone = false;
+    deadZoneDragSlot = null;
+    deadZoneDragStartWorld = null;
+    saveDeadZoneOffsetsToStorage();
+  }
   activeCanvasPointers.delete(e.pointerId);
   if (activeCanvasPointers.size < 2) {
     twoFingerCameraGesture = false;
@@ -8417,85 +9074,146 @@ function onWindowPointerUpOrCancel(e: PointerEvent): void {
     etherVortexDragPendingIndex = null;
     scheduleRender();
   } else if (e.button === 0 && draggingUnitIndex !== null) {
-    if (dragOverHex && !isHexBlockedForSmallDragTarget(dragOverHex)) {
+    const duIdx = draggingUnitIndex;
+    if (tryCommitBoardDragToDeadZone('unit', duIdx, e.clientX, e.clientY)) {
+      draggingUnitIndex = null;
+      dragOverHex = null;
+      dragPreviewPosition = null;
+      unitCard.setPassthrough(false);
+      renderer.setDragState(null, null, null);
+      clearSelectionAfterMiniatureDragEnd();
+      playBoardDragDrop();
+      scheduleRender();
+    } else if (dragOverHex && !isHexBlockedForSmallDragTarget(dragOverHex)) {
       // Dropped on a valid hex → place on board
-      units[draggingUnitIndex].position = dragOverHex;
-      units[draggingUnitIndex].offBoardWorld = undefined;
-      moveSmallUnitToTop(draggingUnitIndex);
+      units[duIdx].position = dragOverHex;
+      units[duIdx].offBoardWorld = undefined;
+      moveSmallUnitToTop(duIdx);
+      draggingUnitIndex = null;
+      dragOverHex = null;
+      dragPreviewPosition = null;
+      unitCard.setPassthrough(false);
+      renderer.setDragState(null, null, null);
+      clearSelectionAfterMiniatureDragEnd();
+      playBoardDragDrop();
+      scheduleRender();
     } else if (!dragOverHex && dragPreviewPosition) {
       // Dropped off-board → store world position
-      units[draggingUnitIndex].offBoardWorld = { ...dragPreviewPosition };
+      units[duIdx].offBoardWorld = { ...dragPreviewPosition };
+      draggingUnitIndex = null;
+      dragOverHex = null;
+      dragPreviewPosition = null;
+      unitCard.setPassthrough(false);
+      renderer.setDragState(null, null, null);
+      clearSelectionAfterMiniatureDragEnd();
+      playBoardDragDrop();
+      scheduleRender();
+    } else {
+      draggingUnitIndex = null;
+      dragOverHex = null;
+      dragPreviewPosition = null;
+      unitCard.setPassthrough(false);
+      renderer.setDragState(null, null, null);
+      clearSelectionAfterMiniatureDragEnd();
+      playBoardDragDrop();
+      scheduleRender();
     }
-    draggingUnitIndex = null;
-    dragOverHex = null;
-    dragPreviewPosition = null;
-    unitCard.setPassthrough(false);
-    renderer.setDragState(null, null, null);
-    clearSelectionAfterMiniatureDragEnd();
-    playBoardDragDrop();
-    scheduleRender();
   }
   if (e.button === 0 && draggingBigMiniIndex !== null) {
-    const dropWorld = screenToBoardWorld(e.clientX, e.clientY);
-    const dropHex = hexAtScreen(e.clientX, e.clientY);
-    if (dropHex) {
-      // Dropped on board → snap to hexon center
-      bigMiniatures[draggingBigMiniIndex].center = nearestHexonCenterFromWorld(dropWorld);
-      bigMiniatures[draggingBigMiniIndex].offBoardWorld = undefined;
+    const dbIdx = draggingBigMiniIndex;
+    if (tryCommitBoardDragToDeadZone('big', dbIdx, e.clientX, e.clientY)) {
+      draggingBigMiniIndex = null;
+      bigMiniPreviewPosition = null;
+      bigMiniDragOverCenter = null;
+      unitCard.setPassthrough(false);
+      renderer.setBigMiniatures(bigMiniatures.map((m) => m.center), null, null, null,
+        bigMiniatures.map((m) => m.offBoardWorld));
+      clearSelectionAfterMiniatureDragEnd();
+      playBoardDragDrop();
+      scheduleRender();
     } else {
-      // Dropped off-board → store world position
-      bigMiniatures[draggingBigMiniIndex].offBoardWorld = { ...dropWorld };
+      const dropWorld = screenToBoardWorld(e.clientX, e.clientY);
+      const dropHex = hexAtScreen(e.clientX, e.clientY);
+      if (dropHex) {
+        // Dropped on board → snap to hexon center
+        bigMiniatures[dbIdx].center = nearestHexonCenterFromWorld(dropWorld);
+        bigMiniatures[dbIdx].offBoardWorld = undefined;
+      } else {
+        // Dropped off-board → store world position
+        bigMiniatures[dbIdx].offBoardWorld = { ...dropWorld };
+      }
+      moveBigMiniToTop(dbIdx);
+      draggingBigMiniIndex = null;
+      bigMiniPreviewPosition = null;
+      bigMiniDragOverCenter = null;
+      unitCard.setPassthrough(false);
+      renderer.setBigMiniatures(bigMiniatures.map((m) => m.center), null, null, null,
+        bigMiniatures.map((m) => m.offBoardWorld));
+      clearSelectionAfterMiniatureDragEnd();
+      playBoardDragDrop();
+      scheduleRender();
     }
-    moveBigMiniToTop(draggingBigMiniIndex);
-    draggingBigMiniIndex = null;
-    bigMiniPreviewPosition = null;
-    bigMiniDragOverCenter = null;
-    unitCard.setPassthrough(false);
-    renderer.setBigMiniatures(bigMiniatures.map((m) => m.center), null, null, null,
-      bigMiniatures.map((m) => m.offBoardWorld));
-    clearSelectionAfterMiniatureDragEnd();
-    playBoardDragDrop();
-    scheduleRender();
   }
   if (e.button === 0 && draggingLargeMiniIndex !== null) {
-    const dropHex = hexAtScreen(e.clientX, e.clientY);
-    if (dropHex && largeMiniDragOverAnchor) {
-      largeMiniatures[draggingLargeMiniIndex].anchor = largeMiniDragOverAnchor;
-      largeMiniatures[draggingLargeMiniIndex].offBoardWorld = undefined;
-    } else if (!dropHex && largeMiniPreviewPosition) {
-      largeMiniatures[draggingLargeMiniIndex].offBoardWorld = { ...largeMiniPreviewPosition };
+    const dlIdx = draggingLargeMiniIndex;
+    if (tryCommitBoardDragToDeadZone('large', dlIdx, e.clientX, e.clientY)) {
+      draggingLargeMiniIndex = null;
+      largeMiniPreviewPosition = null;
+      largeMiniDragOverAnchor = null;
+      unitCard.setPassthrough(false);
+      clearSelectionAfterMiniatureDragEnd();
+      playBoardDragDrop();
+      scheduleRender();
+    } else {
+      const dropHex = hexAtScreen(e.clientX, e.clientY);
+      if (dropHex && largeMiniDragOverAnchor) {
+        largeMiniatures[dlIdx].anchor = largeMiniDragOverAnchor;
+        largeMiniatures[dlIdx].offBoardWorld = undefined;
+      } else if (!dropHex && largeMiniPreviewPosition) {
+        largeMiniatures[dlIdx].offBoardWorld = { ...largeMiniPreviewPosition };
+      }
+      moveLargeMiniToTop(dlIdx);
+      draggingLargeMiniIndex = null;
+      largeMiniPreviewPosition = null;
+      largeMiniDragOverAnchor = null;
+      unitCard.setPassthrough(false);
+      clearSelectionAfterMiniatureDragEnd();
+      playBoardDragDrop();
+      scheduleRender();
     }
-    moveLargeMiniToTop(draggingLargeMiniIndex);
-    draggingLargeMiniIndex = null;
-    largeMiniPreviewPosition = null;
-    largeMiniDragOverAnchor = null;
-    unitCard.setPassthrough(false);
-    clearSelectionAfterMiniatureDragEnd();
-    playBoardDragDrop();
-    scheduleRender();
   }
   if (e.button === 0 && draggingHugeMiniIndex !== null) {
     const idx = draggingHugeMiniIndex;
-    const dropWorld = hugeMiniPreviewPosition ?? screenToBoardWorld(e.clientX, e.clientY);
-    const dropHex = hexAtScreen(e.clientX, e.clientY);
-    if (dropHex) {
-      hugeMiniatures[idx].offBoardWorld = { ...dropWorld };
-      const anchor = findHugeMiniAnchorForPivotWorld(
-        dropWorld,
-        hugeMiniatures[idx].rotationDeg,
-        idx,
-      );
-      if (anchor !== null) hugeMiniatures[idx].anchor = anchor;
+    if (tryCommitBoardDragToDeadZone('huge', idx, e.clientX, e.clientY)) {
+      draggingHugeMiniIndex = null;
+      hugeMiniPreviewPosition = null;
+      hugeMiniDragOverAnchor = null;
+      unitCard.setPassthrough(false);
+      clearSelectionAfterMiniatureDragEnd();
+      playBoardDragDrop();
+      scheduleRender();
     } else {
-      hugeMiniatures[idx].offBoardWorld = { ...dropWorld };
+      const dropWorld = hugeMiniPreviewPosition ?? screenToBoardWorld(e.clientX, e.clientY);
+      const dropHex = hexAtScreen(e.clientX, e.clientY);
+      if (dropHex) {
+        hugeMiniatures[idx].offBoardWorld = { ...dropWorld };
+        const anchor = findHugeMiniAnchorForPivotWorld(
+          dropWorld,
+          hugeMiniatures[idx].rotationDeg,
+          idx,
+        );
+        if (anchor !== null) hugeMiniatures[idx].anchor = anchor;
+      } else {
+        hugeMiniatures[idx].offBoardWorld = { ...dropWorld };
+      }
+      draggingHugeMiniIndex = null;
+      hugeMiniPreviewPosition = null;
+      hugeMiniDragOverAnchor = null;
+      unitCard.setPassthrough(false);
+      clearSelectionAfterMiniatureDragEnd();
+      playBoardDragDrop();
+      scheduleRender();
     }
-    draggingHugeMiniIndex = null;
-    hugeMiniPreviewPosition = null;
-    hugeMiniDragOverAnchor = null;
-    unitCard.setPassthrough(false);
-    clearSelectionAfterMiniatureDragEnd();
-    playBoardDragDrop();
-    scheduleRender();
   }
   if (e.button === 0 && draggingHuge2MiniIndex !== null) {
     const idx = draggingHuge2MiniIndex;
@@ -8660,7 +9378,8 @@ window.addEventListener('keydown', (e) => {
     if (
       isPointOverCanvas(pointerScreenX, pointerScreenY) &&
       !armyBuilderPanel.isScreenPointOverPanel(pointerScreenX, pointerScreenY) &&
-      !godHandBlindDock?.isPointOverBlindZoneChrome(pointerScreenX, pointerScreenY)
+      !godHandBlindDock?.isPointOverBlindZoneChrome(pointerScreenX, pointerScreenY) &&
+      !deadUnitDock?.isPointOverDeadZoneChrome(pointerScreenX, pointerScreenY)
     ) {
       const hi = godLooseHitIndex(pointerScreenX, pointerScreenY);
       if (hi !== null) {
@@ -8865,6 +9584,7 @@ function shouldApplyBoardCameraWheel(e: WheelEvent): boolean {
   if (!(t instanceof Node)) return false;
   if (t === canvas || canvas.contains(t)) return true;
   if (t instanceof Element && t.closest('.god-blind-table-wrap')) return true;
+  if (t instanceof Element && t.closest('.dead-unit-table-wrap')) return true;
   return false;
 }
 
@@ -9068,14 +9788,32 @@ window.addEventListener('keydown', (e) => {
         e.preventDefault();
         return;
       }
-      console.log('[board overlays] values for hardcode:', {
+      const payload = {
         GRID_OVERLAY_EXTRA_ROTATION_DEG,
         gridOverlayOffsetScreenX: Number(gridOverlayOffsetScreenX.toFixed(2)),
         gridOverlayOffsetScreenY: Number(gridOverlayOffsetScreenY.toFixed(2)),
         gridOverlayManualWidthPx: gridOverlayManualWidthPx,
         gridOverlayManualHeightPx: gridOverlayManualHeightPx,
         desertUnderlayExtraRotationDeg: Number(desertUnderlayExtraRotationDeg.toFixed(3)),
-      });
+        deadZoneOffsetBySlot: {
+          '0': {
+            x: Number(deadZoneOffsetBySlot[0].x.toFixed(2)),
+            y: Number(deadZoneOffsetBySlot[0].y.toFixed(2)),
+          },
+          '1': {
+            x: Number(deadZoneOffsetBySlot[1].x.toFixed(2)),
+            y: Number(deadZoneOffsetBySlot[1].y.toFixed(2)),
+          },
+        },
+      };
+      console.log('[board overlays] values for hardcode:', payload);
+      const json = JSON.stringify(payload, null, 2);
+      if (navigator.clipboard?.writeText) {
+        void navigator.clipboard.writeText(json).then(
+          () => console.info('[board overlays] Alt+P payload copied to clipboard'),
+          () => console.warn('[board overlays] Alt+P payload copy failed; use console output'),
+        );
+      }
       e.preventDefault();
       return;
     }
@@ -9357,6 +10095,51 @@ function parseEtherDomain(d: unknown): EtherVortexDomainId | null {
   return null;
 }
 
+/** Board instance ids present on loaded units / mini lanes (dead-zone entries must resolve to one of these). */
+function collectLoadedBoardInstanceIdsForDeadZoneFilter(): Set<string> {
+  const allowed = new Set<string>();
+  const add = (id: string | undefined) => {
+    if (id !== undefined && id.length > 0) allowed.add(id);
+  };
+  for (const u of units) add(ensureDeadPieceId(u));
+  for (const m of bigMiniatures) add(ensureDeadPieceId(m));
+  for (const m of largeMiniatures) add(ensureDeadPieceId(m));
+  for (const m of hugeMiniatures) add(ensureDeadPieceId(m));
+  return allowed;
+}
+
+function applyDeadByZoneFromValidatedSnapshot(s: SerializedBoardStateV1): void {
+  const raw: DeadByZone = (s.deadByZone ?? [[], []]) as DeadByZone;
+  const normalized = normalizeDeadByZone(raw);
+  const allowed = collectLoadedBoardInstanceIdsForDeadZoneFilter();
+
+  const filterZone = (zone: DeadByZone[0]): SerializedDeadEntryV1[] => {
+    const out: SerializedDeadEntryV1[] = [];
+    for (const e of zone) {
+      if (allowed.has(e.boardInstanceId)) {
+        out.push({
+          boardInstanceId: e.boardInstanceId,
+          scoredPoints: e.scoredPoints,
+          order: out.length,
+        });
+      } else {
+        console.warn('[mp] deadByZone: dropped unresolved boardInstanceId', e.boardInstanceId);
+      }
+    }
+    return out;
+  };
+
+  const next0 = filterZone(normalized[0]);
+  const next1 = filterZone(normalized[1]);
+
+  deadByZone[0].length = 0;
+  deadByZone[1].length = 0;
+  deadByZone[0].push(...next0);
+  deadByZone[1].push(...next1);
+  applyDeadZoneHideFromDeadLists();
+  refreshDeadUnitDock();
+}
+
 function captureBoardSnapshot(): SerializedBoardStateV1 {
   return {
     v: 1,
@@ -9379,6 +10162,7 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
     units: units.map((u) => ({
       position: { q: u.position.q, r: u.position.r },
       boardInstanceId: u.boardInstanceId,
+      deadPieceId: ensureDeadPieceId(u),
       offBoardWorld: u.offBoardWorld,
       walk: u.walk,
       run: u.run,
@@ -9398,6 +10182,7 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
     bigMiniatures: bigMiniatures.map((m) => ({
       center: { q: m.center.q, r: m.center.r },
       boardInstanceId: m.boardInstanceId,
+      deadPieceId: ensureDeadPieceId(m),
       offBoardWorld: m.offBoardWorld,
       walk: m.walk,
       run: m.run,
@@ -9417,6 +10202,7 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
     largeMiniatures: largeMiniatures.map((m) => ({
       anchor: { q: m.anchor.q, r: m.anchor.r },
       boardInstanceId: m.boardInstanceId,
+      deadPieceId: ensureDeadPieceId(m),
       offBoardWorld: m.offBoardWorld,
       walk: m.walk,
       run: m.run,
@@ -9436,6 +10222,7 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
     hugeMiniatures: hugeMiniatures.map((m) => ({
       anchor: { q: m.anchor.q, r: m.anchor.r },
       boardInstanceId: m.boardInstanceId,
+      deadPieceId: ensureDeadPieceId(m),
       offBoardWorld: m.offBoardWorld,
       walk: m.walk,
       run: m.run,
@@ -9519,6 +10306,7 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
       '0': crystalWalletRecordForSlot(0),
       '1': crystalWalletRecordForSlot(1),
     },
+    deadByZone: structuredClone(deadByZone),
     tableTurnNumber: topTurnPanel.getTableTurnNumber(),
   };
 }
@@ -9739,6 +10527,9 @@ function applyBoardSnapshot(raw: unknown): void {
     units.push({
       position: new Hex(u.position.q, u.position.r),
       boardInstanceId: u.boardInstanceId,
+      deadPieceId: typeof (u as { deadPieceId?: unknown }).deadPieceId === 'string'
+        ? (u as { deadPieceId?: string }).deadPieceId
+        : allocDeadPieceId(),
       offBoardWorld: u.offBoardWorld,
       walk: u.walk,
       run: u.run,
@@ -9763,6 +10554,9 @@ function applyBoardSnapshot(raw: unknown): void {
     bigMiniatures.push({
       center: new Hex(m.center.q, m.center.r),
       boardInstanceId: m.boardInstanceId,
+      deadPieceId: typeof (m as { deadPieceId?: unknown }).deadPieceId === 'string'
+        ? (m as { deadPieceId?: string }).deadPieceId
+        : allocDeadPieceId(),
       offBoardWorld: m.offBoardWorld,
       walk: m.walk,
       run: m.run,
@@ -9786,6 +10580,9 @@ function applyBoardSnapshot(raw: unknown): void {
     largeMiniatures.push({
       anchor: new Hex(m.anchor.q, m.anchor.r),
       boardInstanceId: m.boardInstanceId,
+      deadPieceId: typeof (m as { deadPieceId?: unknown }).deadPieceId === 'string'
+        ? (m as { deadPieceId?: string }).deadPieceId
+        : allocDeadPieceId(),
       offBoardWorld: m.offBoardWorld,
       walk: m.walk,
       run: m.run,
@@ -9809,6 +10606,9 @@ function applyBoardSnapshot(raw: unknown): void {
     hugeMiniatures.push({
       anchor: new Hex(m.anchor.q, m.anchor.r),
       boardInstanceId: m.boardInstanceId,
+      deadPieceId: typeof (m as { deadPieceId?: unknown }).deadPieceId === 'string'
+        ? (m as { deadPieceId?: string }).deadPieceId
+        : allocDeadPieceId(),
       offBoardWorld: m.offBoardWorld,
       walk: m.walk,
       run: m.run,
@@ -9867,6 +10667,7 @@ function applyBoardSnapshot(raw: unknown): void {
   huge2MiniCardData.push(...structuredClone(h2cArr.slice(0, h2PairLen)));
 
   migrateLegacySiegeGolemHugeToHuge2();
+  applyDeadByZoneFromValidatedSnapshot(s);
 
   terrains.length = 0;
   for (const h of s.terrains) {
@@ -9972,6 +10773,8 @@ function applyBoardSnapshot(raw: unknown): void {
   updateHuge2MiniMovementHighlights();
   updateAttackRangeHighlights();
   updateUnitCard();
+  scheduleRender();
+  refreshDeadScorePills();
   scheduleRender();
 }
 

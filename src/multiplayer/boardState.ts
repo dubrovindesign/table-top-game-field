@@ -28,6 +28,7 @@ export type SerializedBoardInstanceV1 = {
 export type SerializedUnit = {
   position: SerializedHex;
   boardInstanceId?: string;
+  deadPieceId?: string;
   offBoardWorld?: SerializedPoint;
   walk: number;
   run: number;
@@ -46,6 +47,7 @@ export type SerializedUnit = {
 export type SerializedBigMini = {
   center: SerializedHex;
   boardInstanceId?: string;
+  deadPieceId?: string;
   offBoardWorld?: SerializedPoint;
   walk: number;
   run: number;
@@ -63,6 +65,7 @@ export type SerializedBigMini = {
 export type SerializedLargeMini = {
   anchor: SerializedHex;
   boardInstanceId?: string;
+  deadPieceId?: string;
   offBoardWorld?: SerializedPoint;
   walk: number;
   run: number;
@@ -80,6 +83,7 @@ export type SerializedLargeMini = {
 export type SerializedHugeMini = {
   anchor: SerializedHex;
   boardInstanceId?: string;
+  deadPieceId?: string;
   offBoardWorld?: SerializedPoint;
   walk: number;
   run: number;
@@ -201,7 +205,44 @@ export type SerializedCrystalWalletsV1 = {
   '1': Record<string, number>;
 };
 
+/** One dead-unit zone entry (per-player scoring lists), snapshot v1. */
+export type SerializedDeadEntryV1 = {
+  boardInstanceId: string;
+  scoredPoints: number;
+  order: number;
+};
+
 const CRYSTAL_WALLET_ID_SET = new Set(['yellow', 'black', 'red', 'green', 'ether']);
+
+const DEAD_ZONE_MAX_ENTRIES_PER_SLOT = 500;
+const DEAD_SCORED_POINTS_MAX = 1_000_000;
+const DEAD_ORDER_MAX = 100_000;
+
+function validSerializedDeadEntryV1(o: unknown): boolean {
+  if (!o || typeof o !== 'object') return false;
+  const e = o as SerializedDeadEntryV1;
+  if (!validBoardId(e.boardInstanceId)) return false;
+  if (
+    typeof e.scoredPoints !== 'number' ||
+    !Number.isInteger(e.scoredPoints) ||
+    e.scoredPoints < 0 ||
+    e.scoredPoints > DEAD_SCORED_POINTS_MAX
+  )
+    return false;
+  if (typeof e.order !== 'number' || !Number.isInteger(e.order) || e.order < 0 || e.order > DEAD_ORDER_MAX)
+    return false;
+  return true;
+}
+
+function validDeadByZoneV1(o: unknown): boolean {
+  if (!Array.isArray(o) || o.length !== 2) return false;
+  const a = o[0];
+  const b = o[1];
+  if (!Array.isArray(a) || !Array.isArray(b)) return false;
+  if (a.length > DEAD_ZONE_MAX_ENTRIES_PER_SLOT || b.length > DEAD_ZONE_MAX_ENTRIES_PER_SLOT) return false;
+  if (!a.every(validSerializedDeadEntryV1) || !b.every(validSerializedDeadEntryV1)) return false;
+  return true;
+}
 
 function validCrystalWalletSlotRecord(o: unknown): boolean {
   if (!o || typeof o !== 'object') return false;
@@ -256,6 +297,11 @@ export type SerializedBoardStateV1 = {
   crystalWallets?: SerializedCrystalWalletsV1;
   /** Счётчик хода в верхней панели («Ход N»), 1…6. */
   tableTurnNumber?: number;
+  /**
+   * Dead-unit scoring zones by player slot ([slot0 entries], [slot1 entries]).
+   * Optional for legacy snapshots.
+   */
+  deadByZone?: [SerializedDeadEntryV1[], SerializedDeadEntryV1[]];
 };
 
 /** Снимок одного слота: у чужого слота `handIds`/`deckIds`/`blindCardIds` могут отсутствовать (скрыто). */
@@ -514,6 +560,8 @@ export function isSerializedBoardStateV1(raw: unknown): raw is SerializedBoardSt
     if (!validOptionalArmyOwnerSlot(aos)) return false;
     const bid = (u as { boardInstanceId?: unknown }).boardInstanceId;
     if (bid !== undefined && !validBoardId(bid)) return false;
+    const did = (u as { deadPieceId?: unknown }).deadPieceId;
+    if (did !== undefined && !validBoardId(did)) return false;
   }
   for (const m of o.bigMiniatures) {
     if (!m || typeof m !== 'object') return false;
@@ -521,6 +569,8 @@ export function isSerializedBoardStateV1(raw: unknown): raw is SerializedBoardSt
     if (!validOptionalArmyOwnerSlot(aos)) return false;
     const bid = (m as { boardInstanceId?: unknown }).boardInstanceId;
     if (bid !== undefined && !validBoardId(bid)) return false;
+    const did = (m as { deadPieceId?: unknown }).deadPieceId;
+    if (did !== undefined && !validBoardId(did)) return false;
   }
   for (const m of o.largeMiniatures) {
     if (!m || typeof m !== 'object') return false;
@@ -528,6 +578,8 @@ export function isSerializedBoardStateV1(raw: unknown): raw is SerializedBoardSt
     if (!validOptionalArmyOwnerSlot(aos)) return false;
     const bid = (m as { boardInstanceId?: unknown }).boardInstanceId;
     if (bid !== undefined && !validBoardId(bid)) return false;
+    const did = (m as { deadPieceId?: unknown }).deadPieceId;
+    if (did !== undefined && !validBoardId(did)) return false;
   }
   for (const m of o.hugeMiniatures) {
     if (!m || typeof m !== 'object') return false;
@@ -535,6 +587,8 @@ export function isSerializedBoardStateV1(raw: unknown): raw is SerializedBoardSt
     if (!validOptionalArmyOwnerSlot(aos)) return false;
     const bid = (m as { boardInstanceId?: unknown }).boardInstanceId;
     if (bid !== undefined && !validBoardId(bid)) return false;
+    const did = (m as { deadPieceId?: unknown }).deadPieceId;
+    if (did !== undefined && !validBoardId(did)) return false;
   }
   const huge2MiniaturesList = h2m !== undefined && h2c !== undefined ? h2m : [];
   for (const m of huge2MiniaturesList) {
@@ -612,5 +666,7 @@ export function isSerializedBoardStateV1(raw: unknown): raw is SerializedBoardSt
   if (ttn !== undefined) {
     if (typeof ttn !== 'number' || !Number.isInteger(ttn) || ttn < 1 || ttn > 6) return false;
   }
+  const dbz = (o as { deadByZone?: unknown }).deadByZone;
+  if (dbz !== undefined && !validDeadByZoneV1(dbz)) return false;
   return true;
 }

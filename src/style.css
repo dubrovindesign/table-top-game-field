@@ -231,6 +231,54 @@ select option {
   align-items: center;
 }
 
+/* Wallet + dead-score column: keeps turn counter centered; stacks mirror by wing side. */
+.turn-wing-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.turn-wing--left .turn-wing-stack {
+  align-items: flex-end;
+}
+
+.turn-wing--right .turn-wing-stack {
+  align-items: flex-start;
+}
+
+.turn-wing-stack > * {
+  pointer-events: auto;
+}
+
+.dead-score-mount {
+  flex: 0 0 auto;
+}
+
+.dead-score-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 120, 120, 0.68);
+  background: rgba(56, 16, 20, 0.9);
+  color: #ffd8d8;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+}
+
+.dead-score-pill__value {
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Crystal Wallet ────────────────────────────────────────────
    Local: above dice panel (mount inside `.dice-local-wallet-mount`, top-right).
    Opponent: fixed bottom-left. */
@@ -4669,6 +4717,13 @@ select option {
   opacity: 0.92;
 }
 
+.dead-unit-dock-drag-ghost {
+  position: fixed;
+  z-index: 10001;
+  pointer-events: none;
+  opacity: 0.92;
+}
+
 .god-dock-card--ghost {
   box-sizing: border-box;
 }
@@ -4682,4 +4737,106 @@ select option {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
   line-clamp: 4;
+}
+
+/* --- Dead unit zone overlay (position from JS, zoom via --dead-unit-zoom) --- */
+
+.dead-unit-table-wrap {
+  position: fixed;
+  z-index: 59;
+  box-sizing: border-box;
+  pointer-events: none;
+  --dead-unit-zoom: 1;
+  --dead-unit-zone-radius: 18px;
+  --dead-unit-card-radius: 10px;
+}
+
+.dead-unit-table-wrap--inactive {
+  opacity: 0.55;
+}
+
+.dead-unit-zone {
+  width: min(420px, 88vw);
+  min-height: 120px;
+  border-radius: var(--dead-unit-zone-radius);
+  box-sizing: border-box;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+
+.dead-unit-zone--on-table {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-width: none;
+  pointer-events: none;
+  padding: 0;
+  border: none;
+}
+
+.dead-unit-zone-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.dead-unit-table-wrap .dead-unit-dock-card--slot {
+  pointer-events: auto;
+}
+
+.dead-unit-dock-card {
+  border-radius: var(--dead-unit-card-radius);
+  box-shadow: 0 calc(6px * var(--dead-unit-zoom)) calc(18px * var(--dead-unit-zoom))
+    rgba(0, 0, 0, 0.42);
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px;
+  background: rgba(22, 26, 36, 0.94);
+  border: calc(1px * var(--dead-unit-zoom)) solid rgba(255, 255, 255, 0.18);
+}
+
+.dead-unit-dock-card--mine {
+  color: rgba(235, 240, 255, 0.92);
+}
+
+.dead-unit-dock-card--stack {
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(2px * var(--dead-unit-zoom));
+}
+
+.dead-unit-dock-card__points {
+  font-size: calc(10px * var(--dead-unit-zoom));
+  font-weight: 700;
+  color: rgba(180, 220, 255, 0.88);
+  line-height: 1;
+}
+
+.dead-unit-dock-card--opp {
+  background: rgba(18, 18, 26, 0.92);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dead-unit-dock-card__label {
+  font-size: calc(11px * var(--dead-unit-zoom));
+  line-height: 1.2;
+  text-align: center;
+  word-break: break-word;
+}
+
+.dead-unit-dock-card__mask {
+  font-size: calc(var(--dead-unit-card-h, 96px) * 0.32);
+  color: rgba(255, 255, 255, 0.35);
 }
