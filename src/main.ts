@@ -122,6 +122,11 @@ import type { PlayerSlot, TableDragState } from './multiplayer/protocol.ts';
 import { EMPTY_TABLE_DRAG } from './multiplayer/protocol.ts';
 import { tickTableDragOutbound } from './multiplayer/tableDragOutbound.ts';
 import { initMultiplayerSession, sendPingIntentAtBoard, sendRoomClientMessage } from './multiplayer/session.ts';
+import { applyScenarioDocument, type ApplyScenarioResult } from './scenarios/apply.ts';
+import { createScenariosPanel } from './scenarios/panel.ts';
+import { newScenarioDocumentId } from './scenarios/panelHelpers.ts';
+import { deriveRotationModel } from './scenarios/rotationModel.ts';
+import type { ScenarioDocument, ScenarioOrientation } from './scenarios/types.ts';
 import { mountAppMoreMenu } from './appMoreMenu.ts';
 import { getWheelBehavior, mountAppSettingsToolbar } from './appSettings.ts';
 import { createPwaInstallMenuFlow } from './pwaInstallUi.ts';
@@ -142,6 +147,11 @@ const HEX_SIZE = 28;
 const BOARD_ROTATION_DEG = -10;
 /** +180° for multiplayer `playerSlot === 1` (opposite seat); 0 otherwise. */
 let viewSeatExtraRotationDeg = 0;
+/**
+ * Scenario-level field orientation (additive on top of `BOARD_ROTATION_DEG` and seat rotation).
+ * `vertical` maps to +90° per scenario spec; `horizontal` adds 0°.
+ */
+let scenarioBoardOrientation: ScenarioOrientation = 'horizontal';
 /** Local seat in room (`null` = solo / disconnected / spectator). Used for roster points / copy limits. */
 let localViewPlayerSlot: PlayerSlot | null = null;
 
@@ -151,8 +161,21 @@ const crystalWalletBySlot: { 0: Map<string, number>; 1: Map<string, number> } = 
   1: new Map(),
 };
 
-function effectiveBoardRotationDeg(): number {
-  return BOARD_ROTATION_DEG + viewSeatExtraRotationDeg;
+function effectiveFieldRotationDeg(): number {
+  return deriveRotationModel({
+    baseDeg: BOARD_ROTATION_DEG,
+    seatExtraDeg: viewSeatExtraRotationDeg,
+    orientation: scenarioBoardOrientation,
+  }).fieldDeg;
+}
+
+/** Seat + base board tilt for content-facing transforms (no scenario vertical bonus). */
+export function effectiveContentRotationDeg(): number {
+  return deriveRotationModel({
+    baseDeg: BOARD_ROTATION_DEG,
+    seatExtraDeg: viewSeatExtraRotationDeg,
+    orientation: scenarioBoardOrientation,
+  }).contentDeg;
 }
 
 /** Same as `renderer` `oppositeSeatUnitRotationCorrectionDeg` (MP slot 1 = −180). */
@@ -160,9 +183,13 @@ function oppositeSeatUnitRotationCorrectionDeg(): number {
   return viewSeatExtraRotationDeg === 180 ? -180 : 0;
 }
 
-/** Model rotation + seat fix — HP / activation / effect-marker anchors (matches `rotRadVisual` in renderer). */
+function contentFieldRotationDeltaDeg(): number {
+  return effectiveContentRotationDeg() - effectiveFieldRotationDeg();
+}
+
+/** Model rotation + seat + content-vs-field delta — HP / activation / effect anchors (matches renderer `rotRadVisual`). */
 function unitRotationDegForMiniatureLocalUi(modelDeg: number): number {
-  return modelDeg + oppositeSeatUnitRotationCorrectionDeg();
+  return modelDeg + oppositeSeatUnitRotationCorrectionDeg() + contentFieldRotationDeltaDeg();
 }
 
 function unitRotationRadForMiniatureLocalUi(modelDeg: number): number {
@@ -177,13 +204,14 @@ function healthBadgePlusMinusCentersWorld(
   buttonOffsetWorld: number,
 ): { minus: Point; plus: Point } {
   const fix = oppositeSeatUnitRotationCorrectionDeg();
-  if (fix === 0) {
+  const tiltDeg = contentFieldRotationDeltaDeg() - fix;
+  if (tiltDeg === 0) {
     return {
       minus: { x: badgeCenterWorld.x - buttonOffsetWorld, y: badgeCenterWorld.y },
       plus: { x: badgeCenterWorld.x + buttonOffsetWorld, y: badgeCenterWorld.y },
     };
   }
-  const rad = ((-fix) * Math.PI) / 180;
+  const rad = (tiltDeg * Math.PI) / 180;
   const c = Math.cos(rad);
   const s = Math.sin(rad);
   const rot = (vx: number, vy: number): Point => ({
@@ -608,7 +636,10 @@ function getBoardWorldExtentsForGodBlind(): {
 }
 
 function godTableCardRotRad(): number {
-  return ((GOD_TABLE_CARD_ROT_CW_DEG + godTableCardOppositeSeatFixDeg()) * Math.PI) / 180;
+  return (
+    (GOD_TABLE_CARD_ROT_CW_DEG + godTableCardOppositeSeatFixDeg() + contentFieldRotationDeltaDeg()) *
+    Math.PI
+  ) / 180;
 }
 
 /** Экранный bbox карты богов в мировой точке — как на канвасе (поворот + зум). */
@@ -793,6 +824,7 @@ const renderConfig = {
   backgroundImageRotationDeg: FIELD_BG_PRESET.backgroundImageRotationDeg,
   hexonBorderWidth: 0,
   boardRotationDeg: BOARD_ROTATION_DEG,
+  contentFieldRotationDeltaDeg: 0,
 };
 
 const renderer = new Renderer(
@@ -2139,10 +2171,26 @@ function applyMultiplayerViewSeat(slot: PlayerSlot | null): void {
   diceRoller.setLocalPlayerSlot(slot);
   viewSeatExtraRotationDeg = slot === 1 ? 180 : 0;
   renderer.updateConfig({
-    boardRotationDeg: effectiveBoardRotationDeg(),
+    boardRotationDeg: effectiveFieldRotationDeg(),
+    contentFieldRotationDeltaDeg: contentFieldRotationDeltaDeg(),
     oppositeSeatUnitRotationCorrectionDeg: slot === 1 ? -180 : 0,
   });
   refreshCrystalWalletUis();
+  scheduleRender();
+  refreshGodDock();
+}
+
+/** Updates renderer board rotation and DOM overlays for scenario `horizontal` / `vertical` (default: horizontal). */
+export function setScenarioBoardOrientation(orientation: ScenarioOrientation): void {
+  scenarioBoardOrientation = orientation;
+  renderer.updateConfig({
+    boardRotationDeg: effectiveFieldRotationDeg(),
+    contentFieldRotationDeltaDeg: contentFieldRotationDeltaDeg(),
+    oppositeSeatUnitRotationCorrectionDeg: oppositeSeatUnitRotationCorrectionDeg(),
+  });
+  refreshCrystalWalletUis();
+  updateBoardDesertUnderlayTransform();
+  updateBoardGridOverlayTransform();
   scheduleRender();
   refreshGodDock();
 }
@@ -2221,7 +2269,7 @@ function loop(): void {
         w: widthPx,
         h: heightPx,
         /* Поворот сетки не связан с калибровкой текстуры поля (запятая/точка/Alt+[). */
-        rotDeg: effectiveBoardRotationDeg() + GRID_OVERLAY_EXTRA_ROTATION_DEG,
+        rotDeg: effectiveFieldRotationDeg() + GRID_OVERLAY_EXTRA_ROTATION_DEG,
       });
     }
     renderer.updateConfig({
@@ -2593,7 +2641,7 @@ function captureTableDragForNetwork(): TableDragState {
 function screenToBoardWorld(sx: number, sy: number): { x: number; y: number } {
   const world = camera.screenToWorld(sx, sy);
   const boardCenter = getBoardCenterWorld();
-  const angleRad = (effectiveBoardRotationDeg() * Math.PI) / 180;
+  const angleRad = (effectiveFieldRotationDeg() * Math.PI) / 180;
   const inverseAngle = -angleRad;
   const dx = world.x - boardCenter.x;
   const dy = world.y - boardCenter.y;
@@ -2612,10 +2660,13 @@ function godTableCardOppositeSeatFixDeg(): number {
 function godEllipseContains(world: Point, center: Point, hw: number, hh: number): boolean {
   const dx = world.x - center.x;
   const dy = world.y - center.y;
-  const B = (effectiveBoardRotationDeg() * Math.PI) / 180;
+  const B = (effectiveFieldRotationDeg() * Math.PI) / 180;
   const dpx = dx * Math.cos(B) + dy * Math.sin(B);
   const dpy = -dx * Math.sin(B) + dy * Math.cos(B);
-  const C = ((GOD_TABLE_CARD_ROT_CW_DEG + godTableCardOppositeSeatFixDeg()) * Math.PI) / 180;
+  const C =
+    ((GOD_TABLE_CARD_ROT_CW_DEG + godTableCardOppositeSeatFixDeg() + contentFieldRotationDeltaDeg()) *
+      Math.PI) /
+    180;
   const sx = dpx * Math.cos(C) - dpy * Math.sin(C);
   const sy = dpx * Math.sin(C) + dpy * Math.cos(C);
   const a = sx / hw;
@@ -4256,7 +4307,7 @@ function deleteSelected(): void {
 
 function boardWorldToScreen(world: { x: number; y: number }): { x: number; y: number } {
   const boardCenter = getBoardCenterWorld();
-  const angleRad = (effectiveBoardRotationDeg() * Math.PI) / 180;
+  const angleRad = (effectiveFieldRotationDeg() * Math.PI) / 180;
   const dx = world.x - boardCenter.x;
   const dy = world.y - boardCenter.y;
   const rotatedX = boardCenter.x + dx * Math.cos(angleRad) - dy * Math.sin(angleRad);
@@ -4288,7 +4339,7 @@ function getBoardDecorOverlayLayoutPx(): {
 
 function updateBoardDesertUnderlayTransform(): void {
   const { center, widthPx, heightPx } = getBoardDecorOverlayLayoutPx();
-  const visualRotation = effectiveBoardRotationDeg() + desertUnderlayExtraRotationDeg;
+  const visualRotation = effectiveFieldRotationDeg() + desertUnderlayExtraRotationDeg;
   boardDesertUnderlay.style.left = `${center.x}px`;
   boardDesertUnderlay.style.top = `${center.y}px`;
   boardDesertUnderlay.style.width = `${widthPx}px`;
@@ -4298,7 +4349,7 @@ function updateBoardDesertUnderlayTransform(): void {
 
 function updateBoardGridOverlayTransform(): void {
   const { center, widthPx, heightPx } = getBoardDecorOverlayLayoutPx();
-  const visualRotation = effectiveBoardRotationDeg() + GRID_OVERLAY_EXTRA_ROTATION_DEG;
+  const visualRotation = effectiveFieldRotationDeg() + GRID_OVERLAY_EXTRA_ROTATION_DEG;
 
   boardGridOverlay.style.left = `${center.x + gridOverlayOffsetScreenX}px`;
   boardGridOverlay.style.top = `${center.y + gridOverlayOffsetScreenY}px`;
@@ -4418,10 +4469,10 @@ function getLargeMiniHealthUiGeometry(
     LARGE_MINI_VISUAL_SCALE *
     LARGE_UNIT_HEALTH_UI_SCALE *
     0.48;
-  // Model rotation only — matches renderer large tri (see drawLargeMiniatures).
+  // Model + content-vs-field delta — matches renderer large tri (see drawLargeMiniatures).
   const badgeCenterWorld = largeMiniHealthBadgeCenterWorld(
     anchorWorld,
-    rotationDeg,
+    rotationDeg + contentFieldRotationDeltaDeg(),
     layout,
   );
   const buttonRadiusWorld =
@@ -4484,7 +4535,7 @@ function getHugeMiniHealthUiGeometry(
     0.48;
   const badgeCenterWorld = hugeMiniHealthBadgeCenterWorld(
     anchorWorld,
-    unitRotationDegForMiniatureLocalUi(rotationDeg),
+    rotationDeg + contentFieldRotationDeltaDeg(),
     layout,
   );
   const buttonRadiusWorld =
@@ -7151,6 +7202,7 @@ function parseEtherDomain(d: unknown): EtherVortexDomainId | null {
 function captureBoardSnapshot(): SerializedBoardStateV1 {
   return {
     v: 1,
+    boardOrientation: scenarioBoardOrientation,
     units: units.map((u) => ({
       position: { q: u.position.q, r: u.position.r },
       offBoardWorld: u.offBoardWorld,
@@ -7349,6 +7401,7 @@ function applyBoardSnapshot(raw: unknown): void {
     return;
   }
   const s = raw;
+  setScenarioBoardOrientation(s.boardOrientation ?? 'horizontal');
   if (!shouldPreserveLocalInteractionState()) {
     resetTransientMultiplayerInteractionState();
   }
@@ -7517,6 +7570,41 @@ registerBoardSyncApi({
   apply: applyBoardSnapshot,
 });
 
+export function applyScenarioPayload(raw: unknown): ApplyScenarioResult {
+  return applyScenarioDocument(raw, {
+    applyBoardSnapshot,
+    setBoardOrientation: setScenarioBoardOrientation,
+    notifyBoardEditLocal,
+  });
+}
+
+function buildCustomScenarioDocument(meta: {
+  name: string;
+  description: string;
+  tags: string[];
+  difficulty: 'easy' | 'normal' | 'hard';
+}): ScenarioDocument {
+  return {
+    id: newScenarioDocumentId(),
+    version: 1,
+    kind: 'custom',
+    meta: {
+      ...meta,
+      updatedAt: new Date().toISOString(),
+    },
+    boardOrientation: scenarioBoardOrientation,
+    snapshot: captureBoardSnapshot(),
+  };
+}
+
+const scenariosPanel = createScenariosPanel({
+  buildCustomScenarioDocument,
+  applyScenario: applyScenarioPayload,
+  afterScenarioMutation: () => {
+    scheduleRender();
+  },
+});
+
 function mountTouchBoardActionsBar(): void {
   const bar = document.createElement('div');
   bar.className = 'touch-board-actions';
@@ -7577,6 +7665,7 @@ mountAppMoreMenu(toolbarMountEl, {
   onCatalogEditor: () => catalogEditorPanel.setOpen(true),
   onInstallApp: pwaInstallHandle ? () => pwaInstallHandle.open() : undefined,
   onSettings: () => appSettingsHandle.open(),
+  onScenarios: () => scenariosPanel.open(),
 });
 mountTouchBoardActionsBar();
 

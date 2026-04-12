@@ -161,6 +161,8 @@ function validCrystalWalletSlotRecord(o: unknown): boolean {
 
 export type SerializedBoardStateV1 = {
   v: 1;
+  /** Scenario-level board orientation; optional for backward compatibility with legacy snapshots. */
+  boardOrientation?: 'horizontal' | 'vertical';
   units: SerializedUnit[];
   unitCardData: UnitCardData[];
   bigMiniatures: SerializedBigMini[];
@@ -367,6 +369,14 @@ export function isSerializedBoardStateV1(raw: unknown): raw is SerializedBoardSt
   if (!raw || typeof raw !== 'object') return false;
   const o = raw as SerializedBoardStateV1;
   if (o.v !== 1) return false;
+  const boardOrientation = (o as { boardOrientation?: unknown }).boardOrientation;
+  if (
+    boardOrientation !== undefined &&
+    boardOrientation !== 'horizontal' &&
+    boardOrientation !== 'vertical'
+  ) {
+    return false;
+  }
   if (!Array.isArray(o.units) || !Array.isArray(o.unitCardData)) return false;
   if (!Array.isArray(o.bigMiniatures) || !Array.isArray(o.bigMiniCardData)) return false;
   if (!Array.isArray(o.largeMiniatures) || !Array.isArray(o.largeMiniCardData)) return false;

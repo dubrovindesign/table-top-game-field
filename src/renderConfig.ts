@@ -10,6 +10,12 @@ export interface RenderConfig {
   hexonBorderWidth: number;
   boardRotationDeg: number;
   /**
+   * `effectiveContentRotationDeg − effectiveFieldRotationDeg` (typically 0 or −90° for vertical scenario).
+   * Cancels scenario orientation on content-facing draws (miniatures, god cards, HP text) while the field
+   * layer uses {@link boardRotationDeg}.
+   */
+  contentFieldRotationDeltaDeg: number;
+  /**
    * Added to model rotation when placing/drawing miniature sprites, HP, toggles, markers (not hex silhouettes).
    * Use -180 with boardRotationDeg +180 (opposite seat) so art stays upright on screen; hex positions unchanged.
    */
@@ -73,6 +79,7 @@ export const defaultRenderConfig: RenderConfig = {
   hexonGapColor: '#1a1a1a',
   hexonBorderWidth: 8,
   boardRotationDeg: 0,
+  contentFieldRotationDeltaDeg: 0,
   oppositeSeatUnitRotationCorrectionDeg: 0,
   backgroundImageSrc: null,
   backgroundImageOpacity: 1,

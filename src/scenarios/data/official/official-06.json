@@ -1,0 +1,30 @@
+{
+  "id": "official-06",
+  "version": 1,
+  "kind": "official",
+  "meta": {
+    "name": "Official Scenario 6",
+    "description": "Minimal official placeholder scenario 6.",
+    "tags": [
+      "official"
+    ],
+    "difficulty": "hard"
+  },
+  "boardOrientation": "horizontal",
+  "snapshot": {
+    "v": 1,
+    "units": [],
+    "unitCardData": [],
+    "bigMiniatures": [],
+    "bigMiniCardData": [],
+    "largeMiniatures": [],
+    "largeMiniCardData": [],
+    "hugeMiniatures": [],
+    "hugeMiniCardData": [],
+    "terrains": [],
+    "terrainOffBoardWorlds": [],
+    "terrainRotationDegs": [],
+    "etherVortexes": [],
+    "godTablePieces": []
+  }
+}

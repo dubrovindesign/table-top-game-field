@@ -7,6 +7,7 @@ export type AppMoreMenuOptions = {
   /** Если null — пункт «Установить» скрыт (уже PWA). */
   onInstallApp?: () => void | Promise<void>;
   onSettings: () => void;
+  onScenarios: () => void;
 };
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -96,6 +97,8 @@ export function mountAppMoreMenu(toolbarMount: HTMLElement, opts: AppMoreMenuOpt
   }
 
   addItem('Редактор каталога', () => opts.onCatalogEditor());
+
+  addItem('Сценарии', () => opts.onScenarios());
 
   if (opts.onInstallApp) {
     const install = opts.onInstallApp;

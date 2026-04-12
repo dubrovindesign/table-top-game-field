@@ -3706,6 +3706,329 @@ select option {
   font-weight: 600;
 }
 
+/* ── Сценарии (меню ⋯ → Сценарии) ─────────────────────────────── */
+
+.scenarios-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 26500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  box-sizing: border-box;
+  background: rgba(6, 8, 14, 0.58);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  pointer-events: auto;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.scenarios-panel-backdrop--hidden {
+  display: none !important;
+}
+
+.scenarios-panel {
+  width: min(760px, 100%);
+  max-height: min(88vh, 100%);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: rgba(20, 21, 28, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+}
+
+.scenarios-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.scenarios-panel-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #f3f4f6;
+}
+
+.scenarios-panel-close {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8e8f0;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.scenarios-panel-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.scenarios-panel-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px 0;
+  flex-shrink: 0;
+}
+
+.scenarios-panel-tab {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.scenarios-panel-tab:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.scenarios-panel-tab--active {
+  background: rgba(99, 102, 241, 0.35);
+  border-color: rgba(165, 180, 252, 0.45);
+  color: #f3f4f6;
+}
+
+.scenarios-panel-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 16px 0;
+  flex-shrink: 0;
+}
+
+.scenarios-panel-toolbar--hidden {
+  display: none !important;
+}
+
+.scenarios-panel-file-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.scenarios-panel-body {
+  padding: 12px 16px 8px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  min-height: 0;
+}
+
+.scenarios-card-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.scenarios-panel-empty {
+  padding: 20px 8px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.55);
+  text-align: center;
+}
+
+.scenarios-card {
+  padding: 14px 14px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.scenarios-card-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f3f4f6;
+  margin-bottom: 6px;
+}
+
+.scenarios-card-desc {
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.72);
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+
+.scenarios-card-tags {
+  font-size: 12px;
+  color: rgba(147, 197, 253, 0.95);
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+
+.scenarios-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.scenarios-card-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.scenarios-card-pill--muted {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.scenarios-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scenarios-panel-btn {
+  padding: 8px 14px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8e8f0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.scenarios-panel-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.scenarios-panel-btn--small {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.scenarios-panel-btn--primary {
+  background: rgba(99, 102, 241, 0.45);
+  border-color: rgba(165, 180, 252, 0.4);
+}
+
+.scenarios-panel-btn--primary:hover {
+  background: rgba(99, 102, 241, 0.58);
+}
+
+.scenarios-panel-btn--secondary {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.scenarios-panel-btn--danger {
+  border-color: rgba(248, 113, 113, 0.45);
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.35);
+}
+
+.scenarios-panel-btn--danger:hover {
+  background: rgba(153, 27, 27, 0.45);
+}
+
+.scenarios-create-section {
+  padding: 12px 16px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.scenarios-create-section--hidden {
+  display: none !important;
+}
+
+.scenarios-create-heading {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.scenarios-field {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 11px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.25);
+  color: #f3f4f6;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.scenarios-field--textarea {
+  resize: vertical;
+  min-height: 56px;
+}
+
+.scenarios-meta-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 26600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(4, 6, 12, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.scenarios-meta-overlay--hidden {
+  display: none !important;
+}
+
+.scenarios-meta-dialog {
+  width: min(420px, 100%);
+  max-height: min(80vh, 100%);
+  overflow: auto;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(24, 25, 32, 0.98);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scenarios-meta-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f3f4f6;
+  margin-bottom: 4px;
+}
+
+.scenarios-meta-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+
 /* ── PWA: установить приложение (рядом с Армия / Мультиплеер) ─── */
 
 .pwa-install-toolbar-anchor {

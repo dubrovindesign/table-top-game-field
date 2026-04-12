@@ -46,6 +46,11 @@ import {
 import { EFFECT_MARKERS, type EffectMarkerId } from './effectMarkerMenu';
 import type { TableDragKind, TableDragState } from './multiplayer/protocol.ts';
 import { defaultRenderConfig, type RenderConfig } from './renderConfig';
+import { deriveMiniVisualFacingDeg } from './scenarios/miniatureRotationModel.ts';
+import {
+  GOD_TABLE_CARD_ROT_CW_DEG,
+  godTableCardContentVisualRotationDeg,
+} from './scenarios/rotationModel.ts';
 
 export type { RenderConfig };
 export { defaultRenderConfig };
@@ -59,8 +64,7 @@ export const GOD_TABLE_CARD_HH = Math.round(93 * 0.8);
 /** Inventory item markers on the table — half-extents in world space (aligned with `INVENTORY_ITEM_HIT_R` in main). */
 export const INVENTORY_TABLE_MARKER_HW = 48;
 export const INVENTORY_TABLE_MARKER_HH = 48;
-/** Clockwise tilt for all god table cards (canvas °; positive = clockwise). */
-export const GOD_TABLE_CARD_ROT_CW_DEG = 10;
+export { GOD_TABLE_CARD_ROT_CW_DEG };
 /** Double-click flip duration (ms). */
 export const GOD_TABLE_CARD_FLIP_MS = 400;
 /** Transient ping intent arrow — full lifetime including fade-out (ms). */
@@ -298,6 +302,33 @@ export class Renderer {
     return (this.config.oppositeSeatUnitRotationCorrectionDeg * Math.PI) / 180;
   }
 
+  private get contentFieldRotationDeltaRad(): number {
+    return (this.config.contentFieldRotationDeltaDeg * Math.PI) / 180;
+  }
+
+  /** Small/big mini: model + seat + scenario delta — HP, effects, toggles (content layer). */
+  private contentLayerVisualRotationDeg(rotDegModel: number): number {
+    return (
+      rotDegModel +
+      this.config.oppositeSeatUnitRotationCorrectionDeg +
+      this.config.contentFieldRotationDeltaDeg
+    );
+  }
+
+  /** Small mini sprite/overlays: logical facing + seat; scenario orientation does not add field tilt. */
+  private smallUnitVisualRotationDeg(logicalDeg: number): number {
+    return deriveMiniVisualFacingDeg({
+      logicalDeg,
+      seatExtraDeg: this.config.oppositeSeatUnitRotationCorrectionDeg,
+      scenarioOrientation: 'horizontal',
+    });
+  }
+
+  /** Large/huge silhouette basis: model + scenario delta (seat applies inside sprite clip only). */
+  private contentLayerModelRotationDeg(rotDegModel: number): number {
+    return rotDegModel + this.config.contentFieldRotationDeltaDeg;
+  }
+
   /** World-space bitmap drawn upright when opposite-seat correction is active (effect icons, etc.). */
   private drawImageUprightForOppositeSeat(
     ctx: CanvasRenderingContext2D,
@@ -308,13 +339,14 @@ export class Renderer {
     h: number,
   ): void {
     const f = this.oppositeSeatMiniatureRadFix;
-    if (f === 0) {
+    const d = this.contentFieldRotationDeltaRad;
+    if (f === 0 && d === 0) {
       ctx.drawImage(img, cx - w / 2, cy - h / 2, w, h);
       return;
     }
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.rotate(-f);
+    ctx.rotate(-f - d);
     ctx.translate(-cx, -cy);
     ctx.drawImage(img, cx - w / 2, cy - h / 2, w, h);
     ctx.restore();
@@ -1048,7 +1080,7 @@ export class Renderer {
         ctx.lineTo(-tailW, neckY);
         ctx.lineTo(-headW, neckY);
         ctx.closePath();
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = m.color;
         ctx.fill();
         ctx.strokeStyle = 'rgba(0,0,0,0.4)';
         ctx.lineWidth = lw;
@@ -1278,10 +1310,19 @@ export class Renderer {
     }
   }
 
+  private godTableCardContentVisualRotationRad(): number {
+    return (
+      (godTableCardContentVisualRotationDeg({
+        oppositeSeatUnitRotationCorrectionDeg: this.config.oppositeSeatUnitRotationCorrectionDeg,
+        contentFieldRotationDeltaDeg: this.config.contentFieldRotationDeltaDeg,
+      }) *
+        Math.PI) /
+      180
+    );
+  }
+
   private applyGodTableCardVisualRotation(ctx: CanvasRenderingContext2D): void {
-    const deg =
-      GOD_TABLE_CARD_ROT_CW_DEG + this.config.oppositeSeatUnitRotationCorrectionDeg;
-    ctx.rotate((deg * Math.PI) / 180);
+    ctx.rotate(this.godTableCardContentVisualRotationRad());
   }
 
   /** Face-up god card rect centered at `world` (board space; scales with camera zoom). */
@@ -1476,10 +1517,13 @@ export class Renderer {
         const pop = godFlipPopUniformScale(t);
         const showFaceUp = t < 0.5 ? anim.fromFaceUp : p.faceUp;
         const { ctx } = this;
+        const flipRad = this.godTableCardContentVisualRotationRad();
         ctx.save();
         ctx.translate(world.x, world.y);
         ctx.scale(pop, pop);
+        ctx.rotate(flipRad);
         ctx.scale(scaleX, 1);
+        ctx.rotate(-flipRad);
         ctx.translate(-world.x, -world.y);
         this.drawGodTablePieceWithFace(p, world, showFaceUp);
         ctx.restore();
@@ -1652,14 +1696,13 @@ export class Renderer {
     const center = offBoard ?? layout.hexToPixel(unitHex);
     const rotDegModel = this.unitRotationDeg[index] ?? 0;
     const rotRadModel = (rotDegModel * Math.PI) / 180;
-    const rotRadVisual =
-      ((rotDegModel + this.config.oppositeSeatUnitRotationCorrectionDeg) * Math.PI) / 180;
+    const rotRadVisual = (this.smallUnitVisualRotationDeg(rotDegModel) * Math.PI) / 180;
     const sprite = this.getSpriteImage(this.unitSpriteSrcs[index] ?? null);
 
     this.drawSmallUnitInHex(center, rotRadModel, sprite, () => {
       ctx.save();
       ctx.translate(center.x, center.y);
-      ctx.rotate(rotRadModel);
+      ctx.rotate(rotRadVisual);
       const offs = [0, 1, 2, 3, 4, 5].map((i) => layout.hexCornerOffset(i));
       ctx.beginPath();
       this.roundHexPathLocal(ctx, offs, this.smallUnitHexCornerRadius());
@@ -1678,7 +1721,7 @@ export class Renderer {
     });
 
     if (drawSelectionRing) {
-      this.strokeHexAtCenterRotated(center, rotRadModel, '#4caf50', 2.5);
+      this.strokeSmallUnitHexAtCenterRotated(center, rotDegModel, '#4caf50', 2.5);
     }
 
     this.drawHealthBadgeAt(
@@ -1729,8 +1772,7 @@ export class Renderer {
       const pv = this.dragPreviewPosition;
       const rotDegModel = this.unitRotationDeg[uIdx] ?? 0;
       const rotRadModel = (rotDegModel * Math.PI) / 180;
-      const rotRadVisual =
-        ((rotDegModel + this.config.oppositeSeatUnitRotationCorrectionDeg) * Math.PI) / 180;
+      const rotRadVisual = (this.smallUnitVisualRotationDeg(rotDegModel) * Math.PI) / 180;
       const sprite = this.getSpriteImage(
         this.unitSpriteSrcs[uIdx] ?? null,
       );
@@ -1738,7 +1780,7 @@ export class Renderer {
         this.drawSmallUnitInHex(pv, rotRadModel, sprite, () => {
           ctx.save();
           ctx.translate(pv.x, pv.y);
-          ctx.rotate(rotRadModel);
+          ctx.rotate(rotRadVisual);
           const offs = [0, 1, 2, 3, 4, 5].map((i) => layout.hexCornerOffset(i));
           ctx.beginPath();
           this.roundHexPathLocal(ctx, offs, this.smallUnitHexCornerRadius());
@@ -1783,8 +1825,7 @@ export class Renderer {
       const pos = { x: d.worldX, y: d.worldY };
       const rotDegModel = this.unitRotationDeg[idx] ?? 0;
       const rotRadModel = (rotDegModel * Math.PI) / 180;
-      const rotRadVisual =
-        ((rotDegModel + this.config.oppositeSeatUnitRotationCorrectionDeg) * Math.PI) / 180;
+      const rotRadVisual = (this.smallUnitVisualRotationDeg(rotDegModel) * Math.PI) / 180;
       const sprite = this.getSpriteImage(this.unitSpriteSrcs[idx] ?? null);
       this.withTablePieceDragLift(pos, () => {
         ctx.save();
@@ -1792,7 +1833,7 @@ export class Renderer {
         this.drawSmallUnitInHex(pos, rotRadModel, sprite, () => {
           ctx.save();
           ctx.translate(pos.x, pos.y);
-          ctx.rotate(rotRadModel);
+          ctx.rotate(rotRadVisual);
           const offs = [0, 1, 2, 3, 4, 5].map((i) => layout.hexCornerOffset(i));
           ctx.beginPath();
           this.roundHexPathLocal(ctx, offs, this.smallUnitHexCornerRadius());
@@ -1823,7 +1864,7 @@ export class Renderer {
           this.drawEffectMarkers(pos, rMarkers, halfH, 'small', rotRadVisual);
         }
         ctx.restore();
-        this.strokeHexAtCenterRotated(pos, rotRadModel, rp.color, 2.4);
+        this.strokeSmallUnitHexAtCenterRotated(pos, rotDegModel, rp.color, 2.4);
       });
     }
   }
@@ -2089,21 +2130,20 @@ export class Renderer {
     const dh = ih * scale;
 
     const cornerR = this.smallUnitHexCornerRadius();
+    const logicalDeg = (rotRad * 180) / Math.PI;
+    const visualRad = (this.smallUnitVisualRotationDeg(logicalDeg) * Math.PI) / 180;
     ctx.save();
     ctx.translate(centerWorld.x, centerWorld.y);
-    ctx.rotate(rotRad);
+    ctx.rotate(visualRad);
     ctx.beginPath();
     this.roundHexPathLocal(ctx, offs, cornerR);
     ctx.clip();
-    const f = this.oppositeSeatMiniatureRadFix;
-    if (f !== 0) ctx.rotate(f);
     ctx.drawImage(sprite, -dw / 2, -dh / 2, dw, dh);
-    if (f !== 0) ctx.rotate(-f);
     ctx.restore();
 
     ctx.save();
     ctx.translate(centerWorld.x, centerWorld.y);
-    ctx.rotate(rotRad);
+    ctx.rotate(visualRad);
     ctx.beginPath();
     this.roundHexPathLocal(ctx, offs, cornerR);
     ctx.strokeStyle = config.unitStrokeColor;
@@ -2112,17 +2152,19 @@ export class Renderer {
     ctx.restore();
   }
 
-  private strokeHexAtCenterRotated(
+  /** Selection ring for small units: matches {@link smallUnitVisualRotationDeg} (no scenario field tilt). */
+  private strokeSmallUnitHexAtCenterRotated(
     centerWorld: Point,
-    rotRad: number,
+    logicalDeg: number,
     color: string,
     width: number,
   ): void {
     const { ctx, layout } = this;
     const offs = [0, 1, 2, 3, 4, 5].map((i) => layout.hexCornerOffset(i));
+    const visualRad = (this.smallUnitVisualRotationDeg(logicalDeg) * Math.PI) / 180;
     ctx.save();
     ctx.translate(centerWorld.x, centerWorld.y);
-    ctx.rotate(rotRad);
+    ctx.rotate(visualRad);
     ctx.beginPath();
     this.roundHexPathLocal(ctx, offs, this.smallUnitHexCornerRadius());
     ctx.strokeStyle = color;
@@ -2193,10 +2235,14 @@ export class Renderer {
     ctx.stroke();
 
     const fixDeg = this.config.oppositeSeatUnitRotationCorrectionDeg;
-    if (fixDeg !== 0) {
+    const tiltDeg =
+      verticalPlacement === 'insideHexSmallUnit'
+        ? this.smallUnitVisualRotationDeg(0)
+        : this.config.contentFieldRotationDeltaDeg - fixDeg;
+    if (tiltDeg !== 0) {
       ctx.save();
       ctx.translate(badgeCenter.x, badgeCenter.y);
-      ctx.rotate((-fixDeg * Math.PI) / 180);
+      ctx.rotate((tiltDeg * Math.PI) / 180);
       ctx.translate(-badgeCenter.x, -badgeCenter.y);
     }
     ctx.fillStyle = '#ffffff';
@@ -2206,7 +2252,7 @@ export class Renderer {
     ctx.fillText(String(health), badgeCenter.x, badgeCenter.y);
 
     if (!showPlusMinus) {
-      if (fixDeg !== 0) ctx.restore();
+      if (tiltDeg !== 0) ctx.restore();
       return;
     }
 
@@ -2224,7 +2270,7 @@ export class Renderer {
       buttonRadius,
       '+',
     );
-    if (fixDeg !== 0) ctx.restore();
+    if (tiltDeg !== 0) ctx.restore();
   }
 
   /** Activation state: yellow = active, gray = inactive (board/world space). */
@@ -2902,7 +2948,7 @@ export class Renderer {
       const { x: hcx, y: hcy } = this.localBoundsCenter(hb);
       ctx.save();
       ctx.translate(p.x, p.y);
-      ctx.rotate(rotRad);
+      ctx.rotate(rotRad + this.contentFieldRotationDeltaRad);
       ctx.scale(BIG_MINI_VISUAL_SCALE, BIG_MINI_VISUAL_SCALE);
       ctx.translate(-hcx, -hcy);
       ctx.beginPath();
@@ -2925,7 +2971,7 @@ export class Renderer {
       const rotRad = (rotDeg * Math.PI) / 180;
       ctx.save();
       ctx.translate(anchorP.x, anchorP.y);
-      ctx.rotate(rotRad);
+      ctx.rotate(rotRad + this.contentFieldRotationDeltaRad);
       ctx.scale(LARGE_MINI_VISUAL_SCALE, LARGE_MINI_VISUAL_SCALE);
       ctx.translate(0, 0);
       ctx.beginPath();
@@ -2949,7 +2995,7 @@ export class Renderer {
       const { x: ucx, y: ucy } = this.localBoundsCenter(ub);
       ctx.save();
       ctx.translate(pivotP.x, pivotP.y);
-      ctx.rotate(rotRad);
+      ctx.rotate(rotRad + this.contentFieldRotationDeltaRad);
       ctx.scale(HUGE_MINI_VISUAL_SCALE, HUGE_MINI_VISUAL_SCALE);
       ctx.translate(-ucx, -ucy);
       ctx.beginPath();
@@ -3118,8 +3164,9 @@ export class Renderer {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         const fixDeg = this.config.oppositeSeatUnitRotationCorrectionDeg;
-        if (fixDeg !== 0) {
-          ctx.rotate((-fixDeg * Math.PI) / 180);
+        const tiltDeg = this.config.contentFieldRotationDeltaDeg - fixDeg;
+        if (tiltDeg !== 0) {
+          ctx.rotate((tiltDeg * Math.PI) / 180);
         }
         ctx.fillText(String(v.etherCrystals), 0, 0);
         ctx.restore();
@@ -3300,8 +3347,9 @@ export class Renderer {
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           const fixDeg = this.config.oppositeSeatUnitRotationCorrectionDeg;
-          if (fixDeg !== 0) {
-            ctx.rotate((-fixDeg * Math.PI) / 180);
+          const tiltDeg = this.config.contentFieldRotationDeltaDeg - fixDeg;
+          if (tiltDeg !== 0) {
+            ctx.rotate((tiltDeg * Math.PI) / 180);
           }
           ctx.fillText(String(v.etherCrystals), 0, 0);
           ctx.restore();
@@ -3345,8 +3393,9 @@ export class Renderer {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         const fixDeg = this.config.oppositeSeatUnitRotationCorrectionDeg;
-        if (fixDeg !== 0) {
-          ctx.rotate((-fixDeg * Math.PI) / 180);
+        const tiltDeg = this.config.contentFieldRotationDeltaDeg - fixDeg;
+        if (tiltDeg !== 0) {
+          ctx.rotate((tiltDeg * Math.PI) / 180);
         }
         ctx.fillText(String(v.etherCrystals), 0, 0);
         ctx.restore();
@@ -3387,8 +3436,7 @@ export class Renderer {
       if (this.draggingBigMiniIndex === i && this.bigMiniPreviewPosition) {
         const p = this.bigMiniPreviewPosition;
         const previewRotModel = this.bigMiniRotationDeg[i] ?? 0;
-        const previewRotVisual =
-          previewRotModel + this.config.oppositeSeatUnitRotationCorrectionDeg;
+        const previewRotVisual = this.contentLayerVisualRotationDeg(previewRotModel);
         this.withTablePieceDragLift(p, () => {
           this.drawBigMiniHexonAtPoint(
             p,
@@ -3441,7 +3489,8 @@ export class Renderer {
         0.22;
       if (this.draggingHugeMiniIndex === i && this.hugeMiniPreviewPosition) {
         const previewRotModel = this.hugeMiniRotationDeg[i] ?? 0;
-        const previewRotRadModel = (previewRotModel * Math.PI) / 180;
+        const previewRotContent = this.contentLayerModelRotationDeg(previewRotModel);
+        const previewRotRadModel = (previewRotContent * Math.PI) / 180;
         const p = this.hugeMiniPreviewPosition;
         this.withTablePieceDragLift(p, () => {
           this.drawHugeMiniShapeAtPoint(
@@ -3467,11 +3516,11 @@ export class Renderer {
             this.drawEffectMarkers(p, dragMarkers, badgeRadius, 'hugeTri', previewRotRadModel);
           }
           this.drawActivationToggle(
-            hugeMiniActivationToggleCenterFromPivotWorld(p, previewRotModel, layout),
+            hugeMiniActivationToggleCenterFromPivotWorld(p, previewRotContent, layout),
             hugeActR,
             this.hugeMiniActivated[i] !== false,
           );
-          this.drawHugeBroomgarHungerIfAny(p, previewRotModel, i, hugeActR);
+          this.drawHugeBroomgarHungerIfAny(p, previewRotContent, i, hugeActR);
         });
         return;
       }
@@ -3494,7 +3543,8 @@ export class Renderer {
       const largeLocalOrigin: Point = { x: 0, y: 0 };
       if (this.draggingLargeMiniIndex === i && this.largeMiniPreviewPosition) {
         const previewRotModel = this.largeMiniRotationDeg[i] ?? 0;
-        const previewRotRadModel = (previewRotModel * Math.PI) / 180;
+        const previewRotContent = this.contentLayerModelRotationDeg(previewRotModel);
+        const previewRotRadModel = (previewRotContent * Math.PI) / 180;
         const p = this.largeMiniPreviewPosition;
         const boxW = bounds.maxX - bounds.minX;
         const boxH = bounds.maxY - bounds.minY;
@@ -3524,11 +3574,11 @@ export class Renderer {
             this.drawEffectMarkers(p, dragMarkers, badgeRadius, 'largeTri', previewRotRadModel);
           }
           this.drawActivationToggle(
-            largeMiniActivationToggleCenterWorld(p, previewRotModel, layout),
+            largeMiniActivationToggleCenterWorld(p, previewRotContent, layout),
             largeActR,
             this.largeMiniActivated[i] !== false,
           );
-          this.drawLargeBroomgarHungerIfAny(p, previewRotModel, i, largeActR);
+          this.drawLargeBroomgarHungerIfAny(p, previewRotContent, i, largeActR);
         });
         return;
       }
@@ -3544,14 +3594,13 @@ export class Renderer {
         const pv = this.dragPreviewPosition;
         const rotDegModel = this.unitRotationDeg[i] ?? 0;
         const rotRadModel = (rotDegModel * Math.PI) / 180;
-        const rotRadVisual =
-          ((rotDegModel + this.config.oppositeSeatUnitRotationCorrectionDeg) * Math.PI) / 180;
+        const rotRadVisual = (this.smallUnitVisualRotationDeg(rotDegModel) * Math.PI) / 180;
         const sprite = this.getSpriteImage(this.unitSpriteSrcs[i] ?? null);
         this.withTablePieceDragLift(pv, () => {
           this.drawSmallUnitInHex(pv, rotRadModel, sprite, () => {
             ctx.save();
             ctx.translate(pv.x, pv.y);
-            ctx.rotate(rotRadModel);
+            ctx.rotate(rotRadVisual);
             const offs = [0, 1, 2, 3, 4, 5].map((j) => layout.hexCornerOffset(j));
             ctx.beginPath();
             this.roundHexPathLocal(ctx, offs, this.smallUnitHexCornerRadius());
@@ -3562,7 +3611,7 @@ export class Renderer {
             ctx.stroke();
             ctx.restore();
           });
-          this.strokeHexAtCenterRotated(pv, rotRadModel, '#4caf50', 2.5);
+          this.strokeSmallUnitHexAtCenterRotated(pv, rotDegModel, '#4caf50', 2.5);
           this.drawHealthBadgeAt(
             pv,
             halfH,
@@ -3698,7 +3747,7 @@ export class Renderer {
     const bigActR = baseRadius * BIG_MINI_VISUAL_SCALE * 0.22;
     const offBoard = this.bigMiniOffBoardWorlds[index];
     const rotDegModel = this.bigMiniRotationDeg[index] ?? 0;
-    const rotDegVisual = rotDegModel + this.config.oppositeSeatUnitRotationCorrectionDeg;
+    const rotDegVisual = this.contentLayerVisualRotationDeg(rotDegModel);
     const rotRadVisual = (rotDegVisual * Math.PI) / 180;
 
     if (offBoard) {
@@ -3710,7 +3759,7 @@ export class Renderer {
         this.bigMiniSpriteSrcs[index] ?? null,
       );
       if (drawSelectionRing) {
-        this.drawBigMiniRingAtPoint(offBoard, ringSel, '#4caf50', selStrokeW, rotDegModel);
+        this.drawBigMiniRingAtPoint(offBoard, ringSel, '#4caf50', selStrokeW, rotDegModel, true);
       }
       this.drawHealthBadgeAt(
         offBoard,
@@ -3740,7 +3789,7 @@ export class Renderer {
         this.bigMiniSpriteSrcs[index] ?? null,
       );
       if (drawSelectionRing) {
-        this.drawBigMiniRing(center, ringSel, '#4caf50', selStrokeW, rotDegModel);
+        this.drawBigMiniRing(center, ringSel, '#4caf50', selStrokeW, rotDegModel, true);
       }
       const p = layout.hexToPixel(center);
       this.drawHealthBadgeAt(
@@ -3794,8 +3843,7 @@ export class Renderer {
       const bmIdx = this.draggingBigMiniIndex;
       const previewRotModel =
         bmIdx !== null ? (this.bigMiniRotationDeg[bmIdx] ?? 0) : 0;
-      const previewRotVisual =
-        previewRotModel + this.config.oppositeSeatUnitRotationCorrectionDeg;
+      const previewRotVisual = this.contentLayerVisualRotationDeg(previewRotModel);
       this.withTablePieceDragLift(pv, () => {
         this.drawBigMiniHexonAtPoint(
           pv,
@@ -3840,8 +3888,7 @@ export class Renderer {
       if (d.index < 0 || d.index >= this.bigMiniCenters.length) continue;
       const idx = d.index;
       const previewRotModel = this.bigMiniRotationDeg[idx] ?? 0;
-      const previewRotVisual =
-        previewRotModel + this.config.oppositeSeatUnitRotationCorrectionDeg;
+      const previewRotVisual = this.contentLayerVisualRotationDeg(previewRotModel);
       const p = { x: d.worldX, y: d.worldY };
       ctx.save();
       this.withTablePieceDragLift(p, () => {
@@ -3860,6 +3907,7 @@ export class Renderer {
           rp.color,
           2.5,
           previewRotModel,
+          true,
         );
         ctx.globalAlpha = 1;
         this.drawHealthBadgeAt(
@@ -3923,7 +3971,7 @@ export class Renderer {
 
     ctx.save();
     ctx.translate(point.x, point.y);
-    ctx.rotate(rotRad);
+    ctx.rotate(rotRad + this.contentFieldRotationDeltaRad);
     ctx.scale(BIG_MINI_VISUAL_SCALE, BIG_MINI_VISUAL_SCALE);
     ctx.translate(-pcx, -pcy);
     const sprite = this.getSpriteImage(spriteSrc);
@@ -3991,10 +4039,11 @@ export class Renderer {
     strokeColor: string,
     width: number,
     rotationDeg: number,
+    applyContentCompensation = false,
   ): void {
     const { layout } = this;
     const p = layout.hexToPixel(center);
-    this.drawBigMiniRingAtPoint(p, pathScale, strokeColor, width, rotationDeg);
+    this.drawBigMiniRingAtPoint(p, pathScale, strokeColor, width, rotationDeg, applyContentCompensation);
   }
 
   private drawBigMiniRingAtPoint(
@@ -4003,6 +4052,8 @@ export class Renderer {
     strokeColor: string,
     width: number,
     rotationDeg = 0,
+    /** Miniatures only — terrain/ether rings follow field rotation without scenario content cancel. */
+    applyContentCompensation = false,
   ): void {
     const { ctx, layout } = this;
     const rotRad = (rotationDeg * Math.PI) / 180;
@@ -4011,7 +4062,7 @@ export class Renderer {
     const lineW = width / pathScale;
     ctx.save();
     ctx.translate(point.x, point.y);
-    ctx.rotate(rotRad);
+    ctx.rotate(rotRad + (applyContentCompensation ? this.contentFieldRotationDeltaRad : 0));
     ctx.scale(pathScale, pathScale);
     ctx.translate(-hcx, -hcy);
     ctx.beginPath();
@@ -4201,7 +4252,8 @@ export class Renderer {
     const largeLocalOrigin: Point = { x: 0, y: 0 };
     const offBoard = this.largeMiniOffBoardWorlds[index];
     const rotDegModel = this.largeMiniRotationDeg[index] ?? 0;
-    const rotRadModel = (rotDegModel * Math.PI) / 180;
+    const rotDegContent = this.contentLayerModelRotationDeg(rotDegModel);
+    const rotRadContent = (rotDegContent * Math.PI) / 180;
     const pivot = offBoard ?? layout.hexToPixel(anchor);
 
     this.drawLargeMiniShapeAtPoint(
@@ -4235,17 +4287,17 @@ export class Renderer {
       this.openHealthControlsLargeMiniIndex === index,
       LARGE_UNIT_HEALTH_UI_SCALE,
       'insideHexLargeUnit',
-      rotRadModel,
+      rotRadContent,
     );
     this.drawActivationToggle(
-      largeMiniActivationToggleCenterWorld(pivot, rotDegModel, layout),
+      largeMiniActivationToggleCenterWorld(pivot, rotDegContent, layout),
       largeActR,
       this.largeMiniActivated[index] !== false,
     );
-    this.drawLargeBroomgarHungerIfAny(pivot, rotDegModel, index, largeActR);
+    this.drawLargeBroomgarHungerIfAny(pivot, rotDegContent, index, largeActR);
     const markers = this.largeMiniEffectMarkers[index];
     if (markers && markers.length > 0) {
-      this.drawEffectMarkers(pivot, markers, badgeRadius, 'largeTri', rotRadModel);
+      this.drawEffectMarkers(pivot, markers, badgeRadius, 'largeTri', rotRadContent);
     }
   }
 
@@ -4281,7 +4333,8 @@ export class Renderer {
     ) {
       const previewRotModel = this.draggingLargeMiniIndex !== null
         ? (this.largeMiniRotationDeg[this.draggingLargeMiniIndex] ?? 0) : 0;
-      const previewRotRadModel = (previewRotModel * Math.PI) / 180;
+      const previewRotContent = this.contentLayerModelRotationDeg(previewRotModel);
+      const previewRotRadModel = (previewRotContent * Math.PI) / 180;
       const p = this.largeMiniPreviewPosition;
       this.withTablePieceDragLift(p, () => {
         this.drawLargeMiniShapeAtPoint(
@@ -4311,13 +4364,13 @@ export class Renderer {
             );
           }
           this.drawActivationToggle(
-            largeMiniActivationToggleCenterWorld(p, previewRotModel, layout),
+            largeMiniActivationToggleCenterWorld(p, previewRotContent, layout),
             largeActR,
             this.largeMiniActivated[this.draggingLargeMiniIndex] !== false,
           );
           this.drawLargeBroomgarHungerIfAny(
             p,
-            previewRotModel,
+            previewRotContent,
             this.draggingLargeMiniIndex,
             largeActR,
           );
@@ -4331,7 +4384,8 @@ export class Renderer {
       if (d.index < 0 || d.index >= this.largeMiniAnchors.length) continue;
       const idx = d.index;
       const previewRotModel = this.largeMiniRotationDeg[idx] ?? 0;
-      const previewRotRadModel = (previewRotModel * Math.PI) / 180;
+      const previewRotContent = this.contentLayerModelRotationDeg(previewRotModel);
+      const previewRotRadModel = (previewRotContent * Math.PI) / 180;
       const p = { x: d.worldX, y: d.worldY };
       ctx.save();
       this.withTablePieceDragLift(p, () => {
@@ -4359,11 +4413,11 @@ export class Renderer {
           this.drawEffectMarkers(p, rLm, badgeRadius, 'largeTri', previewRotRadModel);
         }
         this.drawActivationToggle(
-          largeMiniActivationToggleCenterWorld(p, previewRotModel, layout),
+          largeMiniActivationToggleCenterWorld(p, previewRotContent, layout),
           largeActR,
           this.largeMiniActivated[idx] !== false,
         );
-        this.drawLargeBroomgarHungerIfAny(p, previewRotModel, idx, largeActR);
+        this.drawLargeBroomgarHungerIfAny(p, previewRotContent, idx, largeActR);
       });
       ctx.restore();
     }
@@ -4388,7 +4442,7 @@ export class Renderer {
 
     ctx.save();
     ctx.translate(point.x, point.y);
-    ctx.rotate(rotRad);
+    ctx.rotate(rotRad + this.contentFieldRotationDeltaRad);
     ctx.scale(LARGE_MINI_VISUAL_SCALE, LARGE_MINI_VISUAL_SCALE);
     ctx.translate(-pcx, -pcy);
 
@@ -4473,7 +4527,8 @@ export class Renderer {
       0.22;
     const offBoard = this.hugeMiniOffBoardWorlds[index];
     const rotDegModel = this.hugeMiniRotationDeg[index] ?? 0;
-    const rotRadModel = (rotDegModel * Math.PI) / 180;
+    const rotDegContent = this.contentLayerModelRotationDeg(rotDegModel);
+    const rotRadContent = (rotDegContent * Math.PI) / 180;
     const pivot = offBoard ?? hugeMiniDrawPivotWorld(anchor, rotDegModel, layout);
 
     this.drawHugeMiniShapeAtPoint(
@@ -4496,17 +4551,17 @@ export class Renderer {
       this.openHealthControlsHugeMiniIndex === index,
       HUGE_UNIT_HEALTH_UI_SCALE,
       'insideHexHugeUnit',
-      rotRadModel,
+      rotRadContent,
     );
     this.drawActivationToggle(
-      hugeMiniActivationToggleCenterFromPivotWorld(pivot, rotDegModel, layout),
+      hugeMiniActivationToggleCenterFromPivotWorld(pivot, rotDegContent, layout),
       hugeActR,
       this.hugeMiniActivated[index] !== false,
     );
-    this.drawHugeBroomgarHungerIfAny(pivot, rotDegModel, index, hugeActR);
+    this.drawHugeBroomgarHungerIfAny(pivot, rotDegContent, index, hugeActR);
     const markers = this.hugeMiniEffectMarkers[index];
     if (markers && markers.length > 0) {
-      this.drawEffectMarkers(pivot, markers, badgeRadius, 'hugeTri', rotRadModel);
+      this.drawEffectMarkers(pivot, markers, badgeRadius, 'hugeTri', rotRadContent);
     }
   }
 
@@ -4544,7 +4599,8 @@ export class Renderer {
     ) {
       const previewRotModel = this.draggingHugeMiniIndex !== null
         ? (this.hugeMiniRotationDeg[this.draggingHugeMiniIndex] ?? 0) : 0;
-      const previewRotRadModel = (previewRotModel * Math.PI) / 180;
+      const previewRotContent = this.contentLayerModelRotationDeg(previewRotModel);
+      const previewRotRadModel = (previewRotContent * Math.PI) / 180;
       const p = this.hugeMiniPreviewPosition;
       this.withTablePieceDragLift(p, () => {
         this.drawHugeMiniShapeAtPoint(
@@ -4580,13 +4636,13 @@ export class Renderer {
             );
           }
           this.drawActivationToggle(
-            hugeMiniActivationToggleCenterFromPivotWorld(p, previewRotModel, layout),
+            hugeMiniActivationToggleCenterFromPivotWorld(p, previewRotContent, layout),
             hugeActR,
             this.hugeMiniActivated[this.draggingHugeMiniIndex] !== false,
           );
           this.drawHugeBroomgarHungerIfAny(
             p,
-            previewRotModel,
+            previewRotContent,
             this.draggingHugeMiniIndex,
             hugeActR,
           );
@@ -4600,7 +4656,8 @@ export class Renderer {
       if (d.index < 0 || d.index >= this.hugeMiniAnchors.length) continue;
       const idx = d.index;
       const previewRotModel = this.hugeMiniRotationDeg[idx] ?? 0;
-      const previewRotRadModel = (previewRotModel * Math.PI) / 180;
+      const previewRotContent = this.contentLayerModelRotationDeg(previewRotModel);
+      const previewRotRadModel = (previewRotContent * Math.PI) / 180;
       const p = { x: d.worldX, y: d.worldY };
       ctx.save();
       this.withTablePieceDragLift(p, () => {
@@ -4638,11 +4695,11 @@ export class Renderer {
           this.drawEffectMarkers(p, rHm, badgeRadius, 'hugeTri', previewRotRadModel);
         }
         this.drawActivationToggle(
-          hugeMiniActivationToggleCenterFromPivotWorld(p, previewRotModel, layout),
+          hugeMiniActivationToggleCenterFromPivotWorld(p, previewRotContent, layout),
           hugeActR,
           this.hugeMiniActivated[idx] !== false,
         );
-        this.drawHugeBroomgarHungerIfAny(p, previewRotModel, idx, hugeActR);
+        this.drawHugeBroomgarHungerIfAny(p, previewRotContent, idx, hugeActR);
       });
       ctx.restore();
     }
@@ -4674,7 +4731,7 @@ export class Renderer {
     ctx.save();
     /** `point` = hugeMiniDrawPivotWorld: в мире совпадает с центром bbox следа — вращение вокруг центра миниатюры. */
     ctx.translate(point.x, point.y);
-    ctx.rotate(rotRad);
+    ctx.rotate(rotRad + this.contentFieldRotationDeltaRad);
     ctx.scale(hs, hs);
     ctx.translate(-pcx, -pcy);
 
@@ -4735,7 +4792,7 @@ export class Renderer {
     const lineW = width / pathScale;
     ctx.save();
     ctx.translate(point.x, point.y);
-    ctx.rotate(rotRad);
+    ctx.rotate(rotRad + this.contentFieldRotationDeltaRad);
     ctx.scale(pathScale, pathScale);
     ctx.translate(-cx, -cy);
     ctx.beginPath();

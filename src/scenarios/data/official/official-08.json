@@ -1,0 +1,30 @@
+{
+  "id": "official-08",
+  "version": 1,
+  "kind": "official",
+  "meta": {
+    "name": "Official Scenario 8",
+    "description": "Minimal official placeholder scenario 8.",
+    "tags": [
+      "official"
+    ],
+    "difficulty": "normal"
+  },
+  "boardOrientation": "horizontal",
+  "snapshot": {
+    "v": 1,
+    "units": [],
+    "unitCardData": [],
+    "bigMiniatures": [],
+    "bigMiniCardData": [],
+    "largeMiniatures": [],
+    "largeMiniCardData": [],
+    "hugeMiniatures": [],
+    "hugeMiniCardData": [],
+    "terrains": [],
+    "terrainOffBoardWorlds": [],
+    "terrainRotationDegs": [],
+    "etherVortexes": [],
+    "godTablePieces": []
+  }
+}

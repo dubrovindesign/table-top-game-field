@@ -1,0 +1,30 @@
+{
+  "id": "official-09",
+  "version": 1,
+  "kind": "official",
+  "meta": {
+    "name": "Official Scenario 9",
+    "description": "Minimal official placeholder scenario 9.",
+    "tags": [
+      "official"
+    ],
+    "difficulty": "hard"
+  },
+  "boardOrientation": "vertical",
+  "snapshot": {
+    "v": 1,
+    "units": [],
+    "unitCardData": [],
+    "bigMiniatures": [],
+    "bigMiniCardData": [],
+    "largeMiniatures": [],
+    "largeMiniCardData": [],
+    "hugeMiniatures": [],
+    "hugeMiniCardData": [],
+    "terrains": [],
+    "terrainOffBoardWorlds": [],
+    "terrainRotationDegs": [],
+    "etherVortexes": [],
+    "godTablePieces": []
+  }
+}

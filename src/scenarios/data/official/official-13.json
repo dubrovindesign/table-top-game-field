@@ -1,0 +1,30 @@
+{
+  "id": "official-13",
+  "version": 1,
+  "kind": "official",
+  "meta": {
+    "name": "Official Scenario 13",
+    "description": "Minimal official placeholder scenario 13.",
+    "tags": [
+      "official"
+    ],
+    "difficulty": "easy"
+  },
+  "boardOrientation": "vertical",
+  "snapshot": {
+    "v": 1,
+    "units": [],
+    "unitCardData": [],
+    "bigMiniatures": [],
+    "bigMiniCardData": [],
+    "largeMiniatures": [],
+    "largeMiniCardData": [],
+    "hugeMiniatures": [],
+    "hugeMiniCardData": [],
+    "terrains": [],
+    "terrainOffBoardWorlds": [],
+    "terrainRotationDegs": [],
+    "etherVortexes": [],
+    "godTablePieces": []
+  }
+}

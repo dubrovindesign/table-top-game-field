@@ -1,0 +1,30 @@
+{
+  "id": "official-18",
+  "version": 1,
+  "kind": "official",
+  "meta": {
+    "name": "Official Scenario 18",
+    "description": "Minimal official placeholder scenario 18.",
+    "tags": [
+      "official"
+    ],
+    "difficulty": "hard"
+  },
+  "boardOrientation": "horizontal",
+  "snapshot": {
+    "v": 1,
+    "units": [],
+    "unitCardData": [],
+    "bigMiniatures": [],
+    "bigMiniCardData": [],
+    "largeMiniatures": [],
+    "largeMiniCardData": [],
+    "hugeMiniatures": [],
+    "hugeMiniCardData": [],
+    "terrains": [],
+    "terrainOffBoardWorlds": [],
+    "terrainRotationDegs": [],
+    "etherVortexes": [],
+    "godTablePieces": []
+  }
+}
