@@ -3826,8 +3826,9 @@ select option {
 
 .ping-intent-fab-host {
   position: fixed;
-  right: max(12px, env(safe-area-inset-right, 0px));
-  bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  left: max(12px, env(safe-area-inset-left, 0px));
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 10020;
   pointer-events: auto;
 }

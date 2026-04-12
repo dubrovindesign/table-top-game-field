@@ -8,6 +8,7 @@ node_modules/
 
 # Build output — rebuild on the host or in CI (see README)
 dist/
+.worktrees/
 
 # Server deploy: npm cache as www-data (see deploy/deploy.sh)
 .npm-cache/

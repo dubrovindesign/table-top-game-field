@@ -65,6 +65,7 @@ export const GOD_TABLE_CARD_ROT_CW_DEG = 10;
 export const GOD_TABLE_CARD_FLIP_MS = 400;
 /** Transient ping intent arrow — full lifetime including fade-out (ms). */
 export const PING_TTL_MS = 1200;
+const PING_POINTER_SVG_SRC = '/pointer.svg';
 /** Uniform scale at flip midpoint: first 50% of flip anim 1→this, last 50% this→1 (subtle «подлёт»). */
 const GOD_TABLE_CARD_FLIP_POP_SCALE = 1.12;
 
@@ -268,6 +269,9 @@ export class Renderer {
 
   /** Local / transient intent pings (animated arrow); independent TTL per marker. */
   private pingMarkers: TransientPingMarker[] = [];
+  private pingPointerImage: HTMLImageElement | null = null;
+  private pingPointerSrcLoaded: string | null = null;
+  private pingPointerSrcFailed: string | null = null;
 
   /** In-flight table drags from other peers (ghost previews). */
   private remotePeerTableDrags: RemotePeerTableDragPaint[] = [];
@@ -955,21 +959,41 @@ export class Renderer {
     }
   }
 
+  private ensurePingPointerLoaded(): void {
+    const src = PING_POINTER_SVG_SRC;
+    if (this.pingPointerSrcLoaded === src || this.pingPointerSrcFailed === src) return;
+    const image = new Image();
+    image.onload = () => {
+      this.pingPointerImage = image;
+      this.pingPointerSrcLoaded = src;
+      this.pingPointerSrcFailed = null;
+    };
+    image.onerror = () => {
+      this.pingPointerImage = null;
+      this.pingPointerSrcLoaded = null;
+      this.pingPointerSrcFailed = src;
+    };
+    image.src = src;
+  }
+
   /** Intent ping arrows — fixed screen-sized stroke/fill via `1/camera.zoom` like remote pointers. */
   private drawPingMarkers(): void {
     const now = performance.now();
     this.pingMarkers = this.pingMarkers.filter((m) => now - m.startMs < PING_TTL_MS);
     if (this.pingMarkers.length === 0) return;
+    this.ensurePingPointerLoaded();
 
     const { ctx } = this;
     const z = this.camera.zoom;
-    const base = 26 / z;
+    const base = 78 / z;
     const lw = 2.25 / z;
+    const pointerImg = this.pingPointerImage;
 
     for (const m of this.pingMarkers) {
       const elapsed = now - m.startMs;
       let scale: number;
       let alpha: number;
+      let jumpOffsetY = 0;
       if (elapsed < 150) {
         const u = elapsed / 150;
         scale = 0.85 + u * 0.15;
@@ -983,34 +1007,54 @@ export class Renderer {
         alpha = 1 - (elapsed - 900) / fadeSpanMs;
       }
 
+      // Short spring-like settle: arrow pops in above and "lands" on the ping point.
+      if (elapsed < 260) {
+        const t = elapsed / 260;
+        const damp = Math.exp(-5 * t);
+        const spring = Math.cos(10 * t);
+        jumpOffsetY = (-base * 0.55) * damp * spring;
+      }
+
       ctx.save();
-      ctx.translate(m.boardX, m.boardY);
+      ctx.translate(m.boardX, m.boardY + jumpOffsetY);
       ctx.scale(scale, scale);
       ctx.globalAlpha = alpha;
 
-      // Upward arrow (screen-up); tip at negative Y in world space.
-      const tipY = -base * 0.48;
-      const headW = base * 0.42;
-      const neckY = base * 0.02;
-      const tailW = base * 0.16;
-      const tailY = base * 0.5;
-
-      ctx.beginPath();
-      ctx.moveTo(0, tipY);
-      ctx.lineTo(headW, neckY);
-      ctx.lineTo(tailW, neckY);
-      ctx.lineTo(tailW, tailY);
-      ctx.lineTo(-tailW, tailY);
-      ctx.lineTo(-tailW, neckY);
-      ctx.lineTo(-headW, neckY);
-      ctx.closePath();
-
-      ctx.fillStyle = m.color;
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-      ctx.lineWidth = lw;
-      ctx.lineJoin = 'round';
-      ctx.stroke();
+      if (pointerImg && pointerImg.complete && pointerImg.naturalWidth > 0) {
+        const aspect = pointerImg.naturalHeight / pointerImg.naturalWidth;
+        const drawW = base;
+        const drawH = drawW * aspect;
+        // Anchor SVG tip at ping point (tip is near y≈6 of 166 in the asset).
+        const tipRatioY = 6 / 166;
+        const drawX = -drawW * 0.5;
+        const drawY = -drawH * tipRatioY;
+        const prevSmooth = ctx.imageSmoothingEnabled;
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(pointerImg, drawX, drawY, drawW, drawH);
+        ctx.imageSmoothingEnabled = prevSmooth;
+      } else {
+        // Fallback while SVG is loading/failed.
+        const tipY = -base * 0.48;
+        const headW = base * 0.42;
+        const neckY = base * 0.02;
+        const tailW = base * 0.16;
+        const tailY = base * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(0, tipY);
+        ctx.lineTo(headW, neckY);
+        ctx.lineTo(tailW, neckY);
+        ctx.lineTo(tailW, tailY);
+        ctx.lineTo(-tailW, tailY);
+        ctx.lineTo(-tailW, neckY);
+        ctx.lineTo(-headW, neckY);
+        ctx.closePath();
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+        ctx.lineWidth = lw;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+      }
       ctx.restore();
     }
   }

@@ -103,3 +103,32 @@ export function playGodDeckShuffle(): void {
   shuffleAudio.currentTime = 0;
   void shuffleAudio.play().catch(() => {});
 }
+
+/** Short UI ping (soft chirp) for intent arrow placement. */
+function playPingIntentInternal(c: AudioContext): void {
+  const t = c.currentTime;
+  const osc = c.createOscillator();
+  const gain = c.createGain();
+  const lp = c.createBiquadFilter();
+
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(920, t);
+  osc.frequency.exponentialRampToValueAtTime(1460, t + 0.07);
+
+  lp.type = 'lowpass';
+  lp.frequency.setValueAtTime(2800, t);
+
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.exponentialRampToValueAtTime(0.08, t + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+
+  osc.connect(lp);
+  lp.connect(gain);
+  gain.connect(c.destination);
+  osc.start(t);
+  osc.stop(t + 0.1);
+}
+
+export function playPingIntentSfx(): void {
+  resumeAndRun(playPingIntentInternal);
+}
