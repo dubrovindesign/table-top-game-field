@@ -278,7 +278,7 @@ Gate Task 5 Step 1 evidence:
 - `npx tsx --test src/scenarios/*.test.ts` passed (54 tests, 0 failures).
 - `npm run build` passed (`tsc && vite build` completed successfully).
 
-- [ ] **Step 2: Final manual MP smoke**
+- [x] **Step 2: Final manual MP smoke**
 
 Checklist:
 1. Open two clients via preview:mp.
@@ -291,7 +291,7 @@ Expected:
 
 Gate Task 5 Step 2 evidence:
 - `npm run preview:mp` startup verified: `vite preview` served on `http://localhost:4173/` and room server on `ws://0.0.0.0:3333` after freeing ports 4173/3333.
-- **Manual smoke (two-browser):** pending in this pass; run cross-client ping + scenario apply sync + no field-rotation spot-check before merge.
+- **Manual smoke (two-browser):** completed and confirmed by user (`smoke ok`): cross-client ping, scenario apply sync, and no runtime field-rotation behavior.
 
 - [x] **Step 3: Final integration commit**
 
@@ -301,7 +301,7 @@ git commit -m "chore(integration): finalize unified build with scenarios and pin
 ```
 
 Task 5 merge-readiness note:
-- Automated gates passed (`npx tsx --test src/scenarios/*.test.ts`, `npm run build`, and `npm run preview:mp` startup verification); branch is ready pending Step 2 manual two-client validation.
+- Automated and manual gates passed (`npx tsx --test src/scenarios/*.test.ts`, `npm run build`, `npm run preview:mp` startup, and user-confirmed two-client smoke); branch is merge-ready.
 
 ---
 
