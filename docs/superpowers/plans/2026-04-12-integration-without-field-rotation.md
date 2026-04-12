@@ -77,7 +77,7 @@ git commit -m "docs: start layered integration execution checklist"
 **Files:**
 - Modify: integration branch workspace files affected by baseline pack
 
-- [ ] **Step 1: Create clean integration branch from main**
+- [x] **Step 1: Create clean integration branch from main**
 
 Run:
 ```bash
@@ -88,7 +88,7 @@ git switch -c integration/stable-all
 Expected:
 - Integration branch starts from known base.
 
-- [ ] **Step 2: Apply baseline non-scenario changes**
+- [x] **Step 2: Apply baseline non-scenario changes**
 
 Preferred operation:
 ```bash
@@ -104,7 +104,7 @@ git cherry-pick <wip-baseline-sha>
 Expected:
 - Ping/cursor/general baseline features present; scenario pack not fully applied yet.
 
-- [ ] **Step 3: Gate L1 verification**
+- [x] **Step 3: Gate L1 verification**
 
 Run:
 ```bash
@@ -119,12 +119,19 @@ Manual smoke:
 Expected:
 - Build passes, preview:mp starts, baseline smoke passes.
 
-- [ ] **Step 4: Commit Layer 1**
+- [x] **Step 4: Commit Layer 1**
 
 ```bash
 git add -A
 git commit -m "feat(integration): apply layer 1 baseline feature pack"
 ```
+
+Execution note:
+- Layer 1 baseline content was already present on current `main`; integration branch `integration/stable-all` was reset to `main` tip and `0db1c19` was recorded as a checkpoint/no-op Layer 1 commit with the required subject.
+
+Gate L1 evidence:
+- `npm run build` passed (`tsc && vite build` completed successfully).
+- `npm run preview:mp` started successfully with `vite preview` on `http://localhost:4173/` and room server on `ws://0.0.0.0:3333`.
 
 ---
 
