@@ -111,6 +111,8 @@ export class DeadUnitDock {
   private oppWrap: HTMLElement;
   private oppZone: HTMLElement;
   private oppInner: HTMLElement;
+  myScoreValueEl!: HTMLElement;
+  oppScoreValueEl!: HTMLElement;
   private lastMineLayout: DeadZoneLayout | null = null;
   private lastOppLayout: DeadZoneLayout | null = null;
   private lastVm: DeadZoneViewModel | null = null;
@@ -131,13 +133,37 @@ export class DeadUnitDock {
     this.myInner = el('div', 'dead-unit-zone-inner');
     this.myZone.appendChild(this.myInner);
     this.myWrap.appendChild(this.myZone);
+    const myScoreMount = document.createElement('div');
+    myScoreMount.className = 'dead-score-mount dead-score-mount--local';
+    const myScorePill = document.createElement('div');
+    myScorePill.className = 'dead-score-pill';
+    myScorePill.setAttribute('aria-label', 'Dead zone score (your side)');
+    const myScoreValueEl = document.createElement('span');
+    myScoreValueEl.className = 'dead-score-pill__value';
+    myScoreValueEl.textContent = '☠ 0';
+    myScorePill.appendChild(myScoreValueEl);
+    myScoreMount.appendChild(myScorePill);
+    this.myWrap.appendChild(myScoreMount);
+    this.myScoreValueEl = myScoreValueEl;
     document.body.appendChild(this.myWrap);
 
     this.oppWrap = el('div', 'dead-unit-table-wrap dead-unit-table-wrap--opponent');
     this.oppZone = el('div', 'dead-unit-zone dead-unit-zone--on-table');
     this.oppInner = el('div', 'dead-unit-zone-inner');
     this.oppZone.appendChild(this.oppInner);
+    const oppScoreMount = document.createElement('div');
+    oppScoreMount.className = 'dead-score-mount dead-score-mount--opponent';
+    const oppScorePill = document.createElement('div');
+    oppScorePill.className = 'dead-score-pill';
+    oppScorePill.setAttribute('aria-label', 'Dead zone score (opponent side)');
+    const oppScoreValueEl = document.createElement('span');
+    oppScoreValueEl.className = 'dead-score-pill__value';
+    oppScoreValueEl.textContent = '☠ 0';
+    oppScorePill.appendChild(oppScoreValueEl);
+    oppScoreMount.appendChild(oppScorePill);
     this.oppWrap.appendChild(this.oppZone);
+    this.oppWrap.appendChild(oppScoreMount);
+    this.oppScoreValueEl = oppScoreValueEl;
     document.body.appendChild(this.oppWrap);
 
     this.ghost = el('div', 'dead-unit-dock-drag-ghost');

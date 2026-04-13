@@ -257,6 +257,15 @@ select option {
   flex: 0 0 auto;
 }
 
+.dead-unit-table-wrap .dead-score-mount {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translateY(calc(-100% - 4px));
+  pointer-events: none;
+  z-index: 1;
+}
+
 .dead-score-pill {
   display: inline-flex;
   align-items: center;

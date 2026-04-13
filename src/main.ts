@@ -457,20 +457,6 @@ function resizeCanvas(): void {
 }
 resizeCanvas();
 
-function mountDeadScorePill(mount: HTMLElement, variant: 'local' | 'opponent'): void {
-  mount.className = `dead-score-mount dead-score-mount--${variant}`;
-  const pill = document.createElement('div');
-  pill.className = 'dead-score-pill';
-  pill.setAttribute(
-    'aria-label',
-    variant === 'local' ? 'Dead zone score (your side)' : 'Dead zone score (opponent side)',
-  );
-  const valueEl = document.createElement('span');
-  valueEl.className = 'dead-score-pill__value';
-  valueEl.textContent = '☠ 0';
-  pill.appendChild(valueEl);
-  mount.appendChild(pill);
-}
 
 function mountTopTurnPanel(
   parent: HTMLElement,
@@ -478,8 +464,6 @@ function mountTopTurnPanel(
 ): {
   localWalletMount: HTMLElement;
   opponentWalletMount: HTMLElement;
-  localDeadScoreMount: HTMLElement;
-  opponentDeadScoreMount: HTMLElement;
   getTableTurnNumber: () => number;
   setTableTurnNumber: (n: number) => void;
 } {
@@ -543,20 +527,13 @@ function mountTopTurnPanel(
   const localWalletMount = document.createElement('div');
   localWalletMount.className = 'turn-wallet-mount turn-wallet-mount-local';
 
-  const opponentDeadScoreMount = document.createElement('div');
-  const localDeadScoreMount = document.createElement('div');
-  mountDeadScorePill(opponentDeadScoreMount, 'opponent');
-  mountDeadScorePill(localDeadScoreMount, 'local');
-
   const opponentWingStack = document.createElement('div');
   opponentWingStack.className = 'turn-wing-stack';
   opponentWingStack.appendChild(opponentWalletMount);
-  opponentWingStack.appendChild(opponentDeadScoreMount);
 
   const localWingStack = document.createElement('div');
   localWingStack.className = 'turn-wing-stack';
   localWingStack.appendChild(localWalletMount);
-  localWingStack.appendChild(localDeadScoreMount);
 
   const wingRight = document.createElement('div');
   wingRight.className = 'turn-wing turn-wing--right';
@@ -573,8 +550,6 @@ function mountTopTurnPanel(
   return {
     localWalletMount,
     opponentWalletMount,
-    localDeadScoreMount,
-    opponentDeadScoreMount,
     getTableTurnNumber,
     setTableTurnNumber,
   };
@@ -2848,13 +2823,12 @@ function deadZoneStatsForSlot(slot: PlayerSlot): { count: number; points: number
 }
 
 function refreshDeadScorePills(): void {
+  if (!deadUnitDock) return;
   const { local: slL, opponent: slO } = crystalWalletSlotsForUi();
   const localStats = deadZoneStatsForSlot(slL);
   const oppStats = deadZoneStatsForSlot(slO);
-  const locEl = topTurnPanel.localDeadScoreMount.querySelector('.dead-score-pill__value');
-  const oppEl = topTurnPanel.opponentDeadScoreMount.querySelector('.dead-score-pill__value');
-  if (locEl) locEl.textContent = `☠ ${localStats.points}`;
-  if (oppEl) oppEl.textContent = `☠ ${oppStats.points}`;
+  deadUnitDock.myScoreValueEl.textContent = `☠ ${localStats.points}`;
+  deadUnitDock.oppScoreValueEl.textContent = `☠ ${oppStats.points}`;
 }
 
 function deadZoneTuple(): DeadByZone {
