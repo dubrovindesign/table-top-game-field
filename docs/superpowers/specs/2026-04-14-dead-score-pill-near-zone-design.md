@@ -34,13 +34,13 @@ The `.dead-unit-table-wrap` has `position: fixed` and no `overflow` restriction,
 
 ### `src/deadUnitDock.ts` — `DeadUnitDock`
 
-- **Constructor**: after appending `myZone` to `myWrap` and `oppZone` to `oppWrap`, call the existing `mountDeadScorePill(mount, 'local')` / `mountDeadScorePill(mount, 'opponent')` to create pill mounts, then append each to `myWrap` / `oppWrap` respectively.
+- **Constructor**: after appending `myZone` to `myWrap` and `oppZone` to `oppWrap`, call the existing `mountDeadScorePill(mount, 'local')` / `mountDeadScorePill(mount, 'opponent')` to create pill mounts, then append each to `myWrap` / `oppWrap` respectively. `mountDeadScorePill` does not return the value element, so obtain the reference via `mount.querySelector('.dead-score-pill__value') as HTMLElement` immediately after the call.
 - **Public fields**: expose `myScoreValueEl: HTMLElement` and `oppScoreValueEl: HTMLElement` — references to the `.dead-score-pill__value` spans — so `refreshDeadScorePills` can update text without DOM queries.
 - **`dispose`**: no extra work; pill is removed from the DOM automatically when `myWrap`/`oppWrap` are removed from `document.body`.
 
 ### `src/main.ts`
 
-- **`mountTopTurnPanel`**: remove both `mountDeadScorePill` calls, the `opponentDeadScoreMount` / `localDeadScoreMount` variables, and their references in the wing stacks. Remove these two fields from the returned object.
+- **`mountTopTurnPanel`**: remove both `mountDeadScorePill` calls, the `opponentDeadScoreMount` / `localDeadScoreMount` variables, and their references in the wing stacks. Remove these two fields from the returned object. Only `refreshDeadScorePills` reads these fields — no other callers reference them.
 - **`refreshDeadScorePills`**: replace `topTurnPanel.localDeadScoreMount.querySelector(…)` / `topTurnPanel.opponentDeadScoreMount.querySelector(…)` with direct references to `deadUnitDock.myScoreValueEl` / `deadUnitDock.oppScoreValueEl`.
 
 ### `src/style.css`
