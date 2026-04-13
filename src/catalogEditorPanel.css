@@ -1783,8 +1783,8 @@
 .ce-hs-quick-edit {
   position: fixed;
   z-index: 10075;
-  min-width: 240px;
-  max-width: min(320px, calc(100vw - 16px));
+  min-width: min(480px, calc(100vw - 16px));
+  max-width: min(640px, calc(100vw - 16px));
   padding: 10px 12px;
   background: #1a1a22;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -1814,6 +1814,16 @@
 
 .ce-hs-quick-edit-row--dice .ce-hs-dice-inputs {
   flex-wrap: wrap;
+  width: 100%;
+}
+
+/* В поп-апе «Параметры зоны» поля кубиков в 2× шире базовых .ce-hs-dice-num (3.25rem) */
+.ce-hs-quick-edit-row--dice .ce-hs-dice-chip .catalog-editor-input.ce-hs-dice-num {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: 6.5rem;
+  min-width: 6.5rem;
+  max-width: none;
 }
 
 .ce-hs-quick-edit-lab {
