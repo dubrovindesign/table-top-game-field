@@ -51,7 +51,7 @@
     "name": "Гатархин, дуэлянт",
     "run": 7,
     "size": "small",
-    "sprite": "/catalog-units/engeln-gatarkhin_glaive/image.jpg",
+    "sprite": "",
     "walk": 4
   },
   "id": "engeln-gatarkhin_glaive",

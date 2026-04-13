@@ -51,10 +51,11 @@
     "name": "Абгорр, Неотразимый Истязатель",
     "run": 9,
     "size": "large",
-    "sprite": "/catalog-units/chasm-abgorr/image.jpg",
+    "sprite": "",
     "walk": 6
   },
   "id": "chasm-abgorr",
   "mercenary": false,
-  "points": 45
+  "points": 45,
+  "requiresCommanderUnitId": null
 }

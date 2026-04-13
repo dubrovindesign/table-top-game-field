@@ -56,5 +56,6 @@
   },
   "id": "broomgar_horde-gahai_boomerang",
   "mercenary": false,
-  "points": 23
+  "points": 23,
+  "requiresCommanderUnitId": null
 }

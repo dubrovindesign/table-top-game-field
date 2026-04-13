@@ -55,7 +55,7 @@
     "name": "Автоматон \"М.У.Л.\"",
     "run": 5,
     "size": "small",
-    "sprite": "/catalog-units/engeln-mul/image.jpg",
+    "sprite": "",
     "traits": [
       {
         "description": "Карточка-заглушка: заданы только имя, очки и лимит из torn-world.com. Арт и игровые статы не заполнены.",

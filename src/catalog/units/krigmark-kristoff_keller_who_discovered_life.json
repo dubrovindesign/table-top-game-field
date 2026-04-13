@@ -51,7 +51,7 @@
     "name": "Кристоф Келлер, Познавший Жизнь",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/krigmark-kristoff_keller_who_discovered_life/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "krigmark-kristoff_keller_who_discovered_life",

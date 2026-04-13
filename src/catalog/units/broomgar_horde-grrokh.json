@@ -59,5 +59,6 @@
   },
   "id": "broomgar_horde-grrokh",
   "mercenary": false,
-  "points": 25
+  "points": 25,
+  "requiresCommanderUnitId": null
 }

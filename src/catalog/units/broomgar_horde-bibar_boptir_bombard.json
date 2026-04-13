@@ -59,5 +59,6 @@
   },
   "id": "broomgar_horde-bibar_boptir_bombard",
   "mercenary": false,
-  "points": 46
+  "points": 46,
+  "requiresCommanderUnitId": null
 }

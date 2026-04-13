@@ -56,5 +56,6 @@
   },
   "id": "broomgar_horde-gahai_sling",
   "mercenary": false,
-  "points": 22
+  "points": 22,
+  "requiresCommanderUnitId": null
 }
