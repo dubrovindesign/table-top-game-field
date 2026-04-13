@@ -581,13 +581,17 @@
 .ce-hs-dice-inputs {
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-wrap: nowrap;
+  align-items: stretch;
   gap: 10px;
+  width: 100%;
+  min-width: 0;
 }
 
 .ce-hs-dice-chip {
-  display: inline-flex;
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
   align-items: center;
   gap: 6px;
   cursor: pointer;
@@ -600,9 +604,12 @@
   flex-shrink: 0;
 }
 
-.ce-hs-dice-num {
-  width: 3.25rem;
+/* Равная ширина четырёх полей в строке; сброс глобального min-width:120px у .catalog-editor-input */
+.ce-hs-dice-chip .catalog-editor-input.ce-hs-dice-num {
+  flex: 1 1 auto;
   min-width: 0;
+  width: auto;
+  max-width: none;
 }
 
 .ce-hs-preset-row {
@@ -1810,10 +1817,6 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-}
-
-.ce-hs-quick-edit-row--dice .ce-hs-dice-inputs {
-  flex-wrap: wrap;
 }
 
 .ce-hs-quick-edit-lab {
