@@ -66,5 +66,6 @@
   },
   "id": "engeln-mul",
   "mercenary": true,
-  "points": 10
+  "points": 10,
+  "requiresCommanderUnitId": null
 }

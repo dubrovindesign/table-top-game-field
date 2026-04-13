@@ -42,17 +42,17 @@
     "explorationRange": 0,
     "flagSprite": "/blackthorn.webp",
     "grabRange": 1,
-    "health": 1,
+    "health": 13,
     "keywords": [
       "Великий Терновник"
     ],
-    "maxHealth": 1,
+    "maxHealth": 13,
     "miniatureSprite": "/catalog-units/blackthorn-drago_mort/miniature.jpg",
     "name": "Драго-Морт Дэа'Мор",
-    "run": 2,
+    "run": 7,
     "size": "large",
     "sprite": "",
-    "walk": 1
+    "walk": 4
   },
   "id": "blackthorn-drago_mort",
   "mercenary": false,

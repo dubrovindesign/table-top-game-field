@@ -66,5 +66,6 @@
   },
   "id": "engeln-boyd",
   "mercenary": true,
-  "points": 17
+  "points": 17,
+  "requiresCommanderUnitId": null
 }

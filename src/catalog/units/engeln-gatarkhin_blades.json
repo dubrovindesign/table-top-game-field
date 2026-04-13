@@ -56,5 +56,6 @@
   },
   "id": "engeln-gatarkhin_blades",
   "mercenary": true,
-  "points": 33
+  "points": 33,
+  "requiresCommanderUnitId": null
 }

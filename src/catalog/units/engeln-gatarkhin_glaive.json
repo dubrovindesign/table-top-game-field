@@ -56,5 +56,6 @@
   },
   "id": "engeln-gatarkhin_glaive",
   "mercenary": true,
-  "points": 35
+  "points": 35,
+  "requiresCommanderUnitId": null
 }

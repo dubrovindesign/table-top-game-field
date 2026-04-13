@@ -51,10 +51,11 @@
     "name": "Гвардеец Кастилии с штурмовым Очистителем",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/castilla-flamethrower/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "castilla-flamethrower",
   "mercenary": false,
-  "points": 26
+  "points": 26,
+  "requiresCommanderUnitId": null
 }

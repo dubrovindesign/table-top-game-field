@@ -1,7 +1,7 @@
 {
   "card": {
     "attacks": [],
-    "catalogUnitId": "castilla-okhotnik-na-svyatykh",
+    "catalogUnitId": "castilla-saint_hunter_salvador",
     "concentration": {
       "black": 0,
       "green": 0,
@@ -36,7 +36,7 @@
       "Кастилия"
     ],
     "maxHealth": 5,
-    "miniatureSprite": "/catalog-units/castilla-okhotnik-na-svyatykh/miniature.jpg",
+    "miniatureSprite": "/catalog-units/castilla-saint_hunter_salvador/miniature.jpg",
     "name": "Охотник на Святых",
     "run": 6,
     "size": "small",

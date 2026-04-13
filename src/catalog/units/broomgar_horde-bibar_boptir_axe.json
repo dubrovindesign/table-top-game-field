@@ -58,6 +58,7 @@
     "walk": 4
   },
   "id": "broomgar_horde-bibar_boptir_axe",
-  "mercenary": false,
-  "points": 36
+  "mercenary": true,
+  "points": 36,
+  "requiresCommanderUnitId": null
 }

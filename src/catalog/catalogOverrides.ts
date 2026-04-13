@@ -836,6 +836,12 @@ export function getHotspotsForUnit(unitId: string): HotspotFile | undefined {
   const st = getStaticHotspotForUnit(unitId);
   if (!ov) return st;
   const hasOvImg = !!(ov.image && String(ov.image).trim());
+  /** Явный `regions: []` в редакторе — только картинка без зон; не подмешивать статику. */
+  const explicitEmptyRegions = Array.isArray(ov.regions) && ov.regions.length === 0;
+  const hasOvRegions = Array.isArray(ov.regions) && ov.regions.length > 0;
+  if (hasOvImg && !hasOvRegions && !explicitEmptyRegions && st?.regions?.length) {
+    return { ...ov, regions: st.regions };
+  }
   if (hasOvImg) return ov;
   if (st?.image?.trim()) {
     return {

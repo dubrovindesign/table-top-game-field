@@ -51,10 +51,11 @@
     "name": "Фламмальеро с ручной мортирой",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/castilla-flammalero_mortar/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "castilla-flammalero_mortar",
   "mercenary": false,
-  "points": 50
+  "points": 50,
+  "requiresCommanderUnitId": null
 }

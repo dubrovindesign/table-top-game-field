@@ -56,5 +56,6 @@
   },
   "id": "krigmark-kristoff_keller_who_discovered_life",
   "mercenary": true,
-  "points": 21
+  "points": 21,
+  "requiresCommanderUnitId": null
 }

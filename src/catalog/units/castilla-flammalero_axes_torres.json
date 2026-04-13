@@ -51,10 +51,11 @@
     "name": "Фламмальеро с топорами",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/castilla-flammalero_axes_torres/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "castilla-flammalero_axes_torres",
   "mercenary": false,
-  "points": 33
+  "points": 33,
+  "requiresCommanderUnitId": null
 }

@@ -51,10 +51,11 @@
     "name": "Каттимп Бездны",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/castilla-catimp/image.jpg",
+    "sprite": "",
     "walk": 4
   },
   "id": "castilla-catimp",
   "mercenary": false,
-  "points": 6
+  "points": 6,
+  "requiresCommanderUnitId": null
 }

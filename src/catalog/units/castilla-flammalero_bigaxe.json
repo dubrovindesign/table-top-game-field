@@ -51,10 +51,11 @@
     "name": "Фламмальеро с секирой",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/castilla-flammalero_bigaxe/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "castilla-flammalero_bigaxe",
   "mercenary": false,
-  "points": 40
+  "points": 40,
+  "requiresCommanderUnitId": null
 }

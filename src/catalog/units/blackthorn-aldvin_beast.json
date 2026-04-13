@@ -51,10 +51,11 @@
     "name": "Алдвин Искатель Истины",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/blackthorn-aldvin_beast/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "blackthorn-aldvin_beast",
   "mercenary": true,
-  "points": 19
+  "points": 19,
+  "requiresCommanderUnitId": null
 }

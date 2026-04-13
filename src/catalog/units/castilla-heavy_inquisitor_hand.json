@@ -51,10 +51,11 @@
     "name": "Инквизитор-Ревнитель с Оком Вихря",
     "run": 5,
     "size": "small",
-    "sprite": "/catalog-units/castilla-heavy_inquisitor_hand/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "castilla-heavy_inquisitor_hand",
   "mercenary": false,
-  "points": 28
+  "points": 28,
+  "requiresCommanderUnitId": null
 }

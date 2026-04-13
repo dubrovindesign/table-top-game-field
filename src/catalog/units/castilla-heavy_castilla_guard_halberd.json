@@ -51,10 +51,11 @@
     "name": "Тяжелый Гвардеец с алебардой",
     "run": 5,
     "size": "small",
-    "sprite": "/catalog-units/castilla-heavy_castilla_guard_halberd/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "castilla-heavy_castilla_guard_halberd",
   "mercenary": false,
-  "points": 24
+  "points": 24,
+  "requiresCommanderUnitId": null
 }

@@ -51,10 +51,11 @@
     "name": "Гвардеец с с мечом",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/castilla-castilla_guard_hand/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "castilla-castilla_guard_hand",
   "mercenary": false,
-  "points": 23
+  "points": 23,
+  "requiresCommanderUnitId": null
 }
