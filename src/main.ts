@@ -206,8 +206,8 @@ const deadByZone: [SerializedDeadEntryV1[], SerializedDeadEntryV1[]] = [[], []];
 type DeadZoneOffsetWorld = { x: number; y: number };
 const DEAD_ZONE_OFFSET_STORAGE_KEY = 'hex-board.dead-zone-offsets-world.v4';
 const deadZoneOffsetBySlot: { 0: DeadZoneOffsetWorld; 1: DeadZoneOffsetWorld } = {
-  0: { x: 0, y: 0 },
-  1: { x: 0, y: 0 },
+  0: { x: 535.57, y: -231.05 },
+  1: { x: -506.81, y: 192.03 },
 };
 
 function loadDeadZoneOffsetsFromStorage(): void {
