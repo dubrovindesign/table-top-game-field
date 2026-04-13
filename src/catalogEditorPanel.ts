@@ -12,7 +12,6 @@ import {
   createStubCatalogUnit,
   exportCatalogOverridesJson,
   finalizeCardForUnitSave,
-  applyHotspotLayoutPresetToAllUnits,
   applyLeaderGodCardLoadout,
   effectiveGodCardCopiesForLeader,
   getCatalogOverrides,
@@ -1218,19 +1217,8 @@ export class CatalogEditorPanel {
     presetRow.appendChild(el('span', 'ce-hs-field-lab', 'Пресет раскладки'));
     presetRow.appendChild(this.hsPresetSelect);
     hotSection.appendChild(presetRow);
-    const applyPresetAllBtn = el(
-      'button',
-      'catalog-editor-btn catalog-editor-btn-secondary',
-      'Пресет на все юниты',
-    ) as HTMLButtonElement;
-    applyPresetAllBtn.type = 'button';
-    applyPresetAllBtn.title =
-      'Кубики и подписи с карточек каждого юнита; координаты — из выбранного пресета (число зон = защита + атаки, либо два прямоугольника: защита + полоса атаки).';
-    applyPresetAllBtn.addEventListener('click', () => this.applyHotspotLayoutPresetToAllCatalogUnits());
-
     const saveHotRow = el('div', 'ce-hs-save-row');
     saveHotRow.appendChild(this.saveHotspotPresetBtn);
-    saveHotRow.appendChild(applyPresetAllBtn);
     hotSection.appendChild(saveHotRow);
     hotSection.appendChild(this.hotspotHint);
     this.refreshHotspotPresetSelect();
@@ -3652,45 +3640,6 @@ export class CatalogEditorPanel {
     this.syncHotspotFieldsFromRegion();
     this.hotspotHint.textContent =
       'Применена только раскладка; дальность и кубики по зонам совпадают по порядку с прежними.';
-  }
-
-  /** Пресет из списка → все юниты: статы с карточек, геометрия с пресета. */
-  private applyHotspotLayoutPresetToAllCatalogUnits(): void {
-    const presetId = this.hsPresetSelect.value;
-    if (!presetId || presetId === '__default__') {
-      this.hotspotHint.textContent =
-        'Выберите пресет раскладки в списке выше (не «По умолчанию»).';
-      return;
-    }
-    const preset = getCatalogOverrides().hotspotLayoutPresets?.find((p) => p.id === presetId);
-    if (!preset) {
-      this.hotspotHint.textContent = 'Пресет не найден.';
-      return;
-    }
-    if (
-      !confirm(
-        `Применить раскладку «${preset.name}» ко всем юнитам каталога?\nКубики и подписи — из полей карточки; координаты зон — из пресета.`,
-      )
-    ) {
-      return;
-    }
-    try {
-      const { applied, skipped } = applyHotspotLayoutPresetToAllUnits(presetId);
-      this.hotspotHint.textContent =
-        skipped.length > 0
-          ? `Готово: ${applied} юнитов. Пропущено: ${skipped.length} (см. консоль).`
-          : `Готово: ${applied} юнитов.`;
-      if (skipped.length) {
-        console.warn('[catalog editor] Пресет на все юниты: пропуски', skipped);
-      }
-      this.refreshHotspotPresetSelect();
-      window.dispatchEvent(new CustomEvent(CATALOG_OVERRIDES_CHANGED));
-      if (this.selectedUnitId) {
-        this.openUnitFormEdit(this.selectedUnitId);
-      }
-    } catch (e) {
-      alert(e instanceof Error ? e.message : String(e));
-    }
   }
 
   private saveHotspotLayoutPresetFromUi(): void {
