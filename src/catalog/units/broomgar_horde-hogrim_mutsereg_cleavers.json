@@ -45,17 +45,17 @@
     },
     "flagSprite": "/broomgar_horde.webp",
     "grabRange": 1,
-    "health": 12,
+    "health": 0,
     "keywords": [
       "Орда Брумгаров"
     ],
-    "maxHealth": 12,
+    "maxHealth": 0,
     "miniatureSprite": "/catalog-units/broomgar_horde-hogrim_mutsereg_cleavers/miniature.jpg",
     "name": "Муцерег с Топорами",
-    "run": 7,
+    "run": 0,
     "size": "large",
-    "sprite": "",
-    "walk": 4
+    "sprite": "/catalog-units/broomgar_horde-hogrim_mutsereg_cleavers/image.jpg",
+    "walk": 0
   },
   "id": "broomgar_horde-hogrim_mutsereg_cleavers",
   "mercenary": false,

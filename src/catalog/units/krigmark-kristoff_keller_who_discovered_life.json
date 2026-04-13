@@ -8,11 +8,11 @@
         "dice": {
           "black": 0,
           "green": 0,
-          "red": 1,
+          "red": 0,
           "white": 0
         },
-        "name": "—",
-        "range": 1
+        "name": "же EA",
+        "range": 0
       }
     ],
     "catalogUnitId": "krigmark-kristoff_keller_who_discovered_life",
@@ -23,8 +23,8 @@
       "white": 0
     },
     "defense": {
-      "green": 0,
-      "white": 0
+      "green": 2,
+      "white": 2
     },
     "defenseReaction": {
       "green": 0,
@@ -40,18 +40,18 @@
       "white": 0
     },
     "explorationRange": 0,
-    "flagSprite": "/krigmark.webp",
+    "flagSprite": "/blackthorn.webp",
     "grabRange": 1,
     "health": 5,
     "keywords": [
-      "Кригмарк"
+      "Великий Терновник"
     ],
     "maxHealth": 5,
     "miniatureSprite": "/catalog-units/krigmark-kristoff_keller_who_discovered_life/miniature.jpg",
     "name": "Кристоф Келлер, Познавший Жизнь",
     "run": 6,
     "size": "small",
-    "sprite": "",
+    "sprite": "/catalog-units/krigmark-kristoff_keller_who_discovered_life/image.jpg",
     "walk": 3
   },
   "id": "krigmark-kristoff_keller_who_discovered_life",

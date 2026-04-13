@@ -45,17 +45,17 @@
     },
     "flagSprite": "/broomgar_horde.webp",
     "grabRange": 1,
-    "health": 12,
+    "health": 0,
     "keywords": [
       "Орда Брумгаров"
     ],
-    "maxHealth": 12,
+    "maxHealth": 0,
     "miniatureSprite": "/catalog-units/broomgar_horde-hogrim_tsereg_maul/miniature.jpg",
     "name": "Церег с Булавой",
-    "run": 6,
+    "run": 0,
     "size": "large",
-    "sprite": "",
-    "walk": 3
+    "sprite": "/catalog-units/broomgar_horde-hogrim_tsereg_maul/image.jpg",
+    "walk": 0
   },
   "id": "broomgar_horde-hogrim_tsereg_maul",
   "mercenary": false,

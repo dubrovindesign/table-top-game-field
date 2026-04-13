@@ -42,17 +42,17 @@
     "explorationRange": 0,
     "flagSprite": "/castilla.webp",
     "grabRange": 1,
-    "health": 3,
+    "health": 0,
     "keywords": [
       "Кастилия"
     ],
-    "maxHealth": 3,
+    "maxHealth": 0,
     "miniatureSprite": "/catalog-units/castilla-catimp_gun/miniature.jpg",
     "name": "Каттимп Бездны с пистолем",
-    "run": 6,
+    "run": 0,
     "size": "small",
-    "sprite": "",
-    "walk": 4
+    "sprite": "/catalog-units/castilla-catimp_gun/image.jpg",
+    "walk": 0
   },
   "id": "castilla-catimp_gun",
   "mercenary": false,

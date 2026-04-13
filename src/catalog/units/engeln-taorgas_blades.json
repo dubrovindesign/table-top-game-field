@@ -31,7 +31,7 @@
       "white": 0
     },
     "domains": [
-      "creation"
+      "destruction"
     ],
     "exploration": {
       "black": 0,
@@ -40,19 +40,19 @@
       "white": 0
     },
     "explorationRange": 0,
-    "flagSprite": "/engeln.webp",
+    "flagSprite": "/broomgar_horde.webp",
     "grabRange": 1,
-    "health": 0,
+    "health": 14,
     "keywords": [
-      "Ангельн"
+      "Орда Брумгаров"
     ],
-    "maxHealth": 0,
+    "maxHealth": 14,
     "miniatureSprite": "/catalog-units/engeln-taorgas_blades/miniature.jpg",
     "name": "Таоргас с Клинками",
-    "run": 0,
-    "size": "small",
+    "run": 2,
+    "size": "big",
     "sprite": "",
-    "walk": 0
+    "walk": 1
   },
   "id": "engeln-taorgas_blades",
   "mercenary": true,

@@ -8,11 +8,11 @@
         "dice": {
           "black": 0,
           "green": 0,
-          "red": 1,
+          "red": 0,
           "white": 0
         },
-        "name": "—",
-        "range": 1
+        "name": "Лечение:",
+        "range": 0
       }
     ],
     "catalogUnitId": "engeln-boyd",
@@ -24,14 +24,14 @@
     },
     "defense": {
       "green": 0,
-      "white": 0
+      "white": 8
     },
     "defenseReaction": {
       "green": 0,
       "white": 0
     },
     "domains": [
-      "creation"
+      "death"
     ],
     "exploration": {
       "black": 0,
@@ -43,19 +43,19 @@
     "faithMarkers": {
       "red": 0
     },
-    "flagSprite": "/engeln.webp",
+    "flagSprite": "/blackthorn.webp",
     "grabRange": 1,
     "health": 5,
     "keywords": [
-      "Ангельн"
+      "Великий Терновник"
     ],
     "maxHealth": 5,
     "miniatureSprite": "/catalog-units/engeln-boyd/miniature.jpg",
     "movementDistanceUnit": "hex",
-    "name": "Бойд Великолепный",
+    "name": "Бойд Великол��пный",
     "run": 6,
     "size": "small",
-    "sprite": "",
+    "sprite": "/catalog-units/engeln-boyd/image.jpg",
     "traits": [
       {
         "description": "Карточка-заглушка: заданы только имя, очки и лимит из torn-world.com. Арт и игровые статы не заполнены.",

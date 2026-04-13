@@ -8,11 +8,11 @@
         "dice": {
           "black": 0,
           "green": 0,
-          "red": 1,
+          "red": 0,
           "white": 0
         },
-        "name": "—",
-        "range": 1
+        "name": "Ключевое слово: Машина",
+        "range": 0
       }
     ],
     "catalogUnitId": "engeln-mul",
@@ -23,15 +23,15 @@
       "white": 0
     },
     "defense": {
-      "green": 0,
-      "white": 0
+      "green": 7,
+      "white": 1
     },
     "defenseReaction": {
       "green": 0,
       "white": 0
     },
     "domains": [
-      "creation"
+      "death"
     ],
     "exploration": {
       "black": 0,
@@ -43,11 +43,11 @@
     "faithMarkers": {
       "red": 0
     },
-    "flagSprite": "/engeln.webp",
+    "flagSprite": "/blackthorn.webp",
     "grabRange": 1,
     "health": 4,
     "keywords": [
-      "Ангельн"
+      "Великий Терновник"
     ],
     "maxHealth": 4,
     "miniatureSprite": "/catalog-units/engeln-mul/miniature.jpg",
@@ -55,7 +55,7 @@
     "name": "Автоматон \"М.У.Л.\"",
     "run": 5,
     "size": "small",
-    "sprite": "",
+    "sprite": "/catalog-units/engeln-mul/image.jpg",
     "traits": [
       {
         "description": "Карточка-заглушка: заданы только имя, очки и лимит из torn-world.com. Арт и игровые статы не заполнены.",

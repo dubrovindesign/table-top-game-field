@@ -42,17 +42,17 @@
     "explorationRange": 0,
     "flagSprite": "/castilla.webp",
     "grabRange": 1,
-    "health": 16,
+    "health": 0,
     "keywords": [
       "Кастилия"
     ],
-    "maxHealth": 16,
+    "maxHealth": 0,
     "miniatureSprite": "/catalog-units/castilla-faceless_unit/miniature.jpg",
     "name": "Безликий, Владыка Ненависти",
-    "run": 3,
+    "run": 0,
     "size": "big",
-    "sprite": "",
-    "walk": 2
+    "sprite": "/catalog-units/castilla-faceless_unit/image.jpg",
+    "walk": 0
   },
   "id": "castilla-faceless_unit",
   "mercenary": false,

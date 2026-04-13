@@ -6,12 +6,9 @@
         "damage": 1,
         "damageType": "physical",
         "dice": {
-          "black": 0,
-          "green": 0,
-          "red": 1,
-          "white": 0
+          "black": 4
         },
-        "name": "—",
+        "name": "УДАР. БУЛАВОЙ",
         "range": 1
       }
     ],
@@ -23,8 +20,8 @@
       "white": 0
     },
     "defense": {
-      "green": 0,
-      "white": 0
+      "green": 3,
+      "white": 3
     },
     "defenseReaction": {
       "green": 0,
@@ -51,7 +48,7 @@
     "name": "Драго-Морт Дэа'Мор",
     "run": 7,
     "size": "large",
-    "sprite": "",
+    "sprite": "/catalog-units/blackthorn-drago_mort/image.jpg",
     "walk": 4
   },
   "id": "blackthorn-drago_mort",

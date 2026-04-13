@@ -45,17 +45,17 @@
     },
     "flagSprite": "/broomgar_horde.webp",
     "grabRange": 1,
-    "health": 12,
+    "health": 0,
     "keywords": [
       "Орда Брумгаров"
     ],
-    "maxHealth": 12,
+    "maxHealth": 0,
     "miniatureSprite": "/catalog-units/broomgar_horde-hogrim_shaktan_gun/miniature.jpg",
     "name": "Шактан с Ручницей",
-    "run": 5,
+    "run": 0,
     "size": "large",
-    "sprite": "",
-    "walk": 3
+    "sprite": "/catalog-units/broomgar_horde-hogrim_shaktan_gun/image.jpg",
+    "walk": 0
   },
   "id": "broomgar_horde-hogrim_shaktan_gun",
   "mercenary": false,

@@ -31,7 +31,7 @@
       "white": 0
     },
     "domains": [
-      "creation"
+      "destruction"
     ],
     "exploration": {
       "black": 0,
@@ -40,19 +40,19 @@
       "white": 0
     },
     "explorationRange": 0,
-    "flagSprite": "/engeln.webp",
+    "flagSprite": "/broomgar_horde.webp",
     "grabRange": 1,
-    "health": 0,
+    "health": 14,
     "keywords": [
-      "Ангельн"
+      "Орда Брумгаров"
     ],
-    "maxHealth": 0,
+    "maxHealth": 14,
     "miniatureSprite": "/catalog-units/engeln-taorgas_hammer/miniature.jpg",
     "name": "Таоргас с Молотом",
-    "run": 0,
-    "size": "small",
-    "sprite": "",
-    "walk": 0
+    "run": 2,
+    "size": "big",
+    "sprite": "/catalog-units/engeln-taorgas_hammer/image.jpg",
+    "walk": 1
   },
   "id": "engeln-taorgas_hammer",
   "mercenary": true,

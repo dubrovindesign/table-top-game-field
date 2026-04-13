@@ -45,17 +45,17 @@
     },
     "flagSprite": "/broomgar_horde.webp",
     "grabRange": 1,
-    "health": 12,
+    "health": 0,
     "keywords": [
       "Орда Брумгаров"
     ],
-    "maxHealth": 12,
+    "maxHealth": 0,
     "miniatureSprite": "/catalog-units/broomgar_horde-bibar_boptir_axe/miniature.jpg",
     "name": "Бибар-Батыр с Топорами",
-    "run": 6,
+    "run": 0,
     "size": "large",
-    "sprite": "",
-    "walk": 4
+    "sprite": "/catalog-units/broomgar_horde-bibar_boptir_axe/image.jpg",
+    "walk": 0
   },
   "id": "broomgar_horde-bibar_boptir_axe",
   "mercenary": false,
