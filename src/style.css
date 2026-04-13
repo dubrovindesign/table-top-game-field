@@ -261,9 +261,17 @@ select option {
   position: absolute;
   top: 0;
   left: 0;
-  transform: translateY(calc(-100% - 4px));
+  transform: translateY(calc(-100% - 4px * var(--dead-unit-zoom)));
   pointer-events: none;
   z-index: 1;
+}
+
+.dead-unit-table-wrap .dead-score-pill {
+  font-size: calc(13px * var(--dead-unit-zoom));
+  padding: calc(6px * var(--dead-unit-zoom)) calc(12px * var(--dead-unit-zoom));
+  border-radius: calc(999px * var(--dead-unit-zoom));
+  border-width: calc(1px * var(--dead-unit-zoom));
+  box-shadow: 0 calc(4px * var(--dead-unit-zoom)) calc(16px * var(--dead-unit-zoom)) rgba(0, 0, 0, 0.35);
 }
 
 .dead-score-pill {
