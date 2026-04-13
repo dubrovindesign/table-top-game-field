@@ -51,10 +51,11 @@
     "name": "Безликий, Владыка Ненависти",
     "run": 3,
     "size": "big",
-    "sprite": "/catalog-units/castilla-faceless_unit/image.jpg",
+    "sprite": "",
     "walk": 2
   },
   "id": "castilla-faceless_unit",
   "mercenary": false,
-  "points": 70
+  "points": 70,
+  "requiresCommanderUnitId": null
 }

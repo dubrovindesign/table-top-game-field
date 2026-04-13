@@ -51,10 +51,11 @@
     "name": "Монах-Габриэлит",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/castilla-gabrielit_monk/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "castilla-gabrielit_monk",
   "mercenary": false,
-  "points": 18
+  "points": 18,
+  "requiresCommanderUnitId": null
 }

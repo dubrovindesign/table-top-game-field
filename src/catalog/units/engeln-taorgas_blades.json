@@ -42,19 +42,20 @@
     "explorationRange": 0,
     "flagSprite": "/engeln.webp",
     "grabRange": 1,
-    "health": 14,
+    "health": 0,
     "keywords": [
       "Ангельн"
     ],
-    "maxHealth": 14,
+    "maxHealth": 0,
     "miniatureSprite": "/catalog-units/engeln-taorgas_blades/miniature.jpg",
     "name": "Таоргас с Клинками",
-    "run": 2,
-    "size": "big",
-    "sprite": "/catalog-units/engeln-taorgas_blades/image.jpg",
-    "walk": 1
+    "run": 0,
+    "size": "small",
+    "sprite": "",
+    "walk": 0
   },
   "id": "engeln-taorgas_blades",
   "mercenary": true,
-  "points": 41
+  "points": 41,
+  "requiresCommanderUnitId": null
 }

@@ -51,10 +51,11 @@
     "name": "Инквизитор-Ревнитель с Мечами",
     "run": 5,
     "size": "small",
-    "sprite": "/catalog-units/castilla-heavy_inquisitor_swords/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "castilla-heavy_inquisitor_swords",
   "mercenary": false,
-  "points": 28
+  "points": 28,
+  "requiresCommanderUnitId": null
 }

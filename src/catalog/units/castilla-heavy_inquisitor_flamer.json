@@ -51,10 +51,11 @@
     "name": "Инквизитор-Ревнитель с Очистителем",
     "run": 5,
     "size": "small",
-    "sprite": "/catalog-units/castilla-heavy_inquisitor_flamer/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "castilla-heavy_inquisitor_flamer",
   "mercenary": false,
-  "points": 31
+  "points": 31,
+  "requiresCommanderUnitId": null
 }

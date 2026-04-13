@@ -51,10 +51,11 @@
     "name": "Алдвин Летописец",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/blackthorn-aldvin_book/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "blackthorn-aldvin_book",
   "mercenary": true,
-  "points": 19
+  "points": 19,
+  "requiresCommanderUnitId": null
 }

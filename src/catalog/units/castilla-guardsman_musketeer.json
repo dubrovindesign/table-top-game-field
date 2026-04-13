@@ -51,10 +51,11 @@
     "name": "Гвардеец с мушкетом",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/castilla-guardsman_musketeer/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "castilla-guardsman_musketeer",
   "mercenary": false,
-  "points": 42
+  "points": 42,
+  "requiresCommanderUnitId": null
 }

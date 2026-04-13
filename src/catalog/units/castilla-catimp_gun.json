@@ -51,10 +51,11 @@
     "name": "Каттимп Бездны с пистолем",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/castilla-catimp_gun/image.jpg",
+    "sprite": "",
     "walk": 4
   },
   "id": "castilla-catimp_gun",
   "mercenary": false,
-  "points": 8
+  "points": 8,
+  "requiresCommanderUnitId": null
 }

@@ -51,10 +51,11 @@
     "name": "Капрал Гвардии",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/castilla-guardsman_officer/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "castilla-guardsman_officer",
   "mercenary": false,
-  "points": 20
+  "points": 20,
+  "requiresCommanderUnitId": null
 }

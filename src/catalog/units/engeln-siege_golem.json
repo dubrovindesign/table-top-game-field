@@ -43,6 +43,11 @@
     "flagSprite": "/engeln.webp",
     "grabRange": 1,
     "health": 40,
+    "hugeSpriteOffsetLocal": {
+      "x": 64.4,
+      "y": 16.8
+    },
+    "hugeSpriteRotationDeg": 358,
     "keywords": [
       "Ангельн"
     ],
@@ -50,12 +55,7 @@
     "miniatureSprite": "/catalog-units/engeln-siege_golem/miniature.jpg",
     "name": "Осадный Голем",
     "run": 0,
-    "size": "huge2",
-    "hugeSpriteOffsetLocal": {
-      "x": 64.4,
-      "y": 16.8
-    },
-    "hugeSpriteRotationDeg": 358,
+    "size": "huge",
     "sprite": "/catalog-units/engeln-siege_golem/image.jpg",
     "walk": 1
   },

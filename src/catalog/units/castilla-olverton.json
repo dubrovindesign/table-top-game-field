@@ -56,5 +56,6 @@
   },
   "id": "castilla-olverton",
   "mercenary": true,
-  "points": 23
+  "points": 23,
+  "requiresCommanderUnitId": null
 }

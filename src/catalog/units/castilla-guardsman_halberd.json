@@ -51,10 +51,11 @@
     "name": "Гвардеец с алебардой",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/castilla-guardsman_halberd/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "castilla-guardsman_halberd",
   "mercenary": false,
-  "points": 20
+  "points": 20,
+  "requiresCommanderUnitId": null
 }
