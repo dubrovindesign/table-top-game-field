@@ -124,6 +124,14 @@
     "imageRotationDeg": 269
   },
   {
+    "id": "terrain-toxic-field",
+    "name": "Terrain: Toxic Field",
+    "category": "terrain",
+    "sprite": "/objects/toxic-field.png",
+    "footprint": "hexon",
+    "imageRotationDeg": 30
+  },
+  {
     "id": "ether-vortex-classic",
     "name": "Ether Vortex: Classic",
     "category": "terrain",
