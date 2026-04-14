@@ -60,9 +60,9 @@ type DeadZoneLayout = {
 Rules:
 
 - **`slot`**: fixed screen-pixel size (approx `140 × 56` at zoom=1, tuned so pill + wounded breakdown fit with ≥ 8px margin). Anchored at the world point that today serves as the zone center.
-- **`panel`**: computed only when `entries.length > 0`. Positioned above the slot with a screen-px gap (`10 * zoom`), centered on X. Width = sum of card widths + gaps + horizontal padding. Height = single card row + vertical padding.
+- **`panel`**: computed only when `entries.length > 0`. Positioned above the slot with a screen-px gap (`10 * zoom`), centered on X relative to slot center. If the resulting panel rect would extend past the left or right edge of the canvas viewport, clamp `panel.left` to the viewport so the panel stays fully visible (this breaks the centering, which is acceptable near edges).
 - **`cards`**: coordinates relative to `panel.left/top` (not `container` as before).
-- Wrap `applyBounds` covers the bounding box of `slot ∪ panel` so the wrap remains a valid positioned ancestor; `slot` and `panel` are positioned inside via `applyBounds` against their own bounds.
+- Wrap `applyBounds` covers the bounding box of `slot ∪ panel` so the wrap remains a valid positioned ancestor. `slot` and `panel` bounds supplied to `applyOneLayout` are absolute (canvas-screen) and must be rebased to wrap-local coordinates (subtract `wrap.left/top`) before being applied to the inner elements — `wrap` is the positioned ancestor for both.
 
 ## Expanded State
 
@@ -74,8 +74,8 @@ private expanded: { mine: boolean; opp: boolean } = { mine: false, opp: false };
 
 Not persisted, not synced over multiplayer. Behavior:
 
-- **Click on `.dead-unit-zone`** (pointerdown, button 0): toggles `expanded[side]` if `entries.length > 0`; otherwise ignored. Must not interfere with zone-move drag (which begins on the same element) — distinguish by movement threshold / pointer-up on same element.
-- **Click outside**: global `pointerdown` listener on `window` closes `expanded[side]` if the point is outside both `slot` bounds and `panel` bounds for that side. Clicks inside one side's panel do not close the other side.
+- **Click on `.dead-unit-zone`** (pointerdown → pointerup, button 0): toggles `expanded[side]` if `entries.length > 0`; otherwise ignored. Must not interfere with zone-move drag (which begins on the same element). Disambiguation: it's a click (toggle) when the total pointer movement between down and up is `< 4` screen-px **and** pointer-up lands on the same `.dead-unit-zone` element; otherwise treat the interaction as a zone-move drag and do not toggle.
+- **Click outside**: global `pointerdown` listener on `window` closes `expanded[side]` if the point is outside both `slot` bounds and `panel` bounds for that side. Clicks inside one side's panel do not close the other side. The listener is registered in the `DeadUnitDock` constructor (alongside the existing `pointermove`/`pointerup`/`pointercancel` listeners) and must be removed in `DeadUnitDock.dispose()`.
 - **Card drag start** (`onDeadCardPointerDown`): does not close the panel — existing behavior stands.
 - **`refresh(vm)`**: if `vm.myEntries.length === 0`, reset `expanded.mine = false`; same for opp. Prevents an empty panel from remaining open after the last unit is restored to the board.
 - **Apply**: when `expanded` flips, call `applyExpandedClasses()` to toggle `.is-expanded` on wrap, then re-run `applyDualLayouts(...)` with the last known layouts so `panel` bounds are (re)applied.
@@ -84,7 +84,7 @@ Not persisted, not synced over multiplayer. Behavior:
 
 New and changed methods on `DeadUnitDock`:
 
-- **`hitTestDeadZoneDropTarget(clientX, clientY): 'mine' | 'opp' | null`** — unified drop target. Returns a side if the point lies in that side's `slot` bounds, OR in its `panel` bounds when `expanded[side]` is true.
+- **`hitTestDeadZoneDropTarget(clientX, clientY): 'mine' | 'opp' | null`** — unified drop target. Returns a side if the point lies in that side's `slot` bounds, OR in its `panel` bounds when `expanded[side]` is true. Precedence when both sides match (possible if two expanded panels overlap): `'mine'` wins over `'opp'`.
 - **`hitTestDeadZoneCards(clientX, clientY)`** — narrowed: searches cards only within the expanded panel of each side. Used for dragging fallen units back to the board.
 - **`isPointOverDeadZoneChrome(clientX, clientY)`** — now also returns true for points inside an expanded panel, so field raycasts don't leak through.
 - **`hitTestDeadZoneMoveHandle`** — unchanged; continues to drag the slot (not the panel).
