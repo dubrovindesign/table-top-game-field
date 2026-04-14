@@ -52,8 +52,14 @@ export type CatalogUnitDef = {
   /**
    * Другой юнит, чья миниатюра должна быть в армии до этого (как `requiresUnitId` у слота ростера).
    * Можно переопределить на уровне слота у лидера; если в слоте `requiresUnitId` нет — используется это поле.
+   * @deprecated Используй `requiresCommanderUnitIds` — поддерживается для обратной совместимости.
    */
   requiresCommanderUnitId?: string;
+  /**
+   * Список альтернативных командиров: юнит доступен, если в армии присутствует ХОТЯ БЫ ОДИН из них (OR-семантика).
+   * Если массив пустой/отсутствует, используется legacy-поле `requiresCommanderUnitId` (если есть).
+   */
+  requiresCommanderUnitIds?: string[];
   card: UnitCardData;
 };
 

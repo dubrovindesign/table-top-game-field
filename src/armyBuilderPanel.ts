@@ -415,9 +415,12 @@ export class ArmyBuilderPanel {
     this.panel.appendChild(header);
     this.panel.appendChild(this.pointsBlock);
     this.panel.appendChild(this.factionTabs);
-    this.panel.appendChild(this.leadersSection);
-    this.panel.appendChild(this.mainTabBar);
-    this.panel.appendChild(this.tabPanelsWrap);
+
+    const scrollWrap = el('div', 'army-scroll-wrap');
+    scrollWrap.appendChild(this.leadersSection);
+    scrollWrap.appendChild(this.mainTabBar);
+    scrollWrap.appendChild(this.tabPanelsWrap);
+    this.panel.appendChild(scrollWrap);
 
     this.syncMainTabUi();
 

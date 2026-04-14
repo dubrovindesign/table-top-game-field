@@ -522,6 +522,12 @@ function mergeCatalogUnitDef(base: CatalogUnitDef, patch: Partial<CatalogUnitDef
       delete (out as { requiresCommanderUnitId?: string }).requiresCommanderUnitId;
     }
   }
+  if (Object.prototype.hasOwnProperty.call(patch, 'requiresCommanderUnitIds')) {
+    const v = (patch as { requiresCommanderUnitIds?: string[] | null }).requiresCommanderUnitIds;
+    if (v === null || (Array.isArray(v) && v.length === 0)) {
+      delete (out as { requiresCommanderUnitIds?: string[] }).requiresCommanderUnitIds;
+    }
+  }
   return out;
 }
 
@@ -996,14 +1002,19 @@ export function applyHotspotLayoutPresetToAllUnits(
 
 export function setUnitPatch(
   unitId: string,
-  patch: (Partial<CatalogUnitDef> & { requiresCommanderUnitId?: string | null }) | undefined,
+  patch:
+    | (Omit<Partial<CatalogUnitDef>, 'requiresCommanderUnitId' | 'requiresCommanderUnitIds'> & {
+        requiresCommanderUnitId?: string | null;
+        requiresCommanderUnitIds?: string[] | null;
+      })
+    | undefined,
   saveOpts?: CatalogOverridesSaveOptions,
 ): void {
   const o = structuredClone(getCatalogOverrides());
   if (patch === undefined || Object.keys(patch).length === 0) {
     delete o.unitPatches[unitId];
   } else {
-    o.unitPatches[unitId] = patch;
+    o.unitPatches[unitId] = patch as Partial<CatalogUnitDef>;
   }
   saveCatalogOverrides(o, saveOpts);
 }

@@ -79,6 +79,21 @@ export function getFaction(factionId: string): FactionDef | undefined {
   return FACTIONS.find((f) => f.id === factionId);
 }
 
+/**
+ * Эффективный список требуемых командиров для юнита (OR-семантика).
+ * Предпочитает новое поле `requiresCommanderUnitIds`; если оно пустое/отсутствует,
+ * использует legacy-поле `requiresCommanderUnitId`.
+ */
+export function getRequiredCommanderIdsForUnit(
+  def: Pick<CatalogUnitDef, 'requiresCommanderUnitId' | 'requiresCommanderUnitIds'> | undefined,
+): string[] {
+  if (!def) return [];
+  const multi = def.requiresCommanderUnitIds?.filter((s) => typeof s === 'string' && s.trim());
+  if (multi && multi.length > 0) return [...multi];
+  const legacy = def.requiresCommanderUnitId?.trim();
+  return legacy ? [legacy] : [];
+}
+
 /** Points counted toward the army cap when this catalog unit is placed for the given leader. */
 export function rosterSpawnPoints(leaderId: string, catalogUnitId: string): number {
   const def = getCatalogUnit(catalogUnitId);
@@ -125,9 +140,12 @@ export function listRosterRows(
     if (q && !hay.includes(q)) continue;
     let rosterBlocked = false;
     let rosterBlockedReason: string | undefined;
-    const reqId = slot.requiresUnitId ?? def.requiresCommanderUnitId;
-    if (reqId) {
-      if (usedCount(leaderId, reqId) < 1) {
+    const reqIds: string[] = slot.requiresUnitId
+      ? [slot.requiresUnitId]
+      : getRequiredCommanderIdsForUnit(def);
+    if (reqIds.length > 0) {
+      const anyPresent = reqIds.some((rid) => usedCount(leaderId, rid) >= 1);
+      if (!anyPresent) {
         rosterBlocked = true;
         rosterBlockedReason = 'Сначала добавьте в армию миниатюру, от которой зависит этот слот';
       }
@@ -187,21 +205,25 @@ export function getRosterDependencyHintsForUnit(unitId: string): {
   const requiresMap = new Map<string, string>();
   const unlocksMap = new Map<string, string>();
   const selfDef = getCatalogUnit(unitId);
-  if (selfDef?.requiresCommanderUnitId) {
-    const req = getCatalogUnit(selfDef.requiresCommanderUnitId);
-    if (req) requiresMap.set(selfDef.requiresCommanderUnitId, req.card.name);
+  for (const reqId of getRequiredCommanderIdsForUnit(selfDef)) {
+    const req = getCatalogUnit(reqId);
+    if (req) requiresMap.set(reqId, req.card.name);
   }
   for (const leaderId of listAllMergedLeaderIds()) {
     const leader = getMergedLeader(leaderId);
     if (!leader) continue;
     for (const slot of leader.roster) {
-      const slotReq = slot.requiresUnitId ?? getCatalogUnit(slot.unitId)?.requiresCommanderUnitId;
-      if (!slotReq) continue;
+      const slotReqs: string[] = slot.requiresUnitId
+        ? [slot.requiresUnitId]
+        : getRequiredCommanderIdsForUnit(getCatalogUnit(slot.unitId));
+      if (slotReqs.length === 0) continue;
       if (slot.unitId === unitId) {
-        const req = getCatalogUnit(slotReq);
-        if (req) requiresMap.set(slotReq, req.card.name);
+        for (const slotReq of slotReqs) {
+          const req = getCatalogUnit(slotReq);
+          if (req) requiresMap.set(slotReq, req.card.name);
+        }
       }
-      if (slotReq === unitId) {
+      if (slotReqs.includes(unitId)) {
         const dep = getCatalogUnit(slot.unitId);
         if (dep) unlocksMap.set(slot.unitId, dep.card.name);
       }
@@ -210,8 +232,8 @@ export function getRosterDependencyHintsForUnit(unitId: string): {
   for (const oid of listAllUnitIds()) {
     if (oid === unitId) continue;
     const od = getCatalogUnit(oid);
-    if (od?.requiresCommanderUnitId === unitId) {
-      unlocksMap.set(oid, od.card.name);
+    if (getRequiredCommanderIdsForUnit(od).includes(unitId)) {
+      unlocksMap.set(oid, od!.card.name);
     }
   }
   const toSorted = (m: Map<string, string>): RosterDependencyHint[] =>

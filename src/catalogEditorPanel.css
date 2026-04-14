@@ -1730,10 +1730,17 @@
 }
 
 .ce-catalog-maxcopies-input {
-  width: 48px;
-  max-width: 16vw;
+  width: 64px;
+  max-width: 22vw;
   padding: 6px 8px;
   font-size: 0.85rem;
+}
+
+.ce-catalog-slot-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: stretch;
 }
 
 .ce-leader-attached-units .ce-catalog-army-row {
@@ -1932,4 +1939,43 @@
   width: 100%;
   max-height: 200px;
   overflow-y: auto;
+}
+
+.ce-unit-commander-list {
+  width: 100%;
+  max-height: 240px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px 0;
+}
+
+.ce-unit-commander-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ce-unit-commander-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ce-unit-commander-cb {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.ce-unit-commander-item-label {
+  font-size: 0.9rem;
+  line-height: 1.25;
+  color: rgba(230, 230, 235, 0.95);
+}
+
+.ce-unit-commander-empty {
+  padding: 6px 8px;
 }

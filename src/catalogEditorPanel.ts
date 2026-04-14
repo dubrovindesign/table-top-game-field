@@ -59,6 +59,7 @@ import {
   getCatalogUnit,
   getFaction,
   getLeader,
+  getRequiredCommanderIdsForUnit,
   inventoryItemMaxCopies,
   leadersForFaction,
   listAllMergedLeaderIds,
@@ -208,6 +209,13 @@ function commitCatalogLeaderPoints(
   }
   if (v === undefined) setRosterSlotPatch(leaderId, unitId, { points: undefined });
   else setRosterSlotPatch(leaderId, unitId, { points: v });
+}
+
+function commitCatalogLeaderMaxCopies(leaderId: string, unitId: string, raw: string): void {
+  const n = numOrU(raw);
+  const v = n === undefined || n < 0 ? undefined : Math.floor(n);
+  if (v === undefined) setRosterSlotPatch(leaderId, unitId, { maxCopies: undefined });
+  else setRosterSlotPatch(leaderId, unitId, { maxCopies: v });
 }
 
 /** Убрать legacy binding при редактировании; custom dice → поля. */
@@ -368,13 +376,14 @@ export class CatalogEditorPanel {
   private hotspotClipboard: HotspotRegion | null = null;
   private unitIdInput!: HTMLInputElement;
   private unitNameInput!: HTMLInputElement;
-  /** Выбранный id юнита-командира; '' = не требуется. */
-  private unitRequiresCommanderValue = '';
+  /** Выбранные id юнитов-командиров (OR-семантика); пустой Set = не требуется. */
+  private unitRequiresCommanderValues: Set<string> = new Set();
   /** Нативный disclosure: только summary виден, пока блок закрыт. */
   private unitRequiresCommanderDetails!: HTMLDetailsElement;
   private unitRequiresCommanderSummary!: HTMLElement;
   private unitRequiresCommanderSearch!: HTMLInputElement;
-  private unitRequiresCommanderSelect!: HTMLSelectElement;
+  /** Контейнер со списком чекбоксов командиров (множественный выбор). */
+  private unitRequiresCommanderList!: HTMLDivElement;
   private drag:
     | { kind: 'move'; index: number; offX: number; offY: number }
     | {
@@ -766,7 +775,9 @@ export class CatalogEditorPanel {
 
     const commanderBlock = el('div', 'ce-unit-commander-block catalog-editor-row');
     commanderBlock.style.flexDirection = 'column';
-    commanderBlock.appendChild(el('div', 'ce-field-label', 'Требуется командир'));
+    commanderBlock.appendChild(
+      el('div', 'ce-field-label', 'Требуются командиры (любой из выбранных)'),
+    );
     this.unitRequiresCommanderDetails = document.createElement('details');
     this.unitRequiresCommanderDetails.className = 'ce-unit-commander-details';
     this.unitRequiresCommanderSummary = el('summary', 'ce-unit-commander-summary', '— не требуется —');
@@ -775,30 +786,28 @@ export class CatalogEditorPanel {
     this.unitRequiresCommanderSearch.type = 'search';
     this.unitRequiresCommanderSearch.placeholder = 'Поиск по имени или id…';
     this.unitRequiresCommanderSearch.autocomplete = 'off';
-    this.unitRequiresCommanderSearch.addEventListener('input', () => this.populateUnitRequiresCommanderSelect());
-    this.unitRequiresCommanderSelect = el('select', 'catalog-editor-select ce-unit-commander-select') as HTMLSelectElement;
-    this.unitRequiresCommanderSelect.size = 8;
-    this.unitRequiresCommanderSelect.addEventListener('change', () => {
-      this.unitRequiresCommanderValue = this.unitRequiresCommanderSelect.value;
-      this.syncUnitRequiresCommanderSummary();
-      this.unitRequiresCommanderDetails.open = false;
-    });
+    this.unitRequiresCommanderSearch.addEventListener('input', () => this.populateUnitRequiresCommanderList());
+    this.unitRequiresCommanderList = el('div', 'ce-unit-commander-list') as HTMLDivElement;
     this.unitRequiresCommanderDetails.addEventListener('toggle', () => {
       if (this.unitRequiresCommanderDetails.open) {
         this.unitRequiresCommanderSearch.value = '';
-        this.populateUnitRequiresCommanderSelect();
+        this.populateUnitRequiresCommanderList();
         requestAnimationFrame(() => this.unitRequiresCommanderSearch.focus());
       }
     });
     commanderPanel.appendChild(this.unitRequiresCommanderSearch);
-    commanderPanel.appendChild(this.unitRequiresCommanderSelect);
+    commanderPanel.appendChild(this.unitRequiresCommanderList);
     this.unitRequiresCommanderDetails.appendChild(this.unitRequiresCommanderSummary);
     this.unitRequiresCommanderDetails.appendChild(commanderPanel);
     commanderBlock.appendChild(this.unitRequiresCommanderDetails);
     unitEditorCol.appendChild(commanderBlock);
     this.unitIdInput.addEventListener('input', () => {
       if (!this.unitFormIsNew) return;
-      this.refreshUnitRequiresCommanderOptions(this.unitRequiresCommanderValue);
+      this.refreshUnitRequiresCommanderOptions();
+    });
+    this.unitNameInput.addEventListener('input', () => {
+      if (!this.unitFormIsNew) return;
+      this.cardName.value = this.unitNameInput.value;
     });
 
     const unitSubTabs = el('div', 'catalog-editor-tabs ce-unit-subtabs');
@@ -1563,10 +1572,11 @@ export class CatalogEditorPanel {
     this.unitIdInput.disabled = false;
     this.unitNameInput.value = '';
     this.unitRequiresCommanderSearch.value = '';
-    this.refreshUnitRequiresCommanderOptions('');
+    this.refreshUnitRequiresCommanderOptions([]);
     this.unitStubFieldsWrap.hidden = false;
     this.clearEditor();
     this.resetUnitFormCardFields();
+    this.cardName.value = '';
     if (this.selectedFactionId === MERCENARY_FACTION_ID) {
       this.unitMercenaryCb.checked = true;
     }
@@ -1648,7 +1658,7 @@ export class CatalogEditorPanel {
     if (!def) return;
     this.unitMercenaryCb.checked = def.mercenary === true;
     this.unitRequiresCommanderSearch.value = '';
-    this.refreshUnitRequiresCommanderOptions(def.requiresCommanderUnitId ?? '');
+    this.refreshUnitRequiresCommanderOptions(getRequiredCommanderIdsForUnit(def));
     this.unitNameInput.value = def.card.name;
     this.loadCardIntoForm(def.card, unitId);
     this.applyError.textContent = '';
@@ -1732,9 +1742,9 @@ export class CatalogEditorPanel {
       const cardResolved = await resolveCardImageUrlsForStorage(rawCard);
       const card = finalizeCardForUnitSave(id, cardResolved, 'newUnit');
       const mercenary = this.unitMercenaryCb.checked;
-      const rc = this.unitRequiresCommanderValue.trim();
+      const rcIds = [...this.unitRequiresCommanderValues].filter((s) => s.trim());
       const nu: CatalogUnitDef = { id, points: 0, card, mercenary };
-      if (rc) nu.requiresCommanderUnitId = rc;
+      if (rcIds.length > 0) nu.requiresCommanderUnitIds = rcIds;
       setNewUnit(id, nu);
       this.selectedUnitId = id;
       if (this.unitCreatePresetLeaderId) {
@@ -1784,10 +1794,35 @@ export class CatalogEditorPanel {
       inp.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
       });
+      let fieldEl: HTMLElement = inp;
+      if (kind === 'slot') {
+        const slotData = leader.roster.find((x) => x.unitId === unitId);
+        const maxCopies = slotData?.maxCopies ?? 1;
+        const cntInp = document.createElement('input');
+        cntInp.type = 'number';
+        cntInp.className = 'ce-catalog-maxcopies-input catalog-editor-input';
+        cntInp.value = String(maxCopies);
+        cntInp.min = '0';
+        cntInp.step = '1';
+        cntInp.title = 'Количество доступных юнитов';
+        cntInp.setAttribute('aria-label', 'Количество доступных юнитов');
+        cntInp.addEventListener('blur', () => {
+          commitCatalogLeaderMaxCopies(lid, unitId, cntInp.value);
+          this.refreshLeaderAttachedUnits();
+        });
+        cntInp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+        });
+        const stack = document.createElement('div');
+        stack.className = 'ce-catalog-slot-fields';
+        stack.appendChild(inp);
+        stack.appendChild(cntInp);
+        fieldEl = stack;
+      }
       const editBtn = createPencilEditButton(() => {
         this.openUnitFormEdit(unitId);
       });
-      const actions: HTMLElement[] = [inp, editBtn];
+      const actions: HTMLElement[] = [fieldEl, editBtn];
       const row = buildCatalogArmyStyleRow({
         sprite: def ? unitPanelThumbSrc(def.card) : undefined,
         name: title ? `${nm} — ${title}` : nm,
@@ -3058,32 +3093,54 @@ export class CatalogEditorPanel {
 
   private syncUnitRequiresCommanderSummary(): void {
     if (!this.unitRequiresCommanderSummary) return;
-    const v = this.unitRequiresCommanderValue;
-    if (!v) {
+    const vals = [...this.unitRequiresCommanderValues];
+    if (vals.length === 0) {
       this.unitRequiresCommanderSummary.textContent = '— не требуется —';
       this.unitRequiresCommanderSummary.title = '';
       return;
     }
-    const d = getCatalogUnit(v);
-    const t = d ? `${d.card.name} · ${v}` : v;
+    const names = vals.map((id) => {
+      const d = getCatalogUnit(id);
+      return d ? d.card.name : id;
+    });
+    const t = names.join(', ');
     this.unitRequiresCommanderSummary.textContent = t;
-    this.unitRequiresCommanderSummary.title = t;
+    this.unitRequiresCommanderSummary.title = vals.map((id) => `${id}`).join(', ');
   }
 
-  /** Заполняет нативный select с учётом строки поиска. */
-  private populateUnitRequiresCommanderSelect(): void {
-    if (!this.unitRequiresCommanderSelect) return;
+  /** Заполняет список чекбоксов с учётом строки поиска (множественный выбор, OR-семантика). */
+  private populateUnitRequiresCommanderList(): void {
+    if (!this.unitRequiresCommanderList) return;
     const q = (this.unitRequiresCommanderSearch?.value ?? '').trim().toLowerCase();
     const rows = this.getUnitRequiresCommanderRowSource();
-    const prev = this.unitRequiresCommanderValue;
-    this.unitRequiresCommanderSelect.innerHTML = '';
-    this.unitRequiresCommanderSelect.appendChild(new Option('— не требуется —', ''));
+    this.unitRequiresCommanderList.innerHTML = '';
+    let visible = 0;
     for (const r of rows) {
       if (q && !r.id.toLowerCase().includes(q) && !r.label.toLowerCase().includes(q)) continue;
-      this.unitRequiresCommanderSelect.appendChild(new Option(r.label, r.id));
+      visible++;
+      const item = document.createElement('label');
+      item.className = 'ce-unit-commander-item';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.className = 'ce-unit-commander-cb';
+      cb.value = r.id;
+      cb.checked = this.unitRequiresCommanderValues.has(r.id);
+      cb.addEventListener('change', () => {
+        if (cb.checked) this.unitRequiresCommanderValues.add(r.id);
+        else this.unitRequiresCommanderValues.delete(r.id);
+        this.syncUnitRequiresCommanderSummary();
+      });
+      const caption = document.createElement('span');
+      caption.className = 'ce-unit-commander-item-label';
+      caption.textContent = r.label;
+      item.appendChild(cb);
+      item.appendChild(caption);
+      this.unitRequiresCommanderList.appendChild(item);
     }
-    const can = prev === '' || [...this.unitRequiresCommanderSelect.options].some((o) => o.value === prev);
-    this.unitRequiresCommanderSelect.value = can ? prev : '';
+    if (visible === 0) {
+      const empty = el('div', 'catalog-editor-hint ce-unit-commander-empty', '— ничего не найдено —');
+      this.unitRequiresCommanderList.appendChild(empty);
+    }
   }
 
   private getUnitRequiresCommanderRowSource(): { id: string; label: string }[] {
@@ -3104,15 +3161,15 @@ export class CatalogEditorPanel {
     return rows;
   }
 
-  /** Пересчитать допустимое значение, подпись на summary и опции select. */
-  private refreshUnitRequiresCommanderOptions(preferredValue?: string): void {
+  /** Пересчитать допустимые значения (отфильтровать пропавшие id), обновить summary и список. */
+  private refreshUnitRequiresCommanderOptions(preferredValues?: Iterable<string>): void {
     if (!this.unitRequiresCommanderSummary) return;
     const rows = this.getUnitRequiresCommanderRowSource();
-    const prev = preferredValue !== undefined ? preferredValue : this.unitRequiresCommanderValue;
-    const canKeep = prev === '' || (prev !== '' && rows.some((r) => r.id === prev));
-    this.unitRequiresCommanderValue = canKeep ? prev : '';
+    const allowed = new Set(rows.map((r) => r.id));
+    const source = preferredValues !== undefined ? new Set(preferredValues) : this.unitRequiresCommanderValues;
+    this.unitRequiresCommanderValues = new Set([...source].filter((id) => allowed.has(id)));
     this.syncUnitRequiresCommanderSummary();
-    this.populateUnitRequiresCommanderSelect();
+    this.populateUnitRequiresCommanderList();
   }
 
   private refreshUnitSelectors(): void {
@@ -3129,7 +3186,7 @@ export class CatalogEditorPanel {
       sel.value = unitIds.includes(prev) ? prev : '';
     };
     if (this.unitRequiresCommanderDetails) {
-      this.refreshUnitRequiresCommanderOptions(this.unitRequiresCommanderValue);
+      this.refreshUnitRequiresCommanderOptions(this.unitRequiresCommanderValues);
     }
     refill(this.leaderCatalogUnitSel, 'Шаблон карточки (опц.)');
     refill(this.leaderRosterUnitSel);
@@ -3250,10 +3307,29 @@ export class CatalogEditorPanel {
       inp.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
       });
+      const cntInp = document.createElement('input');
+      cntInp.type = 'number';
+      cntInp.className = 'ce-catalog-maxcopies-input catalog-editor-input';
+      cntInp.value = String(slot.maxCopies ?? 1);
+      cntInp.min = '0';
+      cntInp.step = '1';
+      cntInp.title = 'Количество доступных юнитов';
+      cntInp.setAttribute('aria-label', 'Количество доступных юнитов');
+      cntInp.addEventListener('blur', () => {
+        commitCatalogLeaderMaxCopies(leader.id, slot.unitId, cntInp.value);
+        this.refreshLeaderRosterEditor();
+      });
+      cntInp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+      });
+      const stack = document.createElement('div');
+      stack.className = 'ce-catalog-slot-fields';
+      stack.appendChild(inp);
+      stack.appendChild(cntInp);
       const editBtn = createPencilEditButton(() => {
         this.openUnitFormEdit(slot.unitId);
       });
-      const actions: HTMLElement[] = [inp, editBtn];
+      const actions: HTMLElement[] = [stack, editBtn];
       if (removable) {
         const rm = el('button', 'catalog-editor-icon-btn', '×') as HTMLButtonElement;
         rm.type = 'button';
@@ -3792,18 +3868,21 @@ export class CatalogEditorPanel {
     const card = finalizeCardForUnitSave(id, cardResolved, storage);
     card.catalogUnitId = def.card.catalogUnitId ?? this.selectedUnitId;
     const mercenary = this.unitMercenaryCb.checked;
-    const rc = this.unitRequiresCommanderValue.trim();
+    const rcIds = [...this.unitRequiresCommanderValues].filter((s) => s.trim());
     if (getCatalogOverrides().newUnits[id]) {
       const next: CatalogUnitDef = { ...def, card, mercenary };
-      if (rc) next.requiresCommanderUnitId = rc;
-      else delete next.requiresCommanderUnitId;
+      if (rcIds.length > 0) next.requiresCommanderUnitIds = rcIds;
+      else delete next.requiresCommanderUnitIds;
+      // Нормализуем legacy-поле — всегда убираем, чтобы не конфликтовало с новым.
+      delete next.requiresCommanderUnitId;
       setNewUnit(id, next);
     } else {
       setUnitPatch(id, {
         card,
         mercenary,
-        requiresCommanderUnitId: rc ? rc : null,
-      } as Parameters<typeof setUnitPatch>[1]);
+        requiresCommanderUnitIds: rcIds.length > 0 ? rcIds : null,
+        requiresCommanderUnitId: null,
+      });
     }
     this.applyError.textContent = '';
   }
