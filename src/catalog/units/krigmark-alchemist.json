@@ -51,10 +51,11 @@
     "name": "Некро-Алхимик",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/krigmark-alchemist/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "krigmark-alchemist",
   "mercenary": false,
-  "points": 17
+  "points": 17,
+  "requiresCommanderUnitId": null
 }

@@ -2,16 +2,55 @@
   "card": {
     "attacks": [
       {
-        "attackRange": "melee",
-        "damage": 1,
+        "attackRange": "ranged",
+        "damage": 2,
+        "damageType": "fire",
+        "dice": {
+          "black": 2,
+          "green": 0,
+          "red": 5,
+          "white": 0
+        },
+        "name": "поток огня",
+        "range": 1
+      },
+      {
+        "attackRange": "ranged",
+        "damage": 2,
+        "damageType": "fire",
+        "dice": {
+          "black": 2,
+          "green": 0,
+          "red": 3,
+          "white": 0
+        },
+        "name": "огненный залп",
+        "range": 2
+      },
+      {
+        "attackRange": "ranged",
+        "damage": 2,
         "damageType": "physical",
         "dice": {
-          "black": 0,
+          "black": 2,
           "green": 0,
           "red": 1,
           "white": 0
         },
-        "name": "—",
+        "name": "удар прикладом",
+        "range": 1
+      },
+      {
+        "attackRange": "ranged",
+        "damage": 2,
+        "damageType": "fire",
+        "dice": {
+          "black": 0,
+          "green": 0,
+          "red": 2,
+          "white": 0
+        },
+        "name": "смертельный финал",
         "range": 1
       }
     ],
@@ -19,16 +58,16 @@
     "concentration": {
       "black": 0,
       "green": 0,
-      "red": 0,
+      "red": 1,
       "white": 0
     },
     "defense": {
       "green": 0,
-      "white": 0
+      "white": 3
     },
     "defenseReaction": {
       "green": 0,
-      "white": 0
+      "white": 1
     },
     "domains": [
       "destruction"
@@ -42,19 +81,22 @@
     "explorationRange": 0,
     "flagSprite": "/chasm.webp",
     "grabRange": 1,
+    "grabRangeUnit": "hexon",
     "health": 10,
     "keywords": [
       "Бездна"
     ],
     "maxHealth": 10,
     "miniatureSprite": "/catalog-units/chasm-void_walker_flamethrower/miniature.jpg",
+    "movementDistanceUnit": "hexon",
     "name": "Разрушитель Бездны с тяжелым огнеметом",
     "run": 2,
     "size": "big",
-    "sprite": "/catalog-units/chasm-void_walker_flamethrower/image.jpg",
+    "sprite": "",
     "walk": 1
   },
   "id": "chasm-void_walker_flamethrower",
   "mercenary": false,
-  "points": 58
+  "points": 58,
+  "requiresCommanderUnitId": null
 }

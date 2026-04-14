@@ -31,7 +31,7 @@
       "white": 0
     },
     "domains": [
-      "death"
+      "creation"
     ],
     "exploration": {
       "black": 0,
@@ -43,11 +43,11 @@
     "faithMarkers": {
       "red": 0
     },
-    "flagSprite": "/blackthorn.webp",
+    "flagSprite": "/engeln.webp",
     "grabRange": 1,
     "health": 4,
     "keywords": [
-      "Великий Терновник"
+      "Ангельн"
     ],
     "maxHealth": 4,
     "miniatureSprite": "/catalog-units/engeln-mul/miniature.jpg",
@@ -55,7 +55,7 @@
     "name": "Автоматон \"М.У.Л.\"",
     "run": 5,
     "size": "small",
-    "sprite": "/catalog-units/engeln-mul/image.jpg",
+    "sprite": "",
     "traits": [
       {
         "description": "Карточка-заглушка: заданы только имя, очки и лимит из torn-world.com. Арт и игровые статы не заполнены.",

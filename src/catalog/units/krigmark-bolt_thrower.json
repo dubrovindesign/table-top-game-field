@@ -51,10 +51,11 @@
     "name": "Тяжелый Стреломет",
     "run": 1,
     "size": "big",
-    "sprite": "/catalog-units/krigmark-bolt_thrower/image.jpg",
+    "sprite": "",
     "walk": 0
   },
   "id": "krigmark-bolt_thrower",
   "mercenary": false,
-  "points": 55
+  "points": 55,
+  "requiresCommanderUnitId": null
 }

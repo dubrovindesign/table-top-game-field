@@ -3,16 +3,29 @@
     "attacks": [
       {
         "attackRange": "melee",
+        "damage": 2,
+        "damageType": "physical",
+        "dice": {
+          "black": 2,
+          "green": 3,
+          "red": 4,
+          "white": 0
+        },
+        "name": "удар мечами",
+        "range": 1
+      },
+      {
+        "attackRange": "melee",
         "damage": 1,
         "damageType": "physical",
         "dice": {
           "black": 0,
           "green": 0,
-          "red": 1,
+          "red": 5,
           "white": 0
         },
-        "name": "—",
-        "range": 1
+        "name": "смертоносные лезвия",
+        "range": 0
       }
     ],
     "catalogUnitId": "chasm-abgorr_unit",
@@ -23,8 +36,8 @@
       "white": 0
     },
     "defense": {
-      "green": 0,
-      "white": 0
+      "green": 3,
+      "white": 1
     },
     "defenseReaction": {
       "green": 0,
@@ -36,25 +49,28 @@
     "exploration": {
       "black": 0,
       "green": 0,
-      "red": 0,
+      "red": 1,
       "white": 0
     },
-    "explorationRange": 0,
+    "explorationRange": 1,
     "flagSprite": "/chasm.webp",
     "grabRange": 1,
+    "grabRangeUnit": "hex",
     "health": 9,
     "keywords": [
       "Бездна"
     ],
     "maxHealth": 9,
     "miniatureSprite": "/catalog-units/chasm-abgorr_unit/miniature.jpg",
+    "movementDistanceUnit": "hex",
     "name": "Абгорр Неотразимый",
     "run": 9,
     "size": "large",
-    "sprite": "/catalog-units/chasm-abgorr_unit/image.jpg",
+    "sprite": "",
     "walk": 6
   },
   "id": "chasm-abgorr_unit",
   "mercenary": false,
-  "points": 45
+  "points": 45,
+  "requiresCommanderUnitId": null
 }

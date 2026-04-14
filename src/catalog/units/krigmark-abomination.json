@@ -51,10 +51,11 @@
     "name": "Абоминация Войны",
     "run": 2,
     "size": "big",
-    "sprite": "/catalog-units/krigmark-abomination/image.jpg",
+    "sprite": "",
     "walk": 1
   },
   "id": "krigmark-abomination",
   "mercenary": false,
-  "points": 50
+  "points": 50,
+  "requiresCommanderUnitId": null
 }

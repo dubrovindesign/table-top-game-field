@@ -31,7 +31,7 @@
       "white": 0
     },
     "domains": [
-      "death"
+      "creation"
     ],
     "exploration": {
       "black": 0,
@@ -43,19 +43,19 @@
     "faithMarkers": {
       "red": 0
     },
-    "flagSprite": "/blackthorn.webp",
+    "flagSprite": "/engeln.webp",
     "grabRange": 1,
     "health": 5,
     "keywords": [
-      "Великий Терновник"
+      "Ангельн"
     ],
     "maxHealth": 5,
     "miniatureSprite": "/catalog-units/engeln-boyd/miniature.jpg",
     "movementDistanceUnit": "hex",
-    "name": "Бойд Великол��пный",
+    "name": "Бойд Великолепный",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/engeln-boyd/image.jpg",
+    "sprite": "",
     "traits": [
       {
         "description": "Карточка-заглушка: заданы только имя, очки и лимит из torn-world.com. Арт и игровые статы не заполнены.",

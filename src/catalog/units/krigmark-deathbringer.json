@@ -51,10 +51,11 @@
     "name": "Несущий Смерть",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/krigmark-deathbringer/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "krigmark-deathbringer",
   "mercenary": false,
-  "points": 45
+  "points": 45,
+  "requiresCommanderUnitId": null
 }

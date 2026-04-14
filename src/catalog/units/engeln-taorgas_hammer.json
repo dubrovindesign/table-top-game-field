@@ -51,7 +51,7 @@
     "name": "Таоргас с Молотом",
     "run": 2,
     "size": "big",
-    "sprite": "/catalog-units/engeln-taorgas_hammer/image.jpg",
+    "sprite": "",
     "walk": 1
   },
   "id": "engeln-taorgas_hammer",

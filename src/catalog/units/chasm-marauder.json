@@ -6,12 +6,12 @@
         "damage": 1,
         "damageType": "physical",
         "dice": {
-          "black": 0,
-          "green": 0,
-          "red": 1,
+          "black": 1,
+          "green": 1,
+          "red": 3,
           "white": 0
         },
-        "name": "—",
+        "name": "удар кинжалом",
         "range": 1
       }
     ],
@@ -19,16 +19,16 @@
     "concentration": {
       "black": 0,
       "green": 0,
-      "red": 0,
+      "red": 1,
       "white": 0
     },
     "defense": {
-      "green": 0,
-      "white": 0
+      "green": 1,
+      "white": 1
     },
     "defenseReaction": {
       "green": 0,
-      "white": 0
+      "white": 1
     },
     "domains": [
       "destruction"
@@ -36,25 +36,28 @@
     "exploration": {
       "black": 0,
       "green": 0,
-      "red": 0,
+      "red": 1,
       "white": 0
     },
-    "explorationRange": 0,
+    "explorationRange": 1,
     "flagSprite": "/chasm.webp",
     "grabRange": 1,
+    "grabRangeUnit": "hex",
     "health": 6,
     "keywords": [
       "Бездна"
     ],
     "maxHealth": 6,
     "miniatureSprite": "/catalog-units/chasm-marauder/miniature.jpg",
+    "movementDistanceUnit": "hex",
     "name": "Дьявол-налетчик",
     "run": 7,
     "size": "small",
-    "sprite": "/catalog-units/chasm-marauder/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "chasm-marauder",
   "mercenary": false,
-  "points": 15
+  "points": 15,
+  "requiresCommanderUnitId": null
 }

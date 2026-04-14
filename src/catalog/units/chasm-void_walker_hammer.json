@@ -3,15 +3,28 @@
     "attacks": [
       {
         "attackRange": "melee",
-        "damage": 1,
+        "damage": 4,
         "damageType": "physical",
+        "dice": {
+          "black": 2,
+          "green": 0,
+          "red": 2,
+          "white": 0
+        },
+        "name": "удар молотом",
+        "range": 1
+      },
+      {
+        "attackRange": "ranged",
+        "damage": 2,
+        "damageType": "fire",
         "dice": {
           "black": 0,
           "green": 0,
-          "red": 1,
+          "red": 2,
           "white": 0
         },
-        "name": "—",
+        "name": "смертельный финал",
         "range": 1
       }
     ],
@@ -19,16 +32,16 @@
     "concentration": {
       "black": 0,
       "green": 0,
-      "red": 0,
+      "red": 1,
       "white": 0
     },
     "defense": {
       "green": 0,
-      "white": 0
+      "white": 3
     },
     "defenseReaction": {
       "green": 0,
-      "white": 0
+      "white": 1
     },
     "domains": [
       "destruction"
@@ -42,19 +55,22 @@
     "explorationRange": 0,
     "flagSprite": "/chasm.webp",
     "grabRange": 1,
+    "grabRangeUnit": "hexon",
     "health": 10,
     "keywords": [
       "Бездна"
     ],
     "maxHealth": 10,
     "miniatureSprite": "/catalog-units/chasm-void_walker_hammer/miniature.jpg",
+    "movementDistanceUnit": "hexon",
     "name": "Разрушитель Бездны с молотом",
     "run": 2,
     "size": "big",
-    "sprite": "/catalog-units/chasm-void_walker_hammer/image.jpg",
+    "sprite": "",
     "walk": 1
   },
   "id": "chasm-void_walker_hammer",
   "mercenary": false,
-  "points": 44
+  "points": 44,
+  "requiresCommanderUnitId": null
 }

@@ -6,12 +6,12 @@
         "damage": 1,
         "damageType": "physical",
         "dice": {
-          "black": 0,
-          "green": 0,
-          "red": 1,
+          "black": 2,
+          "green": 2,
+          "red": 4,
           "white": 0
         },
-        "name": "—",
+        "name": "вихрь кинжалов",
         "range": 1
       }
     ],
@@ -19,16 +19,16 @@
     "concentration": {
       "black": 0,
       "green": 0,
-      "red": 0,
+      "red": 4,
       "white": 0
     },
     "defense": {
-      "green": 0,
-      "white": 0
+      "green": 2,
+      "white": 1
     },
     "defenseReaction": {
       "green": 0,
-      "white": 0
+      "white": 4
     },
     "domains": [
       "destruction"
@@ -36,25 +36,28 @@
     "exploration": {
       "black": 0,
       "green": 0,
-      "red": 0,
+      "red": 4,
       "white": 0
     },
-    "explorationRange": 0,
+    "explorationRange": 1,
     "flagSprite": "/chasm.webp",
     "grabRange": 1,
+    "grabRangeUnit": "hex",
     "health": 6,
     "keywords": [
       "Бездна"
     ],
     "maxHealth": 6,
     "miniatureSprite": "/catalog-units/chasm-drazzgl/miniature.jpg",
+    "movementDistanceUnit": "hex",
     "name": "Драззгл Шкуродер",
     "run": 7,
     "size": "small",
-    "sprite": "/catalog-units/chasm-drazzgl/image.jpg",
+    "sprite": "",
     "walk": 4
   },
   "id": "chasm-drazzgl",
   "mercenary": false,
-  "points": 20
+  "points": 20,
+  "requiresCommanderUnitId": null
 }

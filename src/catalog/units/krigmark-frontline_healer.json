@@ -51,10 +51,11 @@
     "name": "Фронтовой Медик",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/krigmark-frontline_healer/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "krigmark-frontline_healer",
   "mercenary": false,
-  "points": 21
+  "points": 21,
+  "requiresCommanderUnitId": null
 }

@@ -51,10 +51,11 @@
     "name": "Дальмар Шульц",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/krigmark-dalmar_shultz_unit/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "krigmark-dalmar_shultz_unit",
   "mercenary": false,
-  "points": 34
+  "points": 34,
+  "requiresCommanderUnitId": null
 }

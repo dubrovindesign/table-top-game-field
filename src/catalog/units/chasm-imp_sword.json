@@ -19,16 +19,16 @@
     "concentration": {
       "black": 0,
       "green": 0,
-      "red": 0,
+      "red": 1,
       "white": 0
     },
     "defense": {
-      "green": 0,
+      "green": 1,
       "white": 0
     },
     "defenseReaction": {
       "green": 0,
-      "white": 0
+      "white": 1
     },
     "domains": [
       "destruction"
@@ -36,25 +36,28 @@
     "exploration": {
       "black": 0,
       "green": 0,
-      "red": 0,
+      "red": 1,
       "white": 0
     },
-    "explorationRange": 0,
+    "explorationRange": 1,
     "flagSprite": "/chasm.webp",
     "grabRange": 1,
+    "grabRangeUnit": "hex",
     "health": 3,
     "keywords": [
       "Бездна"
     ],
     "maxHealth": 3,
     "miniatureSprite": "/catalog-units/chasm-imp_sword/miniature.jpg",
+    "movementDistanceUnit": "hex",
     "name": "Имп Бездны с мечом",
     "run": 5,
     "size": "small",
-    "sprite": "/catalog-units/chasm-imp_sword/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "chasm-imp_sword",
   "mercenary": false,
-  "points": 6
+  "points": 6,
+  "requiresCommanderUnitId": null
 }

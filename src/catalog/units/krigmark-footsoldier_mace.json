@@ -51,10 +51,11 @@
     "name": "Рядовой с Булавой",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/krigmark-footsoldier_mace/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "krigmark-footsoldier_mace",
   "mercenary": false,
-  "points": 20
+  "points": 20,
+  "requiresCommanderUnitId": null
 }

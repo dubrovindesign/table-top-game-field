@@ -2,16 +2,29 @@
   "card": {
     "attacks": [
       {
-        "attackRange": "melee",
+        "attackRange": "ranged",
+        "damage": 2,
+        "damageType": "physical",
+        "dice": {
+          "black": 0,
+          "green": 1,
+          "red": 1,
+          "white": 0
+        },
+        "name": "выстрел",
+        "range": 2
+      },
+      {
+        "attackRange": "ranged",
         "damage": 1,
         "damageType": "physical",
         "dice": {
           "black": 0,
-          "green": 0,
+          "green": 1,
           "red": 1,
           "white": 0
         },
-        "name": "—",
+        "name": "удар прикладом",
         "range": 1
       }
     ],
@@ -23,12 +36,12 @@
       "white": 0
     },
     "defense": {
-      "green": 0,
+      "green": 1,
       "white": 0
     },
     "defenseReaction": {
       "green": 0,
-      "white": 0
+      "white": 1
     },
     "domains": [
       "destruction"
@@ -42,19 +55,22 @@
     "explorationRange": 0,
     "flagSprite": "/chasm.webp",
     "grabRange": 1,
+    "grabRangeUnit": "hex",
     "health": 3,
     "keywords": [
       "Бездна"
     ],
     "maxHealth": 3,
     "miniatureSprite": "/catalog-units/chasm-catimp_gun/miniature.jpg",
+    "movementDistanceUnit": "hex",
     "name": "Каттимп Бездны с пистолем",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/chasm-catimp_gun/image.jpg",
+    "sprite": "",
     "walk": 4
   },
   "id": "chasm-catimp_gun",
   "mercenary": false,
-  "points": 8
+  "points": 8,
+  "requiresCommanderUnitId": null
 }

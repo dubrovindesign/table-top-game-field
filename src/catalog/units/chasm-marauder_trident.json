@@ -19,12 +19,12 @@
     "concentration": {
       "black": 0,
       "green": 0,
-      "red": 0,
+      "red": 1,
       "white": 0
     },
     "defense": {
-      "green": 0,
-      "white": 4
+      "green": 1,
+      "white": 1
     },
     "defenseReaction": {
       "green": 0,
@@ -36,15 +36,16 @@
     "exploration": {
       "black": 0,
       "green": 0,
-      "red": 0,
+      "red": 1,
       "white": 0
     },
-    "explorationRange": 0,
+    "explorationRange": 1,
     "faithMarkers": {
       "red": 0
     },
     "flagSprite": "/chasm.webp",
     "grabRange": 1,
+    "grabRangeUnit": "hex",
     "health": 6,
     "keywords": [
       "Бездна",
@@ -67,5 +68,6 @@
   },
   "id": "chasm-marauder_trident",
   "mercenary": false,
-  "points": 17
+  "points": 17,
+  "requiresCommanderUnitId": null
 }

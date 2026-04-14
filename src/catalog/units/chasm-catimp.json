@@ -7,11 +7,11 @@
         "damageType": "physical",
         "dice": {
           "black": 0,
-          "green": 0,
-          "red": 1,
+          "green": 1,
+          "red": 2,
           "white": 0
         },
-        "name": "—",
+        "name": "подлый удар",
         "range": 1
       }
     ],
@@ -19,11 +19,11 @@
     "concentration": {
       "black": 0,
       "green": 0,
-      "red": 0,
+      "red": 1,
       "white": 0
     },
     "defense": {
-      "green": 0,
+      "green": 1,
       "white": 0
     },
     "defenseReaction": {
@@ -48,13 +48,15 @@
     ],
     "maxHealth": 3,
     "miniatureSprite": "/catalog-units/chasm-catimp/miniature.jpg",
+    "movementDistanceUnit": "hex",
     "name": "Каттимп Бездны",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/chasm-catimp/image.jpg",
+    "sprite": "",
     "walk": 4
   },
   "id": "chasm-catimp",
   "mercenary": false,
-  "points": 6
+  "points": 6,
+  "requiresCommanderUnitId": null
 }
