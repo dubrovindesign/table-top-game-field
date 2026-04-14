@@ -25,7 +25,7 @@ One number per player slot. No per-unit records.
 
 ### Recalculation function: `recalcWoundedPoints(slot)`
 
-Iterates all living units for the given slot (units, bigMiniatures, largeMiniatures, hugeMiniatures). For each unit:
+Iterates all living units for the given slot (units, bigMiniatures, largeMiniatures, hugeMiniatures, huge2Miniatures). For each unit:
 
 1. Skip if dead (`offBoardWorld` equals `DEAD_ZONE_OFFBOARD_HIDE`).
 2. Look up `catalogUnitId` → `CatalogUnitDef` → get `points` and `card.maxHealth`.
@@ -37,8 +37,7 @@ Iterates all living units for the given slot (units, bigMiniatures, largeMiniatu
    const isWounded = health > 0 && health < threshold;
    const woundedCost = isWounded ? Math.floor(points / 2) : 0;
    ```
-6. **Dead-zone pass for Kellanthra:** after scanning living units, also scan dead entries for the slot. If big Kellanthra is found in the dead zone (regardless of whether small Kellanthra is on the table), add +35 wounded.
-7. Sum all wounded costs → write to `woundedPoints[slot]`.
+6. Sum all wounded costs → write to `woundedPoints[slot]`.
 
 ### When recalculation triggers
 
@@ -51,11 +50,11 @@ Iterates all living units for the given slot (units, bigMiniatures, largeMiniatu
 ### Identification
 
 - Big Kellanthra: `catalogUnitId === 'keld-kellantra_lindwurm'`.
-- Small Kellanthra: identified via `transformsIntoUnitId` field on big Kellanthra's card data.
+- Small Kellanthra: `catalogUnitId === 'keld-kellantra'`.
 
 ### Big Kellanthra's maxHealth
 
-Big Kellanthra has `maxHealth = 7`. The general formula would give `Math.ceil(7/2) = 4` as threshold, which matches the hardcoded value of 4. The hardcode is intentional to ensure stability if catalog data changes.
+Big Kellanthra has `maxHealth = 12`. The general formula would give `Math.ceil(12/2) = 6` as threshold, but the hardcoded value is 4 (derived from the transform rules: combined HP 12+4=16, half=8, threshold for big form = small form's HP = 4). The hardcode is intentional.
 
 ### Scoring rules
 
@@ -63,11 +62,11 @@ Big Kellanthra has `maxHealth = 7`. The general formula would give `Math.ceil(7/
 |-------|-------------|------------|
 | Big Kellanthra alive, HP >= 4 | 0 | — |
 | Big Kellanthra alive, HP < 4 | 35 | — |
-| Big Kellanthra in dead zone (regardless of small form on table) | 35 (wounded, always applied) | full cost via dead entry |
+| Big Kellanthra in dead zone | — | 35 (overrides catalog 70) |
 | Small Kellanthra alive | 0 (the 35 wounded comes from big form being dead) | — |
 | Small Kellanthra dead | — | 35 (overrides catalog 28) |
 
-**Key:** When big Kellanthra is in the dead zone, +35 wounded is always added — whether or not the player has placed small Kellanthra on the table yet.
+**Key:** When big Kellanthra dies, her dead entry scores 35 (not 70). The wounded contribution from her drops to 0 (she's dead, skipped in living-unit scan). No dead-zone wounded scan is needed.
 
 **Total if both forms die: 35 + 35 = 70** (matches full cost of big Kellanthra).
 
@@ -75,7 +74,7 @@ Big Kellanthra has `maxHealth = 7`. The general formula would give `Math.ceil(7/
 
 **Living units:** A dedicated function `getKellanthraOverride(catalogUnitId, health)` returns `{ woundedCost: number } | null`. Returns `null` for non-Kellanthra units → fall through to general formula. This function is only called for living units (dead units are skipped at step 1 of recalc).
 
-**Dead-zone wounded pass:** After the living-unit scan, `recalcWoundedPoints` checks if big Kellanthra's `boardInstanceId` is present in the dead zone entries. If so, +35 wounded is added unconditionally.
+Death cost override for big Kellanthra: in `tryCommitBoardDragToDeadZone()`, `kellanthraDeathPointsOverride()` returns 35 instead of catalog 70.
 
 Death cost override for small Kellanthra: in `resolveDeadZoneScoredPoints()`, check if the dying unit's `catalogUnitId` matches small Kellanthra and override `scoredPoints` to 35 instead of catalog 28.
 
@@ -138,7 +137,7 @@ Examples: points=30 → 15. points=31 → 15. points=70 → 35.
 
 ### Edge cases
 
-- Dead units are skipped (already counted in dead zone at full cost).
+- Dead units are skipped (already counted in dead zone). Kellanthra forms score 35 each in dead zone (not full catalog cost).
 - Units without `catalogUnitId` or with `points === 0` are skipped.
 - Kellanthra forms use hardcoded overrides instead of this formula.
 

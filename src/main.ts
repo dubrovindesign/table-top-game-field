@@ -30,6 +30,7 @@ import { DiceRoller } from './dice';
 import {
   UnitCard,
   unitMiniatureImageSrc,
+  unitPanelThumbSrc,
   type AttackAbility,
   type DiceRequest,
   type UnitCardData,
@@ -143,6 +144,12 @@ import {
   moveDeadEntryBetweenZones,
   normalizeDeadByZone,
   resolveDeadZoneScoredPoints,
+  normalizeScoredPoints,
+  woundedPointsForUnit,
+  getKellanthraWoundedOverride,
+  kellanthraDeathPointsOverride,
+  KELLANTHRA_SMALL_ID,
+  KELLANTHRA_BIG_ID,
   upsertDeadEntry,
   type DeadByZone,
 } from './deadUnitState.ts';
@@ -203,6 +210,7 @@ const crystalWalletBySlot: { 0: Map<string, number>; 1: Map<string, number> } = 
 
 /** Dead-unit zone entries per table seat; UI mirrors via `crystalWalletSlotsForUi` (same as wallets). */
 const deadByZone: [SerializedDeadEntryV1[], SerializedDeadEntryV1[]] = [[], []];
+let woundedPoints: [number, number] = [0, 0];
 type DeadZoneOffsetWorld = { x: number; y: number };
 const DEAD_ZONE_OFFSET_STORAGE_KEY = 'hex-board.dead-zone-offsets-world.v4';
 const deadZoneOffsetBySlot: { 0: DeadZoneOffsetWorld; 1: DeadZoneOffsetWorld } = {
@@ -1112,7 +1120,11 @@ function deadZoneCardCountForSlot(slot: PlayerSlot): number {
   return deadByZone[slot].length;
 }
 
-/** Dead-unit row layout mirrors the god blind zone frame (same edge anchor + card footprint). */
+/**
+ * Compact dead-zone layout: fixed-size `slot` always anchored at the blind-row anchor,
+ * and (when there are fallen units) a floating `panel` positioned above the slot,
+ * holding the unit cards. Cards are positioned relative to `panel.left/top`.
+ */
 function computeDeadZoneLayoutForSlot(slot: PlayerSlot): DeadZoneLayout {
   const n = deadZoneCardCountForSlot(slot);
   const { anchor: blindAnchorW } = getGodBlindRowFrameWorld(slot);
@@ -1127,57 +1139,56 @@ function computeDeadZoneLayoutForSlot(slot: PlayerSlot): DeadZoneLayout {
   const Hs = abb.maxSY - abb.minSY;
 
   const anchorS = boardWorldToScreenBase(anchorW);
+  const zoom = camera.zoom;
+  const b = Math.max(0, Math.round(godBlindZoneBorderScreenPx()));
 
-  const cardsAbs: Array<{ left: number; top: number; width: number; height: number }> = [];
-  const gapPx = Math.max(0, Math.round(godBlindCardGapScreenPx()));
-  const step = Ws + gapPx;
+  // Compact slot: fixed screen-px size (tuned so pill + wounded breakdown fit with margin).
+  const slotW = Math.round(140 * zoom);
+  const slotH = Math.round(56 * zoom);
+  const slotBounds = {
+    left: Math.round(anchorS.x - slotW / 2),
+    top: Math.round(anchorS.y - slotH / 2),
+    width: slotW,
+    height: slotH,
+  };
 
   if (n === 0) {
-    cardsAbs.push({
-      left: anchorS.x - Ws / 2,
-      top: anchorS.y - Hs / 2,
+    return { slot: slotBounds, panel: null, cards: [], borderScreenPx: b, zoom };
+  }
+
+  // Panel sits above the slot with a small gap, holding the fallen-unit cards in a row.
+  const gapPx = Math.max(0, Math.round(godBlindCardGapScreenPx()));
+  const step = Ws + gapPx;
+  const panelPadPx = Math.max(0, Math.round(8 * zoom));
+  const panelGapPx = Math.max(0, Math.round(10 * zoom));
+
+  const panelInnerW = n * Ws + (n - 1) * gapPx;
+  const panelW = panelInnerW + 2 * panelPadPx;
+  const panelH = Hs + 2 * panelPadPx;
+
+  let panelLeft = Math.round(anchorS.x - panelW / 2);
+  const panelTop = Math.round(slotBounds.top - panelGapPx - panelH);
+
+  // Clamp horizontally to viewport so the panel is always fully visible.
+  const viewportW = window.innerWidth;
+  const maxLeft = Math.max(0, viewportW - panelW);
+  if (panelLeft < 0) panelLeft = 0;
+  else if (panelLeft > maxLeft) panelLeft = maxLeft;
+
+  const panelBounds = { left: panelLeft, top: panelTop, width: panelW, height: panelH };
+
+  // Cards laid out left-to-right inside the panel; coordinates are relative to panel origin.
+  const cards: Array<{ left: number; top: number; width: number; height: number }> = [];
+  for (let i = 0; i < n; i++) {
+    cards.push({
+      left: panelPadPx + i * step,
+      top: panelPadPx,
       width: Ws,
       height: Hs,
     });
-  } else {
-    const rowY = anchorS.y;
-    const mine = effectiveMyGodSlot();
-    const dir = slot === mine ? 1 : -1;
-    for (let i = 0; i < n; i++) {
-      const cx = anchorS.x + dir * i * step;
-      const cy = rowY;
-      cardsAbs.push({ left: cx - Ws / 2, top: cy - Hs / 2, width: Ws, height: Hs });
-    }
   }
 
-  let minL = Infinity;
-  let minT = Infinity;
-  let maxR = -Infinity;
-  let maxB = -Infinity;
-  for (const c of cardsAbs) {
-    minL = Math.min(minL, c.left);
-    minT = Math.min(minT, c.top);
-    maxR = Math.max(maxR, c.left + c.width);
-    maxB = Math.max(maxB, c.top + c.height);
-  }
-
-  const m = Math.max(0, Math.round(godBlindHugMarginScreenPx()));
-  const b = Math.max(0, Math.round(godBlindZoneBorderScreenPx()));
-  const container = {
-    left: minL - m - b,
-    top: minT - m - b,
-    width: maxR - minL + 2 * (m + b),
-    height: maxB - minT + 2 * (m + b),
-  };
-
-  const cards = cardsAbs.map((c) => ({
-    left: c.left - container.left,
-    top: c.top - container.top,
-    width: c.width,
-    height: c.height,
-  }));
-
-  return { container, cards, borderScreenPx: b, zoom: camera.zoom };
+  return { slot: slotBounds, panel: panelBounds, cards, borderScreenPx: b, zoom };
 }
 
 // ── Renderer ───────────────────────────────────────────────────
@@ -2822,13 +2833,76 @@ function deadZoneStatsForSlot(slot: PlayerSlot): { count: number; points: number
   return { count: list.length, points };
 }
 
+/** Scan one living miniature for wounded-points contribution to its owner slot. */
+type WoundedScannable = {
+  health: number;
+  catalogUnitId?: string;
+  offBoardWorld?: Point;
+  armyOwnerPlayerSlot?: PlayerSlot;
+};
+
+function addWoundedFor(m: WoundedScannable, woundedBySlot: [number, number]): void {
+  if (m.armyOwnerPlayerSlot === undefined) return;
+  if (isDeadZoneHideWorld(m.offBoardWorld)) return;
+  if (m.health <= 0) return;
+  const cid = m.catalogUnitId;
+  if (!cid) return;
+  const def = getCatalogUnit(cid);
+  if (!def) return;
+  const points = def.points;
+  if (!points || points <= 0) return;
+
+  const override = getKellanthraWoundedOverride(cid, m.health);
+  if (override !== null) {
+    woundedBySlot[m.armyOwnerPlayerSlot] += override;
+    return;
+  }
+
+  const maxHealth = def.card?.maxHealth ?? 0;
+  if (maxHealth <= 0) return;
+  woundedBySlot[m.armyOwnerPlayerSlot] += woundedPointsForUnit(m.health, maxHealth, points);
+}
+
+/** Recompute wounded points for both player slots by scanning every living miniature. */
+function recalcAllWoundedPoints(): void {
+  const acc: [number, number] = [0, 0];
+  for (const u of units) addWoundedFor(u as WoundedScannable, acc);
+  for (const m of bigMiniatures) addWoundedFor(m as WoundedScannable, acc);
+  for (const m of largeMiniatures) addWoundedFor(m as WoundedScannable, acc);
+  for (const m of hugeMiniatures) addWoundedFor(m as WoundedScannable, acc);
+  for (const m of huge2Miniatures) addWoundedFor(m as WoundedScannable, acc);
+  woundedPoints[0] = acc[0];
+  woundedPoints[1] = acc[1];
+}
+
 function refreshDeadScorePills(): void {
   if (!deadUnitDock) return;
+  recalcAllWoundedPoints();
   const { local: slL, opponent: slO } = crystalWalletSlotsForUi();
-  const localStats = deadZoneStatsForSlot(slL);
-  const oppStats = deadZoneStatsForSlot(slO);
-  deadUnitDock.myScoreValueEl.textContent = `☠ ${localStats.points}`;
-  deadUnitDock.oppScoreValueEl.textContent = `☠ ${oppStats.points}`;
+  const deadL = deadZoneStatsForSlot(slL).points;
+  const deadO = deadZoneStatsForSlot(slO).points;
+  const wL = woundedPoints[slL];
+  const wO = woundedPoints[slO];
+  const totalL = deadL + wL;
+  const totalO = deadO + wO;
+  deadUnitDock.myScoreValueEl.textContent = `☠ ${totalL}`;
+  deadUnitDock.oppScoreValueEl.textContent = `☠ ${totalO}`;
+  const breakdownText = (dead: number, wounded: number): string =>
+    wounded > 0 ? `${dead} + ${wounded}` : '';
+  deadUnitDock.myScoreBreakdownEl.textContent = breakdownText(deadL, wL);
+  deadUnitDock.oppScoreBreakdownEl.textContent = breakdownText(deadO, wO);
+  deadUnitDock.myScoreBreakdownEl.style.display = wL > 0 ? '' : 'none';
+  deadUnitDock.oppScoreBreakdownEl.style.display = wO > 0 ? '' : 'none';
+}
+
+/** Helper: does any piece on the board/off-board currently hold big-Kellanthra in a dead-zone hide? */
+function bigKellanthraIsDead(): boolean {
+  for (const list of [units, bigMiniatures, largeMiniatures, hugeMiniatures, huge2Miniatures]) {
+    for (const p of list as WoundedScannable[]) {
+      if (p.catalogUnitId === KELLANTHRA_BIG_ID && isDeadZoneHideWorld(p.offBoardWorld)) return true;
+    }
+  }
+  return false;
 }
 
 function deadZoneTuple(): DeadByZone {
@@ -2971,6 +3045,30 @@ function labelForDeadPieceId(deadPieceId: string): string {
   return '?';
 }
 
+function thumbSrcForDeadPieceId(deadPieceId: string): string | undefined {
+  const iu = units.findIndex((u) => u.deadPieceId === deadPieceId);
+  if (iu !== -1) {
+    const c = unitCardData[iu];
+    return c ? unitPanelThumbSrc(c) : undefined;
+  }
+  const ib = bigMiniatures.findIndex((m) => m.deadPieceId === deadPieceId);
+  if (ib !== -1) {
+    const c = bigMiniCardData[ib];
+    return c ? unitPanelThumbSrc(c) : undefined;
+  }
+  const il = largeMiniatures.findIndex((m) => m.deadPieceId === deadPieceId);
+  if (il !== -1) {
+    const c = largeMiniCardData[il];
+    return c ? unitPanelThumbSrc(c) : undefined;
+  }
+  const ih = hugeMiniatures.findIndex((m) => m.deadPieceId === deadPieceId);
+  if (ih !== -1) {
+    const c = hugeMiniCardData[ih];
+    return c ? unitPanelThumbSrc(c) : undefined;
+  }
+  return undefined;
+}
+
 function refreshDeadUnitDock(): void {
   if (!deadUnitDock) return;
   const mySlot = effectiveMyGodSlot();
@@ -2980,6 +3078,7 @@ function refreshDeadUnitDock(): void {
       boardInstanceId: e.boardInstanceId,
       label: labelForDeadPieceId(e.boardInstanceId),
       points: e.scoredPoints,
+      thumbSrc: thumbSrcForDeadPieceId(e.boardInstanceId),
     }));
   deadUnitDock.refresh({
     interactive: isGodDockInteractive(),
@@ -3115,12 +3214,12 @@ function tryCommitBoardDragToDeadZone(
   clientY: number,
 ): boolean {
   if (!isGodDockInteractive()) return false;
-  const hit = deadUnitDock?.hitTestDeadZoneCards(clientX, clientY);
-  if (!hit) return false;
+  const hitSide = deadUnitDock?.hitTestDeadZoneDropTarget(clientX, clientY);
+  if (!hitSide) return false;
 
   const mySlot = effectiveMyGodSlot();
   const oppSlot = effectiveOpponentGodSlot();
-  const targetSlot: PlayerSlot = hit.side === 'mine' ? mySlot : oppSlot;
+  const targetSlot: PlayerSlot = hitSide === 'mine' ? mySlot : oppSlot;
 
   let deadPieceId: string | undefined;
   let rosterLeaderId: string | undefined;
@@ -3150,11 +3249,23 @@ function tryCommitBoardDragToDeadZone(
 
   if (!deadPieceId || !catalogUnitId) return false;
 
-  const scoredPoints = resolveDeadZoneScoredPoints(
+  let scoredPoints = resolveDeadZoneScoredPoints(
     getRosterPointsOverrideForCatalog(rosterLeaderId, catalogUnitId),
     catalogPointsForCatalogId(catalogUnitId),
     deadPieceId,
   ).scoredPoints;
+
+  // Kellanthra hardcoded death-cost override:
+  //   - big form always scores 35 (not the catalog full cost).
+  //   - small form scores 35 only when big form is already in a dead zone
+  //     (otherwise catalog cost stands).
+  const koverride = kellanthraDeathPointsOverride(
+    catalogUnitId,
+    catalogUnitId === KELLANTHRA_SMALL_ID ? bigKellanthraIsDead() : false,
+  );
+  if (koverride !== undefined) {
+    scoredPoints = normalizeScoredPoints(koverride);
+  }
 
   const next = upsertDeadEntry(deadZoneTuple(), targetSlot, { boardInstanceId: deadPieceId, scoredPoints });
 
@@ -7671,7 +7782,10 @@ function tryTouchDoubleTapOnMiniatureForCard(e: PointerEvent): boolean {
   if (tryEtherVortexCrystalBadgeOpen(e.clientX, e.clientY)) return false;
   if (handleBroomgarHungerClick(e.clientX, e.clientY)) return false;
   if (handleMiniatureActivationClick(e.clientX, e.clientY)) return false;
-  if (handleMiniatureHealthClick(e.clientX, e.clientY)) return false;
+  if (handleMiniatureHealthClick(e.clientX, e.clientY)) {
+    refreshDeadScorePills();
+    return false;
+  }
   if (godLooseHitIndex(e.clientX, e.clientY) !== null) return false;
 
   const key = resolveMiniatureTapKeyForDoubleTap(e.clientX, e.clientY);
@@ -8327,6 +8441,7 @@ canvas.addEventListener('pointerdown', (e: PointerEvent) => {
   }
   if (handleMiniatureHealthClick(e.clientX, e.clientY)) {
     e.preventDefault();
+    refreshDeadScorePills();
     scheduleRender();
     return;
   }
@@ -8465,6 +8580,7 @@ canvas.addEventListener('mousedown', (e) => {
       return;
     }
     if (handleMiniatureHealthClick(e.clientX, e.clientY)) {
+      refreshDeadScorePills();
       scheduleRender();
       return;
     }

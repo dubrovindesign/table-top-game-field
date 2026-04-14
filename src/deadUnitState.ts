@@ -180,3 +180,38 @@ export function moveDeadEntryBetweenZones(
   }
   return [renumberZoneContiguous(next0), renumberZoneContiguous([...next1, moved])];
 }
+
+// ── Wounded scoring ──────────────────────────────────────────
+
+export const KELLANTHRA_BIG_ID = 'keld-kellantra_lindwurm';
+export const KELLANTHRA_SMALL_ID = 'keld-kellantra';
+const KELLANTHRA_HALF_COST = 35;
+const KELLANTHRA_BIG_WOUNDED_THRESHOLD = 4;
+
+/** General wounded formula: half cost if HP below half maxHealth. */
+export function woundedPointsForUnit(health: number, maxHealth: number, points: number): number {
+  if (health <= 0) return 0;
+  const threshold = Math.ceil(maxHealth / 2);
+  return health < threshold ? Math.floor(points / 2) : 0;
+}
+
+/** Kellanthra big form: hardcoded threshold=4, cost=35. Returns null for non-Kellanthra. */
+export function getKellanthraWoundedOverride(
+  catalogUnitId: string | undefined,
+  health: number,
+): number | null {
+  if (catalogUnitId !== KELLANTHRA_BIG_ID) return null;
+  if (health <= 0) return 0;
+  return health < KELLANTHRA_BIG_WOUNDED_THRESHOLD ? KELLANTHRA_HALF_COST : 0;
+}
+
+/** Override death scored points for Kellanthra forms. Returns undefined for normal units.
+ *  For small Kellanthra, override only applies when big form is present (bigFormExists). */
+export function kellanthraDeathPointsOverride(
+  catalogUnitId: string | undefined,
+  bigFormExists: boolean,
+): number | undefined {
+  if (catalogUnitId === KELLANTHRA_BIG_ID) return KELLANTHRA_HALF_COST;
+  if (catalogUnitId === KELLANTHRA_SMALL_ID && bigFormExists) return KELLANTHRA_HALF_COST;
+  return undefined;
+}
