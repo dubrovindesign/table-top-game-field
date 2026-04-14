@@ -2382,6 +2382,11 @@
         "unitId": "engeln-mul",
         "maxCopies": 1,
         "points": 10
+      },
+      {
+        "unitId": "virmgling",
+        "maxCopies": 4,
+        "points": 12
       }
     ]
   },
@@ -2541,6 +2546,10 @@
         "unitId": "engeln-mul",
         "maxCopies": 1,
         "points": 10
+      },
+      {
+        "unitId": "keld-virmgling",
+        "maxCopies": 4
       }
     ]
   },
@@ -2720,6 +2729,10 @@
         "unitId": "engeln-mul",
         "maxCopies": 1,
         "points": 10
+      },
+      {
+        "unitId": "keld-virmgling",
+        "maxCopies": 4
       }
     ]
   },
@@ -2983,6 +2996,16 @@
         "unitId": "engeln-mul",
         "maxCopies": 3,
         "points": 10
+      },
+      {
+        "unitId": "shtalhaund-mode-1",
+        "maxCopies": 3,
+        "points": 8
+      },
+      {
+        "unitId": "krigmark-Homunculus",
+        "maxCopies": 2,
+        "points": 2
       }
     ]
   },
@@ -3151,6 +3174,19 @@
       {
         "unitId": "krigmark-kefer_modification_a",
         "maxCopies": 1
+      },
+      {
+        "unitId": "krigmark-kefer_modification_b",
+        "maxCopies": 1
+      },
+      {
+        "unitId": "krigmark-kefer_modification_c",
+        "maxCopies": 1
+      },
+      {
+        "unitId": "krigmark-Homunculus",
+        "maxCopies": 2,
+        "points": 2
       }
     ]
   },
@@ -3315,6 +3351,11 @@
         "unitId": "engeln-mul",
         "maxCopies": 2,
         "points": 10
+      },
+      {
+        "unitId": "krigmark-Homunculus",
+        "maxCopies": 2,
+        "points": 2
       }
     ]
   },

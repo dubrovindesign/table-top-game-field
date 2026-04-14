@@ -8,14 +8,14 @@
         "dice": {
           "black": 0,
           "green": 0,
-          "red": 1,
+          "red": 0,
           "white": 0
         },
-        "name": "—",
+        "name": "= a TE",
         "range": 1
       }
     ],
-    "catalogUnitId": "keld-virmgling",
+    "catalogUnitId": "krigmark-Homunculus",
     "concentration": {
       "black": 0,
       "green": 0,
@@ -31,31 +31,21 @@
       "white": 0
     },
     "domains": [
-      "life"
+      "death"
     ],
-    "exploration": {
-      "black": 0,
-      "green": 0,
-      "red": 0,
-      "white": 0
-    },
     "explorationRange": 0,
-    "flagSprite": "/keld.webp",
-    "grabRange": 1,
-    "health": 4,
-    "keywords": [
-      "Кельд"
-    ],
-    "maxHealth": 4,
-    "miniatureSprite": "/catalog-units/keld-virmgling/miniature.jpg",
-    "name": "Вирмглинг",
-    "run": 6,
+    "grabRange": 0,
+    "health": 1,
+    "keywords": [],
+    "maxHealth": 1,
+    "miniatureSprite": "/catalog-units/krigmark-Homunculus/miniature.jpg",
+    "name": "Гомункул Помощник",
+    "run": 4,
     "size": "small",
-    "sprite": "",
-    "walk": 3
+    "walk": 1
   },
-  "id": "keld-virmgling",
+  "id": "krigmark-Homunculus",
   "mercenary": false,
-  "points": 12,
-  "requiresCommanderUnitId": "keld-na'atly_unit"
+  "points": 0,
+  "requiresCommanderUnitId": "krigmark-alchemist"
 }

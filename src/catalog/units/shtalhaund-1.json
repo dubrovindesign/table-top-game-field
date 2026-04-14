@@ -1,0 +1,51 @@
+{
+  "card": {
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {
+          "black": 7,
+          "green": 8,
+          "red": 3,
+          "white": 0
+        },
+        "name": "Атака",
+        "range": 0
+      }
+    ],
+    "catalogUnitId": "shtalhaund-1",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "green": 0,
+      "white": 0
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 0
+    },
+    "domains": [
+      "life"
+    ],
+    "explorationRange": 0,
+    "grabRange": 0,
+    "health": 3,
+    "keywords": [],
+    "maxHealth": 3,
+    "miniatureSprite": "/catalog-units/shtalhaund-1/miniature.jpg",
+    "name": "Черновик",
+    "run": 5,
+    "size": "small",
+    "walk": 3
+  },
+  "id": "shtalhaund-1",
+  "mercenary": false,
+  "points": 0,
+  "requiresCommanderUnitId": "krigmark-hundmeister"
+}

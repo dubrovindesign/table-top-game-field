@@ -51,10 +51,11 @@
     "name": "Кефер модификация А",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/krigmark-kefer_modification_a/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "krigmark-kefer_modification_a",
   "mercenary": false,
-  "points": 8
+  "points": 8,
+  "requiresCommanderUnitId": "krigmark-dalmar_shultz_hero"
 }

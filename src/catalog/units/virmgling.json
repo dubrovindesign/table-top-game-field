@@ -1,0 +1,54 @@
+{
+  "card": {
+    "attacks": [
+      {
+        "attackRange": "melee",
+        "damage": 1,
+        "damageType": "physical",
+        "dice": {
+          "black": 0,
+          "green": 0,
+          "red": 0,
+          "white": 2
+        },
+        "name": "SBG \"Tornscape” » Arc I \"Kingdoms of Westorn\" » KoW-Kd26 « 2024",
+        "range": 1
+      }
+    ],
+    "catalogUnitId": "virmgling",
+    "concentration": {
+      "black": 0,
+      "green": 0,
+      "red": 0,
+      "white": 0
+    },
+    "defense": {
+      "green": 0,
+      "white": 2
+    },
+    "defenseReaction": {
+      "green": 0,
+      "white": 0
+    },
+    "domains": [
+      "life"
+    ],
+    "explorationRange": 0,
+    "grabRange": 0,
+    "health": 1,
+    "keywords": [],
+    "maxHealth": 1,
+    "miniatureSprite": "/catalog-units/virmgling/miniature.jpg",
+    "name": "Вирмлинг",
+    "run": 2,
+    "size": "small",
+    "walk": 1
+  },
+  "id": "virmgling",
+  "mercenary": false,
+  "points": 0,
+  "requiresCommanderUnitIds": [
+    "keld-na'atly_unit",
+    "keld-na'atly_hero"
+  ]
+}
