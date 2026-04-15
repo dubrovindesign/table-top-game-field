@@ -4496,10 +4496,11 @@ function findTerrainAtHex(hex: Hex): number {
   );
 }
 
-function findBoardObjectAtHex(hex: Hex): number {
+function findBoardObjectAtHex(hex: Hex, footprintFilter?: 'hex' | 'hexon'): number {
   for (let i = boardObjects.length - 1; i >= 0; i--) {
     const o = boardObjects[i]!;
     if (o.offBoardWorld) continue;
+    if (footprintFilter && o.footprint !== footprintFilter) continue;
     if (o.footprint === 'hex') {
       if (o.center.key === hex.key) return i;
       continue;
@@ -9022,15 +9023,17 @@ canvas.addEventListener('mousedown', (e) => {
       return;
     }
 
-    const clickedBoardObjectIndex = findBoardObjectAtHex(hex);
-    if (clickedBoardObjectIndex !== -1) {
+    // Hit-test top-to-bottom matching render order:
+    // hex-footprint board objects (on top of vortex) → ether vortex → hexon-footprint board objects (below vortex).
+    const clickedHexBoardObjectIndex = findBoardObjectAtHex(hex, 'hex');
+    if (clickedHexBoardObjectIndex !== -1) {
       unitDragPendingIndex = null;
       bigMiniDragPendingIndex = null;
       terrainDragPendingIndex = null;
       etherVortexDragPendingIndex = null;
       openHealthControlsUnitIndex = null;
       openHealthControlsBigMiniIndex = null;
-      armBoardObjectDragPending(clickedBoardObjectIndex, e.clientX, e.clientY);
+      armBoardObjectDragPending(clickedHexBoardObjectIndex, e.clientX, e.clientY);
       scheduleRender();
       return;
     }
@@ -9052,6 +9055,19 @@ canvas.addEventListener('mousedown', (e) => {
       etherVortexDragPending = true;
       etherVortexDragPendingStartX = e.clientX;
       etherVortexDragPendingStartY = e.clientY;
+      scheduleRender();
+      return;
+    }
+
+    const clickedHexonBoardObjectIndex = findBoardObjectAtHex(hex, 'hexon');
+    if (clickedHexonBoardObjectIndex !== -1) {
+      unitDragPendingIndex = null;
+      bigMiniDragPendingIndex = null;
+      terrainDragPendingIndex = null;
+      etherVortexDragPendingIndex = null;
+      openHealthControlsUnitIndex = null;
+      openHealthControlsBigMiniIndex = null;
+      armBoardObjectDragPending(clickedHexonBoardObjectIndex, e.clientX, e.clientY);
       scheduleRender();
       return;
     }

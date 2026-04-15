@@ -1005,11 +1005,15 @@ export class Renderer {
     // Pass 3: terrain feature (one big hexon)
     this.drawTerrain();
 
+    // Pass 3a: hexon-footprint custom board objects (terrain-style big hexons)
+    //          drawn BEFORE ether vortex so the vortex always overlays terrain on the same hexon
+    this.drawBoardObjects('hexon');
+
     // Pass 4: ether vortexes (silhouette + tint + crystal chip in world space)
     this.drawEtherVortexes();
 
-    // Pass 4a: custom board objects (hex / hexon sprites)
-    this.drawBoardObjects();
+    // Pass 4a: hex-footprint custom board objects (small tokens: smoke, prisoners) — on top of the vortex
+    this.drawBoardObjects('hex');
 
     // Pass 5: optional thick border for a highlighted hexon
     if (config.hexonBorderWidth > 0) {
@@ -3498,7 +3502,7 @@ export class Renderer {
     this.drawEtherVortexCrystalBadgesWorld();
   }
 
-  private drawBoardObjects(): void {
+  private drawBoardObjects(filterFootprint?: 'hex' | 'hexon'): void {
     const { ctx, layout, config } = this;
     const selStrokeW = 3;
     const hexonSelRingScale = this.miniatureSelectionRingPathScale(
@@ -3508,6 +3512,7 @@ export class Renderer {
     );
     for (let i = 0; i < this.boardObjects.length; i++) {
       const p = this.boardObjects[i]!;
+      if (filterFootprint && p.footprint !== filterFootprint) continue;
       const pivot = p.offBoardWorld ?? layout.hexToPixel(p.center);
       const drawPiece = (faceUp: boolean): boolean => {
         const spriteSrc = faceUp ? p.spriteSrc : (p.backSpriteSrc ?? p.spriteSrc);
@@ -3764,11 +3769,15 @@ export class Renderer {
       ctx.beginPath();
       this.addBigMiniHexonOuterPath(ctx, layout, 1);
       ctx.clip();
+      // Sprite rotation is isolated so the blend-fill below draws in the same
+      // unrotated coord system as the clip path (prevents tint misalignment
+      // when imageRotationDeg ≠ 0, e.g. rotated ether-vortex art).
+      ctx.save();
       ctx.rotate(texRotRad);
       if (imageRotRad !== 0) ctx.rotate(imageRotRad);
       ctx.drawImage(sprite, -dw / 2, -dh / 2, dw, dh);
+      ctx.restore();
       if (opts.domainBlendColor) {
-        ctx.rotate(-texRotRad);
         ctx.save();
         ctx.globalCompositeOperation = 'color';
         ctx.fillStyle = opts.domainBlendColor;
