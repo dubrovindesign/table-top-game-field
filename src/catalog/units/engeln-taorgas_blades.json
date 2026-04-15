@@ -57,5 +57,6 @@
   "id": "engeln-taorgas_blades",
   "mercenary": true,
   "points": 41,
-  "requiresCommanderUnitId": null
+  "requiresCommanderUnitId": null,
+  "requiresCommanderUnitIds": null
 }

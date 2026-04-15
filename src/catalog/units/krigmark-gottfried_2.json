@@ -51,10 +51,12 @@
     "name": "Готфрид, Железная Длань",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/krigmark-gottfried_2/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "krigmark-gottfried_2",
   "mercenary": false,
-  "points": 32
+  "points": 32,
+  "requiresCommanderUnitId": null,
+  "requiresCommanderUnitIds": null
 }

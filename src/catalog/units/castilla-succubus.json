@@ -51,10 +51,11 @@
     "name": "Суккуб Пороков",
     "run": 8,
     "size": "small",
-    "sprite": "/catalog-units/castilla-succubus/image.jpg",
+    "sprite": "",
     "walk": 4
   },
   "id": "castilla-succubus",
   "mercenary": false,
-  "points": 30
+  "points": 30,
+  "requiresCommanderUnitId": null
 }

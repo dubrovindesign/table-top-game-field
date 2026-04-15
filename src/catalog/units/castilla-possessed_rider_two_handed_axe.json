@@ -51,10 +51,11 @@
     "name": "Одержимый Наездник с Двуручной Секирой",
     "run": 4,
     "size": "big",
-    "sprite": "/catalog-units/castilla-possessed_rider_two_handed_axe/image.jpg",
+    "sprite": "",
     "walk": 2
   },
   "id": "castilla-possessed_rider_two_handed_axe",
   "mercenary": false,
-  "points": 46
+  "points": 46,
+  "requiresCommanderUnitId": null
 }

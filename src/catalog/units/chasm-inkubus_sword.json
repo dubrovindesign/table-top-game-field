@@ -3,41 +3,15 @@
     "attacks": [
       {
         "attackRange": "melee",
-        "damage": 2,
-        "damageType": "physical",
-        "dice": {
-          "black": 2,
-          "green": 1,
-          "red": 3,
-          "white": 0
-        },
-        "name": "удар мечом",
-        "range": 1
-      },
-      {
-        "attackRange": "ranged",
-        "damage": 2,
+        "damage": 1,
         "damageType": "physical",
         "dice": {
           "black": 0,
-          "green": 1,
-          "red": 2,
+          "green": 0,
+          "red": 1,
           "white": 0
         },
-        "name": "выстрел",
-        "range": 2
-      },
-      {
-        "attackRange": "melee",
-        "damage": 0,
-        "damageType": "physical",
-        "dice": {
-          "black": 0,
-          "green": 1,
-          "red": 2,
-          "white": 0
-        },
-        "name": "удар щитом",
+        "name": "—",
         "range": 1
       }
     ],
@@ -45,16 +19,16 @@
     "concentration": {
       "black": 0,
       "green": 0,
-      "red": 1,
+      "red": 0,
       "white": 0
     },
     "defense": {
-      "green": 1,
-      "white": 2
+      "green": 0,
+      "white": 0
     },
     "defenseReaction": {
       "green": 0,
-      "white": 1
+      "white": 0
     },
     "domains": [
       "destruction"
@@ -62,10 +36,10 @@
     "exploration": {
       "black": 0,
       "green": 0,
-      "red": 1,
+      "red": 0,
       "white": 0
     },
-    "explorationRange": 1,
+    "explorationRange": 0,
     "flagSprite": "/chasm.webp",
     "grabRange": 1,
     "grabRangeUnit": "hex",
@@ -79,7 +53,7 @@
     "name": "Инкуб с мечом",
     "run": 6,
     "size": "small",
-    "sprite": "",
+    "sprite": "/catalog-units/chasm-inkubus_sword/image.jpg",
     "walk": 4
   },
   "id": "chasm-inkubus_sword",

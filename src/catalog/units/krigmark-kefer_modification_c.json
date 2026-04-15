@@ -57,5 +57,6 @@
   "id": "krigmark-kefer_modification_c",
   "mercenary": false,
   "points": 6,
-  "requiresCommanderUnitId": "krigmark-dalmar_shultz_hero"
+  "requiresCommanderUnitId": null,
+  "requiresCommanderUnitIds": null
 }

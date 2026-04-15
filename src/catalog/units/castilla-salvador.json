@@ -51,10 +51,11 @@
     "name": "Сальвадор Йерро",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/castilla-salvador/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "castilla-salvador",
   "mercenary": false,
-  "points": 30
+  "points": 30,
+  "requiresCommanderUnitId": null
 }

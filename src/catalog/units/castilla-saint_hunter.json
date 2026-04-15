@@ -51,10 +51,11 @@
     "name": "Охотник на Святых",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/castilla-saint_hunter/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "castilla-saint_hunter",
   "mercenary": false,
-  "points": 28
+  "points": 28,
+  "requiresCommanderUnitId": null
 }

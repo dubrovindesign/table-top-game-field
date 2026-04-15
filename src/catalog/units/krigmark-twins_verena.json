@@ -51,10 +51,12 @@
     "name": "Верена Бальдауф",
     "run": 7,
     "size": "small",
-    "sprite": "/catalog-units/krigmark-twins_verena/image.jpg",
+    "sprite": "",
     "walk": 4
   },
   "id": "krigmark-twins_verena",
   "mercenary": false,
-  "points": 60
+  "points": 60,
+  "requiresCommanderUnitId": null,
+  "requiresCommanderUnitIds": null
 }

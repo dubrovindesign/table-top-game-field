@@ -45,5 +45,6 @@
   },
   "id": "castilla-saint_hunter_salvador",
   "mercenary": false,
-  "points": 26
+  "points": 26,
+  "requiresCommanderUnitId": null
 }

@@ -57,5 +57,6 @@
   "id": "blackthorn-aldvin_beast",
   "mercenary": true,
   "points": 19,
-  "requiresCommanderUnitId": null
+  "requiresCommanderUnitId": null,
+  "requiresCommanderUnitIds": null
 }

@@ -3,15 +3,15 @@
     "attacks": [
       {
         "attackRange": "melee",
-        "damage": 2,
+        "damage": 1,
         "damageType": "physical",
         "dice": {
-          "black": 1,
-          "green": 1,
-          "red": 3,
+          "black": 0,
+          "green": 0,
+          "red": 1,
           "white": 0
         },
-        "name": "укус зверя",
+        "name": "—",
         "range": 1
       }
     ],
@@ -19,16 +19,16 @@
     "concentration": {
       "black": 0,
       "green": 0,
-      "red": 1,
+      "red": 0,
       "white": 0
     },
     "defense": {
-      "green": 1,
-      "white": 1
+      "green": 0,
+      "white": 0
     },
     "defenseReaction": {
       "green": 0,
-      "white": 1
+      "white": 0
     },
     "domains": [
       "destruction"
@@ -41,7 +41,7 @@
     },
     "explorationRange": 0,
     "flagSprite": "/chasm.webp",
-    "grabRange": 0,
+    "grabRange": 1,
     "grabRangeUnit": "hexon",
     "health": 10,
     "keywords": [
@@ -53,7 +53,7 @@
     "name": "Гончая Бездны",
     "run": 3,
     "size": "big",
-    "sprite": "",
+    "sprite": "/catalog-units/chasm-hellhound/image.jpg",
     "walk": 1
   },
   "id": "chasm-hellhound",

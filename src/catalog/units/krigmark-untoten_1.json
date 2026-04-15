@@ -51,10 +51,12 @@
     "name": "Возвратившийся Мод.1",
     "run": 4,
     "size": "small",
-    "sprite": "/catalog-units/krigmark-untoten_1/image.jpg",
+    "sprite": "",
     "walk": 2
   },
   "id": "krigmark-untoten_1",
   "mercenary": false,
-  "points": 10
+  "points": 10,
+  "requiresCommanderUnitId": null,
+  "requiresCommanderUnitIds": null
 }

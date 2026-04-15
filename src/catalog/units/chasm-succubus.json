@@ -6,42 +6,29 @@
         "damage": 1,
         "damageType": "physical",
         "dice": {
-          "black": 2,
-          "green": 1,
-          "red": 4,
+          "black": 0,
+          "green": 0,
+          "red": 1,
           "white": 0
         },
-        "name": "удар плетью",
-        "range": 3
-      },
-      {
-        "attackRange": "ranged",
-        "damage": 2,
-        "damageType": "mental",
-        "dice": {
-          "black": 2,
-          "green": 1,
-          "red": 2,
-          "white": 0
-        },
-        "name": "ментальный приказ",
-        "range": 3
+        "name": "—",
+        "range": 1
       }
     ],
     "catalogUnitId": "chasm-succubus",
     "concentration": {
       "black": 0,
       "green": 0,
-      "red": 1,
+      "red": 0,
       "white": 0
     },
     "defense": {
-      "green": 1,
-      "white": 1
+      "green": 0,
+      "white": 0
     },
     "defenseReaction": {
       "green": 0,
-      "white": 1
+      "white": 0
     },
     "domains": [
       "destruction"
@@ -49,10 +36,10 @@
     "exploration": {
       "black": 0,
       "green": 0,
-      "red": 2,
+      "red": 0,
       "white": 0
     },
-    "explorationRange": 1,
+    "explorationRange": 0,
     "flagSprite": "/chasm.webp",
     "grabRange": 1,
     "grabRangeUnit": "hex",
@@ -66,7 +53,7 @@
     "name": "Суккуб Пороков",
     "run": 8,
     "size": "small",
-    "sprite": "",
+    "sprite": "/catalog-units/chasm-succubus/image.jpg",
     "walk": 4
   },
   "id": "chasm-succubus",

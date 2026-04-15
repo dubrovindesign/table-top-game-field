@@ -55,7 +55,7 @@
     "miniatureSprite": "/catalog-units/engeln-siege_golem/miniature.jpg",
     "name": "Осадный Голем",
     "run": 0,
-    "size": "huge2",
+    "size": "huge",
     "sprite": "/catalog-units/engeln-siege_golem/image.jpg",
     "walk": 1
   },

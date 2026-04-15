@@ -51,10 +51,11 @@
     "name": "Очиститель",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/castilla-purifirer/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "castilla-purifirer",
   "mercenary": false,
-  "points": 14
+  "points": 14,
+  "requiresCommanderUnitId": null
 }

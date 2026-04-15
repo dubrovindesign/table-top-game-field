@@ -2,29 +2,16 @@
   "card": {
     "attacks": [
       {
-        "attackRange": "ranged",
-        "damage": 2,
-        "damageType": "physical",
-        "dice": {
-          "black": 0,
-          "green": 1,
-          "red": 1,
-          "white": 0
-        },
-        "name": "выстрел",
-        "range": 2
-      },
-      {
-        "attackRange": "ranged",
+        "attackRange": "melee",
         "damage": 1,
         "damageType": "physical",
         "dice": {
           "black": 0,
-          "green": 1,
+          "green": 0,
           "red": 1,
           "white": 0
         },
-        "name": "удар прикладом",
+        "name": "—",
         "range": 1
       }
     ],
@@ -36,12 +23,12 @@
       "white": 0
     },
     "defense": {
-      "green": 1,
+      "green": 0,
       "white": 0
     },
     "defenseReaction": {
       "green": 0,
-      "white": 1
+      "white": 0
     },
     "domains": [
       "destruction"
@@ -66,7 +53,7 @@
     "name": "Каттимп Бездны с пистолем",
     "run": 6,
     "size": "small",
-    "sprite": "",
+    "sprite": "/catalog-units/chasm-catimp_gun/image.jpg",
     "walk": 4
   },
   "id": "chasm-catimp_gun",

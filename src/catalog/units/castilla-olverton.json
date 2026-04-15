@@ -51,7 +51,7 @@
     "name": "Девринг Олвертон",
     "run": 6,
     "size": "small",
-    "sprite": "",
+    "sprite": "/catalog-units/castilla-olverton/image.jpg",
     "walk": 3
   },
   "id": "castilla-olverton",

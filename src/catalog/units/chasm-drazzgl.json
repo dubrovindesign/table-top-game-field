@@ -6,12 +6,12 @@
         "damage": 1,
         "damageType": "physical",
         "dice": {
-          "black": 2,
-          "green": 2,
-          "red": 4,
+          "black": 0,
+          "green": 0,
+          "red": 1,
           "white": 0
         },
-        "name": "вихрь кинжалов",
+        "name": "—",
         "range": 1
       }
     ],
@@ -19,16 +19,16 @@
     "concentration": {
       "black": 0,
       "green": 0,
-      "red": 4,
+      "red": 0,
       "white": 0
     },
     "defense": {
-      "green": 2,
-      "white": 1
+      "green": 0,
+      "white": 0
     },
     "defenseReaction": {
       "green": 0,
-      "white": 4
+      "white": 0
     },
     "domains": [
       "destruction"
@@ -36,10 +36,10 @@
     "exploration": {
       "black": 0,
       "green": 0,
-      "red": 4,
+      "red": 0,
       "white": 0
     },
-    "explorationRange": 1,
+    "explorationRange": 0,
     "flagSprite": "/chasm.webp",
     "grabRange": 1,
     "grabRangeUnit": "hex",
@@ -53,7 +53,7 @@
     "name": "Драззгл Шкуродер",
     "run": 7,
     "size": "small",
-    "sprite": "",
+    "sprite": "/catalog-units/chasm-drazzgl/image.jpg",
     "walk": 4
   },
   "id": "chasm-drazzgl",

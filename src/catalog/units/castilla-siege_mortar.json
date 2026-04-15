@@ -51,10 +51,11 @@
     "name": "Осадная Мортира",
     "run": 1,
     "size": "big",
-    "sprite": "/catalog-units/castilla-siege_mortar/image.jpg",
+    "sprite": "",
     "walk": 0
   },
   "id": "castilla-siege_mortar",
   "mercenary": false,
-  "points": 50
+  "points": 50,
+  "requiresCommanderUnitId": null
 }

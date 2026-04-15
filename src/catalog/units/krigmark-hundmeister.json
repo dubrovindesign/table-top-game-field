@@ -51,10 +51,12 @@
     "name": "Хундмейстер",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/krigmark-hundmeister/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "krigmark-hundmeister",
   "mercenary": false,
-  "points": 18
+  "points": 18,
+  "requiresCommanderUnitId": null,
+  "requiresCommanderUnitIds": null
 }

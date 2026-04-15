@@ -59,5 +59,7 @@
   },
   "id": "krigmark-gottfried",
   "mercenary": false,
-  "points": 60
+  "points": 60,
+  "requiresCommanderUnitId": null,
+  "requiresCommanderUnitIds": null
 }

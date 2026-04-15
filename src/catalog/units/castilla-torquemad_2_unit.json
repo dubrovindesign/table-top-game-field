@@ -51,10 +51,11 @@
     "name": "Торкемад, Ревнитель Чистоты",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/castilla-torquemad_2_unit/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "castilla-torquemad_2_unit",
   "mercenary": false,
-  "points": 38
+  "points": 38,
+  "requiresCommanderUnitId": null
 }

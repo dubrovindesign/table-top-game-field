@@ -19,12 +19,12 @@
     "concentration": {
       "black": 0,
       "green": 0,
-      "red": 1,
+      "red": 0,
       "white": 0
     },
     "defense": {
-      "green": 1,
-      "white": 1
+      "green": 0,
+      "white": 4
     },
     "defenseReaction": {
       "green": 0,
@@ -36,10 +36,10 @@
     "exploration": {
       "black": 0,
       "green": 0,
-      "red": 1,
+      "red": 0,
       "white": 0
     },
-    "explorationRange": 1,
+    "explorationRange": 0,
     "faithMarkers": {
       "red": 0
     },

@@ -6,9 +6,12 @@
         "damage": 1,
         "damageType": "physical",
         "dice": {
-          "black": 4
+          "black": 0,
+          "green": 0,
+          "red": 1,
+          "white": 0
         },
-        "name": "УДАР. БУЛАВОЙ",
+        "name": "—",
         "range": 1
       }
     ],
@@ -20,8 +23,8 @@
       "white": 0
     },
     "defense": {
-      "green": 3,
-      "white": 3
+      "green": 0,
+      "white": 0
     },
     "defenseReaction": {
       "green": 0,
@@ -39,17 +42,17 @@
     "explorationRange": 0,
     "flagSprite": "/blackthorn.webp",
     "grabRange": 1,
-    "health": 13,
+    "health": 1,
     "keywords": [
       "Великий Терновник"
     ],
-    "maxHealth": 13,
+    "maxHealth": 1,
     "miniatureSprite": "/catalog-units/blackthorn-drago_mort/miniature.jpg",
     "name": "Драго-Морт Дэа'Мор",
-    "run": 7,
+    "run": 2,
     "size": "large",
     "sprite": "/catalog-units/blackthorn-drago_mort/image.jpg",
-    "walk": 4
+    "walk": 1
   },
   "id": "blackthorn-drago_mort",
   "mercenary": false,

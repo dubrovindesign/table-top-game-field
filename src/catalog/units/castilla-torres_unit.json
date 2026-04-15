@@ -51,10 +51,11 @@
     "name": "Карлос Торрес",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/castilla-torres_unit/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "castilla-torres_unit",
   "mercenary": false,
-  "points": 38
+  "points": 38,
+  "requiresCommanderUnitId": null
 }

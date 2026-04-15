@@ -51,10 +51,12 @@
     "name": "Штурмтрупер со Штурмовым Карабином",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/krigmark-stormtrooper_1/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "krigmark-stormtrooper_1",
   "mercenary": false,
-  "points": 26
+  "points": 26,
+  "requiresCommanderUnitId": null,
+  "requiresCommanderUnitIds": null
 }

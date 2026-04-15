@@ -51,10 +51,11 @@
     "name": "Разрушитель Бездны с молотом",
     "run": 2,
     "size": "big",
-    "sprite": "/catalog-units/castilla-void_walker_hammer/image.jpg",
+    "sprite": "",
     "walk": 1
   },
   "id": "castilla-void_walker_hammer",
   "mercenary": false,
-  "points": 44
+  "points": 44,
+  "requiresCommanderUnitId": null
 }

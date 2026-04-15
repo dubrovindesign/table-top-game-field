@@ -51,10 +51,12 @@
     "name": "Окопный Жнец",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/krigmark-stormtrooper_reaper/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "krigmark-stormtrooper_reaper",
   "mercenary": false,
-  "points": 23
+  "points": 23,
+  "requiresCommanderUnitId": null,
+  "requiresCommanderUnitIds": null
 }

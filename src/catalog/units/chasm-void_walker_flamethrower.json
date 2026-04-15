@@ -2,55 +2,16 @@
   "card": {
     "attacks": [
       {
-        "attackRange": "ranged",
-        "damage": 2,
-        "damageType": "fire",
-        "dice": {
-          "black": 2,
-          "green": 0,
-          "red": 5,
-          "white": 0
-        },
-        "name": "поток огня",
-        "range": 1
-      },
-      {
-        "attackRange": "ranged",
-        "damage": 2,
-        "damageType": "fire",
-        "dice": {
-          "black": 2,
-          "green": 0,
-          "red": 3,
-          "white": 0
-        },
-        "name": "огненный залп",
-        "range": 2
-      },
-      {
-        "attackRange": "ranged",
-        "damage": 2,
+        "attackRange": "melee",
+        "damage": 1,
         "damageType": "physical",
         "dice": {
-          "black": 2,
+          "black": 0,
           "green": 0,
           "red": 1,
           "white": 0
         },
-        "name": "удар прикладом",
-        "range": 1
-      },
-      {
-        "attackRange": "ranged",
-        "damage": 2,
-        "damageType": "fire",
-        "dice": {
-          "black": 0,
-          "green": 0,
-          "red": 2,
-          "white": 0
-        },
-        "name": "смертельный финал",
+        "name": "—",
         "range": 1
       }
     ],
@@ -58,16 +19,16 @@
     "concentration": {
       "black": 0,
       "green": 0,
-      "red": 1,
+      "red": 0,
       "white": 0
     },
     "defense": {
       "green": 0,
-      "white": 3
+      "white": 0
     },
     "defenseReaction": {
       "green": 0,
-      "white": 1
+      "white": 0
     },
     "domains": [
       "destruction"
@@ -92,7 +53,7 @@
     "name": "Разрушитель Бездны с тяжелым огнеметом",
     "run": 2,
     "size": "big",
-    "sprite": "",
+    "sprite": "/catalog-units/chasm-void_walker_flamethrower/image.jpg",
     "walk": 1
   },
   "id": "chasm-void_walker_flamethrower",

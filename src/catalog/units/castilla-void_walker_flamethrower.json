@@ -51,10 +51,11 @@
     "name": "Разрушитель Бездны с тяжелым огнеметом",
     "run": 2,
     "size": "big",
-    "sprite": "/catalog-units/castilla-void_walker_flamethrower/image.jpg",
+    "sprite": "",
     "walk": 1
   },
   "id": "castilla-void_walker_flamethrower",
   "mercenary": false,
-  "points": 58
+  "points": 58,
+  "requiresCommanderUnitId": null
 }

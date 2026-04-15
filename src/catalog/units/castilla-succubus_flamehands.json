@@ -51,10 +51,11 @@
     "name": "Суккуб Пламенных Дланей",
     "run": 8,
     "size": "small",
-    "sprite": "/catalog-units/castilla-succubus_flamehands/image.jpg",
+    "sprite": "",
     "walk": 4
   },
   "id": "castilla-succubus_flamehands",
   "mercenary": false,
-  "points": 36
+  "points": 36,
+  "requiresCommanderUnitId": null
 }

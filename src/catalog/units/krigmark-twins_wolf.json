@@ -51,10 +51,12 @@
     "name": "Вольф Бальдауф",
     "run": 7,
     "size": "small",
-    "sprite": "/catalog-units/krigmark-twins_wolf/image.jpg",
+    "sprite": "",
     "walk": 4
   },
   "id": "krigmark-twins_wolf",
   "mercenary": false,
-  "points": 45
+  "points": 45,
+  "requiresCommanderUnitId": null,
+  "requiresCommanderUnitIds": null
 }

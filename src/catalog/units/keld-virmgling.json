@@ -51,7 +51,7 @@
     "name": "Вирмглинг",
     "run": 6,
     "size": "small",
-    "sprite": "",
+    "sprite": "/catalog-units/keld-virmgling/image.jpg",
     "walk": 3
   },
   "id": "keld-virmgling",

@@ -65,5 +65,6 @@
   },
   "id": "castilla-torquemad",
   "mercenary": false,
-  "points": 60
+  "points": 60,
+  "requiresCommanderUnitId": null
 }

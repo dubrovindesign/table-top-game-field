@@ -31,7 +31,7 @@
       "white": 0
     },
     "domains": [
-      "creation"
+      "death"
     ],
     "exploration": {
       "black": 0,
@@ -43,16 +43,16 @@
     "faithMarkers": {
       "red": 0
     },
-    "flagSprite": "/engeln.webp",
+    "flagSprite": "/blackthorn.webp",
     "grabRange": 1,
     "health": 5,
     "keywords": [
-      "Ангельн"
+      "Великий Терновник"
     ],
     "maxHealth": 5,
     "miniatureSprite": "/catalog-units/engeln-boyd/miniature.jpg",
     "movementDistanceUnit": "hex",
-    "name": "Бойд Великолепный",
+    "name": "Бойд Великол��пный",
     "run": 6,
     "size": "small",
     "sprite": "",

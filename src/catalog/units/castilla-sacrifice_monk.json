@@ -51,10 +51,11 @@
     "name": "Монах Искупления",
     "run": 6,
     "size": "small",
-    "sprite": "/catalog-units/castilla-sacrifice_monk/image.jpg",
+    "sprite": "",
     "walk": 3
   },
   "id": "castilla-sacrifice_monk",
   "mercenary": false,
-  "points": 10
+  "points": 10,
+  "requiresCommanderUnitId": null
 }

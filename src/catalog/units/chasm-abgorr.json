@@ -3,29 +3,16 @@
     "attacks": [
       {
         "attackRange": "melee",
-        "damage": 2,
-        "damageType": "physical",
-        "dice": {
-          "black": 2,
-          "green": 3,
-          "red": 4,
-          "white": 0
-        },
-        "name": "удар мечами",
-        "range": 1
-      },
-      {
-        "attackRange": "ranged",
         "damage": 1,
         "damageType": "physical",
         "dice": {
           "black": 0,
           "green": 0,
-          "red": 5,
+          "red": 1,
           "white": 0
         },
-        "name": "смертоносные лезвия",
-        "range": 0
+        "name": "—",
+        "range": 1
       }
     ],
     "catalogUnitId": "chasm-abgorr",
@@ -36,8 +23,8 @@
       "white": 0
     },
     "defense": {
-      "green": 3,
-      "white": 1
+      "green": 0,
+      "white": 0
     },
     "defenseReaction": {
       "green": 0,
@@ -49,10 +36,10 @@
     "exploration": {
       "black": 0,
       "green": 0,
-      "red": 1,
+      "red": 0,
       "white": 0
     },
-    "explorationRange": 1,
+    "explorationRange": 0,
     "flagSprite": "/chasm.webp",
     "grabRange": 1,
     "grabRangeUnit": "hex",
@@ -66,7 +53,7 @@
     "name": "Абгорр, Неотразимый Истязатель",
     "run": 9,
     "size": "large",
-    "sprite": "",
+    "sprite": "/catalog-units/chasm-abgorr/image.jpg",
     "walk": 6
   },
   "id": "chasm-abgorr",
