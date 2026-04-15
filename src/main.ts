@@ -132,6 +132,7 @@ import {
   isApplyingRemoteBoardState,
   isBoardMultiplayerSyncActive,
   notifyBoardEditLocal,
+  pushBoardStateImmediate,
   registerBoardSyncApi,
 } from './multiplayer/boardSync.ts';
 import type { PlayerSlot, TableDragState } from './multiplayer/protocol.ts';
@@ -812,6 +813,19 @@ function getBoardCenterWorld(): { x: number; y: number } {
 
 /** God cards / decks on the table (from panel DnD or merged stacks). */
 let godTablePieces: GodTablePiece[] = [];
+
+/**
+ * Keys of god table pieces as seen in the last remote board snapshot we applied.
+ * Used to distinguish "locally added since last remote sync" from "everything else"
+ * when merging remote snapshots — protects against two peers placing cards
+ * simultaneously and the server's last-writer-wins broadcast dropping one of them.
+ */
+let lastRemoteGodTablePieceKeys: Set<string> = new Set();
+
+function godTablePieceKey(p: GodTablePiece): string {
+  if (p.kind === 'single') return `s:${p.id}`;
+  return `d:${[...p.ids].sort().join('|')}`;
+}
 
 /** Inventory item tokens on the board (sprites from catalog). */
 export type InventoryTablePiece = {
@@ -10840,9 +10854,36 @@ function applyBoardSnapshot(raw: unknown): void {
   }
 
   const prevGodTablePieces = structuredClone(godTablePieces);
-  godTablePieces.length = 0;
-  godTablePieces.push(...structuredClone(s.godTablePieces));
-  godPieceFlipAnim = isApplyingRemoteBoardState()
+  const incomingGodPieces = structuredClone(s.godTablePieces) as GodTablePiece[];
+  const isRemoteApply = isApplyingRemoteBoardState();
+  if (isRemoteApply) {
+    // Merge-on-apply: preserve locally-added pieces that the remote peer has never
+    // seen (absent from both our last-received baseline and the incoming snapshot).
+    // Without this, simultaneous blind→table placements on both peers are dropped
+    // by the server's last-writer-wins broadcast of `godTablePieces`.
+    const incomingKeys = new Set<string>();
+    for (const p of incomingGodPieces) incomingKeys.add(godTablePieceKey(p));
+    const localSurvivors: GodTablePiece[] = [];
+    for (const p of godTablePieces) {
+      const k = godTablePieceKey(p);
+      if (!lastRemoteGodTablePieceKeys.has(k) && !incomingKeys.has(k)) {
+        localSurvivors.push(structuredClone(p));
+      }
+    }
+    godTablePieces.length = 0;
+    godTablePieces.push(...incomingGodPieces, ...localSurvivors);
+    lastRemoteGodTablePieceKeys = incomingKeys;
+    if (localSurvivors.length > 0) {
+      // Our merged state diverges from the server's stored snapshot — push the
+      // union back so every peer (and the server) converges on it.
+      queueMicrotask(() => pushBoardStateImmediate());
+    }
+  } else {
+    godTablePieces.length = 0;
+    godTablePieces.push(...incomingGodPieces);
+    lastRemoteGodTablePieceKeys = new Set(incomingGodPieces.map(godTablePieceKey));
+  }
+  godPieceFlipAnim = isRemoteApply
     ? detectRemoteGodFlipAnim(prevGodTablePieces, godTablePieces)
     : null;
 
