@@ -142,6 +142,7 @@ import { initMultiplayerSession, sendPingIntentAtBoard, sendRoomClientMessage } 
 import {
   bigMiniRestorePlacementCollides,
   commitDeadRestoreIfLegal,
+  mergeDeadByZoneThreeWay,
   moveDeadEntryBetweenZones,
   normalizeDeadByZone,
   resolveDeadZoneScoredPoints,
@@ -2923,9 +2924,22 @@ function deadZoneTuple(): DeadByZone {
   return [[...deadByZone[0]], [...deadByZone[1]]];
 }
 
+// Random per-process prefix + local counter. The counter alone is NOT safe
+// across peers (both start at 1 so two peers independently assigning ids to
+// different pieces would collide on `dead-piece-1`, `dead-piece-2`, …). The
+// random prefix makes the id globally unique without needing a shared clock.
+const deadPieceIdClientPrefix = (() => {
+  try {
+    const g = globalThis as { crypto?: { randomUUID?: () => string } };
+    if (typeof g.crypto?.randomUUID === 'function') return g.crypto.randomUUID();
+  } catch {
+    /* ignore */
+  }
+  return `${Date.now().toString(36)}-${Math.floor(Math.random() * 0xffffffff).toString(36)}`;
+})();
 let deadPieceIdSeq = 1;
 function allocDeadPieceId(): string {
-  const id = `dead-piece-${deadPieceIdSeq}`;
+  const id = `dead-piece-${deadPieceIdClientPrefix}-${deadPieceIdSeq}`;
   deadPieceIdSeq += 1;
   return id;
 }
@@ -10237,11 +10251,24 @@ function collectLoadedBoardInstanceIdsForDeadZoneFilter(): Set<string> {
   return allowed;
 }
 
+/**
+ * Baseline of boardInstanceIds seen in the last applied board snapshot (per slot).
+ * Used to distinguish "locally added since the last remote sync" from "everything
+ * else" when merging remote snapshots — protects against two peers dropping units
+ * into their dead zones simultaneously and the server's last-writer-wins broadcast
+ * of `deadByZone` overwriting one peer's entry. Same pattern as
+ * `lastRemoteGodTablePieceKeys` for `godTablePieces`.
+ */
+let lastRemoteDeadByZoneKeys: [Set<string>, Set<string>] = [new Set(), new Set()];
+
 function applyDeadByZoneFromValidatedSnapshot(s: SerializedBoardStateV1): void {
   const raw: DeadByZone = (s.deadByZone ?? [[], []]) as DeadByZone;
   const normalized = normalizeDeadByZone(raw);
   const allowed = collectLoadedBoardInstanceIdsForDeadZoneFilter();
 
+  // Log (and drop) incoming entries whose id doesn't resolve to any local unit.
+  // The merge below also filters via `allowed`, but doing it here lets us keep
+  // the dev warning for diagnostics.
   const filterZone = (zone: DeadByZone[0]): SerializedDeadEntryV1[] => {
     const out: SerializedDeadEntryV1[] = [];
     for (const e of zone) {
@@ -10258,15 +10285,54 @@ function applyDeadByZoneFromValidatedSnapshot(s: SerializedBoardStateV1): void {
     return out;
   };
 
-  const next0 = filterZone(normalized[0]);
-  const next1 = filterZone(normalized[1]);
+  const incomingFiltered: DeadByZone = [filterZone(normalized[0]), filterZone(normalized[1])];
+  const isRemoteApply = isApplyingRemoteBoardState();
+
+  let final0: SerializedDeadEntryV1[];
+  let final1: SerializedDeadEntryV1[];
+  let diverged = false;
+
+  if (isRemoteApply) {
+    // Full 3-way CRDT merge: baseline (last remote we applied) + incoming
+    // (new remote) + local (our current state, possibly with edits the remote
+    // hasn't received yet). Handles adds, removes, and slot moves on either
+    // side so that simultaneous dead-zone drops/restores don't clobber each
+    // other via last-writer-wins at the server.
+    const { merged, diverged: d } = mergeDeadByZoneThreeWay({
+      baseline: lastRemoteDeadByZoneKeys,
+      incoming: incomingFiltered,
+      local: [deadByZone[0], deadByZone[1]],
+      allowed,
+    });
+    final0 = merged[0] as SerializedDeadEntryV1[];
+    final1 = merged[1] as SerializedDeadEntryV1[];
+    diverged = d;
+
+    lastRemoteDeadByZoneKeys = [
+      new Set(incomingFiltered[0].map((e) => e.boardInstanceId)),
+      new Set(incomingFiltered[1].map((e) => e.boardInstanceId)),
+    ];
+  } else {
+    final0 = incomingFiltered[0] as SerializedDeadEntryV1[];
+    final1 = incomingFiltered[1] as SerializedDeadEntryV1[];
+    lastRemoteDeadByZoneKeys = [
+      new Set(final0.map((e) => e.boardInstanceId)),
+      new Set(final1.map((e) => e.boardInstanceId)),
+    ];
+  }
 
   deadByZone[0].length = 0;
   deadByZone[1].length = 0;
-  deadByZone[0].push(...next0);
-  deadByZone[1].push(...next1);
+  deadByZone[0].push(...final0);
+  deadByZone[1].push(...final1);
   applyDeadZoneHideFromDeadLists();
   refreshDeadUnitDock();
+
+  if (diverged) {
+    // Our merged state diverges from the server's stored snapshot — push the
+    // union back so every peer (and the server) converges on it.
+    queueMicrotask(() => pushBoardStateImmediate());
+  }
 }
 
 function captureBoardSnapshot(): SerializedBoardStateV1 {
@@ -10518,13 +10584,69 @@ function resetTransientMultiplayerInteractionState(): void {
   godLooseCapturePointerId = null;
   hoveredHexUnderPointer = null;
   renderer.setHoveredHex(null);
-  clearSelection();
-  selectedBoardObjectIndex = null;
-  openHealthControlsUnitIndex = null;
-  openHealthControlsBigMiniIndex = null;
-  openHealthControlsLargeMiniIndex = null;
-  openHealthControlsHugeMiniIndex = null;
-  openHealthControlsHuge2MiniIndex = null;
+  // NB: selection (selectedUnitIndex etc.), selectedBoardObjectIndex и
+  // openHealthControls* — чисто локальное UI-состояние. Не сбрасываем на remote-apply:
+  // иначе когда оппонент делает любое действие, у нас схлопывается превью карточки юнита.
+  // Пост-apply инвалидацию «осиротевших» индексов делает invalidateStaleSelectionAfterApply().
+}
+
+/**
+ * После применения удалённого снапшота массивы юнитов/миниатюр полностью пересобираются.
+ * Если локально-выделенный индекс теперь вне границ нового массива — обнуляем только его,
+ * не трогая остальное UI-состояние.
+ */
+function invalidateStaleSelectionAfterApply(): void {
+  if (selectedUnitIndex !== null && selectedUnitIndex >= units.length) {
+    selectedUnitIndex = null;
+  }
+  if (selectedBigMiniIndex !== null && selectedBigMiniIndex >= bigMiniatures.length) {
+    selectedBigMiniIndex = null;
+  }
+  if (selectedLargeMiniIndex !== null && selectedLargeMiniIndex >= largeMiniatures.length) {
+    selectedLargeMiniIndex = null;
+  }
+  if (selectedHugeMiniIndex !== null && selectedHugeMiniIndex >= hugeMiniatures.length) {
+    selectedHugeMiniIndex = null;
+  }
+  if (selectedHuge2MiniIndex !== null && selectedHuge2MiniIndex >= huge2Miniatures.length) {
+    selectedHuge2MiniIndex = null;
+  }
+  if (selectedBoardObjectIndex !== null && selectedBoardObjectIndex >= boardObjects.length) {
+    selectedBoardObjectIndex = null;
+  }
+  if (selectedTerrainIndex !== null && selectedTerrainIndex >= terrains.length) {
+    selectedTerrainIndex = null;
+  }
+  if (selectedEtherVortexIndex !== null && selectedEtherVortexIndex >= etherVortexes.length) {
+    selectedEtherVortexIndex = null;
+  }
+  if (selectedGodTablePieceIndex !== null && selectedGodTablePieceIndex >= godTablePieces.length) {
+    selectedGodTablePieceIndex = null;
+  }
+  if (
+    selectedInventoryTablePieceIndex !== null &&
+    selectedInventoryTablePieceIndex >= inventoryTablePieces.length
+  ) {
+    selectedInventoryTablePieceIndex = null;
+  }
+  if (openHealthControlsUnitIndex !== null && openHealthControlsUnitIndex >= units.length) {
+    openHealthControlsUnitIndex = null;
+  }
+  if (openHealthControlsBigMiniIndex !== null && openHealthControlsBigMiniIndex >= bigMiniatures.length) {
+    openHealthControlsBigMiniIndex = null;
+  }
+  if (openHealthControlsLargeMiniIndex !== null && openHealthControlsLargeMiniIndex >= largeMiniatures.length) {
+    openHealthControlsLargeMiniIndex = null;
+  }
+  if (openHealthControlsHugeMiniIndex !== null && openHealthControlsHugeMiniIndex >= hugeMiniatures.length) {
+    openHealthControlsHugeMiniIndex = null;
+  }
+  if (openHealthControlsHuge2MiniIndex !== null && openHealthControlsHuge2MiniIndex >= huge2Miniatures.length) {
+    openHealthControlsHuge2MiniIndex = null;
+  }
+  if (openHealthControlsBoardObjectIndex !== null && openHealthControlsBoardObjectIndex >= boardObjects.length) {
+    openHealthControlsBoardObjectIndex = null;
+  }
 }
 
 /** Drop hunger phase for mercenary units (`mercenary` from merged catalog / editor overrides). */
@@ -10648,6 +10770,43 @@ function applyBoardSnapshot(raw: unknown): void {
   setScenarioBoardOrientation(s.boardOrientation ?? 'horizontal');
   if (!shouldPreserveLocalInteractionState()) {
     resetTransientMultiplayerInteractionState();
+  }
+
+  // Capture pre-apply local positions keyed by deadPieceId. Used below to
+  // preserve position/offBoardWorld for units that we locally restored from a
+  // dead zone but the (stale) incoming snapshot still marks as HIDE — without
+  // this, units[].offBoardWorld gets blown away to HIDE by the full-array
+  // replace and the restore flickers back to whatever pre-death hex the
+  // sender last knew.
+  type PrevLocalPos = {
+    offBoardWorld: Point | undefined;
+    position?: { q: number; r: number };
+    center?: { q: number; r: number };
+    anchor?: { q: number; r: number };
+  };
+  const prevLocalUnitPosById = new Map<string, PrevLocalPos>();
+  const capturePrev = (
+    deadPieceId: string | undefined,
+    offBoardWorld: Point | undefined,
+    rest: Omit<PrevLocalPos, 'offBoardWorld'>,
+  ): void => {
+    if (!deadPieceId || deadPieceId.length === 0) return;
+    prevLocalUnitPosById.set(deadPieceId, {
+      offBoardWorld: offBoardWorld ? { ...offBoardWorld } : undefined,
+      ...rest,
+    });
+  };
+  for (const u of units) {
+    capturePrev(u.deadPieceId, u.offBoardWorld, { position: { q: u.position.q, r: u.position.r } });
+  }
+  for (const m of bigMiniatures) {
+    capturePrev(m.deadPieceId, m.offBoardWorld, { center: { q: m.center.q, r: m.center.r } });
+  }
+  for (const m of largeMiniatures) {
+    capturePrev(m.deadPieceId, m.offBoardWorld, { anchor: { q: m.anchor.q, r: m.anchor.r } });
+  }
+  for (const m of hugeMiniatures) {
+    capturePrev(m.deadPieceId, m.offBoardWorld, { anchor: { q: m.anchor.q, r: m.anchor.r } });
   }
 
   units.length = 0;
@@ -10796,6 +10955,69 @@ function applyBoardSnapshot(raw: unknown): void {
   huge2MiniCardData.push(...structuredClone(h2cArr.slice(0, h2PairLen)));
 
   migrateLegacySiegeGolemHugeToHuge2();
+
+  // Position preservation for locally-restored units. The units/minis arrays
+  // were just replaced from `s`. If we had restored a unit locally since our
+  // last remote apply but the incoming snapshot is stale (still HIDE at the
+  // sender's last-known pre-death position), prefer our captured local pose.
+  // The dead-zone merge that runs next decides "is it dead in final?" — if
+  // it rules the unit dead anyway, applyDeadZoneHideFromDeadLists will reset
+  // it to HIDE, so restoring here is safe for both outcomes.
+  const restoreLiveIfLocallyRestored = (
+    piece: {
+      deadPieceId?: string;
+      offBoardWorld?: Point | undefined;
+    },
+    setPos: (p: { q: number; r: number }) => void,
+    posKey: 'position' | 'center' | 'anchor',
+  ): void => {
+    const id = piece.deadPieceId;
+    if (!id) return;
+    if (!isDeadZoneHideWorld(piece.offBoardWorld)) return;
+    const prev = prevLocalUnitPosById.get(id);
+    if (!prev) return;
+    if (isDeadZoneHideWorld(prev.offBoardWorld)) return;
+    piece.offBoardWorld = prev.offBoardWorld ? { ...prev.offBoardWorld } : undefined;
+    const pos = prev[posKey];
+    if (pos) setPos(pos);
+  };
+  for (const u of units) {
+    restoreLiveIfLocallyRestored(
+      u,
+      (p) => {
+        u.position = new Hex(p.q, p.r);
+      },
+      'position',
+    );
+  }
+  for (const m of bigMiniatures) {
+    restoreLiveIfLocallyRestored(
+      m,
+      (p) => {
+        m.center = new Hex(p.q, p.r);
+      },
+      'center',
+    );
+  }
+  for (const m of largeMiniatures) {
+    restoreLiveIfLocallyRestored(
+      m,
+      (p) => {
+        m.anchor = new Hex(p.q, p.r);
+      },
+      'anchor',
+    );
+  }
+  for (const m of hugeMiniatures) {
+    restoreLiveIfLocallyRestored(
+      m,
+      (p) => {
+        m.anchor = new Hex(p.q, p.r);
+      },
+      'anchor',
+    );
+  }
+
   applyDeadByZoneFromValidatedSnapshot(s);
 
   terrains.length = 0;
@@ -10919,6 +11141,8 @@ function applyBoardSnapshot(raw: unknown): void {
   loadCrystalWalletsFromSnapshot(s.crystalWallets);
 
   topTurnPanel.setTableTurnNumber(s.tableTurnNumber ?? 1);
+
+  invalidateStaleSelectionAfterApply();
 
   refreshGodDock();
   armyBuilderPanel.refresh();

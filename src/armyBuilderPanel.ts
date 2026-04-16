@@ -182,9 +182,13 @@ export class ArmyBuilderPanel {
   private selectedMainTab: ArmyMainTab = 'roster';
   private godPreviewFloater: HTMLElement;
   private godPreviewAnchorEl: HTMLElement | null = null;
+  /** Currently previewed god-card id; used to re-anchor the floater after a catalog rebuild. */
+  private godPreviewCardId: string | null = null;
   private godPreviewListenersActive = false;
   private inventoryPreviewFloater: HTMLElement;
   private inventoryPreviewAnchorEl: HTMLElement | null = null;
+  /** Currently previewed inventory-item id; used to re-anchor the floater after a catalog rebuild. */
+  private inventoryPreviewItemId: string | null = null;
   private inventoryPreviewListenersActive = false;
   private open = false;
   private selectedFactionId: string;
@@ -637,6 +641,7 @@ export class ArmyBuilderPanel {
   private openGodCardPreview(c: GodCardDef, anchor: HTMLElement): void {
     this.closeInventoryCardPreview();
     this.godPreviewAnchorEl = anchor;
+    this.godPreviewCardId = c.id;
     applyGodCardSpriteCss(this.godPreviewFloater, c);
     this.godPreviewFloater.setAttribute('aria-label', godCardAriaLabel(c));
     this.godPreviewFloater.hidden = false;
@@ -650,6 +655,7 @@ export class ArmyBuilderPanel {
   private closeGodCardPreview(): void {
     this.detachGodPreviewListeners();
     this.godPreviewAnchorEl = null;
+    this.godPreviewCardId = null;
     if (this.godPreviewFloater.hidden) return;
     this.godPreviewFloater.hidden = true;
     this.godPreviewFloater.setAttribute('aria-hidden', 'true');
@@ -705,6 +711,7 @@ export class ArmyBuilderPanel {
   private openInventoryCardPreview(def: InventoryItemDef, anchor: HTMLElement): void {
     this.closeGodCardPreview();
     this.inventoryPreviewAnchorEl = anchor;
+    this.inventoryPreviewItemId = def.id;
     applyInventoryCardSpriteCss(this.inventoryPreviewFloater, def.sprite);
     this.inventoryPreviewFloater.setAttribute('aria-label', def.name);
     this.inventoryPreviewFloater.hidden = false;
@@ -718,6 +725,7 @@ export class ArmyBuilderPanel {
   private closeInventoryCardPreview(): void {
     this.detachInventoryPreviewListeners();
     this.inventoryPreviewAnchorEl = null;
+    this.inventoryPreviewItemId = null;
     if (this.inventoryPreviewFloater.hidden) return;
     this.inventoryPreviewFloater.hidden = true;
     this.inventoryPreviewFloater.setAttribute('aria-hidden', 'true');
@@ -1142,14 +1150,17 @@ export class ArmyBuilderPanel {
   }
 
   private renderGodSection(): void {
-    this.closeGodCardPreview();
-    this.closeInventoryCardPreview();
+    // Preserve the open god-card preview across rebuilds (e.g. periodic remote
+    // multiplayer snapshots) by re-anchoring to the matching catalog row; close
+    // only if the previewed card is no longer in the rebuilt catalog.
+    const prevCardId = this.godPreviewCardId;
     this.godCatalogEl.replaceChildren();
     const leaderId = this.selectedLeaderId;
     if (!leaderId) {
       this.godCatalogEl.appendChild(
         el('div', 'army-list-empty', 'Выберите лидера, чтобы увидеть доступные карты богов'),
       );
+      if (prevCardId !== null) this.closeGodCardPreview();
       return;
     }
     const inPlay = getArmyRosterGodCardIdsInPlay();
@@ -1166,6 +1177,18 @@ export class ArmyBuilderPanel {
           ? 'Нет карт богов по фильтру'
           : 'Нет карт богов для этого лидера';
       this.godCatalogEl.appendChild(el('div', 'army-list-empty', emptyMsg));
+    }
+
+    if (prevCardId !== null) {
+      const nextAnchor = this.godCatalogEl.querySelector<HTMLElement>(
+        `[data-god-card-id="${CSS.escape(prevCardId)}"]`,
+      );
+      if (nextAnchor) {
+        this.godPreviewAnchorEl = nextAnchor;
+        this.syncGodPreviewPosition();
+      } else {
+        this.closeGodCardPreview();
+      }
     }
   }
 
@@ -1285,10 +1308,13 @@ export class ArmyBuilderPanel {
   }
 
   private renderInventorySection(): void {
-    this.closeInventoryCardPreview();
+    const prevItemId = this.inventoryPreviewItemId;
     this.inventoryCatalogEl.replaceChildren();
     const leaderId = this.selectedLeaderId;
-    if (!leaderId) return;
+    if (!leaderId) {
+      if (prevItemId !== null) this.closeInventoryCardPreview();
+      return;
+    }
     const inPlay = getArmyRosterInventoryItemIdsInPlay();
     const items = listInventoryItemsForLeader(leaderId);
     for (const def of items) {
@@ -1305,6 +1331,17 @@ export class ArmyBuilderPanel {
             : 'Все доступные предметы уже на столе',
         ),
       );
+    }
+    if (prevItemId !== null) {
+      const nextAnchor = this.inventoryCatalogEl.querySelector<HTMLElement>(
+        `[data-inventory-item-id="${CSS.escape(prevItemId)}"]`,
+      );
+      if (nextAnchor) {
+        this.inventoryPreviewAnchorEl = nextAnchor;
+        this.syncInventoryPreviewPosition();
+      } else {
+        this.closeInventoryCardPreview();
+      }
     }
   }
 

@@ -181,6 +181,127 @@ export function moveDeadEntryBetweenZones(
   return [renumberZoneContiguous(next0), renumberZoneContiguous([...next1, moved])];
 }
 
+// ── 3-way CRDT merge for remote apply ────────────────────────
+
+/**
+ * 3-way merge of dead-zone state for the multiplayer last-writer-wins tick.
+ *
+ * Inputs:
+ *   - baseline: keys of the PREVIOUS remote snapshot we applied (per slot).
+ *     This is what the remote peer is known to have seen last.
+ *   - incoming: the new remote snapshot being applied.
+ *   - local: our current local state (may contain edits the remote hasn't seen).
+ *
+ * Per-entry rule (by boardInstanceId):
+ *   - If the entry changed locally vs. baseline (added, removed, or moved slots),
+ *     the local change wins — otherwise a stale remote snapshot would revert
+ *     the player's just-made action.
+ *   - Otherwise follow incoming (remote-only change, or no change).
+ *
+ * Conflict (both sides edited the same entry differently):
+ *   - Local wins, same reason — the user's immediate action should not flicker.
+ *
+ * Output:
+ *   - merged: resulting DeadByZone with contiguous `order`.
+ *   - diverged: true when `merged` differs in keys/order from `incoming`
+ *     (signals the caller to push the merged state back so peers converge).
+ *
+ * Entries whose `boardInstanceId` is not in `allowed` are dropped with no warning
+ * (the caller filters those separately when it also wants to log).
+ */
+export function mergeDeadByZoneThreeWay(args: {
+  baseline: readonly [ReadonlySet<string>, ReadonlySet<string>];
+  incoming: DeadByZone;
+  local: DeadByZone;
+  allowed: ReadonlySet<string>;
+}): { merged: DeadByZone; diverged: boolean } {
+  const { baseline, incoming, local, allowed } = args;
+
+  const incomingKeys0 = new Set(incoming[0].map((e) => e.boardInstanceId));
+  const incomingKeys1 = new Set(incoming[1].map((e) => e.boardInstanceId));
+  const localKeys0 = new Set(local[0].map((e) => e.boardInstanceId));
+  const localKeys1 = new Set(local[1].map((e) => e.boardInstanceId));
+  const baselineKeys0 = baseline[0];
+  const baselineKeys1 = baseline[1];
+
+  type Slot = 0 | 1 | null;
+  const slotIn = (id: string, k0: ReadonlySet<string>, k1: ReadonlySet<string>): Slot =>
+    k0.has(id) ? 0 : k1.has(id) ? 1 : null;
+
+  const allIds = new Set<string>();
+  for (const s of [baselineKeys0, baselineKeys1, incomingKeys0, incomingKeys1, localKeys0, localKeys1]) {
+    for (const id of s) allIds.add(id);
+  }
+
+  const finalSlot = new Map<string, Slot>();
+  for (const id of allIds) {
+    const b = slotIn(id, baselineKeys0, baselineKeys1);
+    const i = slotIn(id, incomingKeys0, incomingKeys1);
+    const l = slotIn(id, localKeys0, localKeys1);
+    const localChanged = l !== b;
+    finalSlot.set(id, localChanged ? l : i);
+  }
+
+  const incomingDataById = new Map<string, DeadEntry>();
+  for (const e of incoming[0]) incomingDataById.set(e.boardInstanceId, e);
+  for (const e of incoming[1]) incomingDataById.set(e.boardInstanceId, e);
+  const localDataById = new Map<string, DeadEntry>();
+  for (const e of local[0]) localDataById.set(e.boardInstanceId, e);
+  for (const e of local[1]) localDataById.set(e.boardInstanceId, e);
+
+  const out0: DeadEntry[] = [];
+  const out1: DeadEntry[] = [];
+  const seen = new Set<string>();
+
+  const pushIfBelongs = (id: string, scoredPoints: number): void => {
+    if (!allowed.has(id)) return;
+    if (seen.has(id)) return;
+    const slot = finalSlot.get(id);
+    if (slot === null || slot === undefined) return;
+    seen.add(id);
+    const target = slot === 0 ? out0 : out1;
+    target.push({
+      boardInstanceId: id,
+      scoredPoints: normalizeScoredPoints(scoredPoints),
+      order: target.length,
+    });
+  };
+
+  // Phase 1: walk the incoming order and pull entries whose data should carry
+  // over. Prefer local data (points may have been re-scored by a local rule
+  // that the remote doesn't yet know about) when local has the same entry.
+  for (const e of incoming[0]) {
+    const slot = finalSlot.get(e.boardInstanceId);
+    if (slot === null || slot === undefined) continue;
+    const local = localDataById.get(e.boardInstanceId);
+    pushIfBelongs(e.boardInstanceId, local?.scoredPoints ?? e.scoredPoints);
+  }
+  for (const e of incoming[1]) {
+    const slot = finalSlot.get(e.boardInstanceId);
+    if (slot === null || slot === undefined) continue;
+    const local = localDataById.get(e.boardInstanceId);
+    pushIfBelongs(e.boardInstanceId, local?.scoredPoints ?? e.scoredPoints);
+  }
+  // Phase 2: append local-only entries that didn't appear in incoming at all.
+  for (const e of local[0]) pushIfBelongs(e.boardInstanceId, e.scoredPoints);
+  for (const e of local[1]) pushIfBelongs(e.boardInstanceId, e.scoredPoints);
+
+  const incomingOrderKeys0 = incoming[0].map((e) => e.boardInstanceId);
+  const incomingOrderKeys1 = incoming[1].map((e) => e.boardInstanceId);
+  const mergedOrderKeys0 = out0.map((e) => e.boardInstanceId);
+  const mergedOrderKeys1 = out1.map((e) => e.boardInstanceId);
+  const sameKeysAndOrder = (a: readonly string[], b: readonly string[]): boolean => {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+  };
+  const diverged =
+    !sameKeysAndOrder(mergedOrderKeys0, incomingOrderKeys0) ||
+    !sameKeysAndOrder(mergedOrderKeys1, incomingOrderKeys1);
+
+  return { merged: [out0, out1], diverged };
+}
+
 // ── Wounded scoring ──────────────────────────────────────────
 
 export const KELLANTHRA_BIG_ID = 'keld-kellantra_lindwurm';
