@@ -7170,9 +7170,13 @@ function tryEtherVortexCrystalBadgeOpen(screenX: number, screenY: number): boole
     const dx = w.x - badge.x;
     const dy = w.y - badge.y;
     if (dx * dx + dy * dy <= hitR2) {
-      // A miniature standing on the vortex must take precedence — clicks on the
-      // mini should not fall through to the crystal counter underneath.
-      if (resolveMiniatureTapKeyForDoubleTap(screenX, screenY) !== null) {
+      // Z-order rule: selected vortex is rendered on top (see drawSelectedLiftPass),
+      // so it also wins the click. Otherwise a miniature standing on the vortex is
+      // visually above and must take precedence over the crystal counter underneath.
+      if (
+        selectedEtherVortexIndex !== i &&
+        resolveMiniatureTapKeyForDoubleTap(screenX, screenY) !== null
+      ) {
         return false;
       }
       const scr = boardWorldToScreen(badge);
