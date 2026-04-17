@@ -135,7 +135,10 @@ export function createVoicePeer(opts: VoicePeerOptions) {
       const state = p.connectionState;
       if (state === 'connected') {
         iceRestartAttempts = 0;
-      } else if (state === 'failed' || state === 'disconnected') {
+      } else if (state === 'failed') {
+        // Trigger only on `failed` — `disconnected` is a routine transient
+        // during ICE pair selection (especially on LAN), and restarting there
+        // tore down handshakes that would have recovered on their own.
         void tryIceRestart();
       }
     };
@@ -152,15 +155,18 @@ export function createVoicePeer(opts: VoicePeerOptions) {
     if (iceRestartPending || !pc) return;
     if (iceRestartAttempts >= MAX_ICE_RESTARTS) return;
     iceRestartPending = true;
-    iceRestartAttempts += 1;
-    const delayMs = 400 * iceRestartAttempts;
     try {
+      // Wait before checking: browsers occasionally flicker to `failed` for a
+      // few hundred ms during normal negotiation. Back off further per attempt
+      // so repeated failures don't spam offers.
+      const delayMs = 600 + 600 * iceRestartAttempts;
       await new Promise((r) => setTimeout(r, delayMs));
       const p = pc;
-      if (!p) return;
-      const state = p.connectionState;
-      if (state !== 'failed' && state !== 'disconnected') return;
+      if (!p || p.connectionState !== 'failed') return;
       if (!localStream) return;
+      // Only count the attempt once we're actually about to send an offer —
+      // otherwise transient flickers eat the retry budget without trying anything.
+      iceRestartAttempts += 1;
       if (opts.localPlayerSlot === 0) {
         if (!opts.hasRemotePlayer()) return;
         if (p.signalingState !== 'stable') return;
