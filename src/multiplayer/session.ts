@@ -493,6 +493,7 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
           updateVoiceUi();
         },
         onRemoteStreamAttached: () => applyRemoteOutputSinkFromSelect(),
+        onConnectionStateChange: () => updateVoiceUi(),
       });
     }
     return voicePeer;

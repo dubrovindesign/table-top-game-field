@@ -1,0 +1,49 @@
+# coturn config for Tornscape voice chat.
+# install-coturn.sh fills REPLACE_* placeholders and drops this at /etc/turnserver.conf.
+# Manual edits to /etc/turnserver.conf are wiped on the next install — change this
+# template instead, then re-run install-coturn.sh.
+
+# TURN realm sent to clients during auth. Any domain you own is fine; keep it
+# short and stable — it becomes part of the user hash, so rotating it requires
+# rebuilding long-term creds.
+realm=REPLACE_REALM
+
+# Public IPv4 of this VPS. coturn advertises this in ICE candidates — if it's
+# wrong, peers get a private/unroutable relay address and nothing works.
+external-ip=REPLACE_EXTERNAL_IP
+
+# Listeners. 3478 = plain STUN/TURN (UDP+TCP). 5349 = TURNS (TLS). 443 is owned
+# by Caddy, so strict corporate firewalls that only allow 443/TCP out will
+# still fail — acceptable trade-off versus juggling SNI routing on one port.
+listening-port=3478
+tls-listening-port=5349
+
+# Relay UDP port range. Open EXACTLY this range on the firewall — too small a
+# range throttles concurrent calls, too large wastes ports. 40 ports = ~20
+# simultaneous calls, plenty for a 2-player game.
+min-port=49160
+max-port=49200
+
+# Long-term credentials (RFC 5389 §15.4). Creds ship in the client bundle, so
+# treat them as "obscure" rather than "secret": they deter drive-by abuse from
+# bots scanning for open relays, nothing more. Rotate if the repo ever leaks.
+lt-cred-mech
+user=REPLACE_TURN_USER:REPLACE_TURN_PASS
+
+# TLS cert from certbot (see install-coturn.sh). coturn reads these at startup
+# and on SIGUSR2; LE renewal hook restarts the service to pick up new certs.
+cert=/etc/letsencrypt/live/REPLACE_TURN_HOST/fullchain.pem
+pkey=/etc/letsencrypt/live/REPLACE_TURN_HOST/privkey.pem
+
+# Hardening: block relay to private/loopback ranges (SSRF defence), disable
+# the admin CLI socket, reject obsolete TLS versions.
+no-loopback-peers
+no-multicast-peers
+no-cli
+no-tlsv1
+no-tlsv1_1
+fingerprint
+
+# Logging. coturn's packaged logrotate handles rotation.
+log-file=/var/log/turnserver/turn.log
+simple-log

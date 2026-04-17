@@ -13,6 +13,8 @@ export type VoicePeerOptions = {
   onRemotePlaybackStarted?: () => void;
   /** After remote MediaStream is bound (e.g. apply setSinkId before play()). */
   onRemoteStreamAttached?: () => void | Promise<void>;
+  /** RTCPeerConnection.connectionState changed — UI should re-render status. */
+  onConnectionStateChange?: () => void;
 };
 
 function parseIceServersFromEnv(): RTCIceServer[] | null {
@@ -51,6 +53,10 @@ export function createVoicePeer(opts: VoicePeerOptions) {
   let remoteDescSet = false;
   const pendingIce: RTCIceCandidateInit[] = [];
   const remoteTrackUnmuteCleanups: Array<() => void> = [];
+  /** Retry budget for ICE restart after `failed`/`disconnected`. Reset on `connected`. */
+  const MAX_ICE_RESTARTS = 3;
+  let iceRestartAttempts = 0;
+  let iceRestartPending = false;
 
   function sendPayload(payload: WebRtcSignalPayload): void {
     opts.send({ type: 'webrtcSignal', payload });
@@ -124,8 +130,52 @@ export function createVoicePeer(opts: VoicePeerOptions) {
         new MediaStream([track]);
       attachRemoteStream(streamWithTrack, track);
     };
+    p.onconnectionstatechange = () => {
+      opts.onConnectionStateChange?.();
+      const state = p.connectionState;
+      if (state === 'connected') {
+        iceRestartAttempts = 0;
+      } else if (state === 'failed' || state === 'disconnected') {
+        void tryIceRestart();
+      }
+    };
     pc = p;
     return p;
+  }
+
+  /**
+   * ICE restart after `failed`/`disconnected`. Without this, any transient NAT/relay hiccup
+   * leaves the UI stuck on "Связь прервана, обновите страницу" — the user's main complaint
+   * when a TURN relay path churns. Bounded retries so we don't spam offers forever.
+   */
+  async function tryIceRestart(): Promise<void> {
+    if (iceRestartPending || !pc) return;
+    if (iceRestartAttempts >= MAX_ICE_RESTARTS) return;
+    iceRestartPending = true;
+    iceRestartAttempts += 1;
+    const delayMs = 400 * iceRestartAttempts;
+    try {
+      await new Promise((r) => setTimeout(r, delayMs));
+      const p = pc;
+      if (!p) return;
+      const state = p.connectionState;
+      if (state !== 'failed' && state !== 'disconnected') return;
+      if (!localStream) return;
+      if (opts.localPlayerSlot === 0) {
+        if (!opts.hasRemotePlayer()) return;
+        if (p.signalingState !== 'stable') return;
+        const offer = await p.createOffer({ iceRestart: true });
+        await p.setLocalDescription(offer);
+        if (!offer.sdp) return;
+        sendPayload({ phase: 'offer', sdp: offer.sdp });
+      } else {
+        await guestRenegotiateAfterMic();
+      }
+    } catch {
+      // Swallow — UI already reflects the failed state; next state change can retry.
+    } finally {
+      iceRestartPending = false;
+    }
   }
 
   async function syncMicToSender(): Promise<void> {
@@ -314,12 +364,15 @@ export function createVoicePeer(opts: VoicePeerOptions) {
       if (pc) {
         pc.onicecandidate = null;
         pc.ontrack = null;
+        pc.onconnectionstatechange = null;
         pc.close();
         pc = null;
       }
       audioSender = null;
       remoteDescSet = false;
       pendingIce.length = 0;
+      iceRestartAttempts = 0;
+      iceRestartPending = false;
       opts.remoteAudio.srcObject = null;
     },
 
