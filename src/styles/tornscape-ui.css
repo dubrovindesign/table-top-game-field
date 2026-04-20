@@ -663,6 +663,17 @@ select option {
 .army-inventory-list {
   padding: 4px 0 16px !important;
 }
+/* Roster toolbar (search + sort) and god-search row had their own 12px
+   inner gutter on top of the 16px parent — flatten them so the search
+   input aligns with the rest. */
+.army-roster-toolbar {
+  padding: 0 0 10px !important;
+  margin-top: 10px !important;
+}
+.army-god-search-row {
+  padding: 4px 0 10px !important;
+  margin-top: 10px !important;
+}
 .army-god-section {
   padding-top: 0 !important;
   margin-top: 0 !important;
