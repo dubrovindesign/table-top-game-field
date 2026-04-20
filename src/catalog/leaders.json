@@ -2013,6 +2013,11 @@
         "unitId": "engeln-servidim_shooter",
         "maxCopies": 1,
         "points": 47
+      },
+      {
+        "unitId": "engeln_hound",
+        "maxCopies": 2,
+        "points": 4
       }
     ]
   },
