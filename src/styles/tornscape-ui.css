@@ -50,19 +50,30 @@ select option {
   color: var(--p-parchment);
 }
 
-/* ---------- Top turn panel (non-canvas ribbon) ---------- */
+/* ---------- Top turn panel — transparent ribbon, only children styled ---------- */
 .turn-top-panel {
-  background: var(--p-bg-deep) !important;
-  background-image:
-    linear-gradient(180deg, rgba(200,170,110,0.06), transparent 40%),
-    linear-gradient(0deg, rgba(0,0,0,0.4), transparent 50%) !important;
-  border-bottom: 1px solid rgba(200, 170, 110, 0.3);
+  background: transparent !important;
+  background-image: none !important;
+  border-bottom: none !important;
   color: var(--p-parchment);
   font-family: var(--font-ui);
 }
-.turn-top-panel * {
-  color: inherit;
+
+/* Turn counter button (next to end-turn) */
+.turn-counter-btn {
+  font-family: var(--font-display) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  color: var(--p-parchment) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.08), transparent 40%),
+    var(--p-iron) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: var(--ts-inset-metal), 0 4px 12px rgba(0,0,0,0.5) !important;
+  backdrop-filter: none !important;
 }
+.turn-counter-btn:hover { filter: brightness(1.15); }
 
 /* End-turn button — primary wax seal */
 .turn-end-btn {
@@ -91,10 +102,10 @@ select option {
 .scenarios-panel {
   background-color: var(--p-leather) !important;
   background-image:
-    radial-gradient(ellipse at 30% 20%, rgba(80,45,15,0.5), transparent 55%),
-    radial-gradient(ellipse at 80% 90%, rgba(20,10,5,0.6), transparent 60%),
-    repeating-linear-gradient(45deg, rgba(0,0,0,0.12) 0 2px, transparent 2px 6px),
-    repeating-linear-gradient(-45deg, rgba(255,210,140,0.035) 0 2px, transparent 2px 7px) !important;
+    radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.04), transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.55), transparent 60%),
+    repeating-linear-gradient(45deg, rgba(0,0,0,0.18) 0 2px, transparent 2px 6px),
+    repeating-linear-gradient(-45deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 7px) !important;
   color: var(--p-parchment);
   border-right: 1px solid rgba(200, 170, 110, 0.3) !important;
   backdrop-filter: none !important;
@@ -225,13 +236,13 @@ select option {
 .rosters-modal input,
 .rosters-modal textarea {
   font-family: var(--font-ui) !important;
-  background: rgba(255, 245, 220, 0.9) !important;
-  color: var(--p-parchment-ink) !important;
+  background: rgba(0, 0, 0, 0.35) !important;
+  color: var(--p-parchment) !important;
   border: none !important;
   border-radius: 0 !important;
   box-shadow:
-    inset 0 0 0 1px var(--p-ink-muted),
-    inset 0 2px 4px rgba(60, 35, 10, 0.18) !important;
+    inset 0 0 0 1px rgba(200, 170, 110, 0.28),
+    inset 0 2px 4px rgba(0, 0, 0, 0.35) !important;
   outline: none !important;
 }
 .army-search-input:focus,
@@ -250,7 +261,61 @@ select option {
 .army-roster-search-input::placeholder,
 .mp-invite-input-ingame::placeholder,
 .mp-join-link-input::placeholder {
-  color: var(--p-ink-faint) !important;
+  color: rgba(200, 170, 110, 0.45) !important;
+}
+
+/* ---------- Sort filter button + popover ---------- */
+.army-roster-sort-btn {
+  background: var(--p-iron) !important;
+  background-image: linear-gradient(180deg, rgba(255,255,255,0.08), transparent 40%) !important;
+  color: var(--p-parchment) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: var(--ts-inset-metal) !important;
+  transition: filter 0.12s ease;
+}
+.army-roster-sort-btn:hover {
+  filter: brightness(1.15);
+  background: var(--p-iron) !important;
+  color: var(--p-parchment) !important;
+  border: none !important;
+}
+.army-roster-sort-btn.army-roster-sort-btn--open {
+  background: var(--accent) !important;
+  color: var(--accent-ink) !important;
+  box-shadow: var(--ts-inset-metal-hi) !important;
+  border: none !important;
+}
+
+.army-roster-sort-popover {
+  background-color: var(--p-leather) !important;
+  background-image:
+    radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.04), transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.55), transparent 60%) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.5),
+    inset 0 0 0 2px rgba(200,170,110,0.28),
+    0 10px 28px rgba(0,0,0,0.55) !important;
+  backdrop-filter: none !important;
+  padding: 4px !important;
+  font-family: var(--font-ui);
+}
+.army-roster-sort-menu-item {
+  border-radius: 0 !important;
+  color: var(--p-parchment) !important;
+  font-family: var(--font-ui) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em;
+}
+.army-roster-sort-menu-item:hover {
+  background: rgba(200, 170, 110, 0.1) !important;
+}
+.army-roster-sort-menu-item.army-roster-sort-menu-item--active {
+  background: var(--accent) !important;
+  color: var(--accent-ink) !important;
+  box-shadow: var(--ts-inset-metal-hi) !important;
 }
 
 /* ---------- Generic buttons in UI panels ---------- */
@@ -343,16 +408,16 @@ select option {
 .army-unit-row,
 .objects-item,
 .rosters-list-row {
-  background: rgba(255, 245, 220, 0.06) !important;
-  border: 1px solid rgba(200, 170, 110, 0.22) !important;
+  background: transparent !important;
+  border: 1px solid rgba(200, 170, 110, 0.16) !important;
   border-radius: 0 !important;
   color: var(--p-parchment);
 }
 .army-unit-row:hover,
 .objects-item:hover,
 .rosters-list-row:hover {
-  background: rgba(255, 245, 220, 0.1) !important;
-  border-color: rgba(200, 170, 110, 0.45) !important;
+  background: rgba(200, 170, 110, 0.06) !important;
+  border-color: rgba(200, 170, 110, 0.38) !important;
 }
 
 .army-section-title,
@@ -377,9 +442,9 @@ select option {
 .mp-panel {
   background-color: var(--p-leather) !important;
   background-image:
-    radial-gradient(ellipse at 30% 20%, rgba(80,45,15,0.5), transparent 55%),
-    radial-gradient(ellipse at 80% 90%, rgba(20,10,5,0.6), transparent 60%),
-    repeating-linear-gradient(45deg, rgba(0,0,0,0.12) 0 2px, transparent 2px 6px) !important;
+    radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.04), transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.55), transparent 60%),
+    repeating-linear-gradient(45deg, rgba(0,0,0,0.18) 0 2px, transparent 2px 6px) !important;
   color: var(--p-parchment) !important;
   border: none !important;
   border-radius: 0 !important;
@@ -411,37 +476,43 @@ select option {
 
 /* ---------- Controls / rules dialog ---------- */
 .app-controls-dialog {
-  background-color: var(--p-parchment) !important;
+  background-color: var(--p-leather) !important;
   background-image:
-    radial-gradient(ellipse at 20% 10%, rgba(184,130,60,0.18), transparent 55%),
-    radial-gradient(ellipse at 85% 90%, rgba(90,50,20,0.22), transparent 60%),
-    repeating-linear-gradient(35deg, rgba(100,65,20,0.035) 0 2px, transparent 2px 7px) !important;
-  color: var(--p-parchment-ink) !important;
+    radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.04), transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.55), transparent 60%),
+    repeating-linear-gradient(45deg, rgba(0,0,0,0.18) 0 2px, transparent 2px 6px) !important;
+  color: var(--p-parchment) !important;
   border-radius: 0 !important;
-  box-shadow: var(--ts-shadow-lg), var(--ts-inset-paper) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.5),
+    inset 0 0 0 2px rgba(200,170,110,0.28),
+    var(--ts-shadow-lg) !important;
   font-family: var(--font-ui);
 }
 .app-controls-dialog-title {
   font-family: var(--font-display) !important;
   font-weight: 600;
-  color: var(--p-parchment-ink) !important;
+  color: var(--p-parchment) !important;
 }
 .app-controls-heading {
   font-family: var(--font-display);
-  color: var(--p-parchment-ink);
-  border-bottom: 1px solid var(--p-ink-faint);
+  color: var(--p-parchment);
+  border-bottom: 1px solid rgba(200, 170, 110, 0.3);
 }
 
 /* ---------- Rosters modal ---------- */
 .rosters-modal {
-  background-color: var(--p-parchment) !important;
+  background-color: var(--p-leather) !important;
   background-image:
-    radial-gradient(ellipse at 20% 10%, rgba(184,130,60,0.22), transparent 55%),
-    radial-gradient(ellipse at 85% 90%, rgba(90,50,20,0.28), transparent 60%),
-    repeating-linear-gradient(35deg, rgba(100,65,20,0.035) 0 2px, transparent 2px 7px) !important;
-  color: var(--p-parchment-ink) !important;
+    radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.04), transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.55), transparent 60%),
+    repeating-linear-gradient(45deg, rgba(0,0,0,0.18) 0 2px, transparent 2px 6px) !important;
+  color: var(--p-parchment) !important;
   border-radius: 0 !important;
-  box-shadow: var(--ts-shadow-lg), var(--ts-inset-paper) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.5),
+    inset 0 0 0 2px rgba(200,170,110,0.28),
+    var(--ts-shadow-lg) !important;
 }
 .rosters-modal-section-title,
 .rosters-modal-group-title {
@@ -449,7 +520,7 @@ select option {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  color: var(--p-ink-muted);
+  color: var(--p-parchment-dark);
 }
 
 /* ---------- Chips (army roster) ---------- */
@@ -491,4 +562,160 @@ select option {
 .army-points-fill {
   background: linear-gradient(180deg, var(--accent), var(--accent-dark)) !important;
   border-radius: 0 !important;
+}
+
+/* =====================================================================
+   Canvas-layer widgets — Tornscape skin for:
+   - crystal wallet + chips + picker
+   - dice panel (roll + results)
+   ===================================================================== */
+
+/* ---------- Crystal wallet ---------- */
+.cw-crystals-row {
+  background-color: var(--p-leather) !important;
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,0.04), transparent 40%),
+    radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.5), transparent 60%) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.5),
+    inset 0 0 0 2px rgba(200,170,110,0.32),
+    0 6px 18px rgba(0,0,0,0.55) !important;
+  backdrop-filter: none !important;
+  font-family: var(--font-ui);
+}
+
+.cw-chip-count {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--p-parchment);
+}
+
+.cw-add-btn {
+  border-radius: 0 !important;
+  border: 1px dashed rgba(200, 170, 110, 0.4) !important;
+  color: rgba(200, 170, 110, 0.6) !important;
+  font-family: var(--font-ui);
+}
+.cw-add-btn:hover {
+  background: rgba(200, 170, 110, 0.08) !important;
+  border-color: rgba(200, 170, 110, 0.7) !important;
+  color: var(--p-parchment) !important;
+}
+
+.cw-picker {
+  background-color: var(--p-leather) !important;
+  background-image:
+    radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.04), transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.55), transparent 60%) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.5),
+    inset 0 0 0 2px rgba(200,170,110,0.3),
+    0 10px 28px rgba(0,0,0,0.6) !important;
+  backdrop-filter: none !important;
+}
+.cw-picker-empty {
+  color: rgba(200, 170, 110, 0.5) !important;
+  font-family: var(--font-ui);
+}
+
+/* ---------- Dice selector panel ---------- */
+.dice-panel,
+.dice-player-block {
+  background-color: var(--p-leather) !important;
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,0.04), transparent 40%),
+    radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.03), transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.55), transparent 60%) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.5),
+    inset 0 0 0 2px rgba(200,170,110,0.3),
+    0 6px 18px rgba(0,0,0,0.55) !important;
+  backdrop-filter: none !important;
+  font-family: var(--font-ui);
+}
+
+.dice-panel-tabs {
+  border-bottom: 1px solid rgba(200, 170, 110, 0.25) !important;
+}
+.dice-tab {
+  font-family: var(--font-ui) !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.14em !important;
+  color: var(--p-parchment-dark) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+.dice-tab:hover {
+  color: var(--p-parchment) !important;
+  background: rgba(200, 170, 110, 0.08) !important;
+}
+.dice-tab.dice-tab-active {
+  color: var(--accent-ink) !important;
+  background: var(--accent) !important;
+  box-shadow: var(--ts-inset-metal-hi) !important;
+}
+
+.dice-roll-btn {
+  font-family: var(--font-ui) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  border-radius: 0 !important;
+  border: none !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.14), transparent 35%),
+    linear-gradient(0deg, rgba(0,0,0,0.25), transparent 50%),
+    var(--accent) !important;
+  color: var(--accent-ink) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.55),
+    inset 0 0 0 2px var(--stroke-metal-hi),
+    0 2px 0 rgba(0,0,0,0.4) !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.45);
+}
+.dice-roll-btn:hover:not(:disabled) {
+  filter: brightness(1.1) saturate(1.05);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.14), transparent 35%),
+    linear-gradient(0deg, rgba(0,0,0,0.25), transparent 50%),
+    var(--accent) !important;
+}
+
+.dice-reset-btn,
+.dice-clear-btn {
+  font-family: var(--font-ui) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  border-radius: 0 !important;
+  border: none !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.08), transparent 40%),
+    var(--p-iron) !important;
+  color: var(--p-parchment) !important;
+  box-shadow: var(--ts-inset-metal) !important;
+}
+.dice-reset-btn:hover,
+.dice-clear-btn:hover:not(:disabled) {
+  filter: brightness(1.15);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.08), transparent 40%),
+    var(--p-iron) !important;
+}
+
+.dice-player-title,
+.dice-roll-label {
+  font-family: var(--font-ui) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.18em !important;
+  color: var(--p-parchment-dark) !important;
 }

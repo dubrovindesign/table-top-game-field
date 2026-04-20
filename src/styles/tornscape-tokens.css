@@ -3,23 +3,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Infant:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Manrope:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Parchment / leather / metal base */
-  --p-bg-deep:        #1a120a;
-  --p-bg:             #2a1c10;
-  --p-leather:        #3a2615;
-  --p-leather-dark:   #241509;
-  --p-parchment:      #efe3c8;
-  --p-parchment-warm: #e7d6af;
-  --p-parchment-dark: #c9b383;
-  --p-parchment-ink:  #2d1e0f;
-  --p-ink-muted:      #5b4327;
-  --p-ink-faint:      #8a7350;
+  /* Dark / graphite / metal base */
+  --p-bg-deep:        #0a0a0c;
+  --p-bg:             #111114;
+  --p-leather:        #17171a;   /* was warm brown — now near-black graphite */
+  --p-leather-dark:   #0c0c0e;
+  --p-parchment:      #e8e4dc;   /* near-white paper, slightly warm */
+  --p-parchment-warm: #d8d4cc;
+  --p-parchment-dark: #9a9690;
+  --p-parchment-ink:  #141418;
+  --p-ink-muted:      #4a4a50;
+  --p-ink-faint:      #7a7a80;
 
-  --p-metal:          #7a6542;
-  --p-metal-hi:       #c8aa6e;
-  --p-metal-lo:       #3d2f18;
-  --p-iron:           #3a3228;
-  --p-iron-hi:        #5a4f40;
+  --p-metal:          #6a6660;
+  --p-metal-hi:       #bfb8a8;
+  --p-metal-lo:       #2a2a2e;
+  --p-iron:           #1f1f23;
+  --p-iron-hi:        #3a3a40;
 
   --p-wax:            #8f1d18;
   --p-wax-hi:         #b83a30;
