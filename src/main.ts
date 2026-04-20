@@ -75,6 +75,7 @@ import {
   type BroomgarHungerPhase,
 } from './broomgarHunger';
 import { CrystalWallet } from './crystalWallet';
+import { getBorderColors, subscribeBorderColors } from './unitBorderColors.ts';
 import {
   CATALOG_UNITS,
   getCatalogUnit,
@@ -1241,6 +1242,11 @@ const renderer = new Renderer(
   camera,
   renderConfig,
 );
+renderer.setOwnerBorderColors(getBorderColors());
+subscribeBorderColors((colors) => {
+  renderer.setOwnerBorderColors(colors);
+  scheduleRender();
+});
 
 // ── Highlighted hexon + unit ───────────────────────────────────
 
@@ -2238,6 +2244,11 @@ function pushPieceRotationsToRenderer(): void {
   renderer.setBigMiniActivated(bigMiniatures.map((m) => m.activated !== false));
   renderer.setLargeMiniActivated(largeMiniatures.map((m) => m.activated !== false));
   renderer.setHugeMiniActivated(hugeMiniatures.map((m) => m.activated !== false));
+  renderer.setUnitArmyOwners(units.map((u) => u.armyOwnerPlayerSlot));
+  renderer.setBigMiniArmyOwners(bigMiniatures.map((m) => m.armyOwnerPlayerSlot));
+  renderer.setLargeMiniArmyOwners(largeMiniatures.map((m) => m.armyOwnerPlayerSlot));
+  renderer.setHugeMiniArmyOwners(hugeMiniatures.map((m) => m.armyOwnerPlayerSlot));
+  renderer.setHuge2MiniArmyOwners(huge2Miniatures.map((m) => m.armyOwnerPlayerSlot));
   renderer.setUnitBroomgarHungerPhase(
     units.map((u) => (u.broomgarHungerPhase !== undefined ? u.broomgarHungerPhase : null)),
   );
@@ -3402,6 +3413,7 @@ canvas.addEventListener('inventory-sprite-ready', () => scheduleRender());
 function applyMultiplayerViewSeat(slot: PlayerSlot | null): void {
   localViewPlayerSlot = slot;
   diceRoller.setLocalPlayerSlot(slot);
+  renderer.setLocalPlayerSlot(slot);
   viewSeatExtraRotationDeg = slot === 1 ? 180 : 0;
   renderer.updateConfig({
     boardRotationDeg: effectiveFieldRotationDeg(),
@@ -9792,6 +9804,13 @@ window.addEventListener('keydown', (e) => {
     return;
   }
 
+  if (!mod && !e.repeat && e.key === 'Enter') {
+    if (diceRoller.rollIfReady()) {
+      e.preventDefault();
+      return;
+    }
+  }
+
   if (e.key === 'Alt' || e.code === 'AltLeft' || e.code === 'AltRight') {
     altKeyHeld = true;
     refreshAltHoverTarget(hexUnderGlobalPointer() ?? hoveredHexUnderPointer);
@@ -11387,7 +11406,25 @@ registerBoardSyncApi({
 
 export function applyScenarioPayload(raw: unknown): ApplyScenarioResult {
   return applyScenarioDocument(raw, {
-    applyBoardSnapshot,
+    applyBoardSnapshot: (snapshot) => {
+      // Preserve currently placed units/miniatures across scenario switch — the
+      // scenario defines board layout/orientation, but figures on the table
+      // stay put.
+      const preserved = captureBoardSnapshot();
+      applyBoardSnapshot({
+        ...snapshot,
+        units: preserved.units,
+        unitCardData: preserved.unitCardData,
+        bigMiniatures: preserved.bigMiniatures,
+        bigMiniCardData: preserved.bigMiniCardData,
+        largeMiniatures: preserved.largeMiniatures,
+        largeMiniCardData: preserved.largeMiniCardData,
+        hugeMiniatures: preserved.hugeMiniatures,
+        hugeMiniCardData: preserved.hugeMiniCardData,
+        huge2Miniatures: preserved.huge2Miniatures,
+        huge2MiniCardData: preserved.huge2MiniCardData,
+      });
+    },
     setBoardOrientation: setScenarioBoardOrientation,
     notifyBoardEditLocal,
   });

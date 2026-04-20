@@ -49,7 +49,7 @@ import {
   type GodTablePiece,
 } from './godCards';
 import { EFFECT_MARKERS, type EffectMarkerId } from './effectMarkerMenu';
-import type { TableDragKind, TableDragState } from './multiplayer/protocol.ts';
+import type { PlayerSlot, TableDragKind, TableDragState } from './multiplayer/protocol.ts';
 import { defaultRenderConfig, type RenderConfig } from './renderConfig';
 import { deriveMiniVisualFacingDeg } from './scenarios/miniatureRotationModel.ts';
 import {
@@ -241,6 +241,16 @@ export class Renderer {
   private bigMiniActivated: boolean[] = [];
   private largeMiniActivated: boolean[] = [];
   private hugeMiniActivated: boolean[] = [];
+  private unitArmyOwners: (PlayerSlot | undefined)[] = [];
+  private bigMiniArmyOwners: (PlayerSlot | undefined)[] = [];
+  private largeMiniArmyOwners: (PlayerSlot | undefined)[] = [];
+  private hugeMiniArmyOwners: (PlayerSlot | undefined)[] = [];
+  private huge2MiniArmyOwners: (PlayerSlot | undefined)[] = [];
+  private localPlayerSlot: PlayerSlot | null = null;
+  private ownerBorderColors: { mine: string; opponent: string } = {
+    mine: '#3b82f6',
+    opponent: '#ef4444',
+  };
   /** `null` = не брумгар / нет индикатора */
   private unitBroomgarHungerPhase: Array<BroomgarHungerPhase | null> = [];
   private bigMiniBroomgarHungerPhase: Array<BroomgarHungerPhase | null> = [];
@@ -671,6 +681,42 @@ export class Renderer {
 
   setUnitActivated(values: boolean[]): void {
     this.unitActivated = [...values];
+  }
+
+  setUnitArmyOwners(values: (PlayerSlot | undefined)[]): void {
+    this.unitArmyOwners = [...values];
+  }
+
+  setBigMiniArmyOwners(values: (PlayerSlot | undefined)[]): void {
+    this.bigMiniArmyOwners = [...values];
+  }
+
+  setLargeMiniArmyOwners(values: (PlayerSlot | undefined)[]): void {
+    this.largeMiniArmyOwners = [...values];
+  }
+
+  setHugeMiniArmyOwners(values: (PlayerSlot | undefined)[]): void {
+    this.hugeMiniArmyOwners = [...values];
+  }
+
+  setHuge2MiniArmyOwners(values: (PlayerSlot | undefined)[]): void {
+    this.huge2MiniArmyOwners = [...values];
+  }
+
+  setLocalPlayerSlot(slot: PlayerSlot | null): void {
+    this.localPlayerSlot = slot;
+  }
+
+  setOwnerBorderColors(colors: { mine: string; opponent: string }): void {
+    this.ownerBorderColors = { mine: colors.mine, opponent: colors.opponent };
+  }
+
+  private strokeColorForOwner(ownerSlot: PlayerSlot | undefined): string {
+    if (ownerSlot === undefined) return this.ownerBorderColors.mine;
+    const local = this.localPlayerSlot ?? 0;
+    return ownerSlot === local
+      ? this.ownerBorderColors.mine
+      : this.ownerBorderColors.opponent;
   }
 
   setBigMiniActivated(values: boolean[]): void {
@@ -1888,6 +1934,7 @@ export class Renderer {
     const rotRadContent = (this.smallUnitContentVisualRotationDeg(rotDegModel) * Math.PI) / 180;
     const sprite = this.getSpriteImage(this.unitSpriteSrcs[index] ?? null);
 
+    const ownerStroke = this.strokeColorForOwner(this.unitArmyOwners[index]);
     this.drawSmallUnitInHex(center, rotRadPhysical, rotRadContent, sprite, () => {
       ctx.save();
       ctx.translate(center.x, center.y);
@@ -1897,17 +1944,17 @@ export class Renderer {
       this.roundHexPathLocal(ctx, offs, this.smallUnitHexCornerRadius());
       ctx.fillStyle = config.unitFillColor;
       ctx.fill();
-      ctx.strokeStyle = config.unitStrokeColor;
+      ctx.strokeStyle = ownerStroke;
       ctx.lineWidth = 2;
       ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(0, 0);
       ctx.lineTo(halfH * 0.95, 0);
-      ctx.strokeStyle = config.unitStrokeColor;
+      ctx.strokeStyle = ownerStroke;
       ctx.lineWidth = 1.75;
       ctx.stroke();
       ctx.restore();
-    });
+    }, ownerStroke);
 
     if (drawSelectionRing) {
       this.strokeSmallUnitHexAtCenterRotated(center, rotDegModel, '#4caf50', 2.5);
@@ -1965,6 +2012,7 @@ export class Renderer {
       const sprite = this.getSpriteImage(
         this.unitSpriteSrcs[uIdx] ?? null,
       );
+      const ownerStrokeDrag = this.strokeColorForOwner(this.unitArmyOwners[uIdx]);
       this.withTablePieceDragLift(pv, () => {
         this.drawSmallUnitInHex(pv, rotRadPhysical, rotRadContent, sprite, () => {
           ctx.save();
@@ -1975,11 +2023,11 @@ export class Renderer {
           this.roundHexPathLocal(ctx, offs, this.smallUnitHexCornerRadius());
           ctx.fillStyle = config.unitFillColor;
           ctx.fill();
-          ctx.strokeStyle = config.unitStrokeColor;
+          ctx.strokeStyle = ownerStrokeDrag;
           ctx.lineWidth = 2;
           ctx.stroke();
           ctx.restore();
-        });
+        }, ownerStrokeDrag);
         this.drawHealthBadgeAt(
           pv,
           halfH,
@@ -2016,6 +2064,7 @@ export class Renderer {
       const rotRadPhysical = (this.smallUnitVisualRotationDeg(rotDegModel) * Math.PI) / 180;
       const rotRadContent = (this.smallUnitContentVisualRotationDeg(rotDegModel) * Math.PI) / 180;
       const sprite = this.getSpriteImage(this.unitSpriteSrcs[idx] ?? null);
+      const ownerStrokePeer = this.strokeColorForOwner(this.unitArmyOwners[idx]);
       this.withTablePieceDragLift(pos, () => {
         ctx.save();
         ctx.globalAlpha = 0.72;
@@ -2028,11 +2077,11 @@ export class Renderer {
           this.roundHexPathLocal(ctx, offs, this.smallUnitHexCornerRadius());
           ctx.fillStyle = config.unitFillColor;
           ctx.fill();
-          ctx.strokeStyle = config.unitStrokeColor;
+          ctx.strokeStyle = ownerStrokePeer;
           ctx.lineWidth = 2;
           ctx.stroke();
           ctx.restore();
-        });
+        }, ownerStrokePeer);
         this.drawHealthBadgeAt(
           pos,
           halfH,
@@ -2293,6 +2342,7 @@ export class Renderer {
     rotRadContent: number,
     sprite: HTMLImageElement | null,
     onFallback: () => void,
+    strokeColor?: string,
   ): void {
     const { ctx, layout, config } = this;
     if (!sprite || sprite.naturalWidth <= 0) {
@@ -2339,7 +2389,7 @@ export class Renderer {
     ctx.rotate(physicalRad);
     ctx.beginPath();
     this.roundHexPathLocal(ctx, offs, cornerR);
-    ctx.strokeStyle = config.unitStrokeColor;
+    ctx.strokeStyle = strokeColor ?? config.unitStrokeColor;
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.restore();
@@ -4008,6 +4058,7 @@ export class Renderer {
             config.bigMiniPreviewColor,
             previewRotModel,
             this.bigMiniSpriteSrcs[i] ?? null,
+            this.bigMiniArmyOwners[i],
           );
           this.drawHealthBadgeAt(
             p,
@@ -4065,6 +4116,7 @@ export class Renderer {
             this.huge2MiniSpriteSrcs[i] ?? null,
             this.huge2MiniSpriteOffsetsLocal[i] ?? { x: 0, y: 0 },
             this.huge2MiniSpriteRotationDegLocal[i] ?? 0,
+            this.huge2MiniArmyOwners[i],
           );
           this.drawHealthBadgeAt(
             p,
@@ -4116,6 +4168,7 @@ export class Renderer {
             this.hugeMiniSpriteSrcs[i] ?? null,
             this.hugeMiniSpriteOffsetsLocal[i] ?? { x: 0, y: 0 },
             this.hugeMiniSpriteRotationDegLocal[i] ?? 0,
+            this.hugeMiniArmyOwners[i],
           );
           this.drawHealthBadgeAt(
             p,
@@ -4174,6 +4227,7 @@ export class Renderer {
             previewRotModel,
             this.largeMiniSpriteSrcs[i] ?? null,
             largeLocalOrigin,
+            this.largeMiniArmyOwners[i],
           );
           this.drawHealthBadgeAt(
             p,
@@ -4211,6 +4265,7 @@ export class Renderer {
         const rotRadPhysical = (this.smallUnitVisualRotationDeg(rotDegModel) * Math.PI) / 180;
         const rotRadContent = (this.smallUnitContentVisualRotationDeg(rotDegModel) * Math.PI) / 180;
         const sprite = this.getSpriteImage(this.unitSpriteSrcs[i] ?? null);
+        const ownerStrokeSel = this.strokeColorForOwner(this.unitArmyOwners[i]);
         this.withTablePieceDragLift(pv, () => {
           this.drawSmallUnitInHex(pv, rotRadPhysical, rotRadContent, sprite, () => {
             ctx.save();
@@ -4221,11 +4276,11 @@ export class Renderer {
             this.roundHexPathLocal(ctx, offs, this.smallUnitHexCornerRadius());
             ctx.fillStyle = config.unitFillColor;
             ctx.fill();
-            ctx.strokeStyle = config.unitStrokeColor;
+            ctx.strokeStyle = ownerStrokeSel;
             ctx.lineWidth = 2;
             ctx.stroke();
             ctx.restore();
-          });
+          }, ownerStrokeSel);
           this.strokeSmallUnitHexAtCenterRotated(pv, rotDegModel, '#4caf50', 2.5);
           this.drawHealthBadgeAt(
             pv,
@@ -4372,6 +4427,7 @@ export class Renderer {
         config.bigMiniFillColor,
         rotDegModel,
         this.bigMiniSpriteSrcs[index] ?? null,
+        this.bigMiniArmyOwners[index],
       );
       if (drawSelectionRing) {
         this.drawBigMiniRingAtPoint(offBoard, ringSel, '#4caf50', selStrokeW, rotDegModel);
@@ -4402,6 +4458,7 @@ export class Renderer {
         config.bigMiniFillColor,
         rotDegModel,
         this.bigMiniSpriteSrcs[index] ?? null,
+        this.bigMiniArmyOwners[index],
       );
       if (drawSelectionRing) {
         this.drawBigMiniRing(center, ringSel, '#4caf50', selStrokeW, rotDegModel);
@@ -4466,6 +4523,7 @@ export class Renderer {
           config.bigMiniPreviewColor,
           previewRotModel,
           bmIdx !== null ? (this.bigMiniSpriteSrcs[bmIdx] ?? null) : null,
+          bmIdx !== null ? this.bigMiniArmyOwners[bmIdx] : undefined,
         );
         if (bmIdx !== null) {
           this.drawHealthBadgeAt(
@@ -4514,6 +4572,7 @@ export class Renderer {
           config.bigMiniPreviewColor,
           previewRotModel,
           this.bigMiniSpriteSrcs[idx] ?? null,
+          this.bigMiniArmyOwners[idx],
         );
         ctx.globalAlpha = 0.55;
         this.drawBigMiniRingAtPoint(
@@ -4561,10 +4620,11 @@ export class Renderer {
     fillColor: string,
     rotationDeg: number,
     spriteSrc: string | null,
+    ownerSlot?: PlayerSlot,
   ): void {
     const { layout } = this;
     const p = layout.hexToPixel(center);
-    this.drawBigMiniHexonAtPoint(p, radius, fillColor, rotationDeg, spriteSrc);
+    this.drawBigMiniHexonAtPoint(p, radius, fillColor, rotationDeg, spriteSrc, ownerSlot);
   }
 
   /** Big unit miniature: hexon shape (7 hexes) with image clipped like terrain; `radius` is legacy size hint for fallback art. */
@@ -4574,8 +4634,10 @@ export class Renderer {
     fillColor: string,
     rotationDeg = 0,
     spriteSrc: string | null = null,
+    ownerSlot?: PlayerSlot,
   ): void {
     const { ctx, config, layout } = this;
+    const ownerStroke = this.strokeColorForOwner(ownerSlot);
     const rotRad = (rotationDeg * Math.PI) / 180;
     const bounds = this.bigMiniHexonBoundsLocal(layout);
     const { x: pcx, y: pcy } = this.localBoundsCenter(bounds);
@@ -4606,7 +4668,7 @@ export class Renderer {
       ctx.restore();
       ctx.beginPath();
       this.addBigMiniHexonOuterPath(ctx, layout, 1);
-      ctx.strokeStyle = config.unitStrokeColor;
+      ctx.strokeStyle = ownerStroke;
       ctx.lineWidth = lwOuter;
       ctx.stroke();
     } else {
@@ -4616,7 +4678,7 @@ export class Renderer {
       ctx.fill();
       ctx.beginPath();
       this.addBigMiniHexonOuterPath(ctx, layout, 1);
-      ctx.strokeStyle = config.unitStrokeColor;
+      ctx.strokeStyle = ownerStroke;
       ctx.lineWidth = lwOuter;
       ctx.stroke();
       ctx.beginPath();
@@ -4943,6 +5005,7 @@ export class Renderer {
       rotDegModel,
       this.largeMiniSpriteSrcs[index] ?? null,
       largeLocalOrigin,
+      this.largeMiniArmyOwners[index],
     );
     if (drawSelectionRing) {
       const ringSel = this.miniatureSelectionRingPathScale(LARGE_MINI_VISUAL_SCALE, bounds, 3);
@@ -5022,6 +5085,9 @@ export class Renderer {
             ? (this.largeMiniSpriteSrcs[this.draggingLargeMiniIndex] ?? null)
             : null,
           largeLocalOrigin,
+          this.draggingLargeMiniIndex !== null
+            ? this.largeMiniArmyOwners[this.draggingLargeMiniIndex]
+            : undefined,
         );
         if (this.draggingLargeMiniIndex !== null) {
           this.drawHealthBadgeAt(
@@ -5072,6 +5138,7 @@ export class Renderer {
           config.largeMiniPreviewColor, previewRotModel,
           this.largeMiniSpriteSrcs[idx] ?? null,
           largeLocalOrigin,
+          this.largeMiniArmyOwners[idx],
         );
         ctx.globalAlpha = 0.5;
         this.drawShapeRingAtPoint(
@@ -5111,8 +5178,10 @@ export class Renderer {
     spriteSrc: string | null,
     /** Local point (anchor hex center = 0,0) that maps to `point` in world after rotate/scale. */
     localOriginInCellSpace: Point,
+    ownerSlot?: PlayerSlot,
   ): void {
-    const { ctx, config, layout } = this;
+    const { ctx, layout } = this;
+    const ownerStroke = this.strokeColorForOwner(ownerSlot);
     const rotRad = (rotationDeg * Math.PI) / 180;
     const lw = 2 / LARGE_MINI_VISUAL_SCALE;
     const { x: pcx, y: pcy } = localOriginInCellSpace;
@@ -5152,7 +5221,7 @@ export class Renderer {
     }
     ctx.beginPath();
     this.addOuterPathFromCells(ctx, layout, cells, 1);
-    ctx.strokeStyle = config.unitStrokeColor;
+    ctx.strokeStyle = ownerStroke;
     ctx.lineWidth = lw;
     ctx.stroke();
     ctx.restore();
@@ -5168,8 +5237,10 @@ export class Renderer {
     spriteSrc: string | null,
     spriteOffsetLocal: Point = { x: 0, y: 0 },
     spriteRotationLocalDeg = 0,
+    ownerSlot?: PlayerSlot,
   ): void {
-    const { ctx, config } = this;
+    const { ctx } = this;
+    const ownerStroke = this.strokeColorForOwner(ownerSlot);
     const bounds = this.huge2DominoFootprintBoundsLocal(layout);
     const boxW = bounds.maxX - bounds.minX;
     const boxH = bounds.maxY - bounds.minY;
@@ -5215,7 +5286,7 @@ export class Renderer {
     }
     ctx.beginPath();
     this.addHuge2DominoDoubleHexonOuterPath(ctx, layout, 1);
-    ctx.strokeStyle = config.unitStrokeColor;
+    ctx.strokeStyle = ownerStroke;
     ctx.lineWidth = lw;
     ctx.stroke();
     ctx.restore();
@@ -5301,6 +5372,7 @@ export class Renderer {
       this.huge2MiniSpriteSrcs[index] ?? null,
       this.huge2MiniSpriteOffsetsLocal[index] ?? { x: 0, y: 0 },
       this.huge2MiniSpriteRotationDegLocal[index] ?? 0,
+      this.huge2MiniArmyOwners[index],
     );
     if (drawSelectionRing) {
       this.drawShapeRingAtPoint(
@@ -5389,6 +5461,7 @@ export class Renderer {
               this.huge2MiniSpriteSrcs[idx] ?? null,
               this.huge2MiniSpriteOffsetsLocal[idx] ?? { x: 0, y: 0 },
               this.huge2MiniSpriteRotationDegLocal[idx] ?? 0,
+              this.huge2MiniArmyOwners[idx],
             );
           }
         }
@@ -5437,6 +5510,7 @@ export class Renderer {
           this.huge2MiniSpriteSrcs[idx] ?? null,
           this.huge2MiniSpriteOffsetsLocal[idx] ?? { x: 0, y: 0 },
           this.huge2MiniSpriteRotationDegLocal[idx] ?? 0,
+          this.huge2MiniArmyOwners[idx],
         );
         ctx.globalAlpha = 0.5;
         this.drawShapeRingAtPoint(
@@ -5535,6 +5609,7 @@ export class Renderer {
       this.hugeMiniSpriteSrcs[index] ?? null,
       this.hugeMiniSpriteOffsetsLocal[index] ?? { x: 0, y: 0 },
       this.hugeMiniSpriteRotationDegLocal[index] ?? 0,
+      this.hugeMiniArmyOwners[index],
     );
     if (drawSelectionRing) {
       const ringSel = this.miniatureSelectionRingPathScale(HUGE_MINI_VISUAL_SCALE, bounds, 3);
@@ -5613,6 +5688,9 @@ export class Renderer {
           this.draggingHugeMiniIndex !== null
             ? (this.hugeMiniSpriteRotationDegLocal[this.draggingHugeMiniIndex] ?? 0)
             : 0,
+          this.draggingHugeMiniIndex !== null
+            ? this.hugeMiniArmyOwners[this.draggingHugeMiniIndex]
+            : undefined,
         );
         if (this.draggingHugeMiniIndex !== null) {
           this.drawHealthBadgeAt(
@@ -5666,6 +5744,7 @@ export class Renderer {
           this.hugeMiniSpriteSrcs[idx] ?? null,
           this.hugeMiniSpriteOffsetsLocal[idx] ?? { x: 0, y: 0 },
           this.hugeMiniSpriteRotationDegLocal[idx] ?? 0,
+          this.hugeMiniArmyOwners[idx],
         );
         ctx.globalAlpha = 0.5;
         this.drawShapeRingAtPoint(
@@ -5709,8 +5788,10 @@ export class Renderer {
     spriteSrc: string | null,
     spriteOffsetLocal: Point = { x: 0, y: 0 },
     spriteRotationLocalDeg = 0,
+    ownerSlot?: PlayerSlot,
   ): void {
-    const { ctx, config } = this;
+    const { ctx } = this;
+    const ownerStroke = this.strokeColorForOwner(ownerSlot);
     const bounds = this.hugeMiniFootprintBoundsLocal(layout);
     const boxW = bounds.maxX - bounds.minX;
     const boxH = bounds.maxY - bounds.minY;
@@ -5758,7 +5839,7 @@ export class Renderer {
     }
     ctx.beginPath();
     this.addHugeMiniTripleHexonOuterPath(ctx, layout, 1);
-    ctx.strokeStyle = config.unitStrokeColor;
+    ctx.strokeStyle = ownerStroke;
     ctx.lineWidth = lw;
     ctx.stroke();
     ctx.restore();

@@ -8,6 +8,12 @@ import {
 } from './boardSync.ts';
 import type { ClientToServerMessage, PlayerSlot, ServerToClientMessage, TableDragState } from './protocol.ts';
 import { RoomClient } from './roomClient.ts';
+import {
+  BORDER_COLOR_PRESETS,
+  getBorderColors,
+  setBorderColors,
+  subscribeBorderColors,
+} from '../unitBorderColors.ts';
 import { createVoicePeer, type VoicePeer } from './voiceChat.ts';
 import {
   setTableDragOutboundActive,
@@ -179,6 +185,17 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
         <input type="text" class="mp-invite-input-ingame" readonly />
         <button type="button" class="mp-btn mp-btn-primary" data-action="copy-again">Копировать ссылку</button>
       </div>
+      <div class="mp-border-colors">
+        <div class="mp-subtitle">Цвет бордера</div>
+        <div class="mp-border-row" data-role="mine">
+          <span class="mp-border-label">Мой:</span>
+          <div class="mp-border-swatches" data-owner="mine"></div>
+        </div>
+        <div class="mp-border-row" data-role="opponent">
+          <span class="mp-border-label">Соперник:</span>
+          <div class="mp-border-swatches" data-owner="opponent"></div>
+        </div>
+      </div>
       <div class="mp-voice-section mp-hidden">
         <div class="mp-subtitle">Голос</div>
         <p class="mp-hint mp-voice-insecure-hint mp-hidden" aria-live="polite"></p>
@@ -213,6 +230,33 @@ export function initMultiplayerSession(opts: MultiplayerSessionOptions): void {
       <button type="button" class="mp-btn mp-btn-danger" data-action="disconnect">Отключиться</button>
     </div>
   `;
+
+  function renderBorderSwatches(): void {
+    const current = getBorderColors();
+    for (const owner of ['mine', 'opponent'] as const) {
+      const host = root.querySelector(
+        `.mp-border-swatches[data-owner="${owner}"]`,
+      ) as HTMLElement | null;
+      if (!host) continue;
+      host.textContent = '';
+      for (const preset of BORDER_COLOR_PRESETS) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'mp-border-swatch';
+        btn.style.backgroundColor = preset.hex;
+        btn.title = preset.label;
+        btn.setAttribute('aria-label', `${owner === 'mine' ? 'Мой' : 'Соперник'}: ${preset.label}`);
+        if (current[owner] === preset.hex) btn.classList.add('mp-border-swatch--selected');
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setBorderColors({ [owner]: preset.hex });
+        });
+        host.appendChild(btn);
+      }
+    }
+  }
+  renderBorderSwatches();
+  subscribeBorderColors(renderBorderSwatches);
 
   let popoverOpen = false;
   function setPopoverOpen(open: boolean): void {
