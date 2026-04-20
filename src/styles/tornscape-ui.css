@@ -59,11 +59,18 @@ select option {
   font-family: var(--font-ui);
 }
 
-/* Turn counter button (next to end-turn) */
+/* Turn-panel center column: counter fixed, end-turn overlays below. */
+.turn-panel-center {
+  position: relative !important;
+  gap: 0 !important;
+}
+
+/* Turn counter button — match wallet row height (48px). */
 .turn-counter-btn {
   font-family: var(--font-display) !important;
   font-weight: 700 !important;
   letter-spacing: 0.08em !important;
+  font-size: 15px !important;
   color: var(--p-parchment) !important;
   background:
     linear-gradient(180deg, rgba(255,255,255,0.08), transparent 40%),
@@ -72,11 +79,20 @@ select option {
   border-radius: 0 !important;
   box-shadow: var(--ts-inset-metal), 0 4px 12px rgba(0,0,0,0.5) !important;
   backdrop-filter: none !important;
+  height: 48px !important;
+  padding: 0 18px !important;
+  box-sizing: border-box !important;
 }
 .turn-counter-btn:hover { filter: brightness(1.15); }
 
-/* End-turn button — primary wax seal */
+/* End-turn — absolutely positioned below counter so it never reflows siblings. */
 .turn-end-btn {
+  position: absolute !important;
+  top: calc(100% + 6px) !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  white-space: nowrap !important;
+  width: auto !important;
   font-family: var(--font-ui);
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -93,6 +109,9 @@ select option {
     inset 0 0 0 2px var(--stroke-metal-hi),
     0 2px 0 rgba(0,0,0,0.4) !important;
   text-shadow: 0 1px 0 rgba(0,0,0,0.45);
+  height: 40px !important;
+  padding: 0 18px !important;
+  box-sizing: border-box !important;
 }
 .turn-end-btn:hover { filter: brightness(1.08) saturate(1.05); }
 
@@ -553,17 +572,49 @@ select option {
 
 /* ---------- Points cap block ---------- */
 .army-points-block {
-  background: rgba(0,0,0,0.25) !important;
-  border: 1px solid rgba(200, 170, 110, 0.25) !important;
+  background: transparent !important;
+  border: none !important;
   border-radius: 0 !important;
   color: var(--p-parchment);
   font-family: var(--font-ui);
 }
+.army-points-inner {
+  background: rgba(0, 0, 0, 0.25) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: var(--ts-inset-metal) !important;
+  padding: 10px 12px !important;
+}
+.army-points-block.army-points-block-over .army-points-inner {
+  background: rgba(164, 32, 32, 0.18) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 2px rgba(184, 58, 48, 0.55) !important;
+}
 .army-points-cap-btn {
-  font-family: var(--font-display);
+  font-family: var(--font-ui) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
   color: var(--p-parchment) !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.45) !important;
   background: transparent !important;
   border: none !important;
+  border-radius: 0 !important;
+}
+.army-points-inner,
+.army-points-current,
+.army-points-cap,
+.army-points-value,
+.army-points-max,
+.army-points-sep {
+  font-family: var(--font-ui) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.45) !important;
+}
+.army-points-cap-btn:hover {
+  background: rgba(200, 170, 110, 0.08) !important;
+  color: var(--p-parchment) !important;
 }
 .army-points-track {
   background: rgba(0, 0, 0, 0.5) !important;
@@ -573,6 +624,38 @@ select option {
 .army-points-fill {
   background: linear-gradient(180deg, var(--accent), var(--accent-dark)) !important;
   border-radius: 0 !important;
+}
+
+/* Points cap dropdown menu */
+.army-points-cap-menu {
+  background-color: var(--p-leather) !important;
+  background-image:
+    radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.04), transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.55), transparent 60%) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.5),
+    inset 0 0 0 2px rgba(200,170,110,0.3),
+    0 10px 28px rgba(0,0,0,0.6) !important;
+  backdrop-filter: none !important;
+  padding: 4px !important;
+  font-family: var(--font-ui);
+}
+.army-points-cap-option {
+  border-radius: 0 !important;
+  color: var(--p-parchment) !important;
+  font-family: var(--font-ui) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em;
+}
+.army-points-cap-option:hover {
+  background: rgba(200, 170, 110, 0.1) !important;
+}
+.army-points-cap-option-active {
+  background: var(--accent) !important;
+  color: var(--accent-ink) !important;
+  box-shadow: var(--ts-inset-metal-hi) !important;
 }
 
 /* ---------- Sharp corners on leader/unit portraits ---------- */
@@ -607,25 +690,29 @@ select option {
 }
 .army-catalog-card__badge--pts {
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.14), transparent 35%),
-    linear-gradient(0deg, rgba(0,0,0,0.25), transparent 50%),
-    var(--accent) !important;
-  color: var(--accent-ink) !important;
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,0.22), transparent 55%),
+    linear-gradient(180deg, #e88324 0%, #c85f0e 100%) !important;
+  color: #ffffff !important;
   box-shadow:
-    inset 0 0 0 1px rgba(0,0,0,0.55),
+    inset 0 0 0 1px rgba(0,0,0,0.4),
     inset 0 0 0 2px var(--stroke-metal-hi),
-    0 2px 0 rgba(0,0,0,0.4) !important;
-  text-shadow: 0 1px 0 rgba(0,0,0,0.45) !important;
+    0 2px 6px rgba(0,0,0,0.5) !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.7) !important;
   border: none !important;
   top: auto !important;
   bottom: 4px !important;
   left: auto !important;
   right: 4px !important;
   transform: none !important;
-  min-width: 0 !important;
-  height: auto !important;
-  padding: 5px 12px !important;
-  font-size: 15px !important;
+  min-width: 28px !important;
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 14px !important;
   line-height: 1.1 !important;
 }
 
@@ -728,9 +815,11 @@ select option {
 }
 
 .cw-chip-count {
-  font-family: var(--font-display);
-  font-weight: 700;
-  color: var(--p-parchment);
+  font-family: var(--font-ui) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  color: var(--accent-ink) !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.45) !important;
 }
 
 .cw-add-btn {
@@ -859,4 +948,491 @@ select option {
   text-transform: uppercase !important;
   letter-spacing: 0.18em !important;
   color: var(--p-parchment-dark) !important;
+}
+
+/* =====================================================================
+   Radial context menus — effect marker + ether vortex domain
+   ===================================================================== */
+.effect-marker-radial,
+.ether-vortex-domain-radial {
+  background-color: var(--p-leather) !important;
+  background-image:
+    radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.04), transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.6), transparent 60%) !important;
+  border: none !important;
+  border-radius: 50% !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.55),
+    inset 0 0 0 2px rgba(200,170,110,0.38),
+    0 12px 36px rgba(0,0,0,0.7) !important;
+  backdrop-filter: none !important;
+  font-family: var(--font-ui);
+}
+
+.effect-marker-radial-btn,
+.ether-vortex-domain-radial-btn {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.08), transparent 40%),
+    var(--p-iron) !important;
+  border: 1px solid rgba(200, 170, 110, 0.4) !important;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.5) !important;
+}
+.effect-marker-radial-btn:hover,
+.ether-vortex-domain-radial-btn:hover {
+  border-color: var(--stroke-metal-hi) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.5),
+    0 4px 16px rgba(0,0,0,0.55) !important;
+}
+.effect-marker-radial-btn--active {
+  border-color: var(--stroke-metal-hi) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.55),
+    inset 0 0 0 2px var(--stroke-metal-hi),
+    0 0 12px rgba(184, 58, 48, 0.5) !important;
+}
+.effect-marker-radial-btn--active:hover {
+  border-color: var(--accent) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.55),
+    inset 0 0 0 2px var(--accent),
+    0 0 14px rgba(184, 58, 48, 0.6) !important;
+}
+
+.effect-marker-radial-center,
+.ether-vortex-domain-radial-center {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.12), transparent 35%),
+    var(--accent) !important;
+  border: 1px solid var(--stroke-metal-hi) !important;
+  color: var(--accent-ink) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.55),
+    0 2px 10px rgba(0,0,0,0.5) !important;
+}
+.effect-marker-radial-center:hover,
+.ether-vortex-domain-radial-center:hover {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.18), transparent 35%),
+    var(--accent) !important;
+  color: var(--accent-ink) !important;
+  filter: brightness(1.12);
+}
+
+/* =====================================================================
+   Graveyard (dead-unit zone) — canvas overlay, scales with zoom
+   ===================================================================== */
+.dead-unit-zone {
+  background-color: rgba(23, 23, 26, 0.6) !important;
+  background-image:
+    radial-gradient(ellipse at 30% 20%, rgba(184, 58, 48, 0.18), transparent 60%),
+    radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.6), transparent 60%) !important;
+}
+
+.dead-unit-zone-panel {
+  background-color: var(--p-leather) !important;
+  background-image:
+    radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.04), transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.6), transparent 60%) !important;
+  border-radius: 0 !important;
+  box-shadow:
+    inset 0 0 0 calc(1px * var(--dead-unit-zoom)) rgba(0,0,0,0.55),
+    inset 0 0 0 calc(2px * var(--dead-unit-zoom)) rgba(200,170,110,0.35),
+    0 calc(6px * var(--dead-unit-zoom)) calc(22px * var(--dead-unit-zoom)) rgba(0,0,0,0.65) !important;
+}
+
+.dead-score-pill {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  color: var(--p-parchment) !important;
+  font-family: var(--font-ui) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.45);
+}
+.dead-score-pill__breakdown {
+  color: var(--p-parchment-dark) !important;
+  opacity: 0.85 !important;
+}
+
+.dead-unit-dock-card {
+  background-color: var(--p-iron) !important;
+  border: calc(1px * var(--dead-unit-zoom)) solid rgba(200, 170, 110, 0.35) !important;
+  border-radius: 0 !important;
+  box-shadow:
+    inset 0 0 0 calc(1px * var(--dead-unit-zoom)) rgba(0,0,0,0.55),
+    0 calc(6px * var(--dead-unit-zoom)) calc(18px * var(--dead-unit-zoom)) rgba(0,0,0,0.5) !important;
+}
+.dead-unit-dock-card--opp {
+  background-color: #0c0c0e !important;
+}
+.dead-unit-dock-card__portrait {
+  border-radius: 0 !important;
+}
+
+/* =====================================================================
+   Blind zone (god-blind) — canvas overlay
+   ===================================================================== */
+.god-blind-zone {
+  background-color: rgba(23, 23, 26, 0.5) !important;
+  background-image:
+    radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.04), transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.6), transparent 60%) !important;
+  border-radius: 0 !important;
+  box-shadow:
+    inset 0 0 0 calc(1px * var(--god-blind-zoom, 1)) rgba(0,0,0,0.55),
+    inset 0 0 0 calc(2px * var(--god-blind-zoom, 1)) rgba(200,170,110,0.3) !important;
+}
+.god-blind-zone--on-table {
+  background: transparent !important;
+  box-shadow: none !important;
+  position: relative;
+}
+/* Eye glyph centered in blind zone — brass tone, mask via inline SVG. */
+.god-blind-zone--on-table::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(32px * var(--god-blind-zoom, 1));
+  height: calc(32px * var(--god-blind-zoom, 1));
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0.35;
+  background-color: rgba(200, 170, 110, 1);
+  -webkit-mask: url('/eye.svg') center / contain no-repeat;
+          mask: url('/eye.svg') center / contain no-repeat;
+}
+
+/* Skeleton glyph inline in the graveyard score pill. */
+.dead-score-pill__value {
+  display: inline-flex !important;
+  align-items: center;
+  gap: calc(6px * var(--dead-unit-zoom, 1));
+}
+.dead-score-pill__value::before {
+  content: "";
+  display: inline-block;
+  width: calc(16px * var(--dead-unit-zoom, 1));
+  height: calc(16px * var(--dead-unit-zoom, 1));
+  background-color: var(--p-parchment);
+  -webkit-mask: url('/skeleton.svg') center / contain no-repeat;
+          mask: url('/skeleton.svg') center / contain no-repeat;
+}
+.dead-unit-zone,
+.dead-unit-zone--on-table {
+  border-radius: 0 !important;
+}
+.god-dock-card--blind-slot.god-dock-card--face,
+.god-dock-card--blind-slot.god-dock-card--back {
+  border-radius: 0 !important;
+  border-color: rgba(200, 170, 110, 0.35) !important;
+}
+.god-dock-card {
+  border-radius: 0 !important;
+}
+
+/* =====================================================================
+   Catalog editor — Tornscape reskin
+   ===================================================================== */
+
+/* Panel chrome — leather like army panel, but hinged on the right. */
+.catalog-editor-panel {
+  background-color: var(--p-leather) !important;
+  background-image:
+    radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.04), transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.55), transparent 60%),
+    repeating-linear-gradient(45deg, rgba(0,0,0,0.18) 0 2px, transparent 2px 6px),
+    repeating-linear-gradient(-45deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 7px) !important;
+  color: var(--p-parchment) !important;
+  border-left: 1px solid rgba(200, 170, 110, 0.3) !important;
+  box-shadow: -12px 0 40px rgba(0,0,0,0.6) !important;
+  font-family: var(--font-ui) !important;
+}
+
+.catalog-editor-overlay {
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: none !important;
+}
+
+.catalog-editor-header {
+  border-bottom: 1px solid rgba(200, 170, 110, 0.3) !important;
+  padding: 14px 16px !important;
+  background-image: linear-gradient(180deg, rgba(0,0,0,0.3), transparent) !important;
+}
+
+.catalog-editor-title {
+  font-family: var(--font-display) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  color: var(--p-parchment) !important;
+}
+
+.catalog-editor-close {
+  border-radius: 0 !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06), transparent 40%),
+    var(--p-iron) !important;
+  color: var(--p-parchment) !important;
+  box-shadow: var(--ts-inset-metal) !important;
+}
+.catalog-editor-close:hover {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.1), transparent 40%),
+    var(--p-iron) !important;
+  color: var(--p-parchment) !important;
+  filter: brightness(1.1);
+}
+
+.catalog-editor-body {
+  padding: 12px 16px 32px !important;
+}
+
+.ce-pane-title,
+.catalog-editor-field-label,
+.ce-field-label,
+.ce-domain-chips-label {
+  font-family: var(--font-ui) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.16em !important;
+  color: var(--p-parchment-dark) !important;
+  font-weight: 700 !important;
+}
+
+/* Tabs — iron base, wax-red active with brass hairline. */
+.catalog-editor-tab {
+  border-radius: 0 !important;
+  border: 1px solid rgba(200, 170, 110, 0.28) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), transparent 40%),
+    var(--p-iron) !important;
+  color: var(--p-parchment-dark) !important;
+  font-family: var(--font-ui) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  padding: 8px 14px !important;
+}
+.catalog-editor-tab:hover {
+  color: var(--p-parchment) !important;
+  filter: brightness(1.15);
+}
+.catalog-editor-tab--active {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.14), transparent 35%),
+    linear-gradient(0deg, rgba(0,0,0,0.25), transparent 50%),
+    var(--accent) !important;
+  color: var(--accent-ink) !important;
+  border-color: var(--stroke-metal-hi) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.55),
+    inset 0 0 0 2px var(--stroke-metal-hi) !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.45);
+}
+
+/* Inputs / textareas / selects */
+.catalog-editor-input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range']),
+.catalog-editor-textarea,
+.catalog-editor-select {
+  background-color: rgba(0, 0, 0, 0.35) !important;
+  border: 1px solid rgba(200, 170, 110, 0.35) !important;
+  border-radius: 0 !important;
+  color: var(--p-parchment) !important;
+  font-family: var(--font-ui) !important;
+  box-shadow: inset 0 1px 0 rgba(0,0,0,0.35) !important;
+}
+.catalog-editor-input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range']):hover,
+.catalog-editor-textarea:hover,
+.catalog-editor-select:hover {
+  border-color: rgba(200, 170, 110, 0.6) !important;
+  background-color: rgba(0, 0, 0, 0.45) !important;
+}
+.catalog-editor-input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range']):focus,
+.catalog-editor-textarea:focus,
+.catalog-editor-select:focus {
+  border-color: var(--accent) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(0,0,0,0.35),
+    0 0 0 2px rgba(184, 58, 48, 0.3) !important;
+}
+.catalog-editor-input::placeholder,
+.catalog-editor-textarea::placeholder {
+  color: rgba(200, 170, 110, 0.5) !important;
+}
+.catalog-editor-input[type='file'] {
+  background-color: rgba(0, 0, 0, 0.35) !important;
+  border: 1px dashed rgba(200, 170, 110, 0.4) !important;
+  border-radius: 0 !important;
+  color: var(--p-parchment-dark) !important;
+}
+.catalog-editor-input[type='file']::file-selector-button {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.14), transparent 35%),
+    var(--accent) !important;
+  color: var(--accent-ink) !important;
+  border: 1px solid var(--stroke-metal-hi) !important;
+  border-radius: 0 !important;
+  font-family: var(--font-ui) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+}
+#ce-faction-select {
+  border-radius: 0 !important;
+}
+
+/* Buttons */
+.catalog-editor-btn {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.14), transparent 35%),
+    var(--accent) !important;
+  color: var(--accent-ink) !important;
+  border: 1px solid var(--stroke-metal-hi) !important;
+  border-radius: 0 !important;
+  font-family: var(--font-ui) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.55),
+    0 2px 0 rgba(0,0,0,0.4) !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.45);
+}
+.catalog-editor-btn:hover { filter: brightness(1.1) saturate(1.05); }
+
+.catalog-editor-btn-secondary {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06), transparent 40%),
+    var(--p-iron) !important;
+  color: var(--p-parchment) !important;
+  border: 1px solid rgba(200, 170, 110, 0.4) !important;
+  text-shadow: none !important;
+  box-shadow: var(--ts-inset-metal) !important;
+}
+
+.catalog-editor-btn-danger {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.1), transparent 40%),
+    var(--p-danger) !important;
+  color: var(--p-parchment) !important;
+  border-color: var(--stroke-metal-hi) !important;
+}
+
+.catalog-editor-icon-btn {
+  border-radius: 0 !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), transparent 40%),
+    var(--p-iron) !important;
+  color: var(--p-parchment-dark) !important;
+  border: 1px solid rgba(200, 170, 110, 0.3) !important;
+  box-shadow: var(--ts-inset-metal) !important;
+}
+.catalog-editor-icon-btn:hover:not(:disabled) {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.14), transparent 35%),
+    var(--accent) !important;
+  color: var(--accent-ink) !important;
+  border-color: var(--stroke-metal-hi) !important;
+}
+
+/* Domain chips — leather pills with brass hairline; wax-red when active. */
+.ce-domain-chip {
+  border-radius: 0 !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), transparent 40%),
+    var(--p-iron) !important;
+  border: 1px solid rgba(200, 170, 110, 0.28) !important;
+  color: var(--p-parchment-dark) !important;
+  font-family: var(--font-ui) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+.ce-domain-chip:hover {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.08), transparent 40%),
+    var(--p-iron) !important;
+  color: var(--p-parchment) !important;
+  border-color: rgba(200, 170, 110, 0.55) !important;
+}
+.ce-domain-chip--active {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.14), transparent 35%),
+    var(--accent) !important;
+  color: var(--accent-ink) !important;
+  border-color: var(--stroke-metal-hi) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.55),
+    inset 0 0 0 2px var(--stroke-metal-hi) !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.45);
+}
+/* Keep the domain accent as a bottom hairline, since we flattened radius/box-shadow */
+.ce-domain-chip--life.ce-domain-chip--active { border-bottom-color: var(--ce-domain-life) !important; }
+.ce-domain-chip--creation.ce-domain-chip--active { border-bottom-color: var(--ce-domain-creation) !important; }
+.ce-domain-chip--death.ce-domain-chip--active { border-bottom-color: var(--ce-domain-death) !important; }
+.ce-domain-chip--destruction.ce-domain-chip--active { border-bottom-color: var(--ce-domain-destruction) !important; }
+
+/* Modal backdrop + shell */
+.ce-modal-backdrop {
+  background: rgba(0, 0, 0, 0.65) !important;
+  backdrop-filter: none !important;
+}
+.ce-modal {
+  background-color: var(--p-leather) !important;
+  background-image:
+    radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.04), transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.6), transparent 60%) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.55),
+    inset 0 0 0 2px rgba(200,170,110,0.35),
+    0 20px 60px rgba(0,0,0,0.7) !important;
+  color: var(--p-parchment) !important;
+  font-family: var(--font-ui) !important;
+}
+.ce-modal__header {
+  border-bottom: 1px solid rgba(200, 170, 110, 0.28) !important;
+  background-image: linear-gradient(180deg, rgba(0,0,0,0.3), transparent) !important;
+}
+.ce-modal__title {
+  font-family: var(--font-display) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  color: var(--p-parchment) !important;
+}
+.ce-modal__footer {
+  border-top: 1px solid rgba(200, 170, 110, 0.28) !important;
+  background-image: linear-gradient(0deg, rgba(0,0,0,0.3), transparent) !important;
+}
+
+/* Rows — iron tiles with brass hairline. */
+.ce-catalog-army-row,
+.ce-attached-unit-row {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.03), transparent 40%),
+    var(--p-iron) !important;
+  border: 1px solid rgba(200, 170, 110, 0.28) !important;
+  border-radius: 0 !important;
+  color: var(--p-parchment) !important;
+  box-shadow: var(--ts-inset-metal) !important;
+}
+
+/* Hotspot quick-edit popover */
+.ce-hs-quick-edit,
+.ce-hs-quick-edit-inner {
+  background-color: var(--p-leather) !important;
+  background-image:
+    radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.04), transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.55), transparent 60%) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.5),
+    inset 0 0 0 2px rgba(200,170,110,0.3),
+    0 10px 28px rgba(0,0,0,0.6) !important;
+  color: var(--p-parchment) !important;
 }

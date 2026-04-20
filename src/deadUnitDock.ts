@@ -63,7 +63,7 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return e;
 }
 
-const DEAD_ZONE_BORDER_COLOR = 'rgba(255, 120, 120, 0.72)';
+const DEAD_ZONE_BORDER_COLOR = 'rgba(200, 170, 110, 0.55)';
 
 /** Click-vs-drag threshold for slot-tap toggle (screen-px, matches spec). */
 const SLOT_TAP_MOVE_THRESHOLD_PX = 4;
@@ -145,7 +145,7 @@ export class DeadUnitDock {
     const myScorePill = el('div', 'dead-score-pill');
     myScorePill.setAttribute('aria-label', 'Dead zone score (your side)');
     const myScoreValueEl = el('span', 'dead-score-pill__value');
-    myScoreValueEl.textContent = '☠ 0';
+    myScoreValueEl.textContent = '0';
     myScorePill.appendChild(myScoreValueEl);
     const myScoreBreakdownEl = el('span', 'dead-score-pill__breakdown');
     myScorePill.appendChild(myScoreBreakdownEl);
@@ -163,7 +163,7 @@ export class DeadUnitDock {
     const oppScorePill = el('div', 'dead-score-pill');
     oppScorePill.setAttribute('aria-label', 'Dead zone score (opponent side)');
     const oppScoreValueEl = el('span', 'dead-score-pill__value');
-    oppScoreValueEl.textContent = '☠ 0';
+    oppScoreValueEl.textContent = '0';
     oppScorePill.appendChild(oppScoreValueEl);
     const oppScoreBreakdownEl = el('span', 'dead-score-pill__breakdown');
     oppScorePill.appendChild(oppScoreBreakdownEl);

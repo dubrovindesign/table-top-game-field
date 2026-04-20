@@ -42,7 +42,7 @@ function el<K extends keyof HTMLElementTagNameMap>(
 }
 
 /** Цвет рамки слепой зоны (толщина задаётся из layout). */
-const GOD_BLIND_ZONE_BORDER_COLOR = 'rgba(255, 255, 255, 0.22)';
+const GOD_BLIND_ZONE_BORDER_COLOR = 'rgba(200, 170, 110, 0.55)';
 
 function applyBounds(
   wrap: HTMLElement,

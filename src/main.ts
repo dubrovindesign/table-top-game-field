@@ -896,7 +896,7 @@ const GOD_BLIND_CARD_GAP_BASE_SCREEN = 8;
 /** Базовый внутренний отступ рамки от карт при zoom=1 (далее × camera.zoom). */
 const GOD_BLIND_HUG_MARGIN_BASE_SCREEN = 10;
 /** Базовая толщина рамки слепой зоны в экранных px при zoom=1 (далее × camera.zoom). */
-const GOD_BLIND_BORDER_BASE_SCREEN = 4;
+const GOD_BLIND_BORDER_BASE_SCREEN = 2;
 
 function godBlindCardGapScreenPx(): number {
   return GOD_BLIND_CARD_GAP_BASE_SCREEN * camera.zoom;
@@ -2906,8 +2906,8 @@ function refreshDeadScorePills(): void {
   const wO = woundedPoints[slO];
   const totalL = deadL + wL;
   const totalO = deadO + wO;
-  deadUnitDock.myScoreValueEl.textContent = `☠ ${totalL}`;
-  deadUnitDock.oppScoreValueEl.textContent = `☠ ${totalO}`;
+  deadUnitDock.myScoreValueEl.textContent = `${totalL}`;
+  deadUnitDock.oppScoreValueEl.textContent = `${totalO}`;
   const breakdownText = (dead: number, wounded: number): string =>
     wounded > 0 ? `${dead} + ${wounded}` : '';
   deadUnitDock.myScoreBreakdownEl.textContent = breakdownText(deadL, wL);
