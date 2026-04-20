@@ -1,0 +1,494 @@
+/* =====================================================================
+   Tornscape UI overrides — non-canvas chrome.
+   Applies to panels, dialogs, buttons, inputs, tabs, chips.
+   Canvas-layer (unit cards, dead-unit zone, dice faces, hex markers,
+   crystal wallet pills, effect markers, floating game widgets) stays
+   untouched per project rules.
+   ===================================================================== */
+
+/* ---------- Global body/typography ---------- */
+html, body {
+  font-family: var(--font-ui);
+  background: var(--p-bg-deep);
+}
+
+/* Scrollbars */
+* {
+  scrollbar-color: rgba(200, 170, 110, 0.45) rgba(40, 25, 10, 0.35);
+}
+::-webkit-scrollbar-track {
+  background: rgba(40, 25, 10, 0.35);
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(200, 170, 110, 0.38);
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(200, 170, 110, 0.65);
+}
+
+/* Global select — re-skin to metal plate. */
+select {
+  background-color: rgba(40, 25, 10, 0.55);
+  color: var(--p-parchment);
+  border: 1px solid rgba(200, 170, 110, 0.35);
+  border-radius: 0;
+  font-family: var(--font-ui);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c8aa6e' stroke-width='2' fill='none' stroke-linecap='square' stroke-linejoin='miter'/%3E%3C/svg%3E");
+}
+select:hover {
+  border-color: var(--stroke-metal-hi);
+  background-color: rgba(40, 25, 10, 0.72);
+}
+select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(184, 58, 48, 0.3);
+}
+select option {
+  background-color: #1a1208;
+  color: var(--p-parchment);
+}
+
+/* ---------- Top turn panel (non-canvas ribbon) ---------- */
+.turn-top-panel {
+  background: var(--p-bg-deep) !important;
+  background-image:
+    linear-gradient(180deg, rgba(200,170,110,0.06), transparent 40%),
+    linear-gradient(0deg, rgba(0,0,0,0.4), transparent 50%) !important;
+  border-bottom: 1px solid rgba(200, 170, 110, 0.3);
+  color: var(--p-parchment);
+  font-family: var(--font-ui);
+}
+.turn-top-panel * {
+  color: inherit;
+}
+
+/* End-turn button — primary wax seal */
+.turn-end-btn {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-ink) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.14), transparent 35%),
+    linear-gradient(0deg, rgba(0,0,0,0.25), transparent 50%),
+    var(--accent) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.55),
+    inset 0 0 0 2px var(--stroke-metal-hi),
+    0 2px 0 rgba(0,0,0,0.4) !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.45);
+}
+.turn-end-btn:hover { filter: brightness(1.08) saturate(1.05); }
+
+/* ---------- Side / slide-in panels (non-canvas) ---------- */
+.army-panel,
+.objects-panel,
+.scenarios-panel {
+  background-color: var(--p-leather) !important;
+  background-image:
+    radial-gradient(ellipse at 30% 20%, rgba(80,45,15,0.5), transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(20,10,5,0.6), transparent 60%),
+    repeating-linear-gradient(45deg, rgba(0,0,0,0.12) 0 2px, transparent 2px 6px),
+    repeating-linear-gradient(-45deg, rgba(255,210,140,0.035) 0 2px, transparent 2px 7px) !important;
+  color: var(--p-parchment);
+  border-right: 1px solid rgba(200, 170, 110, 0.3) !important;
+  backdrop-filter: none !important;
+  font-family: var(--font-ui);
+}
+.scenarios-panel {
+  border-right: none !important;
+  border-bottom: 1px solid rgba(200, 170, 110, 0.3) !important;
+}
+
+/* Panel headers */
+.army-panel-header,
+.objects-panel-header,
+.scenarios-panel-header {
+  border-bottom: 1px solid rgba(200, 170, 110, 0.3) !important;
+  background: linear-gradient(180deg, rgba(0,0,0,0.25), transparent);
+  color: var(--p-parchment);
+}
+
+.army-panel-title,
+.objects-panel-title,
+.scenarios-panel-title {
+  font-family: var(--font-display) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em;
+  color: var(--p-parchment) !important;
+}
+
+/* Close buttons — iron icon */
+.army-panel-close,
+.objects-panel-close,
+.scenarios-panel-close,
+.app-controls-dialog-close,
+.rosters-modal-close {
+  background: var(--p-iron) !important;
+  color: var(--p-parchment) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: var(--ts-inset-metal) !important;
+}
+.army-panel-close:hover,
+.objects-panel-close:hover,
+.scenarios-panel-close:hover,
+.app-controls-dialog-close:hover,
+.rosters-modal-close:hover {
+  filter: brightness(1.2);
+}
+
+/* ---------- Floating round menu buttons (outside canvas) ---------- */
+.army-menu-btn,
+.objects-menu-btn,
+.mp-menu-btn,
+.app-more-menu-btn,
+.app-settings-menu-btn,
+.pwa-install-menu-btn {
+  background: var(--p-iron) !important;
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,0.08), transparent 40%) !important;
+  color: var(--p-parchment) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: var(--ts-inset-metal), 0 4px 12px rgba(0,0,0,0.5) !important;
+  backdrop-filter: none !important;
+}
+.army-menu-btn:hover,
+.objects-menu-btn:hover,
+.mp-menu-btn:hover,
+.app-more-menu-btn:hover,
+.app-settings-menu-btn:hover,
+.pwa-install-menu-btn:hover {
+  filter: brightness(1.15);
+}
+
+.army-menu-btn--text,
+.mp-menu-btn--text {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+/* ---------- Tabs (army panel, objects categories, scenarios) ---------- */
+.army-panel-head-tab,
+.army-main-tab,
+.objects-category-tab,
+.scenarios-panel-tab,
+.army-faction-tab {
+  font-family: var(--font-ui) !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: var(--p-parchment-dark) !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.army-panel-head-tab:hover,
+.army-main-tab:hover,
+.objects-category-tab:hover,
+.scenarios-panel-tab:hover,
+.army-faction-tab:hover {
+  color: var(--p-parchment) !important;
+  background: rgba(200, 170, 110, 0.08) !important;
+}
+
+.army-panel-head-tab--active,
+.army-main-tab--active,
+.objects-category-tab-active,
+.scenarios-panel-tab--active,
+.army-faction-tab-active {
+  background: var(--accent) !important;
+  color: var(--accent-ink) !important;
+  box-shadow: var(--ts-inset-metal-hi) !important;
+  border: none !important;
+}
+
+/* ---------- Inputs / textareas in UI panels ---------- */
+.army-search-input,
+.army-roster-search-input,
+.mp-invite-input-ingame,
+.mp-join-link-input,
+.scenarios-field input,
+.scenarios-field textarea,
+.rosters-modal input,
+.rosters-modal textarea {
+  font-family: var(--font-ui) !important;
+  background: rgba(255, 245, 220, 0.9) !important;
+  color: var(--p-parchment-ink) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow:
+    inset 0 0 0 1px var(--p-ink-muted),
+    inset 0 2px 4px rgba(60, 35, 10, 0.18) !important;
+  outline: none !important;
+}
+.army-search-input:focus,
+.army-roster-search-input:focus,
+.mp-invite-input-ingame:focus,
+.mp-join-link-input:focus,
+.scenarios-field input:focus,
+.scenarios-field textarea:focus,
+.rosters-modal input:focus,
+.rosters-modal textarea:focus {
+  box-shadow:
+    inset 0 0 0 2px var(--accent),
+    inset 0 2px 4px rgba(60, 35, 10, 0.18) !important;
+}
+.army-search-input::placeholder,
+.army-roster-search-input::placeholder,
+.mp-invite-input-ingame::placeholder,
+.mp-join-link-input::placeholder {
+  color: var(--p-ink-faint) !important;
+}
+
+/* ---------- Generic buttons in UI panels ---------- */
+.mp-btn,
+.rosters-save-btn,
+.rosters-take-btn,
+.rosters-modal-apply,
+.scenarios-panel-btn,
+.touch-board-action-btn,
+.app-more-menu-item {
+  font-family: var(--font-ui) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  border-radius: 0 !important;
+  border: none !important;
+  cursor: pointer;
+}
+
+/* Primary variants — wax seal */
+.mp-btn-primary,
+.rosters-save-btn,
+.rosters-take-btn,
+.rosters-modal-apply,
+.scenarios-panel-btn--primary {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.14), transparent 35%),
+    linear-gradient(0deg, rgba(0,0,0,0.25), transparent 50%),
+    var(--accent) !important;
+  color: var(--accent-ink) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.55),
+    inset 0 0 0 2px var(--stroke-metal-hi),
+    0 2px 0 rgba(0,0,0,0.4) !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.45);
+}
+.mp-btn-primary:hover,
+.rosters-save-btn:hover,
+.rosters-take-btn:hover,
+.rosters-modal-apply:hover,
+.scenarios-panel-btn--primary:hover {
+  filter: brightness(1.1) saturate(1.05);
+}
+
+/* Secondary — iron plate */
+.mp-btn,
+.scenarios-panel-btn--secondary {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.08), transparent 40%),
+    var(--p-iron) !important;
+  color: var(--p-parchment) !important;
+  box-shadow: var(--ts-inset-metal) !important;
+}
+.mp-btn:hover,
+.scenarios-panel-btn--secondary:hover {
+  filter: brightness(1.15);
+}
+
+/* Ghost */
+.mp-btn-ghost {
+  background: transparent !important;
+  color: var(--p-parchment) !important;
+  box-shadow: inset 0 0 0 1px rgba(200, 170, 110, 0.45) !important;
+}
+.mp-btn-ghost:hover {
+  background: rgba(200, 170, 110, 0.08) !important;
+}
+
+/* Danger */
+.mp-btn-danger,
+.scenarios-panel-btn--danger,
+.rosters-del-btn {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.14), transparent 35%),
+    var(--p-danger) !important;
+  color: #ffe7c2 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.55),
+    inset 0 0 0 2px rgba(200,170,110,0.4),
+    0 2px 0 rgba(0,0,0,0.4) !important;
+  font-family: var(--font-ui) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+}
+
+/* ---------- Army roster rows / inventory rows ---------- */
+.army-unit-row,
+.objects-item,
+.rosters-list-row {
+  background: rgba(255, 245, 220, 0.06) !important;
+  border: 1px solid rgba(200, 170, 110, 0.22) !important;
+  border-radius: 0 !important;
+  color: var(--p-parchment);
+}
+.army-unit-row:hover,
+.objects-item:hover,
+.rosters-list-row:hover {
+  background: rgba(255, 245, 220, 0.1) !important;
+  border-color: rgba(200, 170, 110, 0.45) !important;
+}
+
+.army-section-title,
+.rosters-empty,
+.army-list-empty,
+.objects-list-empty,
+.scenarios-panel-empty {
+  font-family: var(--font-display);
+  color: var(--p-parchment);
+}
+.army-section-title {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border-bottom: 1px solid rgba(200, 170, 110, 0.25);
+  padding-bottom: 6px;
+}
+
+/* ---------- App More menu dropdown / settings popover / install popover ---------- */
+.app-more-menu-dropdown,
+.app-settings-panel,
+.pwa-install-panel,
+.mp-panel {
+  background-color: var(--p-leather) !important;
+  background-image:
+    radial-gradient(ellipse at 30% 20%, rgba(80,45,15,0.5), transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(20,10,5,0.6), transparent 60%),
+    repeating-linear-gradient(45deg, rgba(0,0,0,0.12) 0 2px, transparent 2px 6px) !important;
+  color: var(--p-parchment) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.5),
+    inset 0 0 0 2px rgba(200,170,110,0.28),
+    0 10px 28px rgba(0,0,0,0.55) !important;
+  backdrop-filter: none !important;
+  font-family: var(--font-ui);
+}
+
+.mp-title,
+.app-settings-title,
+.pwa-install-title,
+.rosters-modal-title {
+  font-family: var(--font-display) !important;
+  font-weight: 600;
+  color: var(--p-parchment);
+  letter-spacing: 0.01em;
+}
+
+.mp-hint,
+.pwa-install-hint,
+.app-settings-hint,
+.mp-subtitle,
+.app-controls-help {
+  color: var(--p-parchment-dark) !important;
+}
+
+/* ---------- Controls / rules dialog ---------- */
+.app-controls-dialog {
+  background-color: var(--p-parchment) !important;
+  background-image:
+    radial-gradient(ellipse at 20% 10%, rgba(184,130,60,0.18), transparent 55%),
+    radial-gradient(ellipse at 85% 90%, rgba(90,50,20,0.22), transparent 60%),
+    repeating-linear-gradient(35deg, rgba(100,65,20,0.035) 0 2px, transparent 2px 7px) !important;
+  color: var(--p-parchment-ink) !important;
+  border-radius: 0 !important;
+  box-shadow: var(--ts-shadow-lg), var(--ts-inset-paper) !important;
+  font-family: var(--font-ui);
+}
+.app-controls-dialog-title {
+  font-family: var(--font-display) !important;
+  font-weight: 600;
+  color: var(--p-parchment-ink) !important;
+}
+.app-controls-heading {
+  font-family: var(--font-display);
+  color: var(--p-parchment-ink);
+  border-bottom: 1px solid var(--p-ink-faint);
+}
+
+/* ---------- Rosters modal ---------- */
+.rosters-modal {
+  background-color: var(--p-parchment) !important;
+  background-image:
+    radial-gradient(ellipse at 20% 10%, rgba(184,130,60,0.22), transparent 55%),
+    radial-gradient(ellipse at 85% 90%, rgba(90,50,20,0.28), transparent 60%),
+    repeating-linear-gradient(35deg, rgba(100,65,20,0.035) 0 2px, transparent 2px 7px) !important;
+  color: var(--p-parchment-ink) !important;
+  border-radius: 0 !important;
+  box-shadow: var(--ts-shadow-lg), var(--ts-inset-paper) !important;
+}
+.rosters-modal-section-title,
+.rosters-modal-group-title {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--p-ink-muted);
+}
+
+/* ---------- Chips (army roster) ---------- */
+.army-god-chip,
+.scenarios-card-pill {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  background: var(--p-parchment-warm) !important;
+  color: var(--p-parchment-ink) !important;
+  box-shadow: inset 0 0 0 1px rgba(90,60,20,0.4) !important;
+  border-radius: 0 !important;
+  border: none !important;
+}
+.scenarios-card-pill--muted {
+  background: transparent !important;
+  color: var(--p-parchment-dark) !important;
+  box-shadow: inset 0 0 0 1px rgba(200, 170, 110, 0.3) !important;
+}
+
+/* ---------- Points cap block ---------- */
+.army-points-block {
+  background: rgba(0,0,0,0.25) !important;
+  border: 1px solid rgba(200, 170, 110, 0.25) !important;
+  border-radius: 0 !important;
+  color: var(--p-parchment);
+  font-family: var(--font-ui);
+}
+.army-points-cap-btn {
+  font-family: var(--font-display);
+  color: var(--p-parchment) !important;
+  background: transparent !important;
+  border: none !important;
+}
+.army-points-track {
+  background: rgba(0, 0, 0, 0.5) !important;
+  border-radius: 0 !important;
+  box-shadow: var(--ts-inset-metal) !important;
+}
+.army-points-fill {
+  background: linear-gradient(180deg, var(--accent), var(--accent-dark)) !important;
+  border-radius: 0 !important;
+}

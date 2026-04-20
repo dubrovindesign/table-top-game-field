@@ -1,0 +1,81 @@
+/* ===== Tornscape Design System — Tokens ===== */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Infant:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Manrope:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* Parchment / leather / metal base */
+  --p-bg-deep:        #1a120a;
+  --p-bg:             #2a1c10;
+  --p-leather:        #3a2615;
+  --p-leather-dark:   #241509;
+  --p-parchment:      #efe3c8;
+  --p-parchment-warm: #e7d6af;
+  --p-parchment-dark: #c9b383;
+  --p-parchment-ink:  #2d1e0f;
+  --p-ink-muted:      #5b4327;
+  --p-ink-faint:      #8a7350;
+
+  --p-metal:          #7a6542;
+  --p-metal-hi:       #c8aa6e;
+  --p-metal-lo:       #3d2f18;
+  --p-iron:           #3a3228;
+  --p-iron-hi:        #5a4f40;
+
+  --p-wax:            #8f1d18;
+  --p-wax-hi:         #b83a30;
+  --p-wax-lo:         #5a0f0c;
+  --p-wax-ink:        #f5e6c4;
+
+  --p-success:        #4d7a2e;
+  --p-warn:           #b8860b;
+  --p-danger:         #a42020;
+  --p-info:           #355a72;
+
+  --accent:           #b83a30;
+  --accent-ink:       #f4dfa8;
+  --accent-dark:      #5c1b17;
+
+  --font-display: 'Cormorant Infant', 'Cormorant Garamond', Georgia, serif;
+  --font-ui:      'Manrope', 'Segoe UI', system-ui, sans-serif;
+
+  --ts-radius: 0px;
+
+  --stroke-ink:       rgba(45, 30, 15, 0.85);
+  --stroke-metal:     #7a6542;
+  --stroke-metal-hi:  #c8aa6e;
+
+  --ts-shadow-sm: 0 2px 0 rgba(0,0,0,0.25);
+  --ts-shadow-md: 0 6px 16px -6px rgba(0,0,0,0.55), 0 2px 0 rgba(0,0,0,0.3);
+  --ts-shadow-lg: 0 18px 40px -10px rgba(0,0,0,0.6), 0 4px 0 rgba(0,0,0,0.35);
+  --ts-inset-paper: inset 0 0 0 1px rgba(255,255,255,0.35), inset 0 0 80px rgba(120,85,40,0.18);
+  --ts-inset-metal: inset 0 0 0 1px rgba(0,0,0,0.55), inset 0 0 0 2px rgba(200,170,110,0.35);
+  --ts-inset-metal-hi: inset 0 0 0 1px rgba(0,0,0,0.55), inset 0 0 0 2px var(--stroke-metal-hi);
+}
+
+/* Procedural parchment background used on paper-style panels. */
+.ts-paper-bg {
+  background-color: var(--p-parchment);
+  background-image:
+    radial-gradient(ellipse at 20% 10%, rgba(184,130,60,0.22), transparent 55%),
+    radial-gradient(ellipse at 85% 90%, rgba(90,50,20,0.28), transparent 60%),
+    radial-gradient(circle at 50% 50%, transparent 55%, rgba(60,35,15,0.35) 100%),
+    repeating-linear-gradient(35deg, rgba(100,65,20,0.035) 0 2px, transparent 2px 7px),
+    repeating-linear-gradient(-18deg, rgba(70,40,10,0.04) 0 3px, transparent 3px 9px);
+}
+
+.ts-leather-bg {
+  background-color: var(--p-leather);
+  background-image:
+    radial-gradient(ellipse at 30% 20%, rgba(80,45,15,0.6), transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(20,10,5,0.7), transparent 60%),
+    repeating-linear-gradient(45deg, rgba(0,0,0,0.15) 0 2px, transparent 2px 6px),
+    repeating-linear-gradient(-45deg, rgba(255,210,140,0.04) 0 2px, transparent 2px 7px);
+}
+
+.ts-iron-bg {
+  background-color: var(--p-iron);
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,0.06), transparent 40%),
+    linear-gradient(0deg, rgba(0,0,0,0.35), transparent 40%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.015) 0 1px, transparent 1px 3px);
+}

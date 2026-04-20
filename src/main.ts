@@ -171,6 +171,7 @@ import { mountAppMoreMenu } from './appMoreMenu.ts';
 import { getWheelBehavior, mountAppSettingsToolbar } from './appSettings.ts';
 import { createPwaInstallMenuFlow } from './pwaInstallUi.ts';
 import './style.css';
+import './styles/tornscape-ui.css';
 import {
   playBoardDragDrop,
   playBoardDragLift,
