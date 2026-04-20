@@ -642,21 +642,26 @@ select option {
   color: #ffe7c2 !important;
 }
 
-/* ---------- Remove inner padding in rosters / god / inventory tabs ---------- */
-.rosters-panel {
-  padding: 0 !important;
+/* ---------- Align side padding on 16px across header, tabs, and tab content ---------- */
+.army-leaders-section {
+  padding: 0 16px 10px !important;
 }
 .army-tab-panels-wrap {
-  margin: 0 !important;
+  margin: 0 16px !important;
 }
+.rosters-panel {
+  padding: 10px 16px !important;
+}
+/* Inner scroll containers pull the 16px from their parent, so zero their own
+   horizontal padding to avoid double-inset. Keep vertical spacing. */
 .army-unit-list {
-  padding: 0 !important;
+  padding: 4px 0 12px !important;
 }
 .army-god-catalog {
-  padding: 0 !important;
+  padding: 4px 0 8px !important;
 }
 .army-inventory-list {
-  padding: 0 !important;
+  padding: 4px 0 16px !important;
 }
 .army-god-section {
   padding-top: 0 !important;
