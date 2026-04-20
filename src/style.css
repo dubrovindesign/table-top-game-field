@@ -4657,7 +4657,7 @@ select option {
   left: max(12px, env(safe-area-inset-left, 0px));
   top: 50%;
   transform: translateY(-50%);
-  z-index: 10020;
+  z-index: 100;
   pointer-events: auto;
 }
 

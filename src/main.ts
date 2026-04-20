@@ -11483,6 +11483,10 @@ function mountTouchBoardActionsBar(): void {
     duplicateSelected();
     scheduleRender();
   });
+  add('Удалить', 'Удалить выделение со стола (Delete)', () => {
+    deleteSelected();
+    scheduleRender();
+  });
   add('↺', 'Поворот против часовой (как Q). В настройках — закрепить Shift для крупного шага.', () => {
     const step = shiftModActive() ? ELEMENT_ROT_STEP_FAST : ELEMENT_ROT_STEP;
     if (rotateSelectedBoardPiece(-step)) scheduleRender();
