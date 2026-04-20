@@ -575,6 +575,14 @@ select option {
   border-radius: 0 !important;
 }
 
+/* ---------- Sharp corners on leader/unit portraits ---------- */
+.army-catalog-card__portrait,
+.army-catalog-card__thumb.army-unit-thumb,
+.army-unit-thumb,
+.army-unit-thumb-img {
+  border-radius: 0 !important;
+}
+
 /* ---------- Card badges (avail / pts on units, leaders, gods) ---------- */
 .army-catalog-card__badge {
   border-radius: 0 !important;
