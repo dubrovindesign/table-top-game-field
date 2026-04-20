@@ -5523,6 +5523,7 @@ function collectCurrentRosterData(): {
   units: { leaderId: string; unitId: string; world: { x: number; y: number } }[];
   godPieces: { ids: string[]; world: { x: number; y: number }; faceUp: boolean }[];
   inventory: { leaderId: string; itemId: string; world: { x: number; y: number } }[];
+  savedBySlot: 0 | 1;
 } {
   const outUnits: { leaderId: string; unitId: string; world: { x: number; y: number } }[] = [];
   const pushUnit = (
@@ -5580,7 +5581,8 @@ function collectCurrentRosterData(): {
     });
   }
 
-  return { units: outUnits, godPieces, inventory };
+  const savedBySlot: 0 | 1 = effectiveMyGodSlot() === 1 ? 1 : 0;
+  return { units: outUnits, godPieces, inventory, savedBySlot };
 }
 
 /** Взять сохранённый ростер за стол: юниты/карты богов/инвентарь — на сохранённых позициях. */
@@ -5588,9 +5590,18 @@ function applyRosterDocToTable(doc: {
   units: { leaderId: string; unitId: string; world: { x: number; y: number } }[];
   godPieces: { ids: string[]; world: { x: number; y: number }; faceUp: boolean }[];
   inventory: { leaderId: string; itemId: string; world: { x: number; y: number } }[];
+  savedBySlot: 0 | 1;
 }): void {
+  // Если применяет игрок противоположного слота — зеркалим на 180° вокруг центра поля,
+  // чтобы юниты появились на своей стороне.
+  const mySlot: 0 | 1 = effectiveMyGodSlot() === 1 ? 1 : 0;
+  const needMirror = mySlot !== doc.savedBySlot;
+  const xform = (w: { x: number; y: number }): { x: number; y: number } =>
+    needMirror ? rotatePointAroundBoardCenter(w, 180) : { x: w.x, y: w.y };
+
   for (const u of doc.units) {
-    spawnRosterCatalogUnitOffBoardAtWorld(u.leaderId, u.unitId, u.world.x, u.world.y);
+    const w = xform(u.world);
+    spawnRosterCatalogUnitOffBoardAtWorld(u.leaderId, u.unitId, w.x, w.y);
   }
 
   // Карты богов — восстанавливаем стопки на сохранённых позициях, пропуская уже разыгранные id.
@@ -5604,7 +5615,7 @@ function applyRosterDocToTable(doc: {
       inPlayGods.add(id);
     }
     if (ids.length === 0) continue;
-    const w = { x: piece.world.x, y: piece.world.y };
+    const w = xform(piece.world);
     if (ids.length === 1) {
       godTablePieces.push({ kind: 'single', id: ids[0]!, world: w, faceUp: piece.faceUp });
     } else {
@@ -5621,7 +5632,7 @@ function applyRosterDocToTable(doc: {
     const def = getMergedInventoryItem(it.itemId);
     if (!def) continue;
     if (sumRosterPoints() + sumInventoryPoints() + def.points > cap) continue;
-    const w = { x: it.world.x, y: it.world.y };
+    const w = xform(it.world);
     const piece: InventoryTablePiece =
       isBoardMultiplayerSyncActive() && localViewPlayerSlot !== null
         ? {

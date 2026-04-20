@@ -90,6 +90,7 @@ export type RostersPanelOptions = {
     units: RosterDocument['units'];
     godPieces: RosterDocument['godPieces'];
     inventory: RosterDocument['inventory'];
+    savedBySlot: 0 | 1;
   };
   applyRoster: (doc: RosterDocument) => void;
 };
@@ -154,6 +155,7 @@ export class RostersPanel {
     const doc: RosterDocument = {
       id: newRosterId(),
       version: 2,
+      savedBySlot: cur.savedBySlot,
       meta: { name: trimmed, createdAt: now, updatedAt: now },
       units: cur.units,
       godPieces: cur.godPieces,

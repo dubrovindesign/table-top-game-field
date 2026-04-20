@@ -68,9 +68,11 @@ function parseDoc(raw: unknown): RosterDocument | null {
     inventoryOut.push({ leaderId: r.leaderId, itemId: r.itemId, world: w });
   }
 
+  const savedBySlot: 0 | 1 = o.savedBySlot === 1 ? 1 : 0;
   return {
     id: o.id,
     version: 2,
+    savedBySlot,
     meta: {
       name: meta.name,
       createdAt: typeof meta.createdAt === 'string' ? meta.createdAt : undefined,

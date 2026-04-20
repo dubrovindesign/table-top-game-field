@@ -31,6 +31,8 @@ export type RosterDocument = {
   id: string;
   version: 2;
   meta: RosterMeta;
+  /** Слот игрока, сохранившего ростер (0 или 1). Нужен для зеркалирования позиций под сторону применителя. */
+  savedBySlot: 0 | 1;
   units: RosterUnitPlacement[];
   godPieces: RosterGodPiece[];
   inventory: RosterInventoryPlacement[];
