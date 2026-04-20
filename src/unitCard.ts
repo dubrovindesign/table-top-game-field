@@ -544,24 +544,20 @@ export class UnitCard {
         const HOTSPOT_CLICK_DELAY_MS = 280;
         btn.addEventListener('click', () => {
           if (!action || dicePoolTotal(action.pool) <= 0) return;
-          if (singleClickTimer) clearTimeout(singleClickTimer);
-          singleClickTimer = setTimeout(() => {
-            singleClickTimer = null;
-            this.emitDice(action.pool, source, { actionKey: hotspotActionKey });
-          }, HOTSPOT_CLICK_DELAY_MS);
-        });
-        btn.addEventListener('dblclick', (e) => {
-          e.preventDefault();
           if (singleClickTimer) {
+            // Second click within window → immediate roll (works on touch where `dblclick` may not fire).
             clearTimeout(singleClickTimer);
             singleClickTimer = null;
-          }
-          if (action && dicePoolTotal(action.pool) > 0) {
             this.emitDice(action.pool, source, {
               actionKey: hotspotActionKey,
               rollImmediately: true,
             });
+            return;
           }
+          singleClickTimer = setTimeout(() => {
+            singleClickTimer = null;
+            this.emitDice(action.pool, source, { actionKey: hotspotActionKey });
+          }, HOTSPOT_CLICK_DELAY_MS);
         });
       } else {
         btn.title = r.label;

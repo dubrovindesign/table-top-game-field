@@ -985,6 +985,14 @@ export class DiceRoller {
     return total;
   }
 
+  /** Public trigger: roll currently selected dice if any are set. No-op while animating or empty. */
+  rollIfReady(): boolean {
+    if (this.myRollAnimating) return false;
+    if (this.getTotalDice() === 0) return false;
+    this.roll();
+    return true;
+  }
+
   private roll(): void {
     if (this.myRollAnimating) return;
     const total = this.getTotalDice();
