@@ -615,6 +615,14 @@ select option {
     0 2px 0 rgba(0,0,0,0.4) !important;
   text-shadow: 0 1px 0 rgba(0,0,0,0.45) !important;
   border: none !important;
+  top: calc(100% + 4px) !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: 0 !important;
+  transform: none !important;
+  min-width: 0 !important;
+  height: auto !important;
+  padding: 3px 10px !important;
 }
 
 .army-god-avail-badge {
