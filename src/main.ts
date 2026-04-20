@@ -112,6 +112,7 @@ import {
   EMPTY_GOD_PILE,
   GOD_BLIND_ZONE_MAX_CARDS,
   godCardIdsInPlay,
+  isValidGodCardId,
   registerArmyRosterGodCardIdsInPlay,
   registerArmyRosterInventoryItemIdsInPlay,
   shuffleIds,
@@ -2780,6 +2781,10 @@ armyBuilderPanel = new ArmyBuilderPanel(document.body, {
       rollImmediately: req.rollImmediately,
     });
   },
+  rosters: {
+    getCurrentRoster: () => collectCurrentRosterData(),
+    applyRoster: (doc) => applyRosterDocToTable(doc),
+  },
 });
 objectsPanel = new ObjectsPanel(armyBuilderPanel.getToolbarMount(), {
   onTouchArmPayload: (json) => {
@@ -5434,6 +5439,211 @@ function placeArmyCatalogUnitOnBoard(
   armyBuilderPanel.refresh();
   scheduleRender();
   return true;
+}
+
+/** Спавн юнита из каталога армии строго off-board в заданной мировой точке — для «Взять за стол» из ростера. */
+function spawnRosterCatalogUnitOffBoardAtWorld(
+  leaderId: string,
+  unitId: string,
+  worldX: number,
+  worldY: number,
+): boolean {
+  const def = getCatalogUnit(unitId);
+  if (!def) return false;
+  const leader = getLeader(leaderId);
+  const isLeaderMini = leader?.catalogUnitId === unitId;
+  if (isLeaderMini) {
+    if (countRosterCopies(leaderId, unitId) >= LEADER_MINI_MAX_COPIES) return false;
+  } else {
+    const maxC = maxCopiesForSlot(leaderId, unitId);
+    if (maxC === null) return false;
+    if (countRosterCopies(leaderId, unitId) >= maxC) return false;
+  }
+  const card = structuredClone(def.card);
+  card.catalogUnitId = unitId;
+  const rosterMeta =
+    isBoardMultiplayerSyncActive() && localViewPlayerSlot !== null
+      ? ({
+          spawnedFromArmyPanel: true as const,
+          catalogUnitId: unitId,
+          rosterLeaderId: leaderId,
+          armyOwnerPlayerSlot: localViewPlayerSlot,
+        } as const)
+      : ({
+          spawnedFromArmyPanel: true as const,
+          catalogUnitId: unitId,
+          rosterLeaderId: leaderId,
+        } as const);
+  const broomgarHungerMeta =
+    isBroomgarRosterLeader(leaderId) && getCatalogUnit(unitId)?.mercenary !== true
+      ? ({ broomgarHungerPhase: 0 as BroomgarHungerPhase })
+      : {};
+  const world = { x: worldX, y: worldY };
+  const base = {
+    boardInstanceId: activeBoardInstanceId,
+    offBoardWorld: { ...world },
+    walk: card.walk,
+    run: card.run,
+    rotationDeg: 0,
+    health: card.health,
+    activated: true,
+    effectMarkers: new Set<EffectMarkerId>(),
+    ...rosterMeta,
+    ...broomgarHungerMeta,
+  };
+  if (def.card.size === 'small') {
+    units.push({ position: layout.pixelToHex(world), ...base });
+    unitCardData.push(card);
+  } else if (def.card.size === 'large') {
+    largeMiniatures.push({ anchor: layout.pixelToHex(world), ...base });
+    largeMiniCardData.push(card);
+  } else if (def.card.size === 'huge') {
+    hugeMiniatures.push({
+      anchor: nearestHexonCenterFromWorld(world),
+      ...base,
+      ...hugeSpriteAlignFromCard(card, unitId),
+    });
+    hugeMiniCardData.push(card);
+  } else if (def.card.size === 'huge2') {
+    huge2Miniatures.push({
+      anchor: nearestHexonCenterFromWorld(world),
+      ...base,
+      ...hugeSpriteAlignFromCard(card, unitId),
+    });
+    huge2MiniCardData.push(card);
+  } else {
+    bigMiniatures.push({ center: nearestHexonCenterFromWorld(world), ...base });
+    bigMiniCardData.push(card);
+  }
+  return true;
+}
+
+function collectCurrentRosterData(): {
+  units: { leaderId: string; unitId: string; world: { x: number; y: number } }[];
+  godPieces: { ids: string[]; world: { x: number; y: number }; faceUp: boolean }[];
+  inventory: { leaderId: string; itemId: string; world: { x: number; y: number } }[];
+} {
+  const outUnits: { leaderId: string; unitId: string; world: { x: number; y: number } }[] = [];
+  const pushUnit = (
+    leaderId: string | undefined,
+    unitId: string | undefined,
+    w: { x: number; y: number },
+  ): void => {
+    if (!leaderId || !unitId) return;
+    outUnits.push({ leaderId, unitId, world: { x: w.x, y: w.y } });
+  };
+  for (const u of units) {
+    if (u.spawnedFromArmyPanel && rosterPieceCountsForLocalArmiesPanel(u)) {
+      const w = u.offBoardWorld ?? layout.hexToPixel(u.position);
+      pushUnit(u.rosterLeaderId, u.catalogUnitId, w);
+    }
+  }
+  for (const m of bigMiniatures) {
+    if (m.spawnedFromArmyPanel && rosterPieceCountsForLocalArmiesPanel(m)) {
+      const w = m.offBoardWorld ?? layout.hexToPixel(m.center);
+      pushUnit(m.rosterLeaderId, m.catalogUnitId, w);
+    }
+  }
+  for (const m of largeMiniatures) {
+    if (m.spawnedFromArmyPanel && rosterPieceCountsForLocalArmiesPanel(m)) {
+      const w = m.offBoardWorld ?? layout.hexToPixel(m.anchor);
+      pushUnit(m.rosterLeaderId, m.catalogUnitId, w);
+    }
+  }
+  for (const m of hugeMiniatures) {
+    if (m.spawnedFromArmyPanel && rosterPieceCountsForLocalArmiesPanel(m)) {
+      const w = m.offBoardWorld ?? layout.hexToPixel(m.anchor);
+      pushUnit(m.rosterLeaderId, m.catalogUnitId, w);
+    }
+  }
+  for (const m of huge2Miniatures) {
+    if (m.spawnedFromArmyPanel && rosterPieceCountsForLocalArmiesPanel(m)) {
+      const w = m.offBoardWorld ?? layout.hexToPixel(m.anchor);
+      pushUnit(m.rosterLeaderId, m.catalogUnitId, w);
+    }
+  }
+
+  const godPieces: { ids: string[]; world: { x: number; y: number }; faceUp: boolean }[] = [];
+  for (const p of godTablePieces) {
+    const ids = p.kind === 'single' ? [p.id] : [...p.ids];
+    godPieces.push({ ids, world: { x: p.world.x, y: p.world.y }, faceUp: p.faceUp });
+  }
+
+  const inventory: { leaderId: string; itemId: string; world: { x: number; y: number } }[] = [];
+  for (const p of inventoryTablePieces) {
+    if (!p.spawnedFromArmyPanel || !rosterPieceCountsForLocalArmiesPanel(p)) continue;
+    inventory.push({
+      leaderId: p.rosterLeaderId,
+      itemId: p.itemId,
+      world: { x: p.world.x, y: p.world.y },
+    });
+  }
+
+  return { units: outUnits, godPieces, inventory };
+}
+
+/** Взять сохранённый ростер за стол: юниты/карты богов/инвентарь — на сохранённых позициях. */
+function applyRosterDocToTable(doc: {
+  units: { leaderId: string; unitId: string; world: { x: number; y: number } }[];
+  godPieces: { ids: string[]; world: { x: number; y: number }; faceUp: boolean }[];
+  inventory: { leaderId: string; itemId: string; world: { x: number; y: number } }[];
+}): void {
+  for (const u of doc.units) {
+    spawnRosterCatalogUnitOffBoardAtWorld(u.leaderId, u.unitId, u.world.x, u.world.y);
+  }
+
+  // Карты богов — восстанавливаем стопки на сохранённых позициях, пропуская уже разыгранные id.
+  const inPlayGods = godCardIdsInPlay(godTablePieces, godPiles);
+  for (const piece of doc.godPieces) {
+    const ids: string[] = [];
+    for (const id of piece.ids) {
+      if (inPlayGods.has(id)) continue;
+      if (!isValidGodCardId(id)) continue;
+      ids.push(id);
+      inPlayGods.add(id);
+    }
+    if (ids.length === 0) continue;
+    const w = { x: piece.world.x, y: piece.world.y };
+    if (ids.length === 1) {
+      godTablePieces.push({ kind: 'single', id: ids[0]!, world: w, faceUp: piece.faceUp });
+    } else {
+      godTablePieces.push({ kind: 'deck', ids, world: w, faceUp: piece.faceUp });
+    }
+  }
+
+  const cap = armyBuilderPanel.getArmyPointsCap();
+  const seenInv = new Set<string>();
+  for (const it of doc.inventory) {
+    if (seenInv.has(it.itemId)) continue;
+    seenInv.add(it.itemId);
+    if (isInventoryItemIdInPlay(it.itemId)) continue;
+    const def = getMergedInventoryItem(it.itemId);
+    if (!def) continue;
+    if (sumRosterPoints() + sumInventoryPoints() + def.points > cap) continue;
+    const w = { x: it.world.x, y: it.world.y };
+    const piece: InventoryTablePiece =
+      isBoardMultiplayerSyncActive() && localViewPlayerSlot !== null
+        ? {
+            rosterLeaderId: it.leaderId,
+            itemId: it.itemId,
+            world: w,
+            spawnedFromArmyPanel: true,
+            armyOwnerPlayerSlot: localViewPlayerSlot,
+          }
+        : {
+            rosterLeaderId: it.leaderId,
+            itemId: it.itemId,
+            world: w,
+            spawnedFromArmyPanel: true,
+          };
+    inventoryTablePieces.push(piece);
+  }
+
+  clearSelection();
+  armyBuilderPanel.refresh();
+  refreshGodDock();
+  notifyBoardEditLocal();
+  scheduleRender();
 }
 
 function trySpawnTroopFromArmyBuilder(

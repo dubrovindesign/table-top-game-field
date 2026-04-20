@@ -4,9 +4,8 @@
     {
       "name": "hex-game",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "port": 5173,
-      "autoPort": true
+      "runtimeArgs": ["run", "dev:client", "--", "--port", "5280", "--strictPort"],
+      "port": 5280
     }
   ]
 }

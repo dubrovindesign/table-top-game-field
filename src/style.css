@@ -2064,6 +2064,266 @@ select option {
   background: rgba(255, 255, 255, 0.12);
 }
 
+.army-panel-header-tabs {
+  display: flex;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.army-panel-head-tab {
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #bbb;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.army-panel-head-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e8e8e8;
+}
+
+.army-panel-head-tab--active {
+  background: rgba(120, 170, 255, 0.22);
+  border-color: rgba(120, 170, 255, 0.5);
+  color: #fff;
+}
+
+.rosters-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  overflow: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.rosters-panel[hidden],
+.army-scroll-wrap[hidden],
+.army-faction-tabs[hidden],
+.army-points-block[hidden] {
+  display: none;
+}
+
+.rosters-toolbar {
+  display: flex;
+  gap: 8px;
+}
+
+.rosters-save-btn {
+  flex: 1 1 auto;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(80, 160, 100, 0.22);
+  color: #f2f2f2;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rosters-save-btn:hover {
+  background: rgba(80, 160, 100, 0.32);
+}
+
+.rosters-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rosters-empty {
+  color: #888;
+  font-size: 13px;
+  padding: 12px 4px;
+  text-align: center;
+}
+
+.rosters-list-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+}
+
+.rosters-list-row:hover,
+.rosters-list-row:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.rosters-list-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rosters-list-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f2f2f2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rosters-list-sub {
+  font-size: 12px;
+  color: #bbb;
+}
+
+.rosters-list-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.rosters-take-btn {
+  padding: 6px 10px;
+  border: 1px solid rgba(120, 170, 255, 0.45);
+  border-radius: 6px;
+  background: rgba(120, 170, 255, 0.18);
+  color: #f2f2f2;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.rosters-take-btn:hover {
+  background: rgba(120, 170, 255, 0.3);
+}
+
+.rosters-del-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #ccc;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.rosters-del-btn:hover {
+  background: rgba(220, 80, 80, 0.25);
+  color: #fff;
+  border-color: rgba(220, 80, 80, 0.45);
+}
+
+.rosters-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.rosters-modal-overlay[hidden] {
+  display: none;
+}
+
+.rosters-modal {
+  width: min(520px, calc(100vw - 32px));
+  max-height: calc(100vh - 64px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+  background: #1b1d22;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  color: #e8e8e8;
+  overflow: auto;
+}
+
+.rosters-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.rosters-modal-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.rosters-modal-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ccc;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.rosters-modal-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.rosters-modal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rosters-modal-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #9ecbff;
+  margin-bottom: 2px;
+}
+
+.rosters-modal-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.rosters-modal-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ccc;
+  margin-top: 4px;
+}
+
+.rosters-modal-line {
+  font-size: 13px;
+  color: #ddd;
+}
+
+.rosters-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 8px;
+}
+
+.rosters-modal-apply {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
 .army-points-block {
   position: relative;
   margin: 8px 16px 16px;

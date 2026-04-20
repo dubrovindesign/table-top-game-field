@@ -28,6 +28,7 @@ import {
   godCardAriaLabel,
   type GodCardDef,
 } from './godCards';
+import { RostersPanel, type RostersPanelOptions } from './rosters/panel.ts';
 import {
   DOMAIN_LABELS,
   UnitCard,
@@ -136,6 +137,8 @@ export type ArmyPanelOptions = {
    * Touch fallback: tap row to arm payload; next tap on the board spawns (HTML5 DnD often missing on touch).
    */
   onTouchArmPayload?: (json: string) => void;
+  /** Получить текущий состав стола (юниты/боги/инвентарь), добавленный из панели армии. */
+  rosters?: RostersPanelOptions;
 };
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -191,6 +194,12 @@ export class ArmyBuilderPanel {
   private inventoryPreviewItemId: string | null = null;
   private inventoryPreviewListenersActive = false;
   private open = false;
+  private rostersPanel: RostersPanel | null = null;
+  private rostersView: HTMLElement | null = null;
+  private rostersToggleBtn: HTMLButtonElement | null = null;
+  private rostersMode = false;
+  private armyHeadTabBtn!: HTMLButtonElement;
+  private armyScrollWrap!: HTMLElement;
   private selectedFactionId: string;
   private selectedLeaderId: string;
   private selectedRosterCard: UnitCard;
@@ -255,12 +264,33 @@ export class ArmyBuilderPanel {
 
     this.panel = el('aside', 'army-panel');
     const header = el('div', 'army-panel-header');
-    const headerMain = el('div', 'army-panel-header-text');
-    const title = el('div', 'army-panel-title', 'Армия');
-    headerMain.appendChild(title);
+    const headerTabs = el('div', 'army-panel-header-tabs');
+    const armyTabBtn = el('button', 'army-panel-head-tab army-panel-head-tab--active', 'Армия') as HTMLButtonElement;
+    armyTabBtn.type = 'button';
+    armyTabBtn.setAttribute('role', 'tab');
+    armyTabBtn.setAttribute('aria-selected', 'true');
+    armyTabBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.setRostersMode(false);
+    });
+    headerTabs.appendChild(armyTabBtn);
+    this.armyHeadTabBtn = armyTabBtn;
+    if (opts.rosters) {
+      const rostersBtn = el('button', 'army-panel-head-tab', 'Мои ростеры') as HTMLButtonElement;
+      rostersBtn.type = 'button';
+      rostersBtn.title = 'Мои ростеры';
+      rostersBtn.setAttribute('role', 'tab');
+      rostersBtn.setAttribute('aria-selected', 'false');
+      rostersBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.setRostersMode(true);
+      });
+      headerTabs.appendChild(rostersBtn);
+      this.rostersToggleBtn = rostersBtn;
+    }
     const closeBtn = el('button', 'army-panel-close', '×');
     closeBtn.type = 'button';
-    header.appendChild(headerMain);
+    header.appendChild(headerTabs);
     header.appendChild(closeBtn);
     closeBtn.addEventListener('click', () => this.setOpen(false));
 
@@ -426,6 +456,14 @@ export class ArmyBuilderPanel {
     scrollWrap.appendChild(this.tabPanelsWrap);
     this.panel.appendChild(scrollWrap);
 
+    if (opts.rosters) {
+      this.rostersPanel = new RostersPanel(opts.rosters);
+      this.rostersView = this.rostersPanel.root;
+      this.rostersView.hidden = true;
+      this.panel.appendChild(this.rostersView);
+    }
+    this.armyScrollWrap = scrollWrap;
+
     this.syncMainTabUi();
 
     this.root.appendChild(this.overlay);
@@ -478,6 +516,28 @@ export class ArmyBuilderPanel {
       this.refresh();
     });
   };
+
+  private setRostersMode(v: boolean): void {
+    if (v && !this.rostersPanel) return;
+    this.rostersMode = v;
+    if (this.rostersView) this.rostersView.hidden = !v;
+    this.armyScrollWrap.hidden = v;
+    this.pointsBlock.hidden = v;
+    this.factionTabs.hidden = v;
+    if (this.rostersToggleBtn) {
+      this.rostersToggleBtn.classList.toggle('army-panel-head-tab--active', v);
+      this.rostersToggleBtn.setAttribute('aria-selected', v ? 'true' : 'false');
+    }
+    this.armyHeadTabBtn.classList.toggle('army-panel-head-tab--active', !v);
+    this.armyHeadTabBtn.setAttribute('aria-selected', v ? 'false' : 'true');
+    if (v) {
+      this.clearSelectedCard();
+      this.closeRosterSortPopover();
+      this.closeGodCardPreview();
+      this.closeInventoryCardPreview();
+      this.rostersPanel?.refresh();
+    }
+  }
 
   private selectMainTab(tab: ArmyMainTab): void {
     if (tab !== 'roster') this.closeRosterSortPopover();
@@ -539,6 +599,7 @@ export class ArmyBuilderPanel {
     this.renderList();
     this.renderGodSection();
     this.renderInventorySection();
+    if (this.rostersMode && this.rostersPanel) this.rostersPanel.refresh();
   }
 
   private onGlobalKey(e: KeyboardEvent): void {
