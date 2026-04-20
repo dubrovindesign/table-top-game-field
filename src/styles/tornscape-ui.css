@@ -661,7 +661,7 @@ select option {
   padding: 4px 0 8px !important;
 }
 .army-inventory-list {
-  padding: 4px 0 16px !important;
+  padding: 16px 0 16px !important;
 }
 /* Roster toolbar (search + sort) and god-search row had their own 12px
    inner gutter on top of the 16px parent — flatten them so the search
