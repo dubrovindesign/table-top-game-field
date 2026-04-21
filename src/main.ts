@@ -160,6 +160,7 @@ import {
 import { applyScenarioDocument, type ApplyScenarioResult } from './scenarios/apply.ts';
 import { fetchOfficialScenarios, updateOfficialScenario } from './scenarios/officialApi.ts';
 import { createScenariosPanel } from './scenarios/panel.ts';
+import { createAppliedScenarioSidePanel } from './scenarios/appliedSidePanel.ts';
 import {
   mergeOfficialEditIntoDocument,
   newScenarioDocumentId,
@@ -11449,6 +11450,9 @@ function buildCustomScenarioDocument(meta: {
   };
 }
 
+const appliedScenarioSidePanel = createAppliedScenarioSidePanel();
+let appliedScenarioDoc: ScenarioDocument | null = null;
+
 function buildOfficialScenarioMetaOnly(
   base: ScenarioDocument,
   meta: EditableScenarioMeta,
@@ -11475,7 +11479,10 @@ const scenariosPanel = createScenariosPanel({
     scheduleRender();
   },
   onScenarioApplied: (doc) => {
-    ephiriumVortexUi.setScenarioName(doc.meta.name);
+    appliedScenarioDoc = doc;
+    ephiriumVortexUi.setScenarioName(doc.meta.name, () => {
+      if (appliedScenarioDoc) appliedScenarioSidePanel.open(appliedScenarioDoc);
+    });
   },
   loadOfficialScenarios: async () => {
     const { scenarios } = await fetchOfficialScenarios();
@@ -11588,6 +11595,19 @@ mountAppMoreMenu(toolbarMountEl, {
   onSettings: () => appSettingsHandle.open(),
   onScenarios: () => scenariosPanel.open(),
 });
+(() => {
+  const order = [
+    '.army-menu-btn--primary',
+    '.mp-toolbar-anchor',
+    '.objects-panel-root',
+    '.app-controls-help-btn',
+    '.app-more-menu-anchor',
+  ];
+  for (const sel of order) {
+    const el = toolbarMountEl.querySelector<HTMLElement>(sel);
+    if (el && el.parentElement === toolbarMountEl) toolbarMountEl.appendChild(el);
+  }
+})();
 mountTouchBoardActionsBar();
 
 type HugeAlignTarget =

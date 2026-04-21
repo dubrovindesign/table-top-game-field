@@ -247,11 +247,11 @@ export class ArmyBuilderPanel {
     parent.appendChild(this.root);
 
     this.menuWrap = el('div', 'army-menu-wrap');
-    const menuBtn = el('button', 'army-menu-btn army-menu-btn--text');
+    const menuBtn = el('button', 'army-menu-btn army-menu-btn--text army-menu-btn--primary');
     menuBtn.type = 'button';
-    menuBtn.setAttribute('aria-label', 'Открыть army builder');
-    menuBtn.title = 'Army builder';
-    menuBtn.textContent = 'army builder';
+    menuBtn.setAttribute('aria-label', 'Открыть army');
+    menuBtn.title = 'Army';
+    menuBtn.textContent = 'army';
     this.menuWrap.appendChild(menuBtn);
     this.root.appendChild(this.menuWrap);
 

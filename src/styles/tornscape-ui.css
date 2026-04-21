@@ -207,6 +207,17 @@ select option {
   font-size: 12px;
 }
 
+.army-menu-btn--primary {
+  background: var(--p-wax) !important;
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,0.18), transparent 50%) !important;
+  color: var(--p-wax-ink) !important;
+  box-shadow: var(--ts-inset-metal), 0 4px 12px rgba(140, 20, 14, 0.5) !important;
+}
+.army-menu-btn--primary:hover {
+  filter: brightness(1.12);
+}
+
 /* ---------- Tabs (army panel, objects categories, scenarios) ---------- */
 .army-panel-head-tab,
 .army-main-tab,

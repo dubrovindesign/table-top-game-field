@@ -84,15 +84,28 @@ export class EphiriumVortexUi {
   }
 
   /** Показывает/скрывает подпись с именем применённого сценария слева от кнопки. */
-  setScenarioName(name: string | null | undefined): void {
+  setScenarioName(name: string | null | undefined, onClick?: () => void): void {
     const trimmed = name?.trim() ?? '';
     if (trimmed.length === 0) {
       this.scenarioLabel.textContent = '';
       this.scenarioLabel.classList.add('ev-scenario-label--hidden');
+      this.scenarioLabel.classList.remove('ev-scenario-label--clickable');
+      this.scenarioLabel.onclick = null;
       return;
     }
     this.scenarioLabel.textContent = trimmed;
     this.scenarioLabel.classList.remove('ev-scenario-label--hidden');
+    if (onClick) {
+      this.scenarioLabel.classList.add('ev-scenario-label--clickable');
+      this.scenarioLabel.setAttribute('role', 'button');
+      this.scenarioLabel.setAttribute('tabindex', '0');
+      this.scenarioLabel.onclick = () => onClick();
+    } else {
+      this.scenarioLabel.classList.remove('ev-scenario-label--clickable');
+      this.scenarioLabel.removeAttribute('role');
+      this.scenarioLabel.removeAttribute('tabindex');
+      this.scenarioLabel.onclick = null;
+    }
   }
 
   /** Полная перерисовка открытых карт из индексов спрайта (синхронизация MP / локальное состояние). */

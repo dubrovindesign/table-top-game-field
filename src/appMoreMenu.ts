@@ -57,6 +57,7 @@ const CONTROLS_HTML = `
       <li><strong>Q</strong> / <strong>E</strong> — поворот выделенного (с Shift — крупный шаг).</li>
       <li><strong>R</strong> над колодой богов на поле — перетасовать колоду.</li>
       <li><strong>Ctrl+Shift+R</strong> — повернуть активное поле на 90°.</li>
+      <li><strong>Enter</strong> — бросить кубики.</li>
     </ul>
   </section>
   <section class="app-controls-section">
