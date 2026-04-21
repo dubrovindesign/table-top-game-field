@@ -11449,11 +11449,23 @@ function buildCustomScenarioDocument(meta: {
   };
 }
 
-function buildEditedOfficialScenarioDocument(
+function buildOfficialScenarioMetaOnly(
   base: ScenarioDocument,
   meta: EditableScenarioMeta,
 ): ScenarioDocument {
-  return mergeOfficialEditIntoDocument(base, meta, scenarioBoardOrientation, captureBoardSnapshot());
+  return mergeOfficialEditIntoDocument(base, meta, base.boardOrientation, base.snapshot);
+}
+
+function buildScenarioWithCurrentBoard(base: ScenarioDocument): ScenarioDocument {
+  return {
+    ...base,
+    boardOrientation: scenarioBoardOrientation,
+    snapshot: captureBoardSnapshot(),
+    meta: {
+      ...base.meta,
+      updatedAt: new Date().toISOString(),
+    },
+  };
 }
 
 const scenariosPanel = createScenariosPanel({
@@ -11462,12 +11474,16 @@ const scenariosPanel = createScenariosPanel({
   afterScenarioMutation: () => {
     scheduleRender();
   },
+  onScenarioApplied: (doc) => {
+    ephiriumVortexUi.setScenarioName(doc.meta.name);
+  },
   loadOfficialScenarios: async () => {
     const { scenarios } = await fetchOfficialScenarios();
     return scenarios;
   },
   updateOfficialScenario: (doc) => updateOfficialScenario(doc),
-  buildEditedOfficialScenarioDocument,
+  buildOfficialScenarioMetaOnly,
+  buildScenarioWithCurrentBoard,
 });
 
 const OFFICIAL_SCENARIOS_POLL_MS = 30_000;

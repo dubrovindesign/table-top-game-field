@@ -444,10 +444,22 @@ select option {
   background: rgba(200, 170, 110, 0.06) !important;
 }
 .army-catalog-card.army-unit-row.army-unit-row-selected:not(.army-unit-row-disabled),
-.army-catalog-card.army-leader-row.army-leader-row-active:not(.army-unit-row-disabled) {
+.army-catalog-card.army-leader-row.army-leader-row-active {
   background: rgba(184, 58, 48, 0.18) !important;
   box-shadow: inset 0 0 0 1px rgba(184, 58, 48, 0.55) !important;
   border: none !important;
+}
+
+/* Selected leader stays visibly selected even when placed on the table (disabled). */
+.army-catalog-card.army-leader-row.army-leader-row-active.army-unit-row-disabled {
+  opacity: 1 !important;
+  box-shadow: inset 0 0 0 2px rgba(184, 58, 48, 0.7) !important;
+}
+.army-catalog-card.army-leader-row.army-leader-row-active.army-unit-row-disabled
+  .army-catalog-card__portrait,
+.army-catalog-card.army-leader-row.army-leader-row-active.army-unit-row-disabled
+  .army-catalog-card__title {
+  opacity: 0.45;
 }
 
 .army-section-title,

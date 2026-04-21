@@ -33,6 +33,7 @@ export type EphiriumVortexUiOptions = {
 export class EphiriumVortexUi {
   private root: HTMLElement;
   private cardsRow: HTMLElement;
+  private scenarioLabel: HTMLElement;
   private drawBtn: HTMLButtonElement;
   private lastRenderedIndices: number[] = [];
   private opts: EphiriumVortexUiOptions;
@@ -44,6 +45,9 @@ export class EphiriumVortexUi {
 
     this.cardsRow = el('div', 'ev-cards-row');
     this.root.appendChild(this.cardsRow);
+
+    this.scenarioLabel = el('div', 'ev-scenario-label ev-scenario-label--hidden');
+    this.root.appendChild(this.scenarioLabel);
 
     this.drawBtn = el('button', 'ev-draw-btn') as HTMLButtonElement;
     this.drawBtn.type = 'button';
@@ -77,6 +81,18 @@ export class EphiriumVortexUi {
 
   dispose(): void {
     this.root.remove();
+  }
+
+  /** Показывает/скрывает подпись с именем применённого сценария слева от кнопки. */
+  setScenarioName(name: string | null | undefined): void {
+    const trimmed = name?.trim() ?? '';
+    if (trimmed.length === 0) {
+      this.scenarioLabel.textContent = '';
+      this.scenarioLabel.classList.add('ev-scenario-label--hidden');
+      return;
+    }
+    this.scenarioLabel.textContent = trimmed;
+    this.scenarioLabel.classList.remove('ev-scenario-label--hidden');
   }
 
   /** Полная перерисовка открытых карт из индексов спрайта (синхронизация MP / локальное состояние). */

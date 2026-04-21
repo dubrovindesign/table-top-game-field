@@ -21,11 +21,15 @@ export type ScenariosPanelOptions = {
   applyScenario: (raw: unknown) => ApplyScenarioResult;
   /** After applying a scenario to the live board (e.g. scheduleRender). */
   afterScenarioMutation?: () => void;
+  /** Called after a successful scenario apply with the applied document. */
+  onScenarioApplied?: (doc: ScenarioDocument) => void;
   /** Runtime official catalog from HTTP API (not static seed). */
   loadOfficialScenarios: () => Promise<ScenarioDocument[]>;
   updateOfficialScenario: (doc: ScenarioDocument) => Promise<ScenarioDocument>;
-  /** Full official document for PUT: base + form meta + live board snapshot/orientation (from `main`). */
-  buildEditedOfficialScenarioDocument: (base: ScenarioDocument, meta: EditableScenarioMeta) => ScenarioDocument;
+  /** Official document for PUT with updated meta only — snapshot/orientation copied from base. */
+  buildOfficialScenarioMetaOnly: (base: ScenarioDocument, meta: EditableScenarioMeta) => ScenarioDocument;
+  /** Scenario (custom or official) with current live board snapshot + orientation, meta copied from base. */
+  buildScenarioWithCurrentBoard: (base: ScenarioDocument) => ScenarioDocument;
 };
 
 export type ScenariosPanelHandle = {
@@ -64,7 +68,7 @@ function btn(label: string, cls: string, onClick: () => void): HTMLButtonElement
 }
 
 const APPLY_CONFIRM =
-  'Применить этот сценарий? Текущее состояние поля будет полностью заменено (включая ориентацию доски).';
+  'Применить этот сценарий на стол? Текущее состояние поля будет полностью заменено (включая ориентацию доски).';
 const DELETE_CONFIRM = 'Удалить этот сценарий из «Моих»? Это действие нельзя отменить.';
 const IMPORT_CONFLICT_HINT =
   'При совпадении id с уже сохранёнными сценариями: OK — заменить существующие, Отмена — импортировать копии с новыми id.';
@@ -72,6 +76,10 @@ const OFFICIAL_SAVE_GLOBAL_CONFIRM =
   'Сохранить изменения официального сценария? Они будут видны всем пользователям и заменят текущую опубликованную версию.';
 const OFFICIAL_LWW_CONFIRM =
   'Сценарий уже был изменён (другим пользователем или в другой вкладке). Сохранить и перезаписать последнюю версию?';
+const CUSTOM_BOARD_OVERWRITE_CONFIRM =
+  'Перезаписать сохранённые объекты сценария текущим состоянием поля? Прежний снимок доски будет заменён.';
+const OFFICIAL_BOARD_OVERWRITE_CONFIRM =
+  'Перезаписать официальный сценарий текущим состоянием поля? Прежний снимок доски будет заменён для всех пользователей.';
 
 function showStorageFailure(actionLabel: string, error: unknown): void {
   const detail = error instanceof Error ? ` ${error.message}` : '';
@@ -129,6 +137,14 @@ export function createScenariosPanel(opts: ScenariosPanelOptions): ScenariosPane
   );
   toolbar.appendChild(importBtn);
   toolbar.appendChild(importInput);
+
+  const officialToolbar = el('div', 'scenarios-panel-toolbar scenarios-panel-toolbar--start');
+  const randomBtn = btn(
+    'Выбрать случайный сценарий',
+    'scenarios-panel-btn scenarios-panel-btn--primary',
+    () => startRandomOfficialPick(),
+  );
+  officialToolbar.appendChild(randomBtn);
 
   const body = el('div', 'scenarios-panel-body');
 
@@ -308,7 +324,7 @@ export function createScenariosPanel(opts: ScenariosPanelOptions): ScenariosPane
       return;
     }
 
-    const built = opts.buildEditedOfficialScenarioDocument(state.base, meta);
+    const built = opts.buildOfficialScenarioMetaOnly(state.base, meta);
     setMetaEditorSavingState(true);
     try {
       await opts.updateOfficialScenario(built);
@@ -332,24 +348,159 @@ export function createScenariosPanel(opts: ScenariosPanelOptions): ScenariosPane
     if (e.target === metaOverlay) closeMetaEditor();
   });
 
+  const randomOverlay = el('div', 'scenarios-random-overlay scenarios-random-overlay--hidden');
+  const randomStage = el('div', 'scenarios-random-stage');
+  const randomRoller = el('div', 'scenarios-random-roller');
+  const randomDetail = el('div', 'scenarios-random-detail scenarios-random-detail--hidden');
+  const randomDetailTitle = el('div', 'scenarios-random-detail-title', 'Выпавший сценарий');
+  const randomDetailName = el('div', 'scenarios-random-detail-name');
+  const randomDetailMeta = el('div', 'scenarios-card-meta');
+  const randomDetailDesc = el('div', 'scenarios-random-detail-desc');
+  const randomDetailTags = el('div', 'scenarios-card-tags');
+  const randomActions = el('div', 'scenarios-meta-actions');
+  const randomCancelBtn = btn(
+    'Отмена',
+    'scenarios-panel-btn scenarios-panel-btn--secondary',
+    () => closeRandomOverlay(),
+  );
+  const randomApplyBtn = btn(
+    'Применить',
+    'scenarios-panel-btn scenarios-panel-btn--primary',
+    () => {},
+  );
+  randomActions.appendChild(randomCancelBtn);
+  randomActions.appendChild(randomApplyBtn);
+  randomDetail.appendChild(randomDetailTitle);
+  randomDetail.appendChild(randomDetailName);
+  randomDetail.appendChild(randomDetailMeta);
+  randomDetail.appendChild(randomDetailDesc);
+  randomDetail.appendChild(randomDetailTags);
+  randomDetail.appendChild(randomActions);
+  randomStage.appendChild(randomRoller);
+  randomStage.appendChild(randomDetail);
+  randomOverlay.appendChild(randomStage);
+  randomOverlay.addEventListener('click', (e) => {
+    if (e.target === randomOverlay) closeRandomOverlay();
+  });
+
   function setTab(tab: 'official' | 'custom'): void {
     activeTab = tab;
     tabOfficial.classList.toggle('scenarios-panel-tab--active', tab === 'official');
     tabCustom.classList.toggle('scenarios-panel-tab--active', tab === 'custom');
     createSection.classList.toggle('scenarios-create-section--hidden', tab !== 'custom');
     toolbar.classList.toggle('scenarios-panel-toolbar--hidden', tab !== 'custom');
+    officialToolbar.classList.toggle('scenarios-panel-toolbar--hidden', tab !== 'official');
     renderCardList();
   }
 
   function tryApply(doc: ScenarioDocument): void {
     if (!window.confirm(APPLY_CONFIRM)) return;
+    applyDocDirectly(doc);
+  }
+
+  function applyDocDirectly(doc: ScenarioDocument): void {
     const result = opts.applyScenario(doc);
     if (!result.ok) {
       window.alert(result.error);
       return;
     }
     opts.afterScenarioMutation?.();
+    opts.onScenarioApplied?.(doc);
     close();
+  }
+
+  function startRandomOfficialPick(): void {
+    if (officialDocs.length === 0) {
+      window.alert('Нет доступных официальных сценариев.');
+      return;
+    }
+    const pool = officialDocs;
+    const finalDoc = pool[Math.floor(Math.random() * pool.length)]!;
+    randomOverlay.classList.remove('scenarios-random-overlay--hidden');
+    randomOverlay.classList.remove('scenarios-random-overlay--landed');
+    randomOverlay.classList.remove('scenarios-random-overlay--reveal');
+    randomRoller.classList.remove('scenarios-random-roller--hidden');
+    randomDetail.classList.add('scenarios-random-detail--hidden');
+    randomRoller.textContent = pool[0]!.meta.name;
+
+    const totalTicks = 22;
+    let tick = 0;
+    function step(): void {
+      if (tick >= totalTicks) {
+        randomRoller.textContent = finalDoc.meta.name;
+        randomOverlay.classList.add('scenarios-random-overlay--landed');
+        window.setTimeout(revealDetail, 700);
+        return;
+      }
+      const name = pool[Math.floor(Math.random() * pool.length)]!.meta.name;
+      randomRoller.textContent = name;
+      const t = tick / totalTicks;
+      const delay = 40 + t * t * 320;
+      tick++;
+      window.setTimeout(step, delay);
+    }
+    function revealDetail(): void {
+      randomDetailName.textContent = finalDoc.meta.name;
+      randomDetailDesc.textContent = finalDoc.meta.description.trim() || '—';
+      randomDetailMeta.replaceChildren();
+      randomDetailMeta.appendChild(
+        el('span', 'scenarios-card-pill', difficultyLabelRu(finalDoc.meta.difficulty)),
+      );
+      randomDetailMeta.appendChild(
+        el(
+          'span',
+          'scenarios-card-pill scenarios-card-pill--muted',
+          scenarioOrientationLabelRu(finalDoc.boardOrientation),
+        ),
+      );
+      randomDetailTags.textContent =
+        finalDoc.meta.tags.length > 0 ? finalDoc.meta.tags.map((t) => `#${t}`).join(' ') : '—';
+      randomApplyBtn.onclick = () => {
+        closeRandomOverlay();
+        applyDocDirectly(finalDoc);
+      };
+      randomRoller.classList.add('scenarios-random-roller--hidden');
+      randomOverlay.classList.add('scenarios-random-overlay--reveal');
+      randomDetail.classList.remove('scenarios-random-detail--hidden');
+    }
+    step();
+  }
+
+  function closeRandomOverlay(): void {
+    randomOverlay.classList.add('scenarios-random-overlay--hidden');
+  }
+
+  async function overwriteScenarioWithCurrentBoard(
+    doc: ScenarioDocument,
+    mode: 'official' | 'custom',
+  ): Promise<void> {
+    const confirmMsg =
+      mode === 'official' ? OFFICIAL_BOARD_OVERWRITE_CONFIRM : CUSTOM_BOARD_OVERWRITE_CONFIRM;
+    if (!window.confirm(confirmMsg)) return;
+    const built = opts.buildScenarioWithCurrentBoard(doc);
+    if (mode === 'custom') {
+      try {
+        upsert(built);
+      } catch (error) {
+        showStorageFailure('сохранить стол в сценарий', error);
+        return;
+      }
+      void refreshAndRender();
+      return;
+    }
+    try {
+      await opts.updateOfficialScenario(built);
+    } catch (error) {
+      const msg =
+        error instanceof OfficialApiError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : String(error);
+      window.alert(`Не удалось сохранить официальный сценарий. ${msg}`);
+      return;
+    }
+    void refreshAndRender();
   }
 
   function promptImportConflict(): ImportConflictStrategy {
@@ -386,7 +537,25 @@ export function createScenariosPanel(opts: ScenariosPanelOptions): ScenariosPane
     const card = el('article', 'scenarios-card');
     card.appendChild(el('div', 'scenarios-card-name', doc.meta.name));
     const desc = doc.meta.description.trim() || '—';
-    card.appendChild(el('div', 'scenarios-card-desc', desc));
+    const descLines = desc.split('\n');
+    const needsCollapse = descLines.length > 3 || desc.length > 220;
+    const descEl = el('div', 'scenarios-card-desc');
+    if (needsCollapse) {
+      const preview =
+        descLines.slice(0, 3).join('\n').slice(0, 220).replace(/\s+$/, '') + '…';
+      descEl.textContent = preview;
+      card.appendChild(descEl);
+      let expanded = false;
+      const toggle = btn('Развернуть описание', 'scenarios-card-desc-toggle', () => {
+        expanded = !expanded;
+        descEl.textContent = expanded ? desc : preview;
+        toggle.textContent = expanded ? 'Свернуть описание' : 'Развернуть описание';
+      });
+      card.appendChild(toggle);
+    } else {
+      descEl.textContent = desc;
+      card.appendChild(descEl);
+    }
     const tags =
       doc.meta.tags.length > 0 ? doc.meta.tags.map((t) => `#${t}`).join(' ') : '—';
     card.appendChild(el('div', 'scenarios-card-tags', tags));
@@ -401,19 +570,21 @@ export function createScenariosPanel(opts: ScenariosPanelOptions): ScenariosPane
 
     const actions = el('div', 'scenarios-card-actions');
     actions.appendChild(
-      btn('Применить', 'scenarios-panel-btn scenarios-panel-btn--small scenarios-panel-btn--primary', () =>
+      btn('Применить на стол', 'scenarios-panel-btn scenarios-panel-btn--small scenarios-panel-btn--primary', () =>
         tryApply(doc),
       ),
     );
-    if (mode === 'official') {
-      actions.appendChild(
-        btn('Редактировать', 'scenarios-panel-btn scenarios-panel-btn--small', () => openMetaEditor(doc, 'official')),
-      );
-    }
+    actions.appendChild(
+      btn('Редактировать', 'scenarios-panel-btn scenarios-panel-btn--small', () =>
+        openMetaEditor(doc, mode),
+      ),
+    );
+    actions.appendChild(
+      btn('Сохранить со стола', 'scenarios-panel-btn scenarios-panel-btn--small', () => {
+        void overwriteScenarioWithCurrentBoard(doc, mode);
+      }),
+    );
     if (mode === 'custom') {
-      actions.appendChild(
-        btn('Правка', 'scenarios-panel-btn scenarios-panel-btn--small', () => openMetaEditor(doc, 'custom')),
-      );
       actions.appendChild(
         btn('Дубль', 'scenarios-panel-btn scenarios-panel-btn--small', () => {
           const copy: ScenarioDocument = {
@@ -517,12 +688,14 @@ export function createScenariosPanel(opts: ScenariosPanelOptions): ScenariosPane
   function open(): void {
     backdrop.classList.remove('scenarios-panel-backdrop--hidden');
     closeMetaEditor();
+    closeRandomOverlay();
     setTab(activeTab);
     void refreshAndRender();
   }
 
   function close(): void {
     closeMetaEditor();
+    closeRandomOverlay();
     backdrop.classList.add('scenarios-panel-backdrop--hidden');
   }
 
@@ -538,11 +711,13 @@ export function createScenariosPanel(opts: ScenariosPanelOptions): ScenariosPane
 
   panel.appendChild(header);
   panel.appendChild(tabRow);
+  panel.appendChild(officialToolbar);
   panel.appendChild(toolbar);
   panel.appendChild(body);
   panel.appendChild(createSection);
   backdrop.appendChild(panel);
   backdrop.appendChild(metaOverlay);
+  backdrop.appendChild(randomOverlay);
   document.body.appendChild(backdrop);
 
   closeBtn.addEventListener('click', (e) => {
@@ -557,6 +732,11 @@ export function createScenariosPanel(opts: ScenariosPanelOptions): ScenariosPane
     function onEsc(ev: KeyboardEvent) {
       if (ev.key !== 'Escape') return;
       if (!backdrop.classList.contains('scenarios-panel-backdrop--hidden')) {
+        if (!randomOverlay.classList.contains('scenarios-random-overlay--hidden')) {
+          closeRandomOverlay();
+          ev.stopPropagation();
+          return;
+        }
         if (!metaOverlay.classList.contains('scenarios-meta-overlay--hidden')) {
           closeMetaEditor();
           ev.stopPropagation();

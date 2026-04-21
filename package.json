@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -n server,vite -c blue,green \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:preview": "concurrently -n server,vite -c blue,green \"npm run dev:server\" \"vite --port 5280 --strictPort\"",
     "dev:client": "vite",
     "dev:server": "tsx watch server/roomServer.ts",
     "dev:vite-only": "vite",

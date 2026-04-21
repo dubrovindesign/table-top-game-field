@@ -56,13 +56,43 @@ const CONTROLS_HTML = `
       <li><strong>Delete / Backspace</strong> — удалить выделенное.</li>
       <li><strong>Q</strong> / <strong>E</strong> — поворот выделенного (с Shift — крупный шаг).</li>
       <li><strong>R</strong> над колодой богов на поле — перетасовать колоду.</li>
+      <li><strong>Ctrl+Shift+R</strong> — повернуть активное поле на 90°.</li>
+    </ul>
+  </section>
+  <section class="app-controls-section">
+    <h3 class="app-controls-heading">Пинг намерения</h3>
+    <ul class="app-controls-list">
+      <li>ПК: <strong>Space</strong> (удерживать) + <strong>ЛКМ</strong> по полю — поставить пинг в точке клика.</li>
+      <li>Плавающая кнопка <strong>Ping</strong>: на ПК — удерживать и кликнуть по полю; на таче — тап по кнопке, затем тап по полю (single-shot).</li>
+      <li>Пинг виден обоим игрокам в мультиплеере и исчезает сам.</li>
+    </ul>
+  </section>
+  <section class="app-controls-section">
+    <h3 class="app-controls-heading">Кубик</h3>
+    <ul class="app-controls-list">
+      <li><strong>Клик / тап</strong> по кубику — бросок.</li>
+      <li><strong>Повторный клик</strong> во время анимации — мгновенно показать результат.</li>
+    </ul>
+  </section>
+  <section class="app-controls-section">
+    <h3 class="app-controls-heading">Вихри эфира и карты богов</h3>
+    <ul class="app-controls-list">
+      <li><strong>ЛКМ</strong> по счётчику кристаллов вихря — изменить значение.</li>
+      <li><strong>ПКМ</strong> / долгое нажатие по вихрю — контекстное меню.</li>
+      <li><strong>Двойной клик</strong> по свободной карте бога — перевернуть; <strong>R</strong> над колодой — перетасовать.</li>
+    </ul>
+  </section>
+  <section class="app-controls-section">
+    <h3 class="app-controls-heading">Мультиплеер</h3>
+    <ul class="app-controls-list">
+      <li>Рамка юнита подсвечивается цветом владельца — цвет выбирается в палитре из 6 цветов.</li>
     </ul>
   </section>
   <section class="app-controls-section">
     <h3 class="app-controls-heading">Прочее</h3>
     <ul class="app-controls-list">
       <li><strong>ПКМ</strong> по полю (долгое нажатие на таче) — круговое меню маркеров состояний.</li>
-      <li>Нижняя панель на таче — быстрые действия (копировать, поворот и т.д.).</li>
+      <li>Нижняя панель на таче — быстрые действия (копировать, поворот, удалить и т.д.).</li>
     </ul>
   </section>
 </div>
@@ -109,8 +139,6 @@ export function mountAppMoreMenu(toolbarMount: HTMLElement, opts: AppMoreMenuOpt
 
   addItem('Настройки', () => opts.onSettings());
 
-  addItem('Управление', () => openControlsDialog());
-
   let open = false;
   function setOpen(v: boolean): void {
     open = v;
@@ -136,6 +164,17 @@ export function mountAppMoreMenu(toolbarMount: HTMLElement, opts: AppMoreMenuOpt
   anchor.appendChild(toggleBtn);
   anchor.appendChild(menu);
   toolbarMount.appendChild(anchor);
+
+  const helpBtn = el('button', 'app-more-menu-btn app-controls-help-btn') as HTMLButtonElement;
+  helpBtn.type = 'button';
+  helpBtn.setAttribute('aria-label', 'Управление');
+  helpBtn.title = 'Управление';
+  helpBtn.textContent = '?';
+  helpBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openControlsDialog();
+  });
+  toolbarMount.appendChild(helpBtn);
 }
 
 let controlsBackdropEl: HTMLElement | null = null;

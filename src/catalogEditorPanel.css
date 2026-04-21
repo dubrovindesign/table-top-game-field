@@ -1506,9 +1506,9 @@
 }
 
 .ce-modal.ce-modal--unit {
-  width: min(640px, 100%);
+  width: min(1080px, calc(100vw - 32px));
+  max-width: 100%;
   max-height: min(92vh, 900px);
-  transition: width 0.2s ease;
 }
 
 .ce-modal.ce-modal--unit.ce-modal--unit-hot-split {
