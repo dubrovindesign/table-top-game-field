@@ -5671,6 +5671,10 @@ function applyRosterDocToTable(doc: {
   scheduleRender();
 }
 
+(window as any).__debugApplyRoster = applyRosterDocToTable;
+(window as any).__debugCapture = captureBoardSnapshot;
+(window as any).__debugApply = applyBoardSnapshot;
+
 function trySpawnTroopFromArmyBuilder(
   unitId: string,
   leaderId: string,
@@ -10578,7 +10582,7 @@ function applyDeadByZoneFromValidatedSnapshot(s: SerializedBoardStateV1): void {
 }
 
 function captureBoardSnapshot(): SerializedBoardStateV1 {
-  return {
+  const snap: SerializedBoardStateV1 = ({
     v: 1,
     boardTemplates: [...boardTemplates.values()].map((t) => ({
       id: t.id,
@@ -10745,7 +10749,14 @@ function captureBoardSnapshot(): SerializedBoardStateV1 {
     },
     deadByZone: structuredClone(deadByZone),
     tableTurnNumber: topTurnPanel.getTableTurnNumber(),
-  };
+  });
+  console.log('[DEBUG-CAPTURE] snapshot', {
+    units: snap.units.length,
+    inv: snap.inventoryTablePieces?.length,
+    gods: snap.godTablePieces.length,
+    valid: isSerializedBoardStateV1(snap),
+  });
+  return snap;
 }
 
 /**
@@ -10965,7 +10976,15 @@ function migrateLegacySiegeGolemHugeToHuge2(): void {
 }
 
 function applyBoardSnapshot(raw: unknown): void {
+  console.log('[DEBUG-APPLY] received snapshot', {
+    valid: isSerializedBoardStateV1(raw),
+    units: (raw as any)?.units?.length,
+    inv: (raw as any)?.inventoryTablePieces?.length,
+    gods: (raw as any)?.godTablePieces?.length,
+    raw,
+  });
   if (!isSerializedBoardStateV1(raw)) {
+    console.error('[DEBUG-APPLY] validation FAILED', raw);
     if (import.meta.env.DEV) {
       console.warn('[mp] boardState ignored: snapshot failed validation', raw);
     }

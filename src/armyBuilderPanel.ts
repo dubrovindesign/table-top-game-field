@@ -1215,6 +1215,7 @@ export class ArmyBuilderPanel {
     // multiplayer snapshots) by re-anchoring to the matching catalog row; close
     // only if the previewed card is no longer in the rebuilt catalog.
     const prevCardId = this.godPreviewCardId;
+    const prevScrollTop = this.godCatalogEl.scrollTop;
     this.godCatalogEl.replaceChildren();
     const leaderId = this.selectedLeaderId;
     if (!leaderId) {
@@ -1251,6 +1252,7 @@ export class ArmyBuilderPanel {
         this.closeGodCardPreview();
       }
     }
+    if (prevScrollTop > 0) this.godCatalogEl.scrollTop = prevScrollTop;
   }
 
   private makeGodCardGroupRow(group: GodCardDef[], inPlay: ReadonlySet<string>): HTMLElement {
