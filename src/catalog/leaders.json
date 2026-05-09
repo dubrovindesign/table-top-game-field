@@ -3520,6 +3520,16 @@
         "unitId": "priory_of_hope-coast_guard_medic",
         "maxCopies": 2,
         "points": 21
+      },
+      {
+        "unitId": "Wavebreaker-with-swords",
+        "maxCopies": 2,
+        "points": 43
+      },
+      {
+        "unitId": "Wavebreaker-with-mace-and-shield",
+        "maxCopies": 2,
+        "points": 47
       }
     ]
   },
@@ -3679,6 +3689,16 @@
         "unitId": "priory_of_hope-coast_guard_medic",
         "maxCopies": 2,
         "points": 21
+      },
+      {
+        "unitId": "Wavebreaker-with-mace-and-shield",
+        "maxCopies": 2,
+        "points": 47
+      },
+      {
+        "unitId": "Wavebreaker-with-swords",
+        "maxCopies": 2,
+        "points": 43
       }
     ]
   },
@@ -3838,6 +3858,16 @@
         "unitId": "priory_of_hope-coast_guard_medic",
         "maxCopies": 1,
         "points": 21
+      },
+      {
+        "unitId": "Wavebreaker-with-mace-and-shield",
+        "maxCopies": 1,
+        "points": 47
+      },
+      {
+        "unitId": "Wavebreaker-with-swords",
+        "maxCopies": 1,
+        "points": 43
       }
     ]
   }
